@@ -18,7 +18,7 @@
 <link rel="icon" href="assets/favicon-48.png" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/site.css?v=20261026">
+<link rel="stylesheet" href="assets/site.css?v=20261026b">
 </head>
 <body>
 
@@ -96,22 +96,11 @@
       html += '<p class="empty" style="margin-top:28px">아직 등록된 강의가 없어요.</p>';
       $("app").innerHTML = html; return;
     }
-    var f = V[0], nf = (f.files || []).length;
-    html += '<a class="feature" href="' + videoUrl(f.id) + '">' + thumbBox(f, true) +
-      '<div class="body">' +
-        '<div class="label">' + (SC.isNew(f.date) ? '<span class="chip new">NEW</span>' : '') + '최신 강의</div>' +
-        '<h2>' + esc(f.title || "제목 없음") + '</h2>' + metaLine(f) +
-        (nf ? '<span class="files-count">' + IC.file + '교육자료 ' + nf + '개</span>' : '') +
-        '<span class="btn">영상 보고 자료 받기' + IC.arrow + '</span>' +
-      '</div></a>';
-
-    if (V.length > 1){
-      html += '<section aria-labelledby="allH"><div class="section-head"><h2 id="allH">전체 강의<small>' + V.length + '</small></h2>' +
-        (V.length > 6 ? '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기"></label>' : '') +
-        '</div><ul class="grid" id="grid"></ul><p class="empty" id="none" hidden>찾는 강의가 없어요.</p></section>';
-    }
+    html += '<section aria-labelledby="allH"><div class="section-head"><h2 id="allH">전체 강의<small>' + V.length + '</small></h2>' +
+      (V.length > 6 ? '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기"></label>' : '') +
+      '</div><ul class="grid" id="grid"></ul><p class="empty" id="none" hidden>찾는 강의가 없어요.</p></section>';
     $("app").innerHTML = html;
-    if (V.length > 1){
+    if (V.length){
       var draw = function(q){
         q = String(q || "").trim().toLowerCase();
         var list = q ? V.filter(function(v){ return (v.title || "").toLowerCase().indexOf(q) > -1; }) : V;
@@ -168,6 +157,19 @@
           '<button type="button" class="more" id="more" hidden>더보기</button></section>' : '') +
       '</div>' +
       (others.length ? '<section aria-labelledby="moreH"><div class="section-head"><h2 id="moreH">다른 강의</h2></div><ul class="grid">' + others.map(card).join("") + '</ul></section>' : '');
+
+    /* 받기 누르면 바로 반응 보여주기 (다운로드가 시작되기까지 몇 초 걸릴 수 있어서) */
+    $("app").addEventListener("click", function(e){
+      var a = e.target.closest("a.dl"); if (!a || a.classList.contains("busy")) return;
+      var orig = a.innerHTML;
+      a.classList.add("busy"); a.innerHTML = '<span class="spin" aria-hidden="true"></span><span>받는 중</span>';
+      toast("다운로드를 시작했어요. 잠시만 기다려 주세요");
+      setTimeout(function(){
+        a.classList.remove("busy"); a.classList.add("done");
+        a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>요청됨</span>';
+        setTimeout(function(){ a.classList.remove("done"); a.innerHTML = orig; }, 5000);
+      }, 3500);
+    });
 
     $("share").addEventListener("click", function(){
       var url = location.origin + location.pathname + "?v=" + encodeURIComponent(v.id);
