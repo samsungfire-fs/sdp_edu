@@ -175,6 +175,12 @@ img{max-width:100%}
 .dl{display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; min-width:44px; padding:0 14px; border-radius:10px; background:var(--brand-soft); color:var(--brand); font-size:14px; font-weight:800; text-decoration:none; white-space:nowrap; transition:background .15s ease, color .15s ease}
 .dl:hover{background:var(--brand); color:var(--brand-ink)}
 .dl svg{width:18px; height:18px}
+.dl.busy, .dl.done{pointer-events:none}
+.dl.busy{background:var(--brand); color:var(--brand-ink)}
+.dl.done{background:var(--xls-bg); color:var(--xls)}
+.spin{width:18px; height:18px; border-radius:50%; border:2.5px solid currentColor; border-right-color:transparent; animation:spin .7s linear infinite; flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .spin{animation-duration:2s} }
 .dl.off{background:var(--etc-bg); color:var(--ink-3); pointer-events:none; font-weight:600}
 .files-note{margin:0; font-size:13px; color:var(--ink-3); line-height:1.55}
 .files-empty{margin:0; font-size:14px; color:var(--ink-2)}
