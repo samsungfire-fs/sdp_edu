@@ -90,6 +90,15 @@
         else { sha = null; useData({ site:{ title:"교육 자료실" }, videos:[] }); }
         canSave = true; setConn("ok", "연결됨 · " + owner + "/" + repo);
         if (apiKey) data.videos.forEach(function(v){ v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f, true); }); });
+        /* 강의별 공유 페이지가 아직 없으면 저장 한 번으로 만들 수 있게 안내 */
+        Promise.all(data.videos.filter(function(v){ return v.id; }).map(function(v){
+          return fetch("v/" + v.id + "/index.html?chk=" + Date.now(), { method:"HEAD", cache:"no-store" }).then(function(r){ return r.ok; }).catch(function(){ return true; });
+        })).then(function(ok){
+          if (ok.some(function(x){ return !x; })){
+            dirty = true; updateSaveBar();
+            $("saveMsg").innerHTML = "<b>카톡 공유 미리보기</b>를 만들려면 저장을 한 번 눌러 주세요";
+          }
+        });
         $("conn").open = false; updateSaveBar();
       })
       .catch(function(e){
@@ -387,28 +396,91 @@
       })
     };
   }
+  /* ---------- 강의별 공유 페이지(v/영상ID/) — 카톡·SNS 미리보기에 영상 썸네일·제목이 나오게 ---------- */
+  function gitSha(str){
+    var b = new TextEncoder().encode(str), h = new TextEncoder().encode("blob " + b.length + "\0"), all = new Uint8Array(h.length + b.length);
+    all.set(h, 0); all.set(b, h.length);
+    return crypto.subtle.digest("SHA-1", all).then(function(d){ return Array.prototype.map.call(new Uint8Array(d), function(x){ return (x < 16 ? "0" : "") + x.toString(16); }).join(""); });
+  }
+  var thumbCache = {};
+  function bestThumb(id){
+    if (thumbCache[id]) return Promise.resolve(thumbCache[id]);
+    return new Promise(function(res){
+      var img = new Image(), done = false;
+      function fin(u){ if (done) return; done = true; thumbCache[id] = u; res(u); }
+      img.onload = function(){ fin(img.naturalWidth > 200 ? SC.thumb(id, true) : SC.thumb(id, false)); };
+      img.onerror = function(){ fin(SC.thumb(id, false)); };
+      setTimeout(function(){ fin(SC.thumb(id, false)); }, 5000);
+      img.src = SC.thumb(id, true);
+    });
+  }
+  function siteRoot(){ return location.origin + location.pathname.replace(/[^/]*$/, ""); }
+  function attr(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function sharePage(tpl, v, site, thumb){
+    var url = siteRoot() + "v/" + v.id + "/";
+    var first = (v.description || "").split("\n").map(function(x){ return x.trim(); }).filter(Boolean)[0] || "";
+    var desc = (v.files.length ? "교육자료 " + v.files.length + "개 · " : "") + (first || site.desc || "강의 영상과 교육자료");
+    if (desc.length > 110) desc = desc.slice(0, 108) + "…";
+    var title = v.title || site.title || "교육 자료실";
+    var meta =
+      '<base href="../../">\n' +
+      '<meta property="og:title" content="' + attr(title) + '">\n' +
+      '<meta property="og:description" content="' + attr(desc) + '">\n' +
+      '<meta property="og:image" content="' + attr(thumb) + '">\n' +
+      '<meta property="og:url" content="' + attr(url) + '">\n' +
+      '<meta property="og:type" content="video.other">\n' +
+      '<meta property="og:site_name" content="' + attr(site.title || "교육 자료실") + '">\n' +
+      '<meta name="twitter:card" content="summary_large_image">\n';
+    return tpl
+      .replace(/<meta property="og:[^>]*>\n?/g, "").replace(/<meta name="twitter:[^>]*>\n?/g, "").replace(/<base [^>]*>\n?/g, "")
+      .replace(/<title>[\s\S]*?<\/title>/, function(){ return "<title>" + attr(title) + "</title>"; })
+      .replace(/<meta name="description" content="[^"]*">/, function(){ return '<meta name="description" content="' + attr(desc) + '">'; })
+      .replace(/<meta charset="utf-8">\n?/, function(){ return '<meta charset="utf-8">\n' + meta; });
+  }
+
   function save(){
     if (!canSave || saving) return;
     var blank = data.videos.filter(function(v){ return !v.id; }).length;
     var out = cleanData(), json = JSON.stringify(out, null, 2) + "\n";
     var first = out.videos[0];
     saving = true; updateSaveBar();
-    gh("/contents/data/videos.json", { method:"PUT", body: JSON.stringify({
-      message: "자료실 업데이트" + (first ? " · " + first.title.slice(0, 40) : ""),
-      content: b64enc(json), branch: branch, sha: sha || undefined
-    }) }).then(function(r){
-      sha = r.content.sha; saving = false; dirty = false;
+    var head, baseTree, remote = {}, newSha;
+    Promise.all([
+      gh("/git/ref/heads/" + encodeURIComponent(branch)).then(function(ref){ head = ref.object.sha; return gh("/git/commits/" + head); })
+        .then(function(c){ baseTree = c.tree.sha; return gh("/git/trees/" + baseTree + "?recursive=1"); })
+        .then(function(t){ (t.tree || []).forEach(function(e){ if (e.type === "blob") remote[e.path] = e.sha; }); }),
+      fetch("index.html?tpl=" + Date.now(), { cache:"no-store" }).then(function(r){ if (!r.ok) throw new Error("tpl"); return r.text(); }),
+      Promise.all(out.videos.map(function(v){ return bestThumb(v.id); })),
+      gitSha(json)
+    ]).then(function(r){
+      var tpl = r[1], thumbs = r[2]; newSha = r[3];
+      if (sha && remote["data/videos.json"] && remote["data/videos.json"] !== sha){ throw Object.assign(new Error("conflict"), { status:409 }); }
+      var tree = [{ path:"data/videos.json", mode:"100644", type:"blob", content: json }];
+      var keep = {};
+      out.videos.forEach(function(v, k){
+        var path = "v/" + v.id + "/index.html"; keep[path] = true;
+        tree.push({ path:path, mode:"100644", type:"blob", content: sharePage(tpl, v, out.site, thumbs[k]) });
+      });
+      Object.keys(remote).forEach(function(p){ if (/^v\/[\w-]+\/index\.html$/.test(p) && !keep[p]) tree.push({ path:p, mode:"100644", type:"blob", sha:null }); });
+      return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree }) });
+    }).then(function(t){
+      return gh("/git/commits", { method:"POST", body: JSON.stringify({ message: "자료실 업데이트" + (first ? " · " + first.title.slice(0, 40) : ""), tree: t.sha, parents:[head] }) });
+    }).then(function(c){
+      return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) });
+    }).then(function(){
+      sha = newSha; saving = false; dirty = false;
       if (blank) data.videos = data.videos.filter(function(v){ return v.id; });
       render(); updateSaveBar();
       toast(blank ? "저장했어요. 유튜브 주소가 없는 강의 " + blank + "개는 빼고 저장했어요" : "저장했어요. 1분쯤 뒤 사이트에 반영돼요");
     }).catch(function(e){
       saving = false; updateSaveBar();
       if (e.status === 409 || e.status === 422) toast("다른 곳에서 먼저 저장됐어요. 새로고침한 뒤 다시 저장해 주세요");
-      else if (e.status === 401) toast("토큰이 만료됐거나 맞지 않아요. 연결 설정을 확인해 주세요");
+      else if (e.status === 401) toast("토큰이 만료됐거나 맞지 않아요. 계정 칸을 확인해 주세요");
       else if (e.status === 403 || e.status === 404) toast("토큰에 이 저장소 쓰기 권한이 없어요");
       else toast("저장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요");
     });
   }
+
 
   /* ---------- 이벤트 ---------- */
   var timers = new WeakMap();
@@ -480,7 +552,7 @@
       ".fname-ro .ftype{width:34px;height:40px;font-size:9.5px;flex:none}" +
       ".fname-ro strong{font-size:15px;font-weight:700;line-height:1.4;min-width:0}" +
       ".fname-ro .ph{font-size:14px;color:var(--ink-3)}" +
-      ".upd-log{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:14px;color:var(--ink-2)}" +
+      ".upd-log{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:14px;color:var(--ink-2)}" + ".upd-log:empty{display:none}" + ".upd-log li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}" +
       ".upd-log b{color:var(--ink)}" +
       ".upd-folder{font-size:13.5px;color:var(--ink-2)}" +
       ".upd-folder b{color:var(--ink)}" +
@@ -515,7 +587,7 @@
 
     function log(html){ var li = document.createElement("li"); li.innerHTML = html; $("updLog").appendChild(li); return li; }
     function b64bytes(buf){ var b = new Uint8Array(buf), s = "", CH = 0x8000; for (var i = 0; i < b.length; i += CH) s += String.fromCharCode.apply(null, b.subarray(i, i + CH)); return btoa(s); }
-    function allowed(path){ return !/^data\//.test(path) && /^(index\.html|admin\.html|README\.md|\.nojekyll|assets\/[\w.\-]+)$/.test(path); }
+    function allowed(path){ return !/^data\//.test(path) && /^(index\.html|admin\.html|404\.html|README\.md|\.nojekyll|assets\/[\w.\-]+)$/.test(path); }
     /* git 방식 파일 지문(blob sha) — 바뀐 파일만 고르는 데 사용 */
     function blobSha(buf){
       var b = new Uint8Array(buf), head = new TextEncoder().encode("blob " + b.length + "\0"), all = new Uint8Array(head.length + b.length);
@@ -596,21 +668,31 @@
         }));
       }).then(function(list){
         var drm = list.filter(function(x){ return x.drm; });
-        drm.forEach(function(x){ log('<b>' + esc(x.path) + '</b> · <span class="pill bad">보안 프로그램으로 암호화돼 있어 건너뛰었어요</span>'); });
+        if (drm.length) log('<span class="pill bad">' + drm.length + '개 건너뜀</span> 보안 프로그램으로 암호화된 파일이에요: ' + drm.map(function(x){ return esc(x.path); }).join(", "));
         var changed = list.filter(function(x){ return !x.drm && remote[x.path] !== x.sha; });
         if (!changed.length){ log('<span class="pill ok">이미 최신이에요</span> 바뀐 파일이 없어요.'); return null; }
         setBusy(true, "올리는 중");
-        return Promise.all(changed.map(function(x){
+        /* 홈(index.html)이 바뀌면 강의별 공유 페이지도 같은 커밋에서 새로 만듦 */
+        var idx = changed.filter(function(x){ return x.path === "index.html"; })[0], pages = Promise.resolve([]);
+        if (idx && canSave){
+          var out = cleanData(), tpl = new TextDecoder().decode(idx.buf);
+          pages = Promise.all(out.videos.map(function(v){ return bestThumb(v.id); })).then(function(th){
+            return out.videos.map(function(v, k){ return { path:"v/" + v.id + "/index.html", mode:"100644", type:"blob", content: sharePage(tpl, v, out.site, th[k]) }; });
+          });
+        }
+        return Promise.all([pages].concat(changed.map(function(x){
           return gh("/git/blobs", { method:"POST", body: JSON.stringify({ content: b64bytes(x.buf), encoding:"base64" }) })
             .then(function(r){ return { path:x.path, mode:"100644", type:"blob", sha:r.sha }; });
-        })).then(function(tree){
+        }))).then(function(all){
+          var tree = all.slice(1).concat(all[0]);
           return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree }) });
         }).then(function(t){
           return gh("/git/commits", { method:"POST", body: JSON.stringify({ message: "사이트 업데이트 (" + changed.length + "개 파일)", tree: t.sha, parents:[head] }) });
         }).then(function(c){
           return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) });
         }).then(function(){
-          changed.forEach(function(x){ log('<b>' + esc(x.path) + '</b> · <span class="pill ok">올렸어요</span>'); });
+          var names = changed.map(function(x){ return x.path.replace(/^assets\//, ""); });
+          log('<span class="pill ok">' + changed.length + '개 올림</span> ' + esc(names.slice(0, 3).join(", ")) + (names.length > 3 ? " 외 " + (names.length - 3) + "개" : ""));
           return changed;
         });
       }).then(function(changed){
@@ -625,7 +707,9 @@
       changed = changed.filter(function(x){ return x.path !== ".nojekyll"; });
       if (!changed.length) return Promise.resolve();
       setBusy(true, "사이트 반영 중");
-      var li = log('<span class="spin" aria-hidden="true"></span> 사이트에 반영되는 중이에요. 보통 1~2분 걸려요…');
+      var li = $("updLog").lastElementChild || log(""), base = li.innerHTML;
+      function show(h){ li.innerHTML = base + ' <span aria-hidden="true">·</span> ' + h; }
+      show('<span class="spin" aria-hidden="true"></span> 사이트에 반영하는 중 (보통 1~2분)');
       var started = Date.now();
       return new Promise(function(res){
         function check(){
@@ -635,14 +719,12 @@
           })).then(function(ok){
             var done = ok.filter(Boolean).length;
             if (done === changed.length){
-              li.innerHTML = '<span class="pill ok">반영 완료</span> 홈과 강의 페이지에도 적용됐어요. <button type="button" class="btn sm" id="updReload">관리자 새로고침</button>';
+              show('<span class="pill ok">반영 완료</span> <button type="button" class="linkbtn" id="updReload">새로고침</button>');
               $("updReload").onclick = function(){ location.reload(); };
-              toast("업데이트가 사이트에 반영됐어요"); return res();
+              toast("업데이트가 홈과 관리자에 반영됐어요"); return res();
             }
-            if (Date.now() - started > 6 * 60 * 1000){
-              li.innerHTML = '<span class="pill warn">반영이 늦어지고 있어요</span> 올리기는 끝났어요. 몇 분 뒤 사이트를 새로고침해 보세요.'; return res();
-            }
-            li.innerHTML = '<span class="spin" aria-hidden="true"></span> 사이트에 반영되는 중이에요 (' + done + '/' + changed.length + '). 보통 1~2분 걸려요…';
+            if (Date.now() - started > 6 * 60 * 1000){ show('<span class="pill warn">반영이 늦어지고 있어요</span> 몇 분 뒤 새로고침해 보세요'); return res(); }
+            show('<span class="spin" aria-hidden="true"></span> 사이트에 반영하는 중 ' + done + '/' + changed.length);
             setTimeout(check, 6000);
           });
         }

@@ -63,7 +63,7 @@
   var toastT;
   function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 2200); }
 
-  function videoUrl(id){ return "./?v=" + encodeURIComponent(id); }
+  function videoUrl(id){ return "v/" + encodeURIComponent(id) + "/"; }
   function metaLine(v, opts){
     var parts = [];
     if (v.channel) parts.push(esc(v.channel));
@@ -172,7 +172,7 @@
     });
 
     $("share").addEventListener("click", function(){
-      var url = location.origin + location.pathname + "?v=" + encodeURIComponent(v.id);
+      var url = new URL("v/" + encodeURIComponent(v.id) + "/", document.baseURI).href;
       SC.copy(url).then(function(){ toast("링크를 복사했어요. 카톡에 붙여 넣으세요"); }, function(){ toast(url); });
     });
     var body = $("descBody");
@@ -193,7 +193,7 @@
       var S = data.site || {};
       if (S.title) $("brandName").textContent = S.title.replace(/\s*교육\s*자료실\s*$/, "") || S.title;
       $("notice").textContent = S.notice ? "※ " + S.notice : "";
-      var id = new URLSearchParams(location.search).get("v");
+      var id = new URLSearchParams(location.search).get("v") || (location.pathname.match(/\/v\/([\w-]{6,})\/?(?:index\.html)?$/) || [])[1];
       if (id) renderVideo(data, id); else renderHome(data);
       window.scrollTo(0, 0);
     })
