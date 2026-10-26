@@ -557,7 +557,7 @@
     var tok = $("ghToken").value.trim(), key = $("apiKey").value.trim(), p1 = $("newPw").value, p2 = $("newPw2").value, msg = $("setupMsg"), btn = $("setupBtn");
     msg.textContent = "";
     if (!/^(github_pat_|ghp_)/.test(tok)){ msg.textContent = "GitHub 토큰을 확인해 주세요. github_pat_로 시작해요."; return; }
-    if (p1.length < 10){ msg.textContent = "비밀번호는 10자 이상으로 정해 주세요."; return; }
+    if (p1.length < 4){ msg.textContent = "비밀번호는 4자 이상으로 정해 주세요."; return; }
     if (p1 !== p2){ msg.textContent = "두 비밀번호가 서로 달라요."; return; }
     if (!$("repoFields").hidden){ owner = $("ghOwner").value.trim(); repo = $("ghRepo").value.trim(); LS.set("sc-owner", owner); LS.set("sc-repo", repo); }
     var label = btn.textContent; btn.disabled = true; btn.textContent = "저장하는 중…";
