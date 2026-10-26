@@ -10,6 +10,7 @@
     down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
     del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
     plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    grip:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>',
     refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>'
   };
 
@@ -246,16 +247,15 @@
   function itemHtml(v, i, n){
     var open = v === openV, id = "v" + i;
     var head = '<div class="vhead" data-act="toggle" data-i="' + i + '" role="button" tabindex="0" aria-expanded="' + open + '">' +
+      '<span class="grip" title="끌어서 순서 바꾸기">' + IC.grip + '</span>' +
       (v.id ? '<div class="thumb">' + SC.thumbImg(v.id) + '</div>' : '<div class="thumb blank">영상 없음</div>') +
       '<div style="min-width:0"><h3>' + esc(v.title || "제목 없음") + '</h3><div class="sub">' + headPills(v) + '</div></div>' +
-      '<div class="vtools">' +
-        '<button type="button" class="icon-btn" data-act="up" data-i="' + i + '" aria-label="위로"' + (i === 0 ? " disabled" : "") + '>' + IC.up + '</button>' +
-        '<button type="button" class="icon-btn" data-act="down" data-i="' + i + '" aria-label="아래로"' + (i === n - 1 ? " disabled" : "") + '>' + IC.down + '</button>' +
-      '</div></div>';
+      '</div>';
     if (!open) return '<div class="vitem" data-v="' + i + '">' + head + '</div>';
 
     var files = v.files.map(function(f, j){
       return '<div class="frow">' +
+        '<span class="grip" title="끌어서 순서 바꾸기">' + IC.grip + '</span>' +
         '<div class="inputs">' +
           '<div class="fname-ro" id="' + id + 'f' + j + 'n">' +
             '<span class="ftype ' + ({ pdf:"pdf", xlsx:"xlsx", pptx:"pptx", docx:"docx", hwp:"hwp" }[f.type] || "etc") + '">' + SC.typeLabel(f.type || "pdf") + '</span>' +
@@ -265,8 +265,6 @@
           '<div class="stat" id="' + id + 'f' + j + 's">' + fileStatus(f) + '</div>' +
         '</div>' +
         '<div class="tools">' +
-          '<button type="button" class="icon-btn" data-act="fup" data-i="' + i + '" data-f="' + j + '" aria-label="위로"' + (j === 0 ? " disabled" : "") + '>' + IC.up + '</button>' +
-          '<button type="button" class="icon-btn" data-act="fdown" data-i="' + i + '" data-f="' + j + '" aria-label="아래로"' + (j === v.files.length - 1 ? " disabled" : "") + '>' + IC.down + '</button>' +
           '<button type="button" class="icon-btn" data-act="fdel" data-i="' + i + '" data-f="' + j + '" aria-label="자료 ' + (j+1) + ' 빼기">' + IC.del + '</button>' +
         '</div></div>';
     }).join("");
@@ -284,7 +282,7 @@
         '<span class="help">유튜브 영상 설명이 자동으로 들어가요. 고쳐도 돼요.</span></div>' +
       '<div class="fileset"><span class="lbl">교육자료</span>' +
         '<span class="help" style="font-size:12.5px;color:var(--ink-3)">드라이브에서 파일 우클릭 → 공유 → ‘링크가 있는 모든 사용자’로 바꾸고 → 링크 복사</span>' +
-        files +
+        '<div class="fsort" data-i="' + i + '">' + files + '</div>' +
         '<div class="row"><button type="button" class="btn sm ghost" data-act="addFile" data-i="' + i + '">' + IC.plus + '자료 추가</button></div></div>' +
       '<div class="vfoot">' + (v.id ? '<a class="site-link" href="./?v=' + esc(v.id) + '" target="_blank" rel="noopener">사이트에서 보기 ↗</a>' : '<span></span>') +
         '<div class="row">' + delBtn + '</div></div>' +
@@ -298,6 +296,65 @@
     $("videos").innerHTML = V.length ? V.map(function(v, i){ return itemHtml(v, i, V.length); }).join("") :
       '<p class="empty-list">아직 강의가 없어요. ‘강의 추가’를 눌러 첫 강의를 넣어 주세요.</p>';
     if (fid && $(fid)){ var el = $(fid); el.focus(); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch(e){} }
+    initSort();
+  }
+
+  /* ---------- 끌어서 순서 바꾸기 (마우스·터치 모두) ---------- */
+  function move(arr, from, to){ arr.splice(to, 0, arr.splice(from, 1)[0]); }
+  function makeSortable(container, itemSel, onMove){
+    if (container._sortable) return; container._sortable = true;
+    container.addEventListener("pointerdown", function(e){
+      var grip = e.target.closest(".grip"); if (!grip || e.button > 0) return;
+      var item = grip.closest(itemSel); if (!item || item.parentElement !== container) return;
+      var items = Array.prototype.filter.call(container.children, function(el){ return el.matches(itemSel); });
+      if (items.length < 2) return;
+      e.preventDefault();
+      var sy = window.scrollY, from = items.indexOf(item), to = from;
+      var R = items.map(function(el){ var r = el.getBoundingClientRect(); return { top: r.top + sy, h: r.height }; });
+      var gap = R[1].top - (R[0].top + R[0].h), step = R[from].h + gap;
+      var startY = e.clientY + sy, lastY = e.clientY, raf = null;
+      item.classList.add("dragging");
+      try { grip.setPointerCapture(e.pointerId); } catch(er){}
+      items.forEach(function(el){ if (el !== item) el.style.transition = "transform .18s ease"; });
+      function update(){
+        var py = lastY + window.scrollY, dy = py - startY;
+        item.style.transform = "translateY(" + dy + "px)";
+        var center = R[from].top + R[from].h / 2 + dy;
+        to = from;
+        for (var k = 0; k < items.length; k++){
+          if (k === from) continue;
+          var mid = R[k].top + R[k].h / 2;
+          if (k > from && center > mid) to = Math.max(to, k);
+          if (k < from && center < mid) to = Math.min(to, k);
+        }
+        items.forEach(function(el, k){
+          if (el === item) return;
+          var sh = (k > from && k <= to) ? -step : (k < from && k >= to) ? step : 0;
+          el.style.transform = sh ? "translateY(" + sh + "px)" : "";
+        });
+      }
+      function autoscroll(){
+        var edge = 70, v = lastY < edge ? -(edge - lastY) / 4 : lastY > innerHeight - 110 ? (lastY - (innerHeight - 110)) / 4 : 0;
+        if (v){ window.scrollBy(0, v); update(); }
+        raf = requestAnimationFrame(autoscroll);
+      }
+      raf = requestAnimationFrame(autoscroll);
+      function onMoveEv(ev){ lastY = ev.clientY; update(); }
+      function onUp(){
+        cancelAnimationFrame(raf);
+        grip.removeEventListener("pointermove", onMoveEv); grip.removeEventListener("pointerup", onUp); grip.removeEventListener("pointercancel", onUp);
+        items.forEach(function(el){ el.style.transform = ""; el.style.transition = ""; });
+        item.classList.remove("dragging");
+        if (to !== from) onMove(from, to);
+      }
+      grip.addEventListener("pointermove", onMoveEv); grip.addEventListener("pointerup", onUp); grip.addEventListener("pointercancel", onUp);
+    });
+  }
+  function initSort(){
+    makeSortable($("videos"), ".vitem", function(a, b){ move(data.videos, a, b); markDirty(); render(); });
+    document.querySelectorAll(".fsort").forEach(function(box){
+      makeSortable(box, ".frow", function(a, b){ var v = data.videos[+box.dataset.i]; if (!v) return; move(v.files, a, b); markDirty(); render(); });
+    });
   }
 
   /* ---------- 저장 바 ---------- */
@@ -379,7 +436,7 @@
     var b = e.target.closest("[data-act]"); if (!b) return;
     var act = b.dataset.act, i = +b.dataset.i, V = data.videos, v = V[i];
     if (act !== "toggle") e.stopPropagation();
-    if (act === "toggle"){ if (e.target.closest("button")) return; openV = (openV === v) ? null : v; armedDel = null; render(); return; }
+    if (act === "toggle"){ if (e.target.closest("button") || e.target.closest(".grip")) return; openV = (openV === v) ? null : v; armedDel = null; render(); return; }
     if (act === "up" && i > 0){ V.splice(i - 1, 0, V.splice(i, 1)[0]); markDirty(); }
     else if (act === "down" && i < V.length - 1){ V.splice(i + 1, 0, V.splice(i, 1)[0]); markDirty(); }
     else if (act === "refetch"){ fetchVideo(v, true); v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f); }); return; }
@@ -415,7 +472,7 @@
   window.addEventListener("scroll", function(){ $("topbar").classList.toggle("scrolled", window.scrollY > 4); }, { passive:true });
 
 
-  /* ================= 사이트 업데이트 (Claude가 고친 파일 올리기) ================= */
+  /* ================= 사이트 업데이트: 내 폴더를 읽어 바뀐 파일만 한 번에 올림 ================= */
   (function(){
     var st = document.createElement("style");
     st.textContent =
@@ -423,59 +480,197 @@
       ".fname-ro .ftype{width:34px;height:40px;font-size:9.5px;flex:none}" +
       ".fname-ro strong{font-size:15px;font-weight:700;line-height:1.4;min-width:0}" +
       ".fname-ro .ph{font-size:14px;color:var(--ink-3)}" +
-      ".upd-log{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:13.5px;color:var(--ink-2)}" +
+      ".upd-log{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:14px;color:var(--ink-2)}" +
       ".upd-log b{color:var(--ink)}" +
-      ".pick{display:inline-flex;align-items:center;gap:8px;cursor:pointer}" +
-      ".pick input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}";
+      ".upd-folder{font-size:13.5px;color:var(--ink-2)}" +
+      ".upd-folder b{color:var(--ink)}" +
+      ".linkbtn{border:0;background:none;padding:0 2px;font:inherit;font-size:13.5px;font-weight:700;color:var(--brand);cursor:pointer;text-decoration:underline;text-underline-offset:3px}" +
+      ".pick{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}" +
+      ".upd-top{min-height:36px;padding:0 14px;font-size:14px;border-radius:10px}" +
+      ".top-actions{display:flex;align-items:center;gap:14px}" +
+      "body:not(.authed) .upd-top{display:none}" +
+      ".spin{width:16px;height:16px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:spin .7s linear infinite;flex:none;display:inline-block}" +
+      "@keyframes spin{to{transform:rotate(360deg)}}";
     document.head.appendChild(st);
+
+    /* 상단 바에 업데이트 버튼 */
+    var siteLink = document.querySelector(".topbar .site-link");
+    var actions = document.createElement("div"); actions.className = "top-actions";
+    siteLink.parentNode.insertBefore(actions, siteLink);
+    var topBtn = document.createElement("button");
+    topBtn.type = "button"; topBtn.className = "btn sm upd-top"; topBtn.id = "updTop"; topBtn.textContent = "업데이트";
+    actions.appendChild(topBtn); actions.appendChild(siteLink);
 
     var box = document.createElement("details");
     box.className = "panel conn"; box.id = "updBox";
     box.innerHTML =
       '<summary><h2><span>사이트 업데이트</span></h2>' +
       '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>' +
-      '<p class="lead" style="margin:0">Claude가 사이트를 고쳐 주면 컴퓨터의 <b>signature-class</b> 폴더가 바뀌어요. 그 폴더를 고르면 바뀐 파일만 GitHub에 올려요. 강의 목록은 건드리지 않아요.</p>' +
-      '<div class="row"><label class="btn sm pick" for="updPick">폴더 고르고 올리기<input type="file" id="updPick" webkitdirectory directory multiple></label></div>' +
+      '<p class="lead" style="margin:0">Claude가 고친 파일을 컴퓨터의 <b>signature-class</b> 폴더에서 읽어, 바뀐 것만 한 번에 올려요. 홈·강의 페이지·관리자 모두 함께 바뀌고, 강의 목록은 건드리지 않아요.</p>' +
+      '<div class="row"><button type="button" class="btn sm" id="updRun">지금 업데이트</button>' +
+      '<span class="upd-folder" id="updFolder"></span></div>' +
+      '<input type="file" class="pick" id="updPick" webkitdirectory directory multiple tabindex="-1" aria-hidden="true">' +
       '<ul class="upd-log" id="updLog"></ul>';
     var site = $("siteBox"); site.parentNode.insertBefore(box, site.nextSibling);
 
     function log(html){ var li = document.createElement("li"); li.innerHTML = html; $("updLog").appendChild(li); return li; }
     function b64bytes(buf){ var b = new Uint8Array(buf), s = "", CH = 0x8000; for (var i = 0; i < b.length; i += CH) s += String.fromCharCode.apply(null, b.subarray(i, i + CH)); return btoa(s); }
-    function allowed(path){
-      if (/^data\//.test(path)) return false;
-      return /^(index\.html|admin\.html|README\.md|\.nojekyll|assets\/[\w.\-]+)$/.test(path);
+    function allowed(path){ return !/^data\//.test(path) && /^(index\.html|admin\.html|README\.md|\.nojekyll|assets\/[\w.\-]+)$/.test(path); }
+    /* git 방식 파일 지문(blob sha) — 바뀐 파일만 고르는 데 사용 */
+    function blobSha(buf){
+      var b = new Uint8Array(buf), head = new TextEncoder().encode("blob " + b.length + "\0"), all = new Uint8Array(head.length + b.length);
+      all.set(head, 0); all.set(b, head.length);
+      return crypto.subtle.digest("SHA-1", all).then(function(h){ return Array.prototype.map.call(new Uint8Array(h), function(x){ return (x < 16 ? "0" : "") + x.toString(16); }).join(""); });
     }
 
+    /* ---- 폴더 기억 (크롬·엣지: 한 번 고르면 다음부터 버튼만) ---- */
+    var canFS = typeof window.showDirectoryPicker === "function";
+    function idb(){ return new Promise(function(res, rej){ var r = indexedDB.open("sc-admin", 1); r.onupgradeneeded = function(){ r.result.createObjectStore("kv"); }; r.onsuccess = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); }; }); }
+    function kvGet(k){ return idb().then(function(db){ return new Promise(function(res){ var q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = function(){ res(q.result || null); }; q.onerror = function(){ res(null); }; }); }).catch(function(){ return null; }); }
+    function kvSet(k, v){ return idb().then(function(db){ return new Promise(function(res){ var t = db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = res; t.onerror = res; }); }).catch(function(){}); }
+    var dirHandle = null;
+    function showFolder(){
+      $("updFolder").innerHTML = dirHandle
+        ? '폴더: <b>' + esc(dirHandle.name) + '</b> <button type="button" class="linkbtn" id="updChange">바꾸기</button>'
+        : (canFS ? '처음 한 번 <b>signature-class</b> 폴더를 고르면 다음부터는 버튼만 누르면 돼요.' : '누를 때마다 <b>signature-class</b> 폴더를 골라 주세요.');
+      var c = $("updChange"); if (c) c.onclick = function(){ pickDir().then(function(h){ if (h) run(); }); };
+    }
+    if (canFS) kvGet("dir").then(function(h){ dirHandle = h; showFolder(); }); else showFolder();
+
+    function pickDir(){
+      return window.showDirectoryPicker({ id:"sc-site", mode:"read" }).then(function(h){
+        return h.getFileHandle("index.html").then(function(){ return h.getFileHandle("admin.html"); }).then(function(){
+          dirHandle = h; kvSet("dir", h); showFolder(); return h;
+        }).catch(function(){ toast("signature-class 폴더를 골라 주세요. 그 안에 index.html이 있어야 해요"); return null; });
+      }).catch(function(){ return null; });
+    }
+    function ensurePerm(h){
+      var o = { mode:"read" };
+      return h.queryPermission(o).then(function(p){ return p === "granted" ? p : h.requestPermission(o); }).then(function(p){ return p === "granted"; });
+    }
+    function readDir(h){
+      var out = [];
+      function walk(dir, prefix, depth){
+        var it = dir.values(), chain = Promise.resolve();
+        function next(){
+          return it.next().then(function(r){
+            if (r.done) return;
+            var e = r.value, path = prefix + e.name;
+            var p = e.kind === "file"
+              ? (allowed(path) ? e.getFile().then(function(f){ out.push({ path:path, file:f }); }) : Promise.resolve())
+              : (depth < 1 && e.name === "assets" ? walk(e, path + "/", depth + 1) : Promise.resolve());
+            return p.then(next);
+          });
+        }
+        return next();
+      }
+      return walk(h, "", 0).then(function(){ return out; });
+    }
+
+    /* ---- 올리기: 바뀐 파일만 커밋 1개로 ---- */
+    var busy = false;
+    function setBusy(b, label){
+      busy = b;
+      [$("updRun"), topBtn].forEach(function(btn){
+        btn.disabled = b;
+        btn.innerHTML = b ? '<span class="spin" aria-hidden="true"></span> ' + esc(label || "업데이트 중") : (btn === topBtn ? "업데이트" : "지금 업데이트");
+      });
+    }
+    function upload(items){
+      $("updLog").innerHTML = "";
+      if (!items.length){ log('<span class="pill bad">올릴 파일이 없어요. signature-class 폴더가 맞는지 확인해 주세요</span>'); return Promise.resolve(); }
+      setBusy(true, "확인 중");
+      var head, baseTree, remote = {};
+      return gh("/git/ref/heads/" + encodeURIComponent(branch)).then(function(ref){
+        head = ref.object.sha; return gh("/git/commits/" + head);
+      }).then(function(c){
+        baseTree = c.tree.sha; return gh("/git/trees/" + baseTree + "?recursive=1");
+      }).then(function(t){
+        (t.tree || []).forEach(function(e){ if (e.type === "blob") remote[e.path] = e.sha; });
+        return Promise.all(items.map(function(x){
+          return x.file.arrayBuffer().then(function(buf){
+            var head16 = new TextDecoder("latin1").decode(new Uint8Array(buf).subarray(0, 16));
+            if (/DocuRay/i.test(head16)) return { path:x.path, drm:true };
+            return blobSha(buf).then(function(sha){ return { path:x.path, buf:buf, sha:sha }; });
+          });
+        }));
+      }).then(function(list){
+        var drm = list.filter(function(x){ return x.drm; });
+        drm.forEach(function(x){ log('<b>' + esc(x.path) + '</b> · <span class="pill bad">보안 프로그램으로 암호화돼 있어 건너뛰었어요</span>'); });
+        var changed = list.filter(function(x){ return !x.drm && remote[x.path] !== x.sha; });
+        if (!changed.length){ log('<span class="pill ok">이미 최신이에요</span> 바뀐 파일이 없어요.'); return null; }
+        setBusy(true, "올리는 중");
+        return Promise.all(changed.map(function(x){
+          return gh("/git/blobs", { method:"POST", body: JSON.stringify({ content: b64bytes(x.buf), encoding:"base64" }) })
+            .then(function(r){ return { path:x.path, mode:"100644", type:"blob", sha:r.sha }; });
+        })).then(function(tree){
+          return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree }) });
+        }).then(function(t){
+          return gh("/git/commits", { method:"POST", body: JSON.stringify({ message: "사이트 업데이트 (" + changed.length + "개 파일)", tree: t.sha, parents:[head] }) });
+        }).then(function(c){
+          return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) });
+        }).then(function(){
+          changed.forEach(function(x){ log('<b>' + esc(x.path) + '</b> · <span class="pill ok">올렸어요</span>'); });
+          return changed;
+        });
+      }).then(function(changed){
+        if (!changed) return;
+        return waitLive(changed);
+      }).catch(function(e){
+        log('<span class="pill bad">올리지 못했어요</span> ' + (e.status === 409 || e.status === 422 ? "다른 저장과 겹쳤어요. 잠시 뒤 다시 눌러 주세요." : e.status === 403 || e.status === 404 ? "토큰 권한을 확인해 주세요." : "인터넷 연결을 확인하고 다시 눌러 주세요."));
+      }).then(function(){ setBusy(false); });
+    }
+    /* 실제 사이트(홈 포함)에 반영될 때까지 확인 */
+    function waitLive(changed){
+      changed = changed.filter(function(x){ return x.path !== ".nojekyll"; });
+      if (!changed.length) return Promise.resolve();
+      setBusy(true, "사이트 반영 중");
+      var li = log('<span class="spin" aria-hidden="true"></span> 사이트에 반영되는 중이에요. 보통 1~2분 걸려요…');
+      var started = Date.now();
+      return new Promise(function(res){
+        function check(){
+          Promise.all(changed.map(function(x){
+            return fetch(x.path + "?live=" + Date.now(), { cache:"no-store" }).then(function(r){ return r.ok ? r.arrayBuffer().then(blobSha) : ""; }).catch(function(){ return ""; })
+              .then(function(sha){ return sha === x.sha; });
+          })).then(function(ok){
+            var done = ok.filter(Boolean).length;
+            if (done === changed.length){
+              li.innerHTML = '<span class="pill ok">반영 완료</span> 홈과 강의 페이지에도 적용됐어요. <button type="button" class="btn sm" id="updReload">관리자 새로고침</button>';
+              $("updReload").onclick = function(){ location.reload(); };
+              toast("업데이트가 사이트에 반영됐어요"); return res();
+            }
+            if (Date.now() - started > 6 * 60 * 1000){
+              li.innerHTML = '<span class="pill warn">반영이 늦어지고 있어요</span> 올리기는 끝났어요. 몇 분 뒤 사이트를 새로고침해 보세요.'; return res();
+            }
+            li.innerHTML = '<span class="spin" aria-hidden="true"></span> 사이트에 반영되는 중이에요 (' + done + '/' + changed.length + '). 보통 1~2분 걸려요…';
+            setTimeout(check, 6000);
+          });
+        }
+        setTimeout(check, 8000);
+      });
+    }
+
+    function run(){
+      if (busy) return;
+      $("updBox").open = true;
+      if (!canSave){ $("updLog").innerHTML = ""; log('<span class="pill bad">먼저 로그인해서 저장소에 연결해 주세요</span>'); return; }
+      if (!canFS){ $("updPick").click(); return; }
+      var h = dirHandle;
+      (h ? Promise.resolve(h) : pickDir()).then(function(h2){
+        if (!h2) return;
+        return ensurePerm(h2).then(function(ok){
+          if (!ok){ toast("폴더 읽기를 허용해야 업데이트할 수 있어요"); return; }
+          return readDir(h2).then(upload);
+        });
+      }).catch(function(){ toast("폴더를 읽지 못했어요. ‘바꾸기’로 폴더를 다시 골라 주세요"); });
+    }
+    $("updRun").addEventListener("click", run);
+    topBtn.addEventListener("click", function(){ run(); $("updBox").scrollIntoView({ behavior:"smooth", block:"start" }); });
     $("updPick").addEventListener("change", function(){
       var picked = Array.prototype.slice.call(this.files || []); this.value = "";
-      $("updLog").innerHTML = "";
-      if (!canSave){ log('<span class="pill bad">먼저 연결 설정에서 GitHub에 연결해 주세요</span>'); return; }
-      var items = picked.map(function(f){
-        var rel = (f.webkitRelativePath || f.name).split("/"); rel.shift();
-        return { file: f, path: rel.join("/") };
-      }).filter(function(x){ return allowed(x.path); });
-      if (!items.length){ log('<span class="pill bad">올릴 파일이 없어요. signature-class 폴더를 골라 주세요</span>'); return; }
-      var up = 0, same = 0, fail = 0;
-      var chain = Promise.resolve();
-      items.forEach(function(x){
-        chain = chain.then(function(){
-          var li = log(esc(x.path) + " … 확인 중");
-          return x.file.arrayBuffer().then(function(buf){
-            var head = new TextDecoder("latin1").decode(new Uint8Array(buf).subarray(0, 16));
-            if (/DocuRay/i.test(head)){ fail++; li.innerHTML = '<b>' + esc(x.path) + '</b> · <span class="pill bad">보안 프로그램으로 암호화된 파일이라 올리지 않았어요</span>'; return; }
-            var content = b64bytes(buf);
-            return gh("/contents/" + x.path + "?ref=" + encodeURIComponent(branch)).catch(function(e){ if (e.status === 404) return null; throw e; })
-              .then(function(cur){
-                if (cur && String(cur.content || "").replace(/\s/g, "") === content){ same++; li.innerHTML = esc(x.path) + ' · 그대로'; return; }
-                return gh("/contents/" + x.path, { method:"PUT", body: JSON.stringify({ message: "사이트 업데이트: " + x.path, content: content, branch: branch, sha: cur ? cur.sha : undefined }) })
-                  .then(function(){ up++; li.innerHTML = '<b>' + esc(x.path) + '</b> · <span class="pill ok">올렸어요</span>'; });
-              });
-          }).catch(function(){ fail++; li.innerHTML = '<b>' + esc(x.path) + '</b> · <span class="pill bad">올리지 못했어요</span>'; });
-        });
-      });
-      chain.then(function(){
-        log(up ? '<b>' + up + '개 파일을 올렸어요.</b> 1~2분 뒤 이 페이지를 Ctrl+F5로 새로고침하세요.' : (fail ? '' : '바뀐 파일이 없어요. 이미 최신이에요.'));
-      });
+      var items = picked.map(function(f){ var rel = (f.webkitRelativePath || f.name).split("/"); rel.shift(); return { file:f, path:rel.join("/") }; })
+        .filter(function(x){ return allowed(x.path); });
+      upload(items);
     });
   })();
 
