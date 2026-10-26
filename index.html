@@ -18,16 +18,9 @@
 <link rel="icon" href="assets/favicon-48.png" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v=20261026">
 </head>
 <body>
-
-<div class="inapp" id="inapp" hidden>
-  <div class="wrap">
-    <p id="inappMsg">카카오톡 안에서는 교육자료 다운로드가 막힐 수 있어요.</p>
-    <a id="inappBtn" href="#">다른 브라우저로 열기</a>
-  </div>
-</div>
 
 <header class="topbar" id="topbar">
   <div class="wrap">
@@ -52,7 +45,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js"></script>
+<script src="assets/common.js?v=20261026"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -65,13 +58,6 @@
     arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
   };
 
-  /* ---------- 카카오톡 등 앱 안 브라우저 안내 ---------- */
-  var ia = SC.inApp();
-  if (ia){
-    $("inapp").hidden = false;
-    if (ia === "kakao") $("inappBtn").href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(location.href);
-    else { $("inappMsg").textContent = "앱 안에서는 교육자료 다운로드가 막힐 수 있어요. 오른쪽 위 메뉴에서 ‘다른 브라우저로 열기’를 눌러 주세요."; $("inappBtn").hidden = true; }
-  }
   window.addEventListener("scroll", function(){ $("topbar").classList.toggle("scrolled", window.scrollY > 4); }, { passive:true });
 
   var toastT;
@@ -175,7 +161,7 @@
         '<aside class="side" aria-labelledby="filesH"><div class="files-card">' +
           '<h2 id="filesH">교육자료' + ((v.files || []).length ? '<small>' + v.files.length + '개</small>' : '') + '</h2>' +
           (files ? '<ul class="files">' + files + '</ul>' : '<p class="files-empty">이 강의는 아직 자료가 없어요.</p>') +
-          (files ? '<p class="files-note">받기를 누르면 바로 내려받아져요. 안 되면 크롬이나 사파리에서 열어 주세요.</p>' : '') +
+          (files ? '<p class="files-note">받기를 누르면 바로 내려받아져요.</p>' : '') +
         '</div></aside>' +
         (v.description ? '<section class="desc" aria-labelledby="descH"><h2 id="descH">강의 소개</h2>' +
           '<p class="desc-body clamp" id="descBody">' + SC.richText(v.description) + '</p>' +
