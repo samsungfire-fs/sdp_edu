@@ -15,7 +15,18 @@
 
   /* ---------- 상태 ---------- */
   var data = { site:{}, videos:[] }, sha = null, branch = "main";
-  var token = LS.get("sc-gh-token"), apiKey = LS.get("sc-api-key");
+  var SS = {
+    get: function(k){ try { return sessionStorage.getItem(k) || ""; } catch(e){ return ""; } },
+    set: function(k, v){ try { v ? sessionStorage.setItem(k, v) : sessionStorage.removeItem(k); } catch(e){} }
+  };
+  /* 로그인 정보: '로그인 유지'면 localStorage, 아니면 이 탭(sessionStorage)에만 */
+  var token = LS.get("sc-gh-token") || SS.get("sc-gh-token"), apiKey = LS.get("sc-api-key") || SS.get("sc-api-key");
+  function keepSession(tok, key, remember){
+    token = tok; apiKey = key || "";
+    LS.set("sc-gh-token", remember ? token : ""); LS.set("sc-api-key", remember ? apiKey : "");
+    SS.set("sc-gh-token", token); SS.set("sc-api-key", apiKey);
+  }
+  function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); }
   var canSave = false, dirty = false, openV = null, armedDel = null, saving = false;
 
   /* 저장소 자동 인식: 계정.github.io/저장소/admin.html */
@@ -33,7 +44,6 @@
     $("repoName").textContent = repo;
     $("keyRef").textContent = "https://" + owner + ".github.io/*";
   })();
-  $("ghToken").value = token; $("apiKey").value = apiKey;
 
   var toastT;
   function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 2600); }
@@ -78,11 +88,12 @@
         if (file){ sha = file.sha; useData(JSON.parse(b64dec(file.content))); }
         else { sha = null; useData({ site:{ title:"교육 자료실" }, videos:[] }); }
         canSave = true; setConn("ok", "연결됨 · " + owner + "/" + repo);
+        if (apiKey) data.videos.forEach(function(v){ v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f, true); }); });
         $("conn").open = false; updateSaveBar();
       })
       .catch(function(e){
         $("conn").open = true;
-        if (e.status === 401) setConn("bad", "토큰이 맞지 않아요");
+        if (e.status === 401){ clearSession(); showGate(authInfo ? "change" : "first", "저장된 토큰이 만료됐거나 지워졌어요. 새 토큰을 넣어 주세요."); return; }
         else if (e.status === 403) setConn("bad", "토큰에 쓰기 권한이 없어요");
         else if (e.status === 404) setConn("bad", "저장소를 찾을 수 없어요 · 토큰의 저장소 선택을 확인해 주세요");
         else setConn("bad", "연결하지 못했어요");
@@ -165,19 +176,34 @@
     "application/x-hwp":"hwp", "application/haansofthwp":"hwp", "application/zip":"zip", "video/mp4":"mp4",
     "application/vnd.google-apps.document":"pdf", "application/vnd.google-apps.spreadsheet":"xlsx", "application/vnd.google-apps.presentation":"pptx" };
   function fmtSize(b){ b = +b; if (!b) return ""; return b >= 1048576 ? (b / 1048576).toFixed(b >= 10485760 ? 0 : 1) + "MB" : Math.max(1, Math.round(b / 1024)) + "KB"; }
-  function fetchFile(f){
+  /* 드라이브 파일 정보(이름·종류·용량)를 가져와 자료 이름을 채움. silent: 불러올 때 조용히 맞춤 */
+  function fetchFile(f, silent){
     var id = SC.driveId(f.link);
-    if (!apiKey || !id){ render(); return; }
-    f._st = "loading"; render();
+    if (!id){ f._st = ""; render(); return; }
+    if (!apiKey){ f._st = "nokey"; render(); return; }
+    f._st = "loading"; if (!silent) render();
     fetch("https://www.googleapis.com/drive/v3/files/" + id + "?fields=name,size,mimeType&supportsAllDrives=true&key=" + encodeURIComponent(apiKey))
-      .then(function(r){ if (!r.ok) throw Object.assign(new Error(r.status), { status:r.status }); return r.json(); })
-      .then(function(j){
-        f.size = fmtSize(j.size);
-        if (!f.type && MIME[j.mimeType]) f.type = MIME[j.mimeType];
-        if (!f.name.trim() && j.name){ var sn = SC.splitName(j.name); f.name = sn.name; if (sn.type) f.type = sn.type; }
-        f._st = "ok"; markDirty(); render();
+      .then(function(r){
+        return r.json().catch(function(){ return {}; }).then(function(j){
+          if (r.ok) return j;
+          var er = (j && j.error) || {}, reasons = JSON.stringify(er);
+          var kind = r.status === 404 ? "private"
+            : /accessNotConfigured|SERVICE_DISABLED|has not been used|is disabled/i.test(reasons) ? "api"
+            : /API_KEY_HTTP_REFERRER_BLOCKED|referer|API_KEY_SERVICE_BLOCKED|keyInvalid|API_KEY_INVALID|ipRefererBlocked/i.test(reasons) ? "key"
+            : r.status === 403 ? "private" : "error";
+          throw Object.assign(new Error(r.status), { kind: kind });
+        });
       })
-      .catch(function(e){ f._st = (e.status === 404 || e.status === 403) ? "private" : ""; render(); });
+      .then(function(j){
+        var before = f.name + "|" + f.type + "|" + f.size;
+        if (j.name){ var sn = SC.splitName(j.name); f.name = sn.name; f.type = sn.type || MIME[j.mimeType] || f.type; }
+        else if (MIME[j.mimeType]) f.type = MIME[j.mimeType];
+        f.size = fmtSize(j.size);
+        f._st = "ok";
+        if (before !== f.name + "|" + f.type + "|" + f.size) markDirty();
+        render();
+      })
+      .catch(function(e){ f._st = e.kind || "error"; render(); });
   }
 
   /* ---------- 화면 ---------- */
@@ -186,9 +212,16 @@
     if (!f.link.trim()) return '<span class="pill idle">드라이브 링크를 넣어 주세요</span>';
     if (d.kind === "folder") return '<span class="pill bad">폴더 링크예요. 파일 하나의 링크를 넣어 주세요</span>';
     if (d.kind === "bad") return '<span class="pill bad">링크 형식을 확인해 주세요</span>';
-    if (f._st === "private") return '<span class="pill bad">공유 설정을 ‘링크가 있는 모든 사용자’로 바꿔 주세요</span>';
+    var errs = {
+      "private": "파일을 열 수 없어요 · 드라이브 공유를 ‘링크가 있는 모든 사용자’로 바꿔 주세요",
+      "api": "구글 콘솔에서 Google Drive API를 ‘사용’으로 켜 주세요",
+      "key": "API 키 제한에 막혔어요 · 키의 API 제한에 Google Drive API가 있는지, 웹사이트 제한 주소가 맞는지 확인해 주세요",
+      "nokey": "연결 설정에 Google API 키를 넣어야 자료 이름을 가져올 수 있어요",
+      "error": "파일 정보를 가져오지 못했어요 · 잠시 뒤 링크를 다시 붙여 넣어 주세요"
+    };
+    if (errs[f._st]) return '<span class="pill bad">' + errs[f._st] + '</span>';
     var s = d.kind === "other" ? '<span class="pill warn">드라이브 링크가 아니에요. 그대로 연결돼요</span>' : '<span class="pill ok">바로 다운로드 링크로 바뀌었어요</span>';
-    if (f._st === "loading") s += '<span>용량 확인 중…</span>';
+    if (f._st === "loading") s += '<span>파일 정보 확인 중…</span>';
     else if (f.size) s += '<span>용량 <b>' + esc(f.size) + '</b></span>';
     return s + '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">받아보기 ↗</a>';
   }
@@ -224,7 +257,10 @@
     var files = v.files.map(function(f, j){
       return '<div class="frow">' +
         '<div class="inputs">' +
-          '<input type="text" id="' + id + 'f' + j + 'n" data-i="' + i + '" data-f="' + j + '" data-fk="name" value="' + esc(f.name) + '" placeholder="자료 이름 (예: 실전 활용 화법집)" aria-label="자료 ' + (j+1) + ' 이름">' +
+          '<div class="fname-ro" id="' + id + 'f' + j + 'n">' +
+            '<span class="ftype ' + ({ pdf:"pdf", xlsx:"xlsx", pptx:"pptx", docx:"docx", hwp:"hwp" }[f.type] || "etc") + '">' + SC.typeLabel(f.type || "pdf") + '</span>' +
+            (f.name ? '<strong>' + esc(f.name) + '</strong>' : '<span class="ph">드라이브 링크를 넣으면 파일 이름이 자동으로 들어가요</span>') +
+          '</div>' +
           '<input type="url" id="' + id + 'f' + j + 'l" class="mono" data-i="' + i + '" data-f="' + j + '" data-fk="link" value="' + esc(f.link) + '" placeholder="구글드라이브 공유 링크" aria-label="자료 ' + (j+1) + ' 드라이브 링크" autocomplete="off">' +
           '<div class="stat" id="' + id + 'f' + j + 's">' + fileStatus(f) + '</div>' +
         '</div>' +
@@ -269,7 +305,7 @@
   function updateSaveBar(msg){
     var m = $("saveMsg"), b = $("saveBtn");
     if (msg){ m.textContent = msg; b.disabled = true; return; }
-    if (!canSave){ m.innerHTML = token ? "저장소에 연결되지 않았어요" : "<b>GitHub 토큰</b>을 넣어야 저장할 수 있어요"; b.disabled = true; return; }
+    if (!canSave){ m.textContent = "저장소에 연결되지 않았어요. 계정 칸을 확인해 주세요"; b.disabled = true; return; }
     if (saving){ m.textContent = "저장하는 중…"; b.disabled = true; return; }
     m.innerHTML = dirty ? "<b>저장하지 않은 변경</b>이 있어요" : "모든 변경이 저장됐어요";
     b.disabled = !dirty;
@@ -285,7 +321,7 @@
         return {
           id: v.id, title: v.title.trim(), channel: v.channel, description: v.description.trim(),
           duration: v.duration, date: v.date || SC.today(),
-          files: v.files.filter(function(f){ return f.name.trim() || f.link.trim(); }).map(function(f){
+          files: v.files.filter(function(f){ return f.link.trim(); }).map(function(f){
             var sn = SC.splitName(f.name), d = SC.download(f.link, sn.type || f.type);
             var t = sn.type || f.type || ({ gdoc:"pdf", gsheet:"xlsx", gslide:"pptx" }[d.kind]) || "pdf";
             return { name: sn.name || "자료", type: t, link: f.link.trim(), size: f.size || "" };
@@ -333,7 +369,7 @@
       var f = v.files[+t.dataset.f]; f[t.dataset.fk] = t.value; markDirty();
       if (t.dataset.fk === "name"){ var sn = SC.splitName(t.value); if (sn.type) f.type = sn.type; }
       if (t.dataset.fk === "link"){
-        f.size = ""; f._st = "";
+        f.size = ""; f._st = ""; if (!t.value.trim()){ f.name = ""; f.type = ""; }
         var st = $("v" + i + "f" + t.dataset.f + "s"); if (st) st.innerHTML = fileStatus(f);
         later(f, function(){ fetchFile(f); }, 450);
       }
@@ -346,8 +382,8 @@
     if (act === "toggle"){ if (e.target.closest("button")) return; openV = (openV === v) ? null : v; armedDel = null; render(); return; }
     if (act === "up" && i > 0){ V.splice(i - 1, 0, V.splice(i, 1)[0]); markDirty(); }
     else if (act === "down" && i < V.length - 1){ V.splice(i + 1, 0, V.splice(i, 1)[0]); markDirty(); }
-    else if (act === "refetch"){ fetchVideo(v, true); return; }
-    else if (act === "addFile"){ v.files.push({ name:"", type:"", link:"", size:"", _st:"" }); markDirty(); render(); var el = $("v" + i + "f" + (v.files.length - 1) + "n"); if (el) el.focus(); return; }
+    else if (act === "refetch"){ fetchVideo(v, true); v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f); }); return; }
+    else if (act === "addFile"){ v.files.push({ name:"", type:"", link:"", size:"", _st:"" }); markDirty(); render(); var el = $("v" + i + "f" + (v.files.length - 1) + "l"); if (el) el.focus(); return; }
     else if (/^f(up|down|del)$/.test(act)){
       var j = +b.dataset.f, F = v.files;
       if (act === "fup" && j > 0) F.splice(j - 1, 0, F.splice(j, 1)[0]);
@@ -374,23 +410,200 @@
   $("saveBtn").addEventListener("click", save);
   document.addEventListener("keydown", function(e){ if ((e.ctrlKey || e.metaKey) && e.key === "s"){ e.preventDefault(); save(); } });
 
-  $("connBtn").addEventListener("click", function(){
-    if (dirty && !confirmLeave()) return;
-    token = $("ghToken").value.trim(); apiKey = $("apiKey").value.trim();
-    LS.set("sc-gh-token", token); LS.set("sc-api-key", apiKey);
-    if (!$("repoFields").hidden){ owner = $("ghOwner").value.trim(); repo = $("ghRepo").value.trim(); LS.set("sc-owner", owner); LS.set("sc-repo", repo); }
-    load();
-  });
-  var forgetArmed = false;
-  $("forgetBtn").addEventListener("click", function(){
-    if (!forgetArmed){ forgetArmed = true; this.textContent = "한 번 더 누르면 지워져요"; return; }
-    forgetArmed = false; this.textContent = "이 브라우저에서 지우기";
-    LS.set("sc-gh-token", ""); LS.set("sc-api-key", ""); token = ""; apiKey = "";
-    $("ghToken").value = ""; $("apiKey").value = ""; toast("이 브라우저에서 토큰과 키를 지웠어요"); load();
-  });
   function confirmLeave(){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return false; }
   window.addEventListener("beforeunload", function(e){ if (dirty){ e.preventDefault(); e.returnValue = ""; } });
   window.addEventListener("scroll", function(){ $("topbar").classList.toggle("scrolled", window.scrollY > 4); }, { passive:true });
 
-  load();
+
+  /* ================= 사이트 업데이트 (Claude가 고친 파일 올리기) ================= */
+  (function(){
+    var st = document.createElement("style");
+    st.textContent =
+      ".fname-ro{display:flex;align-items:center;gap:10px;min-height:46px;padding:4px 2px;min-width:0}" +
+      ".fname-ro .ftype{width:34px;height:40px;font-size:9.5px;flex:none}" +
+      ".fname-ro strong{font-size:15px;font-weight:700;line-height:1.4;min-width:0}" +
+      ".fname-ro .ph{font-size:14px;color:var(--ink-3)}" +
+      ".upd-log{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:13.5px;color:var(--ink-2)}" +
+      ".upd-log b{color:var(--ink)}" +
+      ".pick{display:inline-flex;align-items:center;gap:8px;cursor:pointer}" +
+      ".pick input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}";
+    document.head.appendChild(st);
+
+    var box = document.createElement("details");
+    box.className = "panel conn"; box.id = "updBox";
+    box.innerHTML =
+      '<summary><h2><span>사이트 업데이트</span></h2>' +
+      '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>' +
+      '<p class="lead" style="margin:0">Claude가 사이트를 고쳐 주면 컴퓨터의 <b>signature-class</b> 폴더가 바뀌어요. 그 폴더를 고르면 바뀐 파일만 GitHub에 올려요. 강의 목록은 건드리지 않아요.</p>' +
+      '<div class="row"><label class="btn sm pick" for="updPick">폴더 고르고 올리기<input type="file" id="updPick" webkitdirectory directory multiple></label></div>' +
+      '<ul class="upd-log" id="updLog"></ul>';
+    var site = $("siteBox"); site.parentNode.insertBefore(box, site.nextSibling);
+
+    function log(html){ var li = document.createElement("li"); li.innerHTML = html; $("updLog").appendChild(li); return li; }
+    function b64bytes(buf){ var b = new Uint8Array(buf), s = "", CH = 0x8000; for (var i = 0; i < b.length; i += CH) s += String.fromCharCode.apply(null, b.subarray(i, i + CH)); return btoa(s); }
+    function allowed(path){
+      if (/^data\//.test(path)) return false;
+      return /^(index\.html|admin\.html|README\.md|\.nojekyll|assets\/[\w.\-]+)$/.test(path);
+    }
+
+    $("updPick").addEventListener("change", function(){
+      var picked = Array.prototype.slice.call(this.files || []); this.value = "";
+      $("updLog").innerHTML = "";
+      if (!canSave){ log('<span class="pill bad">먼저 연결 설정에서 GitHub에 연결해 주세요</span>'); return; }
+      var items = picked.map(function(f){
+        var rel = (f.webkitRelativePath || f.name).split("/"); rel.shift();
+        return { file: f, path: rel.join("/") };
+      }).filter(function(x){ return allowed(x.path); });
+      if (!items.length){ log('<span class="pill bad">올릴 파일이 없어요. signature-class 폴더를 골라 주세요</span>'); return; }
+      var up = 0, same = 0, fail = 0;
+      var chain = Promise.resolve();
+      items.forEach(function(x){
+        chain = chain.then(function(){
+          var li = log(esc(x.path) + " … 확인 중");
+          return x.file.arrayBuffer().then(function(buf){
+            var head = new TextDecoder("latin1").decode(new Uint8Array(buf).subarray(0, 16));
+            if (/DocuRay/i.test(head)){ fail++; li.innerHTML = '<b>' + esc(x.path) + '</b> · <span class="pill bad">보안 프로그램으로 암호화된 파일이라 올리지 않았어요</span>'; return; }
+            var content = b64bytes(buf);
+            return gh("/contents/" + x.path + "?ref=" + encodeURIComponent(branch)).catch(function(e){ if (e.status === 404) return null; throw e; })
+              .then(function(cur){
+                if (cur && String(cur.content || "").replace(/\s/g, "") === content){ same++; li.innerHTML = esc(x.path) + ' · 그대로'; return; }
+                return gh("/contents/" + x.path, { method:"PUT", body: JSON.stringify({ message: "사이트 업데이트: " + x.path, content: content, branch: branch, sha: cur ? cur.sha : undefined }) })
+                  .then(function(){ up++; li.innerHTML = '<b>' + esc(x.path) + '</b> · <span class="pill ok">올렸어요</span>'; });
+              });
+          }).catch(function(){ fail++; li.innerHTML = '<b>' + esc(x.path) + '</b> · <span class="pill bad">올리지 못했어요</span>'; });
+        });
+      });
+      chain.then(function(){
+        log(up ? '<b>' + up + '개 파일을 올렸어요.</b> 1~2분 뒤 이 페이지를 Ctrl+F5로 새로고침하세요.' : (fail ? '' : '바뀐 파일이 없어요. 이미 최신이에요.'));
+      });
+    });
+  })();
+
+  /* ================= 로그인 (비밀번호로 토큰을 암호화해 data/auth.json 에 보관) ================= */
+  var AUTH_PATH = "data/auth.json", ITER = 600000, authInfo = null;
+  function u8(b64){ var s = atob(b64), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  function b64(u){ var s = ""; for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s); }
+  function deriveKey(pw, salt, iter){
+    return crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]).then(function(base){
+      return crypto.subtle.deriveKey({ name:"PBKDF2", salt:salt, iterations:iter, hash:"SHA-256" }, base, { name:"AES-GCM", length:256 }, false, ["encrypt", "decrypt"]);
+    });
+  }
+  function seal(pw, secret){
+    var salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    return deriveKey(pw, salt, ITER).then(function(k){
+      return crypto.subtle.encrypt({ name:"AES-GCM", iv:iv }, k, new TextEncoder().encode(JSON.stringify(secret)));
+    }).then(function(ct){
+      return { v:1, kdf:"PBKDF2-SHA256", iter:ITER, salt:b64(salt), iv:b64(iv), data:b64(new Uint8Array(ct)) };
+    });
+  }
+  function unseal(pw, a){
+    return deriveKey(pw, u8(a.salt), a.iter || ITER).then(function(k){
+      return crypto.subtle.decrypt({ name:"AES-GCM", iv:u8(a.iv) }, k, u8(a.data));
+    }).then(function(pt){ return JSON.parse(new TextDecoder().decode(pt)); });
+  }
+  function fetchAuth(){
+    var urls = ["data/auth.json?t=" + Date.now(), "https://raw.githubusercontent.com/" + owner + "/" + repo + "/HEAD/" + AUTH_PATH + "?t=" + Date.now()];
+    function tryAt(n){
+      if (n >= urls.length) return Promise.resolve(null);
+      return fetch(urls[n], { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : tryAt(n + 1); }).catch(function(){ return tryAt(n + 1); });
+    }
+    return tryAt(0).then(function(a){ return (a && a.data && a.salt) ? a : null; });
+  }
+
+  var setupMode = "first";
+  function showGate(mode, msg){
+    document.body.classList.remove("authed");
+    $("loginForm").hidden = mode !== "login"; $("setupForm").hidden = mode === "login";
+    $("loginMsg").textContent = ""; $("setupMsg").textContent = msg || "";
+    if (mode === "login"){
+      $("gateTitle").textContent = "관리자 로그인";
+      $("gateLead").textContent = "관리자 비밀번호를 넣어 주세요.";
+      $("pw").value = ""; setTimeout(function(){ $("pw").focus(); }, 50);
+    } else {
+      setupMode = mode;
+      $("gateTitle").textContent = mode === "first" ? "관리자 비밀번호 만들기" : "비밀번호·토큰 바꾸기";
+      $("gateLead").textContent = mode === "first"
+        ? "처음 한 번만 하면 돼요. 앞으로는 어느 기기에서든 비밀번호만으로 들어올 수 있어요."
+        : "새 토큰이나 새 비밀번호를 넣고 저장하세요. 다른 기기에서도 새 비밀번호로 들어와야 해요.";
+      $("ghToken").value = token || ""; $("apiKey").value = apiKey || "";
+      $("newPw").value = ""; $("newPw2").value = "";
+      $("setupBtn").textContent = mode === "first" ? "비밀번호 만들고 시작하기" : "저장하기";
+      $("setupCancel").hidden = !(mode === "change" && token);
+      setTimeout(function(){ (token ? $("newPw") : $("ghToken")).focus(); }, 50);
+    }
+  }
+  function enterApp(){
+    document.body.classList.add("authed");
+    $("noAuth").hidden = !!authInfo;
+    load();
+  }
+
+  $("loginForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var pw = $("pw").value, btn = $("loginBtn");
+    if (!pw || !authInfo) return;
+    btn.disabled = true; btn.textContent = "확인 중…"; $("loginMsg").textContent = "";
+    unseal(pw, authInfo).then(function(sec){
+      keepSession(sec.token, sec.apiKey, $("remember1").checked);
+      enterApp();
+    }).catch(function(){
+      $("loginMsg").textContent = "비밀번호가 맞지 않아요.";
+      $("pw").select();
+    }).then(function(){ btn.disabled = false; btn.textContent = "로그인"; });
+  });
+
+  $("setupForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var tok = $("ghToken").value.trim(), key = $("apiKey").value.trim(), p1 = $("newPw").value, p2 = $("newPw2").value, msg = $("setupMsg"), btn = $("setupBtn");
+    msg.textContent = "";
+    if (!/^(github_pat_|ghp_)/.test(tok)){ msg.textContent = "GitHub 토큰을 확인해 주세요. github_pat_로 시작해요."; return; }
+    if (p1.length < 10){ msg.textContent = "비밀번호는 10자 이상으로 정해 주세요."; return; }
+    if (p1 !== p2){ msg.textContent = "두 비밀번호가 서로 달라요."; return; }
+    if (!$("repoFields").hidden){ owner = $("ghOwner").value.trim(); repo = $("ghRepo").value.trim(); LS.set("sc-owner", owner); LS.set("sc-repo", repo); }
+    var label = btn.textContent; btn.disabled = true; btn.textContent = "저장하는 중…";
+    var prevTok = token; token = tok;
+    gh("").then(function(info){
+      branch = info.default_branch || "main";
+      if (info.permissions && info.permissions.push === false) throw Object.assign(new Error("no push"), { status:403 });
+      return Promise.all([ seal(p1, { token:tok, apiKey:key }), gh("/contents/" + AUTH_PATH + "?ref=" + encodeURIComponent(branch)).catch(function(er){ if (er.status === 404) return null; throw er; }) ]);
+    }).then(function(r){
+      var sealed = r[0], cur = r[1];
+      return gh("/contents/" + AUTH_PATH, { method:"PUT", body: JSON.stringify({
+        message: "관리자 로그인 정보 " + (cur ? "변경" : "설정"), branch: branch, sha: cur ? cur.sha : undefined,
+        content: b64enc(JSON.stringify(sealed, null, 2) + "\n")
+      }) }).then(function(){ return sealed; });
+    }).then(function(sealed){
+      authInfo = sealed;
+      keepSession(tok, key, $("remember2").checked);
+      enterApp();
+      toast(setupMode === "first" ? "비밀번호를 만들었어요. 다음부터는 비밀번호로 로그인하세요" : "바꿨어요. 다른 기기에서도 새 비밀번호로 로그인하세요");
+    }).catch(function(er){
+      token = prevTok;
+      msg.textContent = er.status === 401 ? "토큰이 맞지 않거나 만료됐어요."
+        : (er.status === 403 || er.status === 404) ? "이 토큰으로는 저장소에 쓸 수 없어요. 토큰의 저장소 선택과 Contents 권한을 확인해 주세요."
+        : "저장하지 못했어요. 잠시 뒤 다시 해 주세요.";
+    }).then(function(){ btn.disabled = false; btn.textContent = label; });
+  });
+  $("setupCancel").addEventListener("click", function(){ enterApp(); });
+
+  $("logoutBtn").addEventListener("click", function(){
+    if (dirty){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return; }
+    clearSession(); canSave = false; data = { site:{}, videos:[] }; render();
+    if (authInfo) showGate("login"); else showGate("first");
+  });
+  $("changeBtn").addEventListener("click", function(){
+    if (dirty){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return; }
+    showGate("change");
+  });
+  $("makePwBtn").addEventListener("click", function(){ showGate("first"); });
+
+  function boot(){
+    fetchAuth().then(function(a){
+      authInfo = a;
+      if (token) enterApp();
+      else if (a) showGate("login");
+      else showGate("first");
+    });
+  }
+  boot();
 })();
