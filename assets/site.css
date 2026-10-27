@@ -77,6 +77,7 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .press:active{transform:scale(.97)}
 
 /* ---------- 배너 · 메뉴 바 ---------- */
+.banner-link{display:block}
 .banner{display:block; width:100%; height:clamp(96px,16.67vw,240px); object-fit:cover; object-position:center; background:#07080C}
 .bar{background:var(--bar); position:sticky; top:0; z-index:20; padding-top:env(safe-area-inset-top, 0px)}
 .bar .wrap{height:66px; display:flex; align-items:center; gap:24px}

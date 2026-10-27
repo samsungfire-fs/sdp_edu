@@ -29,10 +29,12 @@
 </head>
 <body>
 
+<a class="banner-link" href="./" data-go aria-label="홈으로">
 <picture>
   <source type="image/webp" sizes="max(100vw, 576px)" srcset="assets/banner-960.webp 960w, assets/banner-1600.webp 1600w, assets/banner-2560.webp 2560w, assets/banner-3840.webp 3840w">
   <img class="banner" src="assets/banner-1600.jpg" sizes="max(100vw, 576px)" srcset="assets/banner-960.jpg 960w, assets/banner-1600.jpg 1600w, assets/banner-2560.jpg 2560w, assets/banner-3840.jpg 3840w" width="5120" height="854" alt="삼성화재금융서비스 영업개발파트" fetchpriority="high">
 </picture>
+</a>
 
 <header class="bar">
   <div class="wrap">
@@ -147,11 +149,9 @@
     drawMenu(c);
     var V = inCat(c);
     if (!V.length){
-      var hasSig = c !== "signature" && inCat("signature").length;
       $("app").innerHTML = '<section class="list-page"><div class="empty">' +
         '<span class="empty-ic">' + IC.video + '</span>' +
         '<h2>아직 등록된 강의가 없어요</h2><p>강의가 올라오면 여기에서 바로 보고 자료를 받을 수 있어요.</p>' +
-        (hasSig ? '<a class="btn-blue rp press" href="' + catUrl("signature") + '" data-go>시그니처클래스 강의 보기 ' + IC.arrow + '</a>' : '') +
         '</div></section>';
       return;
     }
