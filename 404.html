@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>이동 중…</title>
+<script>
+(function(){
+  /* 강의 공유 주소(v/영상ID/)가 아직 만들어지기 전이면 강의 페이지로 바로 보냄 */
+  var p = location.pathname, m = p.match(/^(.*?\/)v\/([\w-]{6,})\/?/);
+  var root = m ? m[1] : (p.match(/^\/[^\/]+\//) || ["/"])[0];
+  location.replace(root + (m ? "?v=" + m[2] : ""));
+})();
+</script>
+</head>
+<body style="font-family:sans-serif;padding:40px;color:#56617A">이동 중…</body>
+</html>

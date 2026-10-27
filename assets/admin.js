@@ -121,8 +121,11 @@
         files: (v.files || []).map(function(f){ return { name: f.name || "", type: f.type || "", link: f.link || "", size: f.size || "", _st: "" }; })
       };
     }) };
+    /* 사이트 이름 변경: 시그니처클래스 → 영개파 (저장하면 사이트에 반영) */
+    var renamed = false;
+    if (/^\s*시그니처클래스\s*교육\s*자료실\s*$/.test(data.site.title || "")){ data.site.title = "영개파 교육 자료실"; renamed = true; }
     document.querySelectorAll("[data-site]").forEach(function(el){ el.value = data.site[el.dataset.site] || ""; });
-    openV = null; dirty = false; render();
+    openV = null; dirty = renamed; render();
   }
 
   /* ---------- 유튜브 / 드라이브 정보 가져오기 ---------- */
