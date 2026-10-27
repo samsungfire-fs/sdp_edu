@@ -7,6 +7,30 @@
   },
   "videos": [
     {
+      "id": "sFzNR0SzM2M",
+      "title": "[시그니처클래스📖] '선택'하게 되는 30대 순환계 치료비 실전 고객 시연",
+      "channel": "삼프스",
+      "description": "[시그니처 클래스📖]  SPEC 1기 성지연 연구위원\n\n30대 순환계 치료비 상담💬, 성지연 위원님은 실제로 어떻게 진행할까요?\n고객이 연속적으로 선택을 하게끔 유도하여 계약까지 이끌어내는\n상담 비법을 대공개합니다! ✨\n\n\n▼ 강의 자료는 해당 링크에서 다운로드 가능하십니다\nhttps://drive.google.com/drive/folders/15IRS50HuGaj7gTcuTYtNsHTNvnslbOqB?usp=drive_link\n\n\n[제26-V-169호] ‘영업개발파트\n\n※ 본 자료는 RC(또는 판매자) 교육용이므로 고객에게 제시·교부 목적으로 사용할 수 없습니다.",
+      "duration": "6분",
+      "date": "2026-10-15",
+      "category": "signature",
+      "visible": true,
+      "files": [
+        {
+          "name": "[시그니처클래스]RP화법집_30대순환계_성지연",
+          "type": "pdf",
+          "link": "https://drive.google.com/file/d/17MCu083aSNcmCmpT8K7aW2h-AHXqloLf/view?usp=drive_link",
+          "size": "177KB"
+        },
+        {
+          "name": "보장점검시트",
+          "type": "pdf",
+          "link": "https://drive.google.com/file/d/1yGRrunJ3r73kAgTmUWbcXBcHt1AHtTZZ/view?usp=drive_link",
+          "size": "522KB"
+        }
+      ]
+    },
+    {
       "id": "Oh-sY9-p9WA",
       "title": "[시그니처클래스📖] 30대에게 보험은 설득이 아니라 '납득'입니다",
       "channel": "삼프스",
@@ -69,36 +93,6 @@
           "type": "pdf",
           "link": "https://drive.google.com/file/d/1DXF6dhBbfnFHwRuAR3adJTEZVL3BMBS0/view?usp=drive_link",
           "size": "1.4MB"
-        }
-      ]
-    },
-    {
-      "id": "Gkv6ihGXfR8",
-      "title": "[시그니처클래스📖] 50대 니즈 빈틈을 공략하는 베이스캠프 화법",
-      "channel": "삼프스",
-      "description": "[시그니처클래스📖]  SPEC 1기 박은호 책임위원\n\n인생의 절반을 달려온 50대,\n니즈의 빈틈을 찾아 마음을 움직이는\n박은호 위원님의 비법을 대공개합니다! ✨\n\n\n▼ 강의 자료는 해당 링크에서 다운로드 가능하십니다\nhttps://drive.google.com/drive/folders/1jvLbPZ5t8MFBxKFNMokDUCNPdnk9Vakc?usp=drive_link\n\n\n[제26-V-171호] ‘영업개발파트\n\n※ 본 자료는 RC(또는 판매자) 교육용이므로 고객에게 제시·교부 목적으로 사용할 수 없습니다.",
-      "duration": "17분",
-      "date": "2026-10-19",
-      "category": "signature",
-      "visible": true,
-      "files": [
-        {
-          "name": "[시그니처클래스]50대_순환계통합치료비_박은호",
-          "type": "pdf",
-          "link": "https://drive.google.com/file/d/1C-dlQebfYq-M07oiHt3_uPGd70nTWZ8s/view?usp=drive_link",
-          "size": "4.4MB"
-        },
-        {
-          "name": "[시그니처클래스]50대_순환계통합치료비_화법집_박은호",
-          "type": "pdf",
-          "link": "https://drive.google.com/file/d/1Wzb78zRb3OTAFjAwj4d0cVwLa8BWhG4V/view?usp=drive_link",
-          "size": "211KB"
-        },
-        {
-          "name": "50세순환계통합치료비_RC전략노트_202610",
-          "type": "pdf",
-          "link": "https://drive.google.com/file/d/1jg36qZWtencMA4iUebVI8CGCYsQB8SyP/view?usp=drive_link",
-          "size": "414KB"
         }
       ]
     }
