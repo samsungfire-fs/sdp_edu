@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<base href="../../">
+<meta property="og:title" content="[시그니처클래스📖] 30대에게 보험은 설득이 아니라 '납득'입니다">
+<meta property="og:description" content="교육자료 9개 · [시그니처 클래스📖]  SPEC 1기 성지연 연구위원">
+<meta property="og:image" content="https://i.ytimg.com/vi/Oh-sY9-p9WA/maxresdefault.jpg">
+<meta property="og:url" content="https://samsungfire-fs.github.io/sdp_edu/v/Oh-sY9-p9WA/">
+<meta property="og:type" content="video.other">
+<meta property="og:site_name" content="영업개발파트 교육 자료">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="robots" content="noindex, nofollow">
+<title>영개파 교육 자료</title>
+<meta name="description" content="교육자료 9개 · [시그니처 클래스📖]  SPEC 1기 성지연 연구위원">
+<meta name="theme-color" content="#07080C" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<link rel="icon" href="assets/favicon-48.png?v=3" type="image/png" sizes="48x48">
+<link rel="icon" href="assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
+<link rel="stylesheet" href="assets/site.css?v=20261027">
+</head>
+<body>
+
+<a class="banner-link" href="./" data-go aria-label="홈으로">
+<picture>
+  <source type="image/webp" sizes="max(100vw, 576px)" srcset="assets/banner-960.webp 960w, assets/banner-1600.webp 1600w, assets/banner-2560.webp 2560w, assets/banner-3840.webp 3840w">
+  <img class="banner" src="assets/banner-1600.jpg" sizes="max(100vw, 576px)" srcset="assets/banner-960.jpg 960w, assets/banner-1600.jpg 1600w, assets/banner-2560.jpg 2560w, assets/banner-3840.jpg 3840w" width="5120" height="854" alt="삼성화재금융서비스 영업개발파트" fetchpriority="high">
+</picture>
+</a>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="bar-back rp" id="barBack" href="signature/" data-go>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span id="barBackText">시그니처클래스</span>
+    </a>
+    <nav class="menu" id="menu" aria-label="강의 분류"></nav>
+    <span class="bar-count" id="barCount"></span>
+  </div>
+</header>
+
+<main id="app" class="wrap">
+  <p class="loading">불러오는 중…</p>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="note" role="note">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.9 18.2A2 2 0 0 0 3.6 21h16.8a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z" fill="#FFD25E"/><path d="M12 9v4.5" stroke="#07080C" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.25" fill="#07080C"/></svg>
+      <p id="notice"></p>
+    </div>
+    <span class="org">삼성화재금융서비스 영업개발파트</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/common.js?v=20261027"></script>
+<script>
+(function(){
+  var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
+  var TAB_TITLE = "영개파 교육 자료"; /* 브라우저 탭에 항상 이 이름 */
+  var ROOT = new URL(".", document.baseURI).href; /* 사이트 맨 위 주소 (강의·메뉴 페이지에서도 같음) */
+  if (!document.querySelector("base")){ var b = document.createElement("base"); b.href = ROOT; document.head.prepend(b); }
+
+  var IC = {
+    play: '<svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',
+    dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>',
+    spin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 1-9 9"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    person: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5z"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6l-.1 6.5L15 12 3.3 13.9z"/></svg>',
+    video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5.5" width="14" height="13" rx="3"/><path d="m16.5 10.5 5-3v9l-5-3"/></svg>',
+    videoX: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5.5" width="14" height="13" rx="3"/><path d="m16.5 10.5 5-3v9l-5-3M7 9.5l5 5M12 9.5l-5 5"/></svg>',
+    doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>'
+  };
+
+  /* ---------- 토스트 ---------- */
+  var toastT;
+  function toast(msg, icon){
+    var t = $("toast");
+    t.innerHTML = (icon || IC.check) + '<span>' + esc(msg) + '</span>';
+    t.classList.add("show"); clearTimeout(toastT);
+    toastT = setTimeout(function(){ t.classList.remove("show"); }, 3000);
+  }
+
+  /* ---------- 주소 ---------- */
+  function catUrl(c){ return ROOT + c + "/"; }
+  function videoUrl(id){ return ROOT + "v/" + encodeURIComponent(id) + "/"; }
+  function parse(){
+    var rel = decodeURIComponent(location.pathname).slice(decodeURIComponent(new URL(ROOT).pathname).length);
+    var q = new URLSearchParams(location.search), m;
+    var v = q.get("v") || ((m = rel.match(/^v\/([\w-]{6,})\/?(?:index\.html)?$/)) ? m[1] : "");
+    if (v) return { v: v };
+    var c = q.get("c") || ((m = rel.match(/^([a-z]+)\/?(?:index\.html)?$/)) ? m[1] : "");
+    var ok = SC.CATS.some(function(x){ return x.id === c; });
+    return { c: ok ? c : "signature" };
+  }
+
+  /* ---------- 공통 조각 ---------- */
+  var DATA = { site:{}, videos:[] };
+  function pub(){ return (DATA.videos || []).filter(SC.isPublic); }
+  function inCat(c){ return pub().filter(function(v){ return SC.catOf(v) === c; }); }
+
+  function drawMenu(cur){
+    $("menu").innerHTML = SC.CATS.map(function(c){
+      return '<a href="' + catUrl(c.id) + '" data-go' + (c.id === cur ? ' aria-current="page"' : '') + '>' + esc(c.label) + '</a>';
+    }).join("");
+    var n = inCat(cur).length;
+    $("barCount").textContent = n ? "강의 " + n + "개" : "";
+    var act = $("menu").querySelector('[aria-current]');
+    if (act && act.scrollIntoView) act.scrollIntoView({ block:"nearest", inline:"nearest" });
+  }
+
+  function metaText(v, withDur){
+    var p = [];
+    if (v.channel) p.push(esc(v.channel));
+    if (v.date) p.push(SC.fmtDate(v.date));
+    if (withDur && v.duration) p.push(esc(v.duration));
+    return p.join(" · ");
+  }
+  function card(v){
+    var n = (v.files || []).length;
+    return '<li><a class="card rp" href="' + videoUrl(v.id) + '" data-go>' +
+      '<div class="thumb">' + SC.thumbImg(v.id) +
+        (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') +
+        (v.duration ? '<span class="chip-dur">' + esc(v.duration) + '</span>' : '') +
+        '<span class="play" aria-hidden="true">' + IC.play + '</span></div>' +
+      '<div class="card-body"><h3>' + esc(v.title || "제목 없음") + '</h3>' +
+        '<div class="card-meta"><span>' + metaText(v) + '</span>' +
+          (n ? '<span class="chip-files">' + IC.dl + '자료 ' + n + '개</span>' : '') + '</div></div></a></li>';
+  }
+
+  /* ---------- 메뉴(강의 목록) 화면 ---------- */
+  function renderList(c){
+    document.body.classList.remove("watch-page");
+    drawMenu(c);
+    var V = inCat(c);
+    if (!V.length){
+      $("app").innerHTML = '<section class="list-page"><div class="empty">' +
+        '<span class="empty-ic">' + IC.video + '</span>' +
+        '<h2>아직 등록된 강의가 없어요</h2><p>강의가 올라오면 여기에서 바로 보고 자료를 받을 수 있어요.</p>' +
+        '</div></section>';
+      return;
+    }
+    $("app").innerHTML = '<section class="list-page" aria-labelledby="allH">' +
+      '<div class="list-head"><h1 id="allH">전체 강의 <span class="num">' + V.length + '</span></h1>' +
+        (V.length > 6 ? '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기" autocomplete="off"></label>' : '') +
+      '</div><ul class="grid" id="grid"></ul><p class="none" id="none" hidden>찾는 강의가 없어요.</p></section>';
+    var draw = function(q){
+      q = String(q || "").trim().toLowerCase();
+      var list = q ? V.filter(function(v){ return (v.title || "").toLowerCase().indexOf(q) > -1; }) : V;
+      $("grid").innerHTML = list.map(card).join("");
+      $("none").hidden = list.length > 0;
+    };
+    draw("");
+    if ($("q")) $("q").addEventListener("input", function(){ draw(this.value); });
+  }
+
+  /* ---------- 강의 화면 ---------- */
+  function notFound(){
+    document.body.classList.remove("watch-page");
+    drawMenu("signature");
+    $("menu").querySelectorAll("[aria-current]").forEach(function(a){ a.removeAttribute("aria-current"); });
+    $("barCount").textContent = "";
+    $("app").innerHTML = '<div class="state"><span class="state-ic">' + IC.videoX + '</span>' +
+      '<h1>강의를 찾을 수 없어요</h1><p>강의가 내려갔거나 주소가 잘못됐어요.<br>전체 강의에서 다시 찾아 주세요.</p>' +
+      '<a class="btn-blue rp press" href="' + catUrl("signature") + '" data-go>전체 강의 보기</a></div>';
+  }
+
+  function fileRow(f){
+    var sn = SC.splitName(f.name), t = f.type || sn.type || "pdf", d = SC.download(f.link, t);
+    var cls = { pdf:"pdf", xlsx:"xlsx", pptx:"pptx", docx:"docx", hwp:"hwp" }[t] || "etc";
+    var name = sn.name || "자료";
+    var btn = d.url
+      ? '<a class="dl rp press" href="' + esc(d.url) + '" rel="noopener" aria-label="' + esc(name) + ' 받기">' + IC.dl + '<span>받기</span></a>'
+      : '<span class="dl off">준비 중</span>';
+    return '<li class="file"><span class="ftype ' + cls + '" aria-hidden="true">' + SC.typeLabel(t) + '</span>' +
+      '<div class="fname"><strong>' + esc(name) + '</strong><span>' + SC.typeLabel(t) + (f.size ? ' · ' + esc(f.size) : '') + '</span></div>' + btn + '</li>';
+  }
+
+  function renderVideo(id){
+    var v = pub().filter(function(x){ return x.id === id; })[0];
+    if (!v) return notFound();
+    var c = SC.catOf(v), files = v.files || [];
+    document.body.classList.add("watch-page");
+    drawMenu(c);
+    $("barBack").href = catUrl(c);
+    $("barBackText").textContent = SC.catLabel(c);
+
+    var others = inCat(c).filter(function(x){ return x.id !== v.id; }).slice(0, 6);
+    var yt = "https://www.youtube.com/watch?v=" + encodeURIComponent(v.id);
+
+    $("app").innerHTML =
+      '<div class="watch">' +
+        '<a class="back-all rp" href="' + catUrl(c) + '" data-go>' + IC.back + '전체 강의</a>' +
+        '<div class="watch-grid">' +
+          '<div class="watch-main">' +
+            '<div class="player-box"><div class="player">' +
+              '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.id) + '?rel=0&playsinline=1&modestbranding=1" title="' + esc(v.title || "강의 영상") + '" ' +
+              'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>' +
+            '</div></div>' +
+            '<section class="lec-info">' +
+              '<div class="lec-meta">' + (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') + '<span>' + metaText(v, true) + '</span></div>' +
+              '<h1>' + esc(v.title || "제목 없음") + '</h1>' +
+              '<button type="button" class="copy-btn rp press" id="share">' + IC.link + '강의 링크 복사</button>' +
+            '</section>' +
+            '<section class="comments" aria-labelledby="cmH"><h2 id="cmH">댓글</h2>' +
+              '<a class="cm-link rp" href="' + yt + '" target="_blank" rel="noopener" aria-label="유튜브에서 댓글 남기기">' +
+                '<span class="cm-face">' + IC.person + '</span>' +
+                '<span class="cm-box"><span class="cm-send">' + IC.send + '</span></span>' +
+              '</a></section>' +
+            (v.description ? '<section class="intro" aria-labelledby="descH"><h2 id="descH">강의 소개</h2>' +
+              '<p class="intro-body clamp" id="descBody">' + SC.richText(v.description) + '</p>' +
+              '<button type="button" class="more rp" id="more" aria-expanded="false" hidden><span>더보기</span>' + IC.down + '</button></section>' : '') +
+          '</div>' +
+          '<aside class="files-card" aria-labelledby="filesH">' +
+            '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="num">' + files.length + '</span>개' : '') + '</h2>' +
+            (files.length
+              ? '<p class="files-note">받기를 누르면 바로 저장돼요.</p><ul class="files">' + files.map(fileRow).join("") + '</ul>'
+              : '<div class="files-empty"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>') +
+          '</aside>' +
+        '</div>' +
+        (others.length ? '<section class="others" aria-labelledby="moreH"><h2 id="moreH">다른 강의</h2><ul class="grid">' + others.map(card).join("") + '</ul></section>' : '') +
+      '</div>';
+
+    $("share").addEventListener("click", function(){
+      var url = videoUrl(v.id);
+      SC.copy(url).then(function(){ toast("링크를 복사했어요. 카톡에 붙여 넣으세요", IC.link); }, function(){ toast(url, IC.link); });
+    });
+    var body = $("descBody");
+    if (body) requestAnimationFrame(function(){
+      if (body.scrollHeight > body.clientHeight + 2){
+        var more = $("more"); more.hidden = false;
+        more.addEventListener("click", function(){
+          var open = !body.classList.toggle("clamp");
+          more.setAttribute("aria-expanded", open);
+          more.firstChild.textContent = open ? "접기" : "더보기";
+        });
+      } else body.classList.remove("clamp");
+    });
+  }
+
+  /* ---------- 화면 고르기 ---------- */
+  function route(){
+    var r = parse(), want;
+    document.title = TAB_TITLE;
+    if (r.v){ renderVideo(r.v); want = videoUrl(r.v); }
+    else { renderList(r.c); want = catUrl(r.c); }
+    /* 주소창을 정식 주소로 맞춤 (예: 맨 위 주소 → signature/) */
+    if (location.href.split("#")[0] !== want) history.replaceState(null, "", want + location.hash);
+  }
+
+  /* 같은 사이트 안 이동은 새로 불러오지 않고 바로 바꿈 */
+  document.addEventListener("click", function(e){
+    var a = e.target.closest("a[data-go]");
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    if (a.href !== location.href) history.pushState(null, "", a.href);
+    route(); window.scrollTo(0, 0);
+  });
+  window.addEventListener("popstate", route);
+
+  /* 받기 누르면 바로 반응 보여주기 (다운로드가 시작되기까지 몇 초 걸릴 수 있어서) */
+  document.addEventListener("click", function(e){
+    var a = e.target.closest("a.dl"); if (!a || a.classList.contains("busy") || a.classList.contains("done")) return;
+    var orig = a.innerHTML;
+    a.classList.add("busy"); a.innerHTML = IC.spin + '<span>받는 중</span>';
+    toast("다운로드를 시작했어요. 잠시만 기다려 주세요", IC.dl);
+    setTimeout(function(){
+      a.classList.remove("busy"); a.classList.add("done"); a.innerHTML = IC.check + '<span>요청됨</span>';
+      setTimeout(function(){ a.classList.remove("done"); a.innerHTML = orig; }, 5000);
+    }, 3500);
+  });
+
+  SC.ripple();
+
+  /* 고지 문구: 첫 줄은 노란 강조, 둘째 줄은 쉼표 기준으로 두 덩어리(줄바꿈이 깔끔하게) */
+  function drawNotice(s){
+    var lines = SC.noticeText(s).split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
+    var html = '<strong>' + esc(lines.shift() || "") + '</strong>';
+    lines.forEach(function(l){
+      var cut = -1, best = 1e9;
+      l.replace(/, /g, function(m, i){ var d = Math.abs(i - l.length / 2); if (d < best){ best = d; cut = i; } return m; });
+      html += '<br>' + (cut > 0
+        ? '<span class="chunk">' + esc(l.slice(0, cut + 1)) + '</span> <span class="chunk">' + esc(l.slice(cut + 2)) + '</span>'
+        : esc(l));
+    });
+    $("notice").innerHTML = html;
+  }
+  drawNotice("");
+
+  fetch(ROOT + "data/videos.json?t=" + Date.now(), { cache:"no-store" })
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(data){
+      DATA = data || DATA;
+      drawNotice((DATA.site || {}).notice);
+      route();
+    })
+    .catch(function(){
+      drawMenu(parse().c || "signature");
+      $("app").innerHTML = '<div class="state"><span class="state-ic">' + IC.videoX + '</span><h1>목록을 불러오지 못했어요</h1><p>잠시 후 새로고침해 주세요.</p></div>';
+    });
+})();
+</script>
+</body>
+</html>
