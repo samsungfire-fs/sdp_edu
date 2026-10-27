@@ -123,7 +123,7 @@
     }) };
     /* 사이트 이름 변경: 시그니처클래스 → 영개파 (저장하면 사이트에 반영) */
     var renamed = false;
-    if (/^\s*시그니처클래스\s*교육\s*자료실\s*$/.test(data.site.title || "")){ data.site.title = "영개파 교육 자료실"; renamed = true; }
+    if (/^\s*시그니처클래스\s*교육\s*자료실\s*$/.test(data.site.title || "")){ data.site.title = "영개파 교육 자료"; renamed = true; }
     document.querySelectorAll("[data-site]").forEach(function(el){ el.value = data.site[el.dataset.site] || ""; });
     openV = null; dirty = renamed; render();
   }
@@ -432,11 +432,11 @@
       '<meta property="og:image" content="' + attr(thumb) + '">\n' +
       '<meta property="og:url" content="' + attr(url) + '">\n' +
       '<meta property="og:type" content="video.other">\n' +
-      '<meta property="og:site_name" content="' + attr(site.title || "교육 자료실") + '">\n' +
+      '<meta property="og:site_name" content="영업개발파트 교육 자료">\n' +
       '<meta name="twitter:card" content="summary_large_image">\n';
     return tpl
       .replace(/<meta property="og:[^>]*>\n?/g, "").replace(/<meta name="twitter:[^>]*>\n?/g, "").replace(/<base [^>]*>\n?/g, "")
-      .replace(/<title>[\s\S]*?<\/title>/, function(){ return "<title>" + attr(title) + "</title>"; })
+      .replace(/<title>[\s\S]*?<\/title>/, function(){ return "<title>영개파 교육 자료</title>"; })
       .replace(/<meta name="description" content="[^"]*">/, function(){ return '<meta name="description" content="' + attr(desc) + '">'; })
       .replace(/<meta charset="utf-8">\n?/, function(){ return '<meta charset="utf-8">\n' + meta; });
   }

@@ -5,19 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex, nofollow">
-<title>영개파 교육 자료실</title>
+<title>영개파 교육 자료</title>
 <meta name="description" content="강의 영상을 보고, 현장에서 바로 쓰는 교육자료를 내려받으세요.">
-<meta property="og:title" content="영개파 교육 자료실">
+<meta property="og:title" content="영업개발파트 교육 자료">
+<meta property="og:site_name" content="영업개발파트 교육 자료">
 <meta property="og:description" content="강의 영상을 보고, 현장에서 바로 쓰는 교육자료를 내려받으세요.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://samsungfire-fs.github.io/signature_class/assets/icon-512.png">
+<meta property="og:image" content="https://samsungfire-fs.github.io/sdp_edu/assets/icon-512.png">
 <meta name="theme-color" content="#F3F5F9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0A0F1C" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="icon" href="assets/favicon-48.png?v=2" type="image/png" sizes="48x48">
-<link rel="icon" href="assets/favicon-32.png?v=2" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=2">
+<link rel="icon" href="assets/favicon-48.png?v=3" type="image/png" sizes="48x48">
+<link rel="icon" href="assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="stylesheet" href="assets/site.css?v=20261026b">
 </head>
 <body>
@@ -49,6 +50,7 @@
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
+  var TAB_TITLE = "영개파 교육 자료"; /* 브라우저 탭에 항상 이 이름 */
   var IC = {
     play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg>',
     file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
@@ -85,7 +87,7 @@
   /* ---------- 홈 ---------- */
   function renderHome(data){
     var S = data.site || {}, V = data.videos || [];
-    document.title = S.title || "교육 자료실";
+    document.title = TAB_TITLE;
     $("topMeta").textContent = V.length ? "강의 " + V.length + "개" : "";
     var html = '<section class="hero">' +
       (S.eyebrow ? '<div class="eyebrow">' + esc(S.eyebrow) + '</div>' : '') +
@@ -118,11 +120,11 @@
     var v = V.filter(function(x){ return x.id === id; })[0];
     $("back").hidden = false; $("brand").hidden = true;
     if (!v){
-      document.title = "강의를 찾을 수 없어요";
+      document.title = TAB_TITLE;
       $("app").innerHTML = '<div class="state"><h1>강의를 찾을 수 없어요</h1><p>삭제되었거나 주소가 바뀌었을 수 있어요.</p><a class="btn" href="./">전체 강의 보기</a></div>';
       return;
     }
-    document.title = (v.title || "강의") + " · " + (S.title || "교육 자료실");
+    document.title = TAB_TITLE;
 
     var files = (v.files || []).map(function(f){
       var sn = SC.splitName(f.name), t = f.type || sn.type || "pdf", d = SC.download(f.link, t);
@@ -191,7 +193,7 @@
     .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(data){
       var S = data.site || {};
-      if (S.title) $("brandName").textContent = S.title.replace(/\s*교육\s*자료실\s*$/, "") || S.title;
+      if (S.title) $("brandName").textContent = S.title.replace(/\s*교육\s*자료실?\s*$/, "") || S.title;
       $("notice").textContent = S.notice ? "※ " + S.notice : "";
       var id = new URLSearchParams(location.search).get("v") || (location.pathname.match(/\/v\/([\w-]{6,})\/?(?:index\.html)?$/) || [])[1];
       if (id) renderVideo(data, id); else renderHome(data);
