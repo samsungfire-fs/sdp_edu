@@ -6,150 +6,33 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>관리자 페이지</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<meta name="theme-color" content="#07080C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
 <link rel="icon" href="assets/admin-favicon-48.png?v=1" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/admin-favicon-32.png?v=1" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
-<link rel="stylesheet" href="assets/site.css?v=20261026b">
-<style>
-/* Layout: 상단 바 → 연결 설정(처음 한 번) → 강의 목록(펼쳐서 편집) → 하단 고정 저장 바 */
-:root{
-  --ok:#1C7A46; --ok-bg:#E4F4EA;
-  --bad:#C0392B; --bad-bg:#FCEBE8;
-  --field:#F7F9FC;
-}
-@media (prefers-color-scheme: dark){
-  :root{ --ok:#6FD39B; --ok-bg:#14301F; --bad:#FF8F7E; --bad-bg:#3A1D19; --field:#0E1524; }
-}
-body{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
-.admin{max-width:880px; margin:0 auto; display:grid; gap:20px; padding-top:20px}
-.page-head{display:flex; justify-content:space-between; align-items:flex-end; gap:8px 16px; flex-wrap:wrap}
-.page-head h1{margin:0; font-size:26px; font-weight:800; letter-spacing:-.025em}
-.page-head p{margin:4px 0 0; color:var(--ink-2); font-size:15px}
-.site-link{font-size:14px; font-weight:700; color:var(--brand); text-decoration:none; display:inline-flex; align-items:center; gap:4px}
-.site-link:hover{text-decoration:underline; text-underline-offset:3px}
-
-.panel{background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); padding:22px; display:grid; gap:16px; min-width:0}
-.panel h2{margin:0; font-size:17px; font-weight:800}
-.panel .lead{margin:-6px 0 0; color:var(--ink-2); font-size:14px}
-
-.f{display:grid; gap:6px; min-width:0}
-.f > label, .lbl{font-size:13px; font-weight:700; color:var(--ink-2)}
-.f .help{font-size:12.5px; color:var(--ink-3)}
-input[type=text], input[type=password], input[type=url], textarea{
-  width:100%; min-width:0; font:inherit; font-size:15px; color:var(--ink); background:var(--field);
-  border:1px solid var(--line); border-radius:10px; padding:11px 13px; min-height:46px;
-}
-textarea{resize:vertical; line-height:1.6}
-input:focus, textarea:focus{outline:2px solid var(--sky); outline-offset:1px; border-color:transparent}
-.mono{font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size:13.5px}
-.two{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px}
-@media (max-width:640px){ .two{grid-template-columns:minmax(0,1fr)} .panel{padding:18px} }
-
-.pill{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; padding:4px 10px; border-radius:999px; width:fit-content; max-width:100%; line-height:1.4}
-.pill::before{content:""; width:7px; height:7px; border-radius:50%; background:currentColor; flex:none}
-.pill.ok{background:var(--ok-bg); color:var(--ok)}
-.pill.bad{background:var(--bad-bg); color:var(--bad)}
-.pill.warn{background:var(--warn-bg); color:var(--warn-ink)}
-.pill.idle{background:var(--etc-bg); color:var(--ink-2)}
-
-.btn.sm{min-height:40px; padding:0 14px; font-size:14px; border-radius:10px}
-.btn.danger{background:var(--bad-bg); color:var(--bad)}
-.btn[disabled]{opacity:.45; cursor:default; filter:none; transform:none}
-.icon-btn{width:38px; height:38px; display:inline-grid; place-items:center; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); cursor:pointer; flex:none}
-.icon-btn:hover{color:var(--ink); border-color:var(--ink-3)}
-.icon-btn[disabled]{opacity:.3; cursor:default}
-.icon-btn svg{width:17px; height:17px}
-.row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-
-.conn summary{cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
-.conn summary::-webkit-details-marker{display:none}
-.conn summary h2{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; flex:1 1 auto; min-width:0}
-.conn summary h2 > span:first-child{white-space:nowrap}
-.conn:not([open]){gap:0; padding-block:18px}
-.toast{bottom:calc(92px + env(safe-area-inset-bottom, 0px))}
-.conn[open] summary{margin-bottom:6px}
-.conn .chev{transition:transform .2s ease; width:20px; height:20px; color:var(--ink-3)}
-.conn[open] .chev{transform:rotate(180deg)}
-.guide{margin:0; padding-left:20px; display:grid; gap:4px; font-size:13.5px; color:var(--ink-2)}
-.guide b{color:var(--ink)}
-
-.list-head{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
-.list-head h2{margin:0; font-size:20px; font-weight:800}
-.list-head h2 small{font-size:15px; color:var(--ink-3); font-weight:600; margin-left:4px}
-.videos{display:grid; gap:14px}
-
-.vitem{background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; min-width:0}
-.vitem.open{outline:2px solid var(--sky)}
-.vhead{display:grid; grid-template-columns:auto auto minmax(0,1fr); gap:14px; align-items:center; padding:14px 18px 14px 8px; cursor:pointer}
-.vhead .thumb{width:132px; border-radius:8px}
-.vhead .thumb.blank{display:grid; place-items:center; color:var(--ink-3); font-size:12px; font-weight:600; background:var(--field); border:1px dashed var(--line)}
-.vhead h3{margin:0; font-size:16px; font-weight:700; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
-.vhead .sub{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
-.vtools{display:flex; gap:6px; align-items:center}
-@media (max-width:640px){
-  .vhead{grid-template-columns:auto 96px minmax(0,1fr); gap:10px; padding:12px 12px 12px 4px}
-  .vhead .thumb{width:96px}
-  .vtools{grid-column:1 / -1; justify-content:flex-end}
-}
-.vbody{border-top:1px solid var(--line); padding:20px; display:grid; gap:18px; background:color-mix(in srgb, var(--surface) 92%, var(--bg))}
-@media (max-width:640px){ .vbody{padding:16px} }
-.fileset{display:grid; gap:10px}
-.frow{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:start; padding:12px 12px 12px 4px; border:1px solid var(--line); border-radius:12px; background:var(--surface)}
-.frow .inputs{display:grid; gap:8px; min-width:0}
-.frow .stat{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; font-size:13px; color:var(--ink-2)}
-.frow .stat a{color:var(--brand); font-weight:700; text-underline-offset:3px}
-.frow .tools{display:flex; flex-direction:column; gap:6px}
-.grip{display:grid; place-items:center; width:30px; height:44px; border-radius:8px; color:var(--ink-3); cursor:grab; touch-action:none; flex:none}
-.grip:hover{color:var(--ink); background:var(--field)}
-.grip:active{cursor:grabbing}
-.grip svg{width:18px; height:18px}
-.frow .grip{height:46px}
-.dragging{position:relative; z-index:5; box-shadow:0 18px 40px -12px rgba(15,26,51,.5); opacity:.96}
-.dragging .grip{cursor:grabbing; color:var(--ink)}
-body:has(.dragging){user-select:none; -webkit-user-select:none}
-.vfoot{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; padding-top:4px; border-top:1px dashed var(--line); padding-top:16px}
-
-.savebar{position:fixed; left:0; right:0; bottom:0; z-index:30; background:color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-top:1px solid var(--line)}
-.savebar .wrap{max-width:880px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding-block:12px calc(12px + env(safe-area-inset-bottom, 0px))}
-.savebar .msg{font-size:14px; color:var(--ink-2); min-width:0}
-.savebar .msg b{color:var(--ink)}
-.savebar .btn{min-width:120px}
-.empty-list{padding:36px 16px; text-align:center; color:var(--ink-2); border:1px dashed var(--line); border-radius:var(--r); background:var(--surface)}
-
-/* 로그인 화면 */
-body:not(.authed) #app, body:not(.authed) .savebar{display:none!important}
-body.authed #gate{display:none}
-.gate{min-height:calc(100vh - 140px); display:grid; place-items:center; padding-block:32px}
-.gate-card{width:min(100%, 420px); gap:14px; padding:32px 28px}
-.gate-mark{width:44px; height:44px; border-radius:12px}
-.gate-mark svg{width:24px; height:24px}
-.gate-card h1{margin:4px 0 0; font-size:24px; font-weight:800; letter-spacing:-.02em}
-.gate-lead{margin:-4px 0 4px; color:var(--ink-2); font-size:15px}
-.gate-form{display:grid; gap:14px}
-.gate-form .btn{width:100%}
-.gate-msg{margin:0; font-size:14px; font-weight:600; color:var(--bad); min-height:1.2em}
-.check{display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink-2); cursor:pointer}
-.check input{width:18px; height:18px; accent-color:var(--brand)}
-@media (max-width:520px){ .gate-card{padding:24px 18px} }
-</style>
+<link rel="stylesheet" href="assets/site.css?v=20261027">
+<link rel="stylesheet" href="assets/admin.css?v=20261027">
 </head>
 <body>
 
-<header class="topbar" id="topbar">
-  <div class="wrap">
-    <a class="brand" href="admin.html" aria-label="관리자 첫 화면">
-      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
-      관리자 페이지
-    </a>
-    <a class="site-link" href="./" target="_blank" rel="noopener">사이트 보기 ↗</a>
+<header class="abar">
+  <div class="awrap">
+    <a class="abrand" href="admin.html">관리자 페이지</a>
+    <div class="abar-right">
+      <a class="deploy" id="deploy" href="#" target="_blank" rel="noopener" data-st="none" title="사이트 반영 상태" aria-label="사이트 반영 상태"><span class="dot" aria-hidden="true"></span></a>
+      <a class="site-link rp" href="./" target="_blank" rel="noopener">사이트 보기 ↗</a>
+    </div>
   </div>
 </header>
 
-<main class="wrap">
+<main>
+  <!-- 로그인 · 처음 설정 -->
   <section class="gate" id="gate" aria-labelledby="gateTitle">
-    <div class="panel gate-card">
-      <span class="brand-mark gate-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+    <div class="gate-card">
+      <span class="gate-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span>
       <h1 id="gateTitle">관리자 로그인</h1>
       <p class="gate-lead" id="gateLead">확인 중…</p>
 
@@ -157,102 +40,130 @@ body.authed #gate{display:none}
         <input type="text" name="username" value="admin" autocomplete="username" hidden>
         <div class="f">
           <label for="pw">비밀번호</label>
-          <input type="password" id="pw" autocomplete="current-password" required>
+          <input type="password" id="pw" class="in" autocomplete="current-password" required>
         </div>
-        <label class="check"><input type="checkbox" id="remember1"> 이 기기에서 로그인 유지</label>
-        <button type="submit" class="btn" id="loginBtn">로그인</button>
         <p class="gate-msg" id="loginMsg" role="alert"></p>
+        <label class="check"><input type="checkbox" id="remember1"><span>이 기기에서 로그인 유지</span></label>
+        <button type="submit" class="btn-main rp press" id="loginBtn">로그인</button>
       </form>
 
       <form id="setupForm" class="gate-form" hidden autocomplete="off">
         <div class="f">
           <label for="ghToken">GitHub 토큰</label>
-          <input type="password" id="ghToken" class="mono" placeholder="github_pat_로 시작" autocomplete="off" spellcheck="false" required>
+          <input type="password" id="ghToken" class="in mono" placeholder="github_pat_로 시작" autocomplete="off" spellcheck="false" required>
           <span class="help">GitHub → Settings → Developer settings → Fine-grained tokens. 저장소 <b id="repoName">sdp_edu</b>만, Contents: Read and write</span>
         </div>
         <div class="f">
           <label for="apiKey">Google API 키</label>
-          <input type="password" id="apiKey" class="mono" placeholder="AIza로 시작 (없으면 비워 두기)" autocomplete="off" spellcheck="false">
+          <input type="password" id="apiKey" class="in mono" placeholder="AIza로 시작 (없으면 비워 두기)" autocomplete="off" spellcheck="false">
           <span class="help">웹사이트 제한에 <b id="keyRef">https://samsungfire-fs.github.io/*</b> 를 넣어 두세요</span>
         </div>
         <div class="two" id="repoFields" hidden>
-          <div class="f"><label for="ghOwner">GitHub 계정</label><input type="text" id="ghOwner" class="mono" value="samsungfire-fs"></div>
-          <div class="f"><label for="ghRepo">저장소 이름</label><input type="text" id="ghRepo" class="mono" value="sdp_edu"></div>
+          <div class="f"><label for="ghOwner">GitHub 계정</label><input type="text" id="ghOwner" class="in mono" value="samsungfire-fs"></div>
+          <div class="f"><label for="ghRepo">저장소 이름</label><input type="text" id="ghRepo" class="in mono" value="sdp_edu"></div>
         </div>
         <div class="f">
           <label for="newPw">새 관리자 비밀번호</label>
-          <input type="password" id="newPw" autocomplete="new-password" required>
+          <input type="password" id="newPw" class="in" autocomplete="new-password" required>
           <span class="help">4자 이상. 숫자만 쓰기보다 글자와 숫자를 섞으면 더 안전해요.</span>
         </div>
         <div class="f">
           <label for="newPw2">비밀번호 한 번 더</label>
-          <input type="password" id="newPw2" autocomplete="new-password" required>
+          <input type="password" id="newPw2" class="in" autocomplete="new-password" required>
+          <span class="same" id="pwSame" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>비밀번호가 같아요</span>
         </div>
-        <label class="check"><input type="checkbox" id="remember2"> 이 기기에서 로그인 유지</label>
-        <button type="submit" class="btn" id="setupBtn">비밀번호 만들고 시작하기</button>
-        <button type="button" class="btn ghost" id="setupCancel" hidden>취소</button>
         <p class="gate-msg" id="setupMsg" role="alert"></p>
+        <label class="check"><input type="checkbox" id="remember2"><span>이 기기에서 로그인 유지</span></label>
+        <div class="gate-btns">
+          <button type="button" class="btn-sub rp press" id="setupCancel" hidden>취소</button>
+          <button type="submit" class="btn-main rp press" id="setupBtn">비밀번호 만들고 시작하기</button>
+        </div>
       </form>
     </div>
   </section>
 
+  <!-- 강의 관리 -->
   <div class="admin" id="app">
-    <div class="page-head">
-      <div>
+    <div class="amain">
+      <div class="page-head">
         <h1>강의 관리</h1>
-        <p>유튜브 주소와 교육자료만 넣고 저장하면 사이트에 바로 반영돼요.</p>
+        <p>강의를 추가하거나 끌어서 순서를 바꾸고, 다 고치면 아래 저장을 눌러 주세요.</p>
       </div>
+
+      <div class="noauth" id="noAuth" hidden>
+        <span>아직 관리자 비밀번호를 만들지 않았어요. 지금은 이 브라우저에 저장된 토큰으로 들어와 있어요.</span>
+        <button type="button" class="btn-soft rp press" id="makePwBtn">비밀번호 만들기</button>
+      </div>
+
+      <section aria-labelledby="listH">
+        <div class="list-row">
+          <h2 id="listH">강의 목록 <span class="num" id="count"></span></h2>
+          <span class="vis-count" id="visCount"></span>
+          <button type="button" class="btn-add rp press" id="addVideo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>강의 추가
+          </button>
+        </div>
+        <ul class="videos" id="videos"><li class="empty-list">불러오는 중…</li></ul>
+      </section>
     </div>
 
-    <p class="pill warn" id="noAuth" hidden style="border-radius:12px; padding:12px 16px; width:auto; display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center">
-      <span>아직 관리자 비밀번호를 만들지 않았어요. 지금은 이 브라우저에 저장된 토큰으로 들어와 있어요.</span>
-      <button type="button" class="btn sm" id="makePwBtn">비밀번호 만들기</button>
-    </p>
-
-    <details class="panel conn" id="conn">
-      <summary>
-        <h2><span>계정</span><span class="pill idle" id="connState">확인 중</span></h2>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="row">
-        <button type="button" class="btn sm ghost" id="logoutBtn">로그아웃</button>
-        <button type="button" class="btn sm ghost" id="changeBtn">비밀번호·토큰 바꾸기</button>
+    <aside class="aside" aria-labelledby="setH">
+      <h2 id="setH">설정</h2>
+      <div class="setbox">
+        <details class="set" id="conn">
+          <summary class="rp">
+            <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c0-3.8 3.4-6 7.5-6s7.5 2.2 7.5 6"/></svg>
+            <span class="set-t">계정</span><span class="pill idle" id="connState">확인 중</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="set-body">
+            <p class="set-note" id="connRepo"></p>
+            <div class="set-btns">
+              <button type="button" class="btn-soft rp press" id="changeBtn">비밀번호·토큰 바꾸기</button>
+              <button type="button" class="btn-line rp press" id="logoutBtn">로그아웃</button>
+            </div>
+          </div>
+        </details>
+        <details class="set" id="siteBox">
+          <summary class="rp">
+            <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 12h10M5 18h7"/></svg>
+            <span class="set-t">사이트 문구</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="set-body">
+            <div class="f"><label for="sNotice">맨 아래 고지 문구</label><textarea id="sNotice" class="in" rows="4" data-site="notice"></textarea>
+              <span class="help">첫 줄은 노란 글씨로 강조돼요. 줄을 바꾸면 그다음 줄부터 흰 글씨예요.</span></div>
+          </div>
+        </details>
+        <details class="set" id="updBox">
+          <summary class="rp">
+            <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
+            <span class="set-t">사이트 업데이트</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="set-body">
+            <p class="set-note">Claude가 고친 파일을 컴퓨터의 <b>sdp_edu</b> 폴더에서 읽어, 바뀐 것만 한 번에 올려요. 강의 목록은 건드리지 않아요.</p>
+            <button type="button" class="btn-main sm rp press" id="updRun">지금 업데이트</button>
+            <span class="upd-folder" id="updFolder"></span>
+            <input type="file" class="pick" id="updPick" webkitdirectory directory multiple tabindex="-1" aria-hidden="true">
+            <ul class="upd-log" id="updLog"></ul>
+          </div>
+        </details>
       </div>
-    </details>
-
-    <details class="panel conn" id="siteBox">
-      <summary>
-        <h2><span>사이트 문구</span></h2>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="f"><label for="sEyebrow">제목 위 작은 글씨</label><input type="text" id="sEyebrow" data-site="eyebrow"></div>
-      <div class="f"><label for="sTitle">사이트 제목</label><input type="text" id="sTitle" data-site="title"></div>
-      <div class="f"><label for="sDesc">소개 문구</label><input type="text" id="sDesc" data-site="desc"></div>
-      <div class="f"><label for="sNotice">맨 아래 고지 문구</label><textarea id="sNotice" rows="2" data-site="notice"></textarea></div>
-    </details>
-
-    <section aria-labelledby="listH" style="display:grid; gap:14px">
-      <div class="list-head">
-        <h2 id="listH">강의 목록<small id="count"></small></h2>
-        <button type="button" class="btn sm" id="addVideo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>강의 추가
-        </button>
-      </div>
-      <p class="lead" style="margin:0; color:var(--ink-2); font-size:14px">이 순서대로 홈에 보여요. 화살표로 순서를 바꿀 수 있어요.</p>
-      <div class="videos" id="videos"><p class="empty-list">불러오는 중…</p></div>
-    </section>
+      <p class="last" id="lastUpd"></p>
+    </aside>
   </div>
 </main>
 
-<div class="savebar">
-  <div class="wrap">
-    <span class="msg" id="saveMsg">불러오는 중…</span>
-    <button type="button" class="btn" id="saveBtn" disabled>저장</button>
+<div class="savebar" role="status">
+  <div class="awrap">
+    <span class="msg" id="saveMsg"><span class="sdot" aria-hidden="true"></span><span id="saveText">불러오는 중…</span></span>
+    <button type="button" class="btn-main rp press" id="saveBtn" disabled>저장</button>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261026"></script>
-<script src="assets/admin.js?v=20261027b"></script>
+<script src="assets/common.js?v=20261027"></script>
+<script src="assets/admin.js?v=20261027"></script>
 </body>
 </html>

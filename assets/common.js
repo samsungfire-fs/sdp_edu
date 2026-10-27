@@ -104,5 +104,45 @@
     });
   };
 
+  /* 메뉴(강의 분류). 주소: signature/ newbie/ partner/ */
+  SC.CATS = [
+    { id: "signature", label: "시그니처클래스" },
+    { id: "newbie", label: "신입 교육" },
+    { id: "partner", label: "제휴사 상품 전략" }
+  ];
+  SC.catOf = function (v) {
+    var c = v && v.category;
+    for (var i = 0; i < SC.CATS.length; i++) if (SC.CATS[i].id === c) return c;
+    return "signature";
+  };
+  SC.catLabel = function (id) {
+    for (var i = 0; i < SC.CATS.length; i++) if (SC.CATS[i].id === id) return SC.CATS[i].label;
+    return SC.CATS[0].label;
+  };
+  SC.isPublic = function (v) { return !!v && v.visible !== false; };
+
+  /* 사이트 아래 고지 문구 (첫 줄은 강조) */
+  SC.NOTICE = "※ 본 자료는 교육용 자료입니다.\n온라인(SNS 포함) 게시, 고객 대상 설명, 광고 용도로 사용할 수 없습니다.";
+  SC.noticeText = function (s) {
+    s = String(s || "").trim();
+    if (!s || /^본 자료는 판매자 교육용으로/.test(s)) return SC.NOTICE;
+    return s;
+  };
+
+  /* 버튼 물결 효과: class="rp" 붙은 요소를 누르면 누른 자리에서 퍼짐 */
+  SC.ripple = function () {
+    document.addEventListener("pointerdown", function (e) {
+      var el = e.target.closest && e.target.closest(".rp");
+      if (!el || el.disabled) return;
+      var r = el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      var dx = Math.max(x, r.width - x), dy = Math.max(y, r.height - y);
+      el.style.setProperty("--rx", x + "px");
+      el.style.setProperty("--ry", y + "px");
+      el.style.setProperty("--rs", Math.ceil(Math.sqrt(dx * dx + dy * dy) * 2) + "px");
+      el.classList.remove("rp-on"); void el.offsetWidth; el.classList.add("rp-on");
+      clearTimeout(el._rpT); el._rpT = setTimeout(function () { el.classList.remove("rp-on"); }, 900);
+    }, { passive: true });
+  };
+
   w.SC = SC;
 })(window);
