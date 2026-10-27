@@ -1,7 +1,7 @@
 /* 영개파 교육 자료 — 공통 스타일 (디자인: F 나이트 앤 데이 확정안)
    Layout: 배너 → 검정 메뉴 바 → 본문(홈: 강의 카드 / 강의: 영상·자료) → 검정 푸터(고지 문구) */
 /* 글꼴: 티머니 둥근바람(본문·버튼·배지) + 주아(큰 제목·메뉴, Google Fonts) */
-@font-face{font-family:"RoundWind"; font-weight:400; font-style:normal; font-display:swap; src:url(TmoneyRoundWindRegular.woff2) format("woff2")}
+@font-face{font-family:"RoundWind"; font-weight:400; font-style:normal; font-display:swap; src:url(TmoneyRoundWindRegular.woff2?v=2) format("woff2")}
 @font-face{font-family:"RoundWind"; font-weight:800; font-style:normal; font-display:swap; src:url(TmoneyRoundWindExtraBold.woff2) format("woff2")}
 *{font-synthesis:none}
 :root{
@@ -381,3 +381,9 @@ h1, h2, .menu a, .bar-back, .note strong{font-family:var(--jua); font-weight:400
 .pg, .pg-gap{font-weight:400}
 .pg[aria-current="page"]{font-weight:800}
 .fname strong{font-weight:400}
+
+/* ================= #12 유의 문구: 남색 상자 없이 검은 바 위에 바로 ================= */
+.note, .note{background:none; border-radius:0; padding:0}
+.note .ex{stroke:var(--bar)} .note .ex-dot{fill:var(--bar)}
+@media (max-width:980px){ .note{padding:0} }
+@media (max-width:560px){ .note{padding:0; border-radius:0} }

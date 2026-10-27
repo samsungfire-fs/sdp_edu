@@ -279,3 +279,49 @@ body:not(.authed) .fab{display:none}
 .pill, .bdg{font-weight:800}
 .set-note b, .upd-folder b, .help b{font-weight:800}
 .fhead strong{font-weight:400}
+
+/* ================= #14·#15 메뉴별 칸 · 업로드 날짜순 · 정렬·공개 필터·검색 ================= */
+/* 끌어서 순서 바꾸기 없앰 → 손잡이 자리만큼 여백 정리 */
+.vrow{padding-left:14px}
+.frow{padding-left:14px}
+@media (max-width:640px){ .vrow{padding-left:12px} }
+
+.mtabs{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding:2px; margin:-2px}
+.mtabs::-webkit-scrollbar{display:none}
+.mtab{flex:none; height:48px; padding:0 18px 0 20px; border:0; border-radius:999px; background:var(--card); color:var(--ink); font-family:var(--head); font-weight:800; font-size:16px; display:inline-flex; align-items:center; gap:8px; cursor:pointer; white-space:nowrap}
+.mtab-n{display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:24px; padding:0 8px; border-radius:999px; background:var(--sub); color:var(--ink-2); font-size:13px}
+.mtab[aria-selected="true"]{background:#003CDC; color:#FFFFFF}
+.mtab[aria-selected="true"] .mtab-n{background:rgba(255,255,255,.22); color:#FFFFFF}
+@media (prefers-color-scheme: dark){ .mtab[aria-selected="true"]{background:var(--blue)} }
+
+.list-row h2{font-size:24px}
+.tools{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:16px}
+.asearch{flex:1 1 260px; min-width:0; height:48px; display:flex; align-items:center; gap:10px; padding:0 18px; border-radius:999px; background:var(--card); transition:box-shadow 160ms ease}
+.asearch:focus-within{box-shadow:0 0 0 3px var(--sky)}
+.asearch svg{width:18px; height:18px; flex:none; color:var(--blue)}
+.asearch input{flex:1; min-width:0; border:0; background:transparent; font:inherit; font-size:15px; color:var(--ink); outline:none}
+.asort{position:relative; flex:none; height:48px; display:flex; align-items:center}
+.asort select{appearance:none; -webkit-appearance:none; height:48px; padding:0 40px 0 18px; border:0; border-radius:999px; background:var(--card); color:var(--ink); font:inherit; font-weight:800; font-size:15px; cursor:pointer; outline:none}
+.asort select:focus-visible{box-shadow:0 0 0 3px var(--sky)}
+.asort svg{position:absolute; right:14px; width:16px; height:16px; color:var(--ink-2); pointer-events:none}
+.vfilter{flex:none; display:inline-flex; gap:2px; padding:4px; border-radius:999px; background:#E4E8F4}
+.vfilter button{height:40px; padding:0 16px; border:0; border-radius:999px; background:transparent; color:var(--ink-2); font-family:var(--head); font-weight:800; font-size:14px; cursor:pointer}
+.vfilter button[aria-checked="true"]{background:#FFFFFF; color:#003CDC; box-shadow:0 1px 3px rgba(7,8,12,.08)}
+@media (prefers-color-scheme: dark){ .vfilter{background:var(--sub)} .vfilter button[aria-checked="true"]{background:var(--seg-on); color:var(--link)} }
+@media (max-width:640px){ .asearch{flex-basis:100%} }
+.aresult{margin:-4px 0 14px 6px; font-size:15px; color:var(--ink-2)}
+.aresult b{font-weight:800; color:var(--ink)}
+.aresult b.num{color:var(--blue)}
+.videos .nores{list-style:none}
+
+.bdg.date{display:inline-flex; align-items:center; gap:4px; background:#EEF1F7; color:#0B1030}
+.bdg.date svg{width:13px; height:13px}
+@media (prefers-color-scheme: dark){ .bdg.date{background:var(--idle-bg); color:var(--ink)} }
+.ro{min-height:50px; display:flex; align-items:center; padding:12px 16px; border-radius:14px; background:var(--sub); color:var(--ink-2); font-size:15px; line-height:1.5}
+.ro b{color:var(--ink); font-weight:800; margin-right:4px}
+
+.vfoot-r{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-left:auto}
+.amove{display:inline-flex; align-items:center; gap:8px; height:44px; padding:0 6px 0 14px; border-radius:999px; background:var(--sub); font-size:14px; color:var(--ink-2)}
+.amove span{white-space:nowrap}
+.amove select{height:36px; border:0; border-radius:999px; padding:0 12px; background:var(--card); color:var(--ink); font:inherit; font-weight:800; font-size:14px; cursor:pointer}
+@media (max-width:640px){ .asort{flex:1 1 0; min-width:0} .asort select{width:100%} }

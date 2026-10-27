@@ -13,10 +13,10 @@
 <link rel="icon" href="assets/admin-favicon-48.png?v=1" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/admin-favicon-32.png?v=1" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
-<link rel="preload" href="assets/TmoneyRoundWindRegular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261027d">
-<link rel="stylesheet" href="assets/admin.css?v=20261027d">
+<link rel="stylesheet" href="assets/site.css?v=20261027f">
+<link rel="stylesheet" href="assets/admin.css?v=20261027g">
 </head>
 <body>
 
@@ -89,7 +89,7 @@
     <div class="amain">
       <div class="page-head">
         <h1>강의 관리</h1>
-        <p>강의를 추가하거나 끌어서 순서를 바꾸고,<br>다 고치면 아래 저장을 눌러 주세요.</p>
+        <p>메뉴를 고르고 강의를 추가하세요. 목록은 유튜브에 올린 날짜 순으로 자동 정렬돼요.<br>완료되면 아래 저장을 눌러 주세요.</p>
       </div>
 
       <div class="noauth" id="noAuth" hidden>
@@ -97,14 +97,26 @@
         <button type="button" class="btn-soft rp press" id="makePwBtn">비밀번호 만들기</button>
       </div>
 
+      <div class="mtabs" id="mtabs" role="tablist" aria-label="메뉴"></div>
+
       <section aria-labelledby="listH">
         <div class="list-row">
-          <h2 id="listH">강의 목록 <span class="num" id="count"></span></h2>
+          <h2 id="listH"><span id="catName">시그니처클래스</span> <span class="num" id="count"></span></h2>
           <span class="vis-count" id="visCount"></span>
           <button type="button" class="btn-add rp press" id="addVideo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>강의 추가
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span id="addLabel">강의 추가</span>
           </button>
         </div>
+        <div class="tools">
+          <label class="asearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="aq" type="search" placeholder="이 메뉴에서 강의 제목 찾기" aria-label="이 메뉴에서 강의 제목 찾기" autocomplete="off"></label>
+          <label class="asort"><select id="asort" aria-label="정렬">
+            <option value="new">최신 업로드순</option><option value="old">오래된 업로드순</option><option value="title">제목 가나다순</option><option value="files">자료 많은순</option>
+          </select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></label>
+          <div class="vfilter" id="vfilter" role="radiogroup" aria-label="공개 상태">
+            <button type="button" role="radio" aria-checked="true" data-vf="all">모두</button><button type="button" role="radio" aria-checked="false" data-vf="pub">공개</button><button type="button" role="radio" aria-checked="false" data-vf="priv">비공개</button>
+          </div>
+        </div>
+        <p class="aresult" id="aresult" hidden></p>
         <ul class="videos" id="videos"><li class="empty-list">불러오는 중…</li></ul>
       </section>
     </div>
@@ -165,7 +177,7 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261027c"></script>
-<script src="assets/admin.js?v=20261027b"></script>
+<script src="assets/common.js?v=20261027f"></script>
+<script src="assets/admin.js?v=20261027g"></script>
 </body>
 </html>

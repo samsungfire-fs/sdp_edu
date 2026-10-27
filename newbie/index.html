@@ -25,9 +25,9 @@
 <link rel="icon" href="assets/favicon-48.png?v=3" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
-<link rel="preload" href="assets/TmoneyRoundWindRegular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261027d">
+<link rel="stylesheet" href="assets/site.css?v=20261027f">
 </head>
 <body>
 
@@ -54,7 +54,7 @@
 <footer class="foot">
   <div class="wrap">
     <div class="note" role="note">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.9 18.2A2 2 0 0 0 3.6 21h16.8a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z" fill="#FFD25E"/><path d="M12 9v4.5" stroke="#07080C" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.25" fill="#07080C"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.9 18.2A2 2 0 0 0 3.6 21h16.8a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z" fill="#FFD25E"/><path class="ex" d="M12 9v4.5" stroke="#07080C" stroke-width="2.2" stroke-linecap="round"/><circle class="ex-dot" cx="12" cy="17" r="1.25" fill="#07080C"/></svg>
       <p id="notice"></p>
     </div>
     <span class="org">삼성화재금융서비스 영업개발파트</span>
@@ -63,7 +63,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261027c"></script>
+<script src="assets/common.js?v=20261027f"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -121,13 +121,12 @@
   function pub(){ return (DATA.videos || []).filter(SC.isPublic); }
   function newest(list){
     return list.map(function(v, i){ return { v:v, i:i }; })
-      .sort(function(a, b){ return String(b.v.date || "").localeCompare(String(a.v.date || "")) || a.i - b.i; })
+      .sort(function(a, b){ return String(b.v.publishedAt || b.v.date || "").localeCompare(String(a.v.publishedAt || a.v.date || "")) || a.i - b.i; })
       .map(function(x){ return x.v; });
   }
-  /* 전체: 등록일 최신순 / 메뉴: 관리자에서 정한 순서 */
+  /* 전체·메뉴 모두 유튜브에 올린 날짜 최신순 */
   function listOf(m){
-    if (m === "all") return newest(pub());
-    return pub().filter(function(v){ return SC.catOf(v) === m; });
+    return newest(m === "all" ? pub() : pub().filter(function(v){ return SC.catOf(v) === m; }));
   }
 
   /* ---------- 공통 조각 ---------- */
@@ -392,7 +391,7 @@
   });
 
   SC.ripple();
-  SC.fab({ foot: ".foot" });
+  SC.fab({ foot: ".foot", main: "#app" });
 
   /* 고지 문구: 첫 줄은 노란 강조, 둘째 줄은 쉼표 기준으로 두 덩어리(줄바꿈이 깔끔하게) */
   function drawNotice(s){

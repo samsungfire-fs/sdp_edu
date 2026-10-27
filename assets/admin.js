@@ -11,6 +11,7 @@
     del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
     plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     grip:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>',
+    cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
     eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
     lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>',
     refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>'
@@ -32,7 +33,7 @@
   function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); }
   var canSave = false, dirty = false, openV = null, armedDel = null, saving = false;
   /* 저장된 상태와 비교: 바꿨다가 원래대로 되돌리면 저장할 필요 없음 */
-  var baseline = "", needPages = false;
+  var baseline = "";
 
   /* 저장소 자동 인식: 계정.github.io/저장소/admin.html */
   var owner = "", repo = "";
@@ -95,17 +96,8 @@
         canSave = true; setConn("ok", "연결됨", "저장소 " + owner + "/" + repo);
         lastUpdate(); Deploy.start();
         if (apiKey) data.videos.forEach(function(v){ v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f, true); }); });
-        /* 강의별 공유 페이지·메뉴 주소가 아직 없으면 저장 한 번으로 만들 수 있게 안내 */
-        var pages = data.videos.filter(function(v){ return v.id && v.visible !== false; }).map(function(v){ return "v/" + v.id + "/index.html"; })
-          .concat(SC.MENUS.map(function(c){ return c.id + "/index.html"; }));
-        Promise.all(pages.map(function(u){
-          return fetch(u + "?chk=" + Date.now(), { method:"HEAD", cache:"no-store" }).then(function(r){ return r.ok; }).catch(function(){ return true; });
-        })).then(function(ok){
-          if (ok.some(function(x){ return !x; })){
-            needPages = true; dirty = true; updateSaveBar();
-            $("saveText").textContent = "메뉴 주소와 카톡 공유 미리보기를 만들려면 저장을 한 번 눌러 주세요";
-          }
-        });
+        /* 강의별 공유 페이지·메뉴 주소가 빠져 있으면 조용히 만들어 둠 (저장 버튼은 건드리지 않음) */
+        autoPages();
         $("conn").open = false; updateSaveBar();
       })
       .catch(function(e){
@@ -125,12 +117,12 @@
       return {
         id: v.id || "", _url: v.id ? "https://youtu.be/" + v.id : "", title: v.title || "", channel: v.channel || "",
         description: v.description || "", duration: v.duration || "", date: v.date || "", _st: v.id ? "ok" : "",
-        category: SC.catOf(v), visible: v.visible !== false,
+        category: SC.catOf(v), visible: v.visible !== false, publishedAt: v.publishedAt || "",
         files: (v.files || []).map(function(f){ return { name: f.name || "", type: f.type || "", link: f.link || "", size: f.size || "", _st: "" }; })
       };
     }) };
     /* 사이트 이름 변경: 시그니처클래스 → 영개파 (저장하면 사이트에 반영) */
-    baseline = JSON.stringify(cleanData()); needPages = false;
+    baseline = JSON.stringify(cleanData());
     var renamed = false;
     if (/^\s*시그니처클래스\s*교육\s*자료실\s*$/.test(data.site.title || "")){ data.site.title = "영개파 교육 자료"; renamed = true; }
     /* 고지 문구를 디자인팀 새 문구로 (예전 기본 문구였거나 비어 있으면) */
@@ -157,7 +149,7 @@
         .then(function(j){
           var it = j.items && j.items[0]; if (!it) throw new Error("not found");
           return { title: it.snippet.title, channel: it.snippet.channelTitle, description: (it.snippet.description || "").replace(/\r/g, "").trim(),
-                   duration: fmtDur(it.contentDetails.duration), date: (it.snippet.publishedAt || "").slice(0, 10), full: true };
+                   duration: fmtDur(it.contentDetails.duration), date: (it.snippet.publishedAt || "").slice(0, 10), publishedAt: it.snippet.publishedAt || "", full: true };
         });
     }
     function oembed(){
@@ -186,7 +178,7 @@
     ytMeta(id).then(function(m){
       if (SC.ytId(v._url) !== id) return;
       v.title = m.title || v.title; v.channel = m.channel || v.channel;
-      if (m.full){ v.description = m.description; v.duration = m.duration; if (m.date) v.date = m.date; }
+      if (m.full){ v.description = m.description; v.duration = m.duration; if (m.date) v.date = m.date; if (m.publishedAt) v.publishedAt = m.publishedAt; }
       if (!v.date) v.date = SC.today();
       v._st = m.full ? "ok" : "partial"; markDirty(); render();
     }).catch(function(){
@@ -261,9 +253,9 @@
   }
   function badges(v){
     var p = ['<span class="bdg priv">비공개</span>'];
-    p.push('<span class="bdg cat dim" data-menu="' + SC.catOf(v) + '">' + esc(SC.catLabel(SC.catOf(v))) + '</span>');
     if (!v.id){ p.push('<span class="bdg new dim">새 강의</span>'); return p.join(""); }
     var n = v.files.length, miss = v.files.filter(function(f){ return !SC.download(f.link, f.type).url; }).length;
+    if (v.date) p.push('<span class="bdg date dim">' + IC.cal + SC.fmtDate(v.date) + '</span>');
     if (v.duration) p.push('<span class="bdg dim">' + esc(v.duration) + '</span>');
     p.push(n ? '<span class="bdg files dim">자료 ' + n + '개</span>' : '<span class="bdg dim">자료 없음</span>');
     if (miss) p.push('<span class="bdg miss dim">링크 없음 ' + miss + '</span>');
@@ -275,7 +267,6 @@
   function itemHtml(v, i){
     var open = v === openV, id = "v" + i, pub = v.visible !== false, cat = SC.catOf(v);
     var row = '<div class="vrow" data-act="toggle" data-i="' + i + '">' +
-      '<button type="button" class="grip" aria-label="끌어서 순서 바꾸기" title="끌어서 순서 바꾸기">' + IC.grip + '</button>' +
       (v.id ? '<div class="vthumb dim">' + SC.thumbImg(v.id) + '</div>' : '<div class="vthumb blank dim">영상 없음</div>') +
       '<div class="vtext"><h3 class="dim">' + esc(v.title || "제목 없음") + '</h3><div class="badges">' + badges(v) + '</div></div>' +
       '<button type="button" class="vs" role="switch" aria-checked="' + pub + '" data-act="vis" data-i="' + i + '" aria-label="사이트에 공개">' +
@@ -288,7 +279,6 @@
     var files = v.files.map(function(f, j){
       var t = f.type || SC.splitName(f.name).type || "pdf";
       return '<div class="frow">' +
-        '<button type="button" class="grip" aria-label="끌어서 순서 바꾸기" title="끌어서 순서 바꾸기">' + IC.grip + '</button>' +
         '<div class="fmain">' +
           '<div class="fhead" id="' + id + 'f' + j + 'n">' +
             '<span class="ftype ' + ({ pdf:"pdf", xlsx:"xlsx", pptx:"pptx", docx:"docx", hwp:"hwp" }[t] || "etc") + '">' + SC.typeLabel(t) + '</span>' +
@@ -311,9 +301,9 @@
           seg("visSet", i, "1", pub, "공개", IC.eye) + seg("visSet", i, "0", !pub, "비공개", IC.lock) + '</div>' +
         '<span class="help">' + (pub ? "사이트 목록과 강의 주소에서 누구나 볼 수 있어요."
           : "사이트 목록·검색·다른 강의에서 빠지고, 강의 주소로 들어와도 보이지 않아요.<br>저장해야 반영돼요.") + '</span></div>' +
-      '<div class="f"><span class="lbl" id="' + id + 'catL">메뉴</span>' +
-        '<div class="segs" role="radiogroup" aria-labelledby="' + id + 'catL">' +
-          SC.CATS.map(function(c){ return seg("cat", i, c.id, c.id === cat, c.label); }).join("") + '</div></div>' +
+      '<div class="f"><span class="lbl">유튜브에 올린 날짜</span>' +
+        '<div class="ro">' + (v.date ? '<b>' + longDate(v.publishedAt || v.date) + '</b> · 유튜브에서 자동으로 가져와요' : '유튜브 주소를 넣으면 자동으로 들어가요') + '</div>' +
+        '<span class="help">목록과 사이트 순서는 이 날짜로 정해져요(최신이 위).</span></div>' +
       '<div class="f"><label for="' + id + 'url">유튜브 영상 주소</label>' +
         '<input type="url" id="' + id + 'url" class="in mono" data-i="' + i + '" data-k="_url" value="' + esc(v._url) + '" placeholder="https://youtu.be/… 또는 https://www.youtube.com/watch?v=…" autocomplete="off">' +
         '<div class="url-row">' + videoStatus(v) + (v.id ? '<button type="button" class="btn-soft rp press" data-act="refetch" data-i="' + i + '">' + IC.refresh + '유튜브에서 다시 가져오기</button>' : '') + '</div></div>' +
@@ -325,20 +315,75 @@
         '<div class="fsort" data-i="' + i + '">' + files + '</div>' +
         '<div><button type="button" class="btn-soft rp press" data-act="addFile" data-i="' + i + '">' + IC.plus + '자료 추가</button></div></div>' +
       '<div class="vfoot">' + (v.id && pub ? '<a class="site-link rp" href="v/' + esc(v.id) + '/" target="_blank" rel="noopener">사이트에서 보기 ↗</a>' : '<span></span>') +
-        delBtn + '</div>' +
+        '<div class="vfoot-r"><label class="amove"><span>메뉴 옮기기</span><select data-move="' + i + '" aria-label="메뉴 옮기기">' +
+          SC.CATS.map(function(c){ return '<option value="' + c.id + '"' + (c.id === cat ? ' selected' : '') + '>' + esc(c.label) + '</option>'; }).join("") +
+        '</select></label>' + delBtn + '</div></div>' +
     '</div>';
     return '<li class="vitem open"' + attrs + '>' + row + body + '</li>';
   }
+  /* ---------- 목록 보기: 메뉴 칸 · 검색 · 정렬 · 공개 필터 (보기만 바뀌고 저장되지 않음) ---------- */
+  var view = { cat: "signature", q: "", sort: "new", vf: "all" };
+  try { var vc = LS.get("sc-admin-cat"); if (SC.CATS.some(function(c){ return c.id === vc; })) view.cat = vc; } catch(e){}
+  function norm(t){ return String(t || "").toLowerCase().replace(/\s+/g, ""); }
+  function ts(v){ var t = Date.parse(v.publishedAt || v.date); return isNaN(t) ? Infinity : t; }   /* 날짜 없는(새) 강의는 맨 위 */
+  function bare(t){ return String(t || "").replace(/^\s*[\[【(][^\]】)]*[\]】)]\s*/, "").trim(); }
+  function longDate(d){ var m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[1] + "년 " + (+m[2]) + "월 " + (+m[3]) + "일" : ""; }
+  function shown(){
+    var q = norm(view.q);
+    var list = data.videos.map(function(v, i){ return { v:v, i:i }; }).filter(function(x){
+      var v = x.v;
+      if (SC.catOf(v) !== view.cat) return false;
+      if (v === openV && !v.id) return true;
+      if (view.vf === "pub" && v.visible === false) return false;
+      if (view.vf === "priv" && v.visible !== false) return false;
+      return !q || norm(v.title).indexOf(q) > -1;
+    });
+    var byNew = function(a, b){ var ta = ts(a.v), tb = ts(b.v); return ta === tb ? a.i - b.i : (tb > ta ? 1 : -1); };
+    list.sort(view.sort === "old" ? function(a, b){ var ta = ts(a.v), tb = ts(b.v); if (ta === Infinity || tb === Infinity) return byNew(a, b); return ta === tb ? a.i - b.i : ta - tb; }
+      : view.sort === "title" ? function(a, b){ return bare(a.v.title).localeCompare(bare(b.v.title), "ko") || byNew(a, b); }
+      : view.sort === "files" ? function(a, b){ return (b.v.files.length - a.v.files.length) || byNew(a, b); }
+      : byNew);
+    return list;
+  }
   function render(){
     var a = document.activeElement, fid = a && a.id, s0 = a && a.selectionStart, s1 = a && a.selectionEnd;
-    var V = data.videos, on = V.filter(function(v){ return v.visible !== false; }).length;
-    $("count").textContent = V.length ? V.length : "";
-    $("visCount").textContent = V.length ? "공개 " + on + " · 비공개 " + (V.length - on) : "";
-    $("videos").innerHTML = V.length ? V.map(function(v, i){ return itemHtml(v, i); }).join("") :
-      '<li class="empty-list">아직 강의가 없어요. ‘강의 추가’를 눌러 첫 강의를 넣어 주세요.</li>';
+    var V = data.videos, label = SC.catLabel(view.cat);
+    $("mtabs").innerHTML = SC.CATS.map(function(c){
+      var n = V.filter(function(v){ return SC.catOf(v) === c.id; }).length;
+      return '<button type="button" class="mtab rp" role="tab" aria-selected="' + (c.id === view.cat) + '" data-cat="' + c.id + '">' + esc(c.label) + '<span class="mtab-n">' + n + '</span></button>';
+    }).join("");
+    var inCat = V.filter(function(v){ return SC.catOf(v) === view.cat; }), on = inCat.filter(function(v){ return v.visible !== false; }).length;
+    $("catName").textContent = label;
+    $("count").textContent = inCat.length;
+    $("visCount").textContent = inCat.length ? "공개 " + on + " · 비공개 " + (inCat.length - on) : "";
+    $("addLabel").textContent = label + "에 강의 추가";
+    var list = shown(), cond = view.q || view.vf !== "all";
+    $("aresult").hidden = !view.q;
+    if (view.q) $("aresult").innerHTML = "‘<b>" + esc(view.q) + "</b>’ 검색 결과 <b class=\"num\">" + list.length + "</b>개";
+    $("videos").innerHTML = list.length ? list.map(function(x){ return itemHtml(x.v, x.i); }).join("")
+      : (cond ? '<li class="nores"><span class="nores-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><h2>찾는 강의가 없어요</h2><p>검색어나 공개 상태를 바꿔 보세요.</p><button type="button" class="btn-main sm rp press" id="clearCond">조건 지우기</button></li>'
+        : '<li class="empty-list">아직 ' + esc(label) + ' 강의가 없어요.<br>‘' + esc(label) + '에 강의 추가’를 눌러 첫 강의를 넣어 주세요.</li>');
     if (fid && $(fid)){ var el = $(fid); el.focus(); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch(e){} }
-    initSort();
   }
+  $("mtabs").addEventListener("click", function(e){
+    var b = e.target.closest("[data-cat]"); if (!b || b.dataset.cat === view.cat) return;
+    view.cat = b.dataset.cat; view.q = ""; view.vf = "all"; $("aq").value = ""; syncVf(); armedDel = null;
+    LS.set("sc-admin-cat", view.cat); render();
+  });
+  $("aq").addEventListener("input", function(){ view.q = this.value.trim(); render(); });
+  $("asort").addEventListener("change", function(){ view.sort = this.value; render(); });
+  function syncVf(){ $("vfilter").querySelectorAll("[data-vf]").forEach(function(b){ b.setAttribute("aria-checked", b.dataset.vf === view.vf); }); }
+  $("vfilter").addEventListener("click", function(e){ var b = e.target.closest("[data-vf]"); if (!b) return; view.vf = b.dataset.vf; syncVf(); render(); });
+  $("videos").addEventListener("change", function(e){
+    var sel = e.target.closest("select[data-move]"); if (!sel) return;
+    var v = data.videos[+sel.dataset.move]; if (!v) return;
+    v.category = sel.value; markDirty(); render();
+    toast(SC.catLabel(sel.value) + " 칸으로 옮겼어요. 저장하면 사이트에도 반영돼요");
+  });
+  document.addEventListener("click", function(e){
+    if (!e.target.closest("#clearCond")) return;
+    view.q = ""; view.vf = "all"; $("aq").value = ""; syncVf(); render();
+  });
 
   /* ---------- 끌어서 순서 바꾸기 (마우스·터치 모두) ---------- */
   function move(arr, from, to){ arr.splice(to, 0, arr.splice(from, 1)[0]); }
@@ -399,7 +444,7 @@
   }
 
   /* ---------- 저장 바 ---------- */
-  function markDirty(){ dirty = needPages || JSON.stringify(cleanData()) !== baseline; updateSaveBar(); }
+  function markDirty(){ dirty = JSON.stringify(cleanData()) !== baseline; updateSaveBar(); }
   function updateSaveBar(msg){
     var m = $("saveText"), b = $("saveBtn"), bar = document.querySelector(".savebar");
     bar.classList.toggle("dirty", !msg && canSave && !saving && dirty);
@@ -421,7 +466,7 @@
       videos: data.videos.filter(function(v){ return v.id; }).map(function(v){
         return {
           id: v.id, title: v.title.trim(), channel: v.channel, description: v.description.trim(),
-          duration: v.duration, date: v.date || SC.today(), category: SC.catOf(v), visible: v.visible !== false,
+          duration: v.duration, date: v.date || SC.today(), publishedAt: v.publishedAt || undefined, category: SC.catOf(v), visible: v.visible !== false,
           files: v.files.filter(function(f){ return f.link.trim(); }).map(function(f){
             var sn = SC.splitName(f.name), d = SC.download(f.link, sn.type || f.type);
             var t = sn.type || f.type || ({ gdoc:"pdf", gsheet:"xlsx", gslide:"pptx" }[d.kind]) || "pdf";
@@ -495,6 +540,40 @@
       .map(function(p){ return { path:p, mode:"100644", type:"blob", sha:null }; });
   }
 
+  /* 저장된 강의 목록 기준으로, 저장소에 없는 공유 페이지(v/영상ID/)·메뉴 페이지를 만들고
+     비공개·삭제된 강의의 공유 페이지는 지움. 저장소 파일 목록으로 확인하므로 사이트 반영 지연과 무관 */
+  var autoBusy = false;
+  function autoPages(){
+    if (!canSave || autoBusy || !baseline) return;
+    autoBusy = true;
+    var saved = JSON.parse(baseline), head, baseTree, remote = {};
+    gh("/git/ref/heads/" + encodeURIComponent(branch)).then(function(ref){ head = ref.object.sha; return gh("/git/commits/" + head); })
+      .then(function(c){ baseTree = c.tree.sha; return gh("/git/trees/" + baseTree + "?recursive=1"); })
+      .then(function(t){
+        (t.tree || []).forEach(function(e){ if (e.type === "blob") remote[e.path] = e.sha; });
+        var want = saved.videos.filter(function(v){ return v.visible !== false; }).map(function(v){ return "v/" + v.id + "/index.html"; })
+          .concat(SC.MENUS.map(function(c){ return c.id + "/index.html"; }));
+        var missing = want.filter(function(p){ return !remote[p]; });
+        var stale = staleShare(remote, want.map(function(p){ return { path:p }; }));
+        if (!missing.length && !stale.length) return null;
+        return Promise.all([
+          fetch("index.html?tpl=" + Date.now(), { cache:"no-store" }).then(function(r){ if (!r.ok) throw new Error("tpl"); return r.text(); }),
+          Promise.all(saved.videos.map(function(v){ return missing.indexOf("v/" + v.id + "/index.html") > -1 ? bestThumb(v.id) : ""; }))
+        ]).then(function(r){
+          var need = {}; missing.forEach(function(p){ need[p] = true; });
+          var tree = builtPages(r[0], saved, r[1]).filter(function(x){ return need[x.path]; }).concat(stale);
+          return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree }) });
+        }).then(function(t){
+          return gh("/git/commits", { method:"POST", body: JSON.stringify({ message: "공유·메뉴 페이지 자동 정리", tree: t.sha, parents:[head] }) });
+        }).then(function(c){
+          return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) }).then(function(){ return c; });
+        });
+      })
+      .then(function(c){ if (c){ showLast(c.committer && c.committer.date); Deploy.expect(c.sha); } })
+      .catch(function(){ /* 실패해도 다음 저장 때 함께 만들어짐 */ })
+      .then(function(){ autoBusy = false; });
+  }
+
   function save(){
     if (!canSave || saving) return;
     var blank = data.videos.filter(function(v){ return !v.id; }).length;
@@ -521,7 +600,7 @@
       newCommit = c;
       return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) });
     }).then(function(){
-      sha = newSha; saving = false; dirty = false; baseline = JSON.stringify(out); needPages = false;
+      sha = newSha; saving = false; dirty = false; baseline = JSON.stringify(out);
       showLast(newCommit.committer && newCommit.committer.date); Deploy.expect(newCommit.sha);
       if (blank) data.videos = data.videos.filter(function(v){ return v.id; });
       render(); updateSaveBar();
@@ -593,7 +672,7 @@
     }
   });
   $("addVideo").addEventListener("click", function(){
-    var v = { id:"", _url:"", title:"", channel:"", description:"", duration:"", date:"", _st:"", category:"signature", visible:true, files:[{ name:"", type:"", link:"", size:"", _st:"" }] };
+    var v = { id:"", _url:"", title:"", channel:"", description:"", duration:"", date:"", _st:"", category:view.cat, visible:true, files:[{ name:"", type:"", link:"", size:"", _st:"" }] };
     data.videos.unshift(v); openV = v; armedDel = null; render();
     var el = $("v0url"); if (el){ el.focus(); el.scrollIntoView({ block:"center", behavior:"smooth" }); }
   });

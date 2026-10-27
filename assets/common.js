@@ -176,6 +176,14 @@
         if (!long) return;
         var atTop = y < 8, atEnd = y + window.innerHeight >= de.scrollHeight - 8;
         up.hidden = atTop; down.hidden = atEnd; line.hidden = atTop || atEnd;
+        /* 가로: 본문(카드 목록) 오른쪽 끝에서 16px 바깥. 자리가 없으면 화면 오른쪽 20px(휴대폰 12px) */
+        var main = opts.main && document.querySelector(opts.main);
+        if (main) {
+          var mr = main.getBoundingClientRect(), cs = getComputedStyle(main);
+          var contentRight = mr.right - (parseFloat(cs.paddingRight) || 0);
+          var edge = small.matches ? 12 : 20;
+          box.style.right = Math.max(edge, Math.round(document.documentElement.clientWidth - contentRight - 16 - box.offsetWidth)) + "px";
+        }
         var foot = opts.foot && document.querySelector(opts.foot);
         if (foot) {
           var base = small.matches ? 16 : 20, gap = small.matches ? 12 : 16;
