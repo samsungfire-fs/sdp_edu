@@ -115,8 +115,10 @@
     for (var i = 0; i < SC.CATS.length; i++) if (SC.CATS[i].id === c) return c;
     return "signature";
   };
+  /* 사이트 메뉴: 맨 앞 '전체' + 강의 분류 */
+  SC.MENUS = [{ id: "all", label: "전체" }].concat(SC.CATS);
   SC.catLabel = function (id) {
-    for (var i = 0; i < SC.CATS.length; i++) if (SC.CATS[i].id === id) return SC.CATS[i].label;
+    for (var i = 0; i < SC.MENUS.length; i++) if (SC.MENUS[i].id === id) return SC.MENUS[i].label;
     return SC.CATS[0].label;
   };
   SC.isPublic = function (v) { return !!v && v.visible !== false; };
@@ -142,6 +144,52 @@
       el.classList.remove("rp-on"); void el.offsetWidth; el.classList.add("rp-on");
       clearTimeout(el._rpT); el._rpT = setTimeout(function () { el.classList.remove("rp-on"); }, 900);
     }, { passive: true });
+  };
+
+  /* 오른쪽 아래 '맨 위로 · 맨 아래로' 버튼.
+     - 페이지가 화면보다 길 때만 보임. 맨 위에선 ↓만, 맨 아래에선 ↑만, 중간에선 둘 다
+     - opts.foot: 이 요소(맨 아래 검은 바)가 화면에 올라오면 그 위에 멈춤 */
+  SC.fab = function (opts) {
+    opts = opts || {};
+    var box = document.createElement("div");
+    box.className = "fab"; box.hidden = true;
+    box.innerHTML =
+      '<button type="button" class="rp" data-to="top" aria-label="맨 위로" title="맨 위로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>' +
+      '<span class="fab-line" aria-hidden="true"></span>' +
+      '<button type="button" class="rp" data-to="bottom" aria-label="맨 아래로" title="맨 아래로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>';
+    document.body.appendChild(box);
+    var up = box.children[0], line = box.children[1], down = box.children[2];
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var small = window.matchMedia ? matchMedia("(max-width:560px)") : { matches: false };
+    box.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      var top = b.dataset.to === "top" ? 0 : document.documentElement.scrollHeight;
+      window.scrollTo({ top: top, behavior: reduce ? "auto" : "smooth" });
+    });
+    var raf = 0;
+    function check() {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(function () {
+        var de = document.documentElement, y = window.scrollY || de.scrollTop;
+        var long = !document.body.classList.contains("no-fab") && de.scrollHeight > window.innerHeight + 40;
+        box.hidden = !long;
+        if (!long) return;
+        var atTop = y < 8, atEnd = y + window.innerHeight >= de.scrollHeight - 8;
+        up.hidden = atTop; down.hidden = atEnd; line.hidden = atTop || atEnd;
+        var foot = opts.foot && document.querySelector(opts.foot);
+        if (foot) {
+          var base = small.matches ? 16 : 20, gap = small.matches ? 12 : 16;
+          var over = window.innerHeight - foot.getBoundingClientRect().top;
+          box.style.bottom = "calc(" + Math.max(base, over + gap) + "px + " + (over + gap > base ? "0px" : "env(safe-area-inset-bottom, 0px)") + ")";
+        }
+      });
+    }
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    if (window.ResizeObserver) new ResizeObserver(check).observe(document.body);
+    new MutationObserver(check).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    check();
+    return { check: check };
   };
 
   w.SC = SC;

@@ -19,28 +19,29 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
 <link rel="icon" href="assets/favicon-48.png?v=3" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
-<link rel="stylesheet" href="assets/site.css?v=20261027">
+<link rel="preload" href="assets/TmoneyRoundWindRegular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=20261027d">
 </head>
 <body>
 
 <a class="banner-link" href="./" data-go aria-label="홈으로">
 <picture>
-  <source type="image/webp" sizes="max(100vw, 576px)" srcset="assets/banner-960.webp 960w, assets/banner-1600.webp 1600w, assets/banner-2560.webp 2560w, assets/banner-3840.webp 3840w">
-  <img class="banner" src="assets/banner-1600.jpg" sizes="max(100vw, 576px)" srcset="assets/banner-960.jpg 960w, assets/banner-1600.jpg 1600w, assets/banner-2560.jpg 2560w, assets/banner-3840.jpg 3840w" width="5120" height="854" alt="삼성화재금융서비스 영업개발파트" fetchpriority="high">
+  <source type="image/webp" sizes="max(100vw, 576px)" srcset="assets/banner-960.webp?v=2 960w, assets/banner-1600.webp?v=2 1600w, assets/banner-2560.webp?v=2 2560w, assets/banner-3840.webp?v=2 3840w">
+  <img class="banner" src="assets/banner-1600.jpg?v=2" sizes="max(100vw, 576px)" srcset="assets/banner-960.jpg?v=2 960w, assets/banner-1600.jpg?v=2 1600w, assets/banner-2560.jpg?v=2 2560w, assets/banner-3840.jpg?v=2 3840w" width="5120" height="854" alt="삼성화재금융서비스 영업개발파트" fetchpriority="high">
 </picture>
 </a>
 
 <header class="bar">
   <div class="wrap">
-    <a class="bar-back rp" id="barBack" href="signature/" data-go>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span id="barBackText">시그니처클래스</span>
+    <a class="bar-back rp" id="barBack" href="all/" data-go>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span id="barBackText">전체</span>
     </a>
     <nav class="menu" id="menu" aria-label="강의 분류"></nav>
-    <span class="bar-count" id="barCount"></span>
   </div>
 </header>
 
@@ -60,13 +61,14 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261027"></script>
+<script src="assets/common.js?v=20261027c"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
   var TAB_TITLE = "영개파 교육 자료"; /* 브라우저 탭에 항상 이 이름 */
   var ROOT = new URL(".", document.baseURI).href; /* 사이트 맨 위 주소 (강의·메뉴 페이지에서도 같음) */
   if (!document.querySelector("base")){ var b = document.createElement("base"); b.href = ROOT; document.head.prepend(b); }
+  var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var IC = {
     play: '<svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',
@@ -76,8 +78,8 @@
     link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+    next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>',
     down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
-    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
     person: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5z"/></svg>',
     send: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6l-.1 6.5L15 12 3.3 13.9z"/></svg>',
     video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5.5" width="14" height="13" rx="3"/><path d="m16.5 10.5 5-3v9l-5-3"/></svg>',
@@ -95,87 +97,183 @@
   }
 
   /* ---------- 주소 ---------- */
-  function catUrl(c){ return ROOT + c + "/"; }
+  function menuUrl(m, page, q){
+    var u = ROOT + m + "/", p = [];
+    if (q) p.push("q=" + encodeURIComponent(q));
+    if (page > 1) p.push("page=" + page);
+    return u + (p.length ? "?" + p.join("&") : "");
+  }
   function videoUrl(id){ return ROOT + "v/" + encodeURIComponent(id) + "/"; }
+  function isMenu(m){ return SC.MENUS.some(function(x){ return x.id === m; }); }
   function parse(){
     var rel = decodeURIComponent(location.pathname).slice(decodeURIComponent(new URL(ROOT).pathname).length);
     var q = new URLSearchParams(location.search), m;
     var v = q.get("v") || ((m = rel.match(/^v\/([\w-]{6,})\/?(?:index\.html)?$/)) ? m[1] : "");
     if (v) return { v: v };
     var c = q.get("c") || ((m = rel.match(/^([a-z]+)\/?(?:index\.html)?$/)) ? m[1] : "");
-    var ok = SC.CATS.some(function(x){ return x.id === c; });
-    return { c: ok ? c : "signature" };
+    return { m: isMenu(c) ? c : "all", page: Math.max(1, parseInt(q.get("page"), 10) || 1), q: q.get("q") || "" };
+  }
+
+  /* ---------- 데이터 ---------- */
+  var DATA = { site:{}, videos:[] };
+  function pub(){ return (DATA.videos || []).filter(SC.isPublic); }
+  function newest(list){
+    return list.map(function(v, i){ return { v:v, i:i }; })
+      .sort(function(a, b){ return String(b.v.date || "").localeCompare(String(a.v.date || "")) || a.i - b.i; })
+      .map(function(x){ return x.v; });
+  }
+  /* 전체: 등록일 최신순 / 메뉴: 관리자에서 정한 순서 */
+  function listOf(m){
+    if (m === "all") return newest(pub());
+    return pub().filter(function(v){ return SC.catOf(v) === m; });
   }
 
   /* ---------- 공통 조각 ---------- */
-  var DATA = { site:{}, videos:[] };
-  function pub(){ return (DATA.videos || []).filter(SC.isPublic); }
-  function inCat(c){ return pub().filter(function(v){ return SC.catOf(v) === c; }); }
-
   function drawMenu(cur){
-    $("menu").innerHTML = SC.CATS.map(function(c){
-      return '<a href="' + catUrl(c.id) + '" data-go' + (c.id === cur ? ' aria-current="page"' : '') + '>' + esc(c.label) + '</a>';
+    $("menu").innerHTML = SC.MENUS.map(function(c){
+      return '<a href="' + menuUrl(c.id) + '" data-go' + (c.id === cur ? ' aria-current="page"' : '') + '>' + esc(c.label) + '</a>';
     }).join("");
-    var n = inCat(cur).length;
-    $("barCount").textContent = n ? "강의 " + n + "개" : "";
     var act = $("menu").querySelector('[aria-current]');
-    if (act && act.scrollIntoView) act.scrollIntoView({ block:"nearest", inline:"nearest" });
+    /* 고른 메뉴가 화면 밖이면 보이게만 (보이면 그대로 두어 '전체'가 잘리지 않게) */
+    var mn = $("menu");
+    if (act){
+      var a = act.getBoundingClientRect(), r = mn.getBoundingClientRect();
+      if (a.right > r.right) mn.scrollLeft += a.right - r.right + 16;
+      else if (a.left < r.left) mn.scrollLeft -= r.left - a.left + 16;
+    }
   }
-
   function metaText(v, withDur){
-    var p = [];
-    if (v.channel) p.push(esc(v.channel));
-    if (v.date) p.push(SC.fmtDate(v.date));
-    if (withDur && v.duration) p.push(esc(v.duration));
-    return p.join(" · ");
+    var d = SC.fmtDate(v.date), p = [];
+    if (d) p.push('<span class="nowrap">' + d + '</span>');
+    if (withDur && v.duration) p.push('<span class="nowrap">' + esc(v.duration) + '</span>');
+    var rest = p.join(" · ");
+    if (!v.channel) return rest;
+    return rest ? '<span class="ch">' + esc(v.channel) + ' · </span>' + rest : esc(v.channel);
   }
-  function card(v){
+  function menuBadge(v){
+    var c = SC.catOf(v);
+    return '<span class="mbadge" data-menu="' + c + '">' + esc(SC.catLabel(c)) + '</span>';
+  }
+  function card(v, withMenu){
     var n = (v.files || []).length;
     return '<li><a class="card rp" href="' + videoUrl(v.id) + '" data-go>' +
       '<div class="thumb">' + SC.thumbImg(v.id) +
         (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') +
         (v.duration ? '<span class="chip-dur">' + esc(v.duration) + '</span>' : '') +
         '<span class="play" aria-hidden="true">' + IC.play + '</span></div>' +
-      '<div class="card-body"><h3>' + esc(v.title || "제목 없음") + '</h3>' +
-        '<div class="card-meta"><span>' + metaText(v) + '</span>' +
-          (n ? '<span class="chip-files">' + IC.dl + '자료 ' + n + '개</span>' : '') + '</div></div></a></li>';
+      '<div class="card-body">' + (withMenu ? '<div>' + menuBadge(v) + '</div>' : '') +
+        '<h3>' + esc(v.title || "제목 없음") + '</h3>' +
+        '<div class="card-meta"><span class="date">' + metaText(v) + '</span>' +
+          (n ? '<span class="chip-files">' + IC.dl + '자료&nbsp;' + n + '개</span>' : '') + '</div></div></a></li>';
   }
 
-  /* ---------- 메뉴(강의 목록) 화면 ---------- */
-  function renderList(c){
-    document.body.classList.remove("watch-page");
-    drawMenu(c);
-    var V = inCat(c);
-    if (!V.length){
+  /* ---------- 목록 화면 (전체 · 메뉴) ---------- */
+  var L = null;            /* 지금 목록 상태 { m, page, q } */
+  var lastList = "";       /* 강의에서 '돌아가기' 할 목록 주소 */
+  function perPage(){ return innerWidth > 980 ? 12 : innerWidth > 560 ? 9 : 6; }
+  var lastPer = perPage();
+  function norm(s){ return String(s || "").toLowerCase().replace(/\s+/g, ""); }
+  function filtered(){
+    var all = listOf(L.m), q = norm(L.q);
+    if (!q) return all;
+    return all.filter(function(v){
+      return norm(v.title).indexOf(q) > -1 || (L.m === "all" && norm(SC.catLabel(SC.catOf(v))).indexOf(q) > -1);
+    });
+  }
+  function pageList(cur, total){
+    if (total <= 7){ var a = []; for (var i = 1; i <= total; i++) a.push(i); return a; }
+    var out = [1];
+    if (cur - 1 > 2) out.push("…");
+    for (var k = Math.max(2, cur - 1); k <= Math.min(total - 1, cur + 1); k++) out.push(k);
+    if (cur + 1 < total - 1) out.push("…");
+    out.push(total);
+    return out;
+  }
+  function syncUrl(push){
+    var u = menuUrl(L.m, L.page, L.q);
+    lastList = u;
+    if (location.href === u) return;
+    if (push) history.pushState(null, "", u); else history.replaceState(null, "", u);
+  }
+  function drawGrid(){
+    var list = filtered(), per = perPage(), pages = Math.max(1, Math.ceil(list.length / per));
+    if (L.page > pages) L.page = pages;
+    var shown = list.slice((L.page - 1) * per, L.page * per);
+    var box = $("listBody"), html = "";
+    if (L.q) html += '<p class="result">‘<span class="kw">' + esc(L.q) + '</span>’ 검색 결과 <span class="num">' + list.length + '</span>개</p>';
+    if (!list.length){
+      html += '<div class="nores"><span class="nores-ic">' + IC.search + '</span><h2>찾는 강의가 없어요</h2><p>다른 낱말로 다시 찾아 보세요.</p>' +
+        '<button type="button" class="btn-blue rp press" id="clearQ">검색어 지우기</button></div>';
+    } else {
+      html += '<ul class="grid">' + shown.map(function(v){ return card(v, L.m === "all"); }).join("") + '</ul>';
+      if (pages > 1){
+        html += '<nav class="pager" aria-label="페이지">' +
+          '<button type="button" class="pg pg-arrow rp" data-page="' + (L.page - 1) + '" aria-label="이전 페이지"' + (L.page <= 1 ? ' disabled' : '') + '>' + IC.back + '</button>' +
+          pageList(L.page, pages).map(function(n){
+            return n === "…" ? '<span class="pg-gap" aria-hidden="true">…</span>'
+              : '<button type="button" class="pg rp" data-page="' + n + '"' + (n === L.page ? ' aria-current="page"' : '') + ' aria-label="' + n + '페이지">' + n + '</button>';
+          }).join("") +
+          '<button type="button" class="pg pg-arrow rp" data-page="' + (L.page + 1) + '" aria-label="다음 페이지"' + (L.page >= pages ? ' disabled' : '') + '>' + IC.next + '</button>' +
+        '</nav>';
+      }
+    }
+    box.innerHTML = html;
+    lastPer = per;
+  }
+  function toListTop(){
+    var h = $("listH"); if (!h) return;
+    var bar = document.querySelector(".bar").offsetHeight;
+    window.scrollTo({ top: h.getBoundingClientRect().top + scrollY - bar - 20, behavior: REDUCE ? "auto" : "smooth" });
+  }
+
+  function renderList(r){
+    document.body.classList.remove("watch-page", "no-fab");
+    drawMenu(r.m);
+    L = { m: r.m, page: r.page, q: r.q };
+    var all = listOf(L.m);
+    if (!all.length){
+      lastList = menuUrl(L.m);
       $("app").innerHTML = '<section class="list-page"><div class="empty">' +
         '<span class="empty-ic">' + IC.video + '</span>' +
         '<h2>아직 등록된 강의가 없어요</h2><p>강의가 올라오면 여기에서 바로 보고 자료를 받을 수 있어요.</p>' +
         '</div></section>';
-      return;
+      return menuUrl(L.m);
     }
-    $("app").innerHTML = '<section class="list-page" aria-labelledby="allH">' +
-      '<div class="list-head"><h1 id="allH">전체 강의 <span class="num">' + V.length + '</span></h1>' +
-        (V.length > 6 ? '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기" autocomplete="off"></label>' : '') +
-      '</div><ul class="grid" id="grid"></ul><p class="none" id="none" hidden>찾는 강의가 없어요.</p></section>';
-    var draw = function(q){
-      q = String(q || "").trim().toLowerCase();
-      var list = q ? V.filter(function(v){ return (v.title || "").toLowerCase().indexOf(q) > -1; }) : V;
-      $("grid").innerHTML = list.map(card).join("");
-      $("none").hidden = list.length > 0;
-    };
-    draw("");
-    if ($("q")) $("q").addEventListener("input", function(){ draw(this.value); });
+    var title = L.m === "all" ? "전체 강의" : SC.catLabel(L.m);
+    $("app").innerHTML = '<section class="list-page" aria-labelledby="listH">' +
+      '<div class="list-head"><h1 id="listH">' + esc(title) + ' <span class="num">' + all.length + '</span></h1>' +
+        '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기" autocomplete="off" enterkeyhint="search"></label>' +
+      '</div><div id="listBody"></div></section>';
+    $("q").value = L.q;
+    drawGrid();
+    $("q").addEventListener("input", function(){ L.q = this.value.trim(); L.page = 1; drawGrid(); syncUrl(false); });
+    $("q").addEventListener("keydown", function(e){ if (e.key === "Enter") this.blur(); });
+    $("listBody").addEventListener("click", function(e){
+      var pg = e.target.closest("button[data-page]");
+      if (pg && !pg.disabled){ L.page = +pg.dataset.page; drawGrid(); syncUrl(true); toListTop(); return; }
+      if (e.target.closest("#clearQ")){ L.q = ""; L.page = 1; $("q").value = ""; drawGrid(); syncUrl(false); $("q").focus(); }
+    });
+    lastList = menuUrl(L.m, L.page, L.q);
+    return lastList;
   }
+  /* 창 너비가 바뀌어 한 페이지 개수가 달라지면, 보던 첫 카드가 있는 페이지로 */
+  window.addEventListener("resize", function(){
+    var per = perPage();
+    if (!L || !$("listBody") || per === lastPer) return;
+    var first = (L.page - 1) * lastPer;
+    L.page = Math.floor(first / per) + 1;
+    drawGrid(); syncUrl(false);
+  });
 
   /* ---------- 강의 화면 ---------- */
   function notFound(){
+    L = null;
     document.body.classList.remove("watch-page");
-    drawMenu("signature");
-    $("menu").querySelectorAll("[aria-current]").forEach(function(a){ a.removeAttribute("aria-current"); });
-    $("barCount").textContent = "";
+    document.body.classList.add("no-fab");
+    drawMenu("");
     $("app").innerHTML = '<div class="state"><span class="state-ic">' + IC.videoX + '</span>' +
       '<h1>강의를 찾을 수 없어요</h1><p>강의가 내려갔거나 주소가 잘못됐어요.<br>전체 강의에서 다시 찾아 주세요.</p>' +
-      '<a class="btn-blue rp press" href="' + catUrl("signature") + '" data-go>전체 강의 보기</a></div>';
+      '<a class="btn-blue rp press" href="' + menuUrl("all") + '" data-go>전체 강의 보기</a></div>';
   }
 
   function fileRow(f){
@@ -186,24 +284,32 @@
       ? '<a class="dl rp press" href="' + esc(d.url) + '" rel="noopener" aria-label="' + esc(name) + ' 받기">' + IC.dl + '<span>받기</span></a>'
       : '<span class="dl off">준비 중</span>';
     return '<li class="file"><span class="ftype ' + cls + '" aria-hidden="true">' + SC.typeLabel(t) + '</span>' +
-      '<div class="fname"><strong>' + esc(name) + '</strong><span>' + SC.typeLabel(t) + (f.size ? ' · ' + esc(f.size) : '') + '</span></div>' + btn + '</li>';
+      '<div class="fname"><strong>' + esc(name) + '</strong><span class="nowrap">' + SC.typeLabel(t) + (f.size ? ' · ' + esc(f.size) : '') + '</span></div>' + btn + '</li>';
   }
 
   function renderVideo(id){
     var v = pub().filter(function(x){ return x.id === id; })[0];
     if (!v) return notFound();
+    L = null;
     var c = SC.catOf(v), files = v.files || [];
+    /* 돌아갈 목록: 들어온 목록(전체 또는 메뉴), 주소로 바로 왔으면 강의가 속한 메뉴 */
+    var backUrl = lastList || menuUrl(c), backMenu = c;
+    if (lastList){ var bm = new URL(lastList).pathname.match(/\/([a-z]+)\/$/); if (bm && isMenu(bm[1])) backMenu = bm[1]; }
     document.body.classList.add("watch-page");
-    drawMenu(c);
-    $("barBack").href = catUrl(c);
-    $("barBackText").textContent = SC.catLabel(c);
+    document.body.classList.remove("no-fab");
+    drawMenu(backMenu);
+    $("barBack").href = backUrl;
+    $("barBackText").textContent = SC.catLabel(backMenu);
 
-    var others = inCat(c).filter(function(x){ return x.id !== v.id; }).slice(0, 6);
+    /* 다른 강의: 같은 메뉴 최신순 6개, 모자라면 다른 메뉴 최신순으로 채움 */
+    var rest = newest(pub()).filter(function(x){ return x.id !== v.id; });
+    var others = rest.filter(function(x){ return SC.catOf(x) === c; })
+      .concat(rest.filter(function(x){ return SC.catOf(x) !== c; })).slice(0, 6);
     var yt = "https://www.youtube.com/watch?v=" + encodeURIComponent(v.id);
 
     $("app").innerHTML =
       '<div class="watch">' +
-        '<a class="back-all rp" href="' + catUrl(c) + '" data-go>' + IC.back + '전체 강의</a>' +
+        '<a class="back-all rp" href="' + backUrl + '" data-go>' + IC.back + '전체 강의</a>' +
         '<div class="watch-grid">' +
           '<div class="watch-main">' +
             '<div class="player-box"><div class="player">' +
@@ -225,13 +331,13 @@
               '<button type="button" class="more rp" id="more" aria-expanded="false" hidden><span>더보기</span>' + IC.down + '</button></section>' : '') +
           '</div>' +
           '<aside class="files-card" aria-labelledby="filesH">' +
-            '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="num">' + files.length + '</span>개' : '') + '</h2>' +
+            '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
             (files.length
               ? '<p class="files-note">받기를 누르면 바로 저장돼요.</p><ul class="files">' + files.map(fileRow).join("") + '</ul>'
               : '<div class="files-empty"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>') +
           '</aside>' +
         '</div>' +
-        (others.length ? '<section class="others" aria-labelledby="moreH"><h2 id="moreH">다른 강의</h2><ul class="grid">' + others.map(card).join("") + '</ul></section>' : '') +
+        (others.length ? '<section class="others" aria-labelledby="moreH"><h2 id="moreH">다른 강의</h2><ul class="grid">' + others.map(function(x){ return card(x, false); }).join("") + '</ul></section>' : '') +
       '</div>';
 
     $("share").addEventListener("click", function(){
@@ -256,8 +362,8 @@
     var r = parse(), want;
     document.title = TAB_TITLE;
     if (r.v){ renderVideo(r.v); want = videoUrl(r.v); }
-    else { renderList(r.c); want = catUrl(r.c); }
-    /* 주소창을 정식 주소로 맞춤 (예: 맨 위 주소 → signature/) */
+    else want = renderList(r);
+    /* 주소창을 정식 주소로 맞춤 (예: 맨 위 주소 → all/) */
     if (location.href.split("#")[0] !== want) history.replaceState(null, "", want + location.hash);
   }
 
@@ -284,6 +390,7 @@
   });
 
   SC.ripple();
+  SC.fab({ foot: ".foot" });
 
   /* 고지 문구: 첫 줄은 노란 강조, 둘째 줄은 쉼표 기준으로 두 덩어리(줄바꿈이 깔끔하게) */
   function drawNotice(s){
@@ -308,7 +415,8 @@
       route();
     })
     .catch(function(){
-      drawMenu(parse().c || "signature");
+      drawMenu(parse().m || "all");
+      document.body.classList.add("no-fab");
       $("app").innerHTML = '<div class="state"><span class="state-ic">' + IC.videoX + '</span><h1>목록을 불러오지 못했어요</h1><p>잠시 후 새로고침해 주세요.</p></div>';
     });
 })();

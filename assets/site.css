@@ -1,5 +1,9 @@
 /* 영개파 교육 자료 — 공통 스타일 (디자인: F 나이트 앤 데이 확정안)
    Layout: 배너 → 검정 메뉴 바 → 본문(홈: 강의 카드 / 강의: 영상·자료) → 검정 푸터(고지 문구) */
+/* 글꼴: 티머니 둥근바람(본문·버튼·배지) + 주아(큰 제목·메뉴, Google Fonts) */
+@font-face{font-family:"RoundWind"; font-weight:400; font-style:normal; font-display:swap; src:url(TmoneyRoundWindRegular.woff2) format("woff2")}
+@font-face{font-family:"RoundWind"; font-weight:800; font-style:normal; font-display:swap; src:url(TmoneyRoundWindExtraBold.woff2) format("woff2")}
+*{font-synthesis:none}
 :root{
   --bg:#F1F3FA;
   --card:#FFFFFF;
@@ -31,8 +35,9 @@
   --zip:#4B567E; --zip-bg:#EEF1F7;
   --title-band:#07080C; --title-band-ink:#FFFFFF; --title-band-sub:#C3CAE8; --title-band-btn:#FFFFFF; --title-band-btn-ink:#07080C;
   --hover-shadow:0 20px 40px -18px rgba(0,60,220,.45);
-  --head:"Jua","Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --head:"RoundWind","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --jua:"Jua","RoundWind","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"RoundWind","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
   --ease:cubic-bezier(0.23,1,0.32,1);
 }
 @media (prefers-color-scheme: dark){
@@ -53,7 +58,7 @@
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.7; word-break:keep-all; overflow-wrap:anywhere}
-h1,h2,h3{font-family:var(--head); font-weight:400; margin:0}
+h1,h2,h3{font-family:var(--head); font-weight:800; font-weight:400; margin:0}
 a{color:var(--link)}
 img{max-width:100%}
 ::selection{background:var(--sky); color:#07080C}
@@ -83,11 +88,11 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .bar .wrap{height:66px; display:flex; align-items:center; gap:24px}
 .menu{display:flex; gap:28px; height:100%; margin-right:auto; overflow-x:auto; scrollbar-width:none; white-space:nowrap}
 .menu::-webkit-scrollbar{display:none}
-.menu a{display:flex; align-items:center; height:100%; color:var(--bar-dim); font-family:var(--head); font-size:18px; text-decoration:none; flex:none}
+.menu a{display:flex; align-items:center; height:100%; color:var(--bar-dim); font-family:var(--head); font-weight:800; font-size:18px; text-decoration:none; flex:none}
 .menu a:hover{color:var(--bar-ink)}
 .menu a[aria-current="page"]{color:var(--bar-ink); box-shadow:inset 0 -3px 0 var(--sky)}
 .bar-count{font-size:15px; color:var(--bar-dim); white-space:nowrap}
-.bar-back{display:none; align-items:center; gap:2px; height:44px; padding:0 12px 0 0; color:var(--bar-ink); text-decoration:none; font-family:var(--head); font-size:17px}
+.bar-back{display:none; align-items:center; gap:2px; height:44px; padding:0 12px 0 0; color:var(--bar-ink); text-decoration:none; font-family:var(--head); font-weight:800; font-size:17px}
 .bar-back svg{width:22px; height:22px; color:var(--sky)}
 @media (max-width:980px){ .bar .wrap{height:62px} .menu{gap:26px} .menu a{font-size:17px} .bar-count{font-size:14px} }
 @media (max-width:640px){ .bar-count{display:none} }
@@ -114,14 +119,14 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .card:active{transform:scale(.98)}
 .thumb{position:relative; aspect-ratio:16/9; max-width:100%; background:var(--thumb); overflow:hidden}
 .thumb img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
-.chip-new{position:absolute; left:14px; top:14px; background:var(--sky); color:#07080C; font-family:var(--head); font-size:14px; line-height:1; padding:6px 12px; border-radius:999px}
-.chip-dur{position:absolute; right:12px; bottom:12px; background:#07080C; color:#FFFFFF; font-family:var(--head); font-size:14px; line-height:1; padding:6px 10px; border-radius:8px}
+.chip-new{position:absolute; left:14px; top:14px; background:var(--sky); color:#07080C; font-family:var(--head); font-weight:800; font-size:14px; line-height:1; padding:6px 12px; border-radius:999px}
+.chip-dur{position:absolute; right:12px; bottom:12px; background:#07080C; color:#FFFFFF; font-family:var(--head); font-weight:800; font-size:14px; line-height:1; padding:6px 10px; border-radius:8px}
 .play{position:absolute; left:50%; top:50%; width:62px; height:62px; margin:-31px 0 0 -31px; border-radius:999px; background:#003CDC; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.92); transition:opacity 160ms ease-out, transform 220ms var(--ease)}
 .play svg{width:22px; height:22px; margin-left:3px}
 .card-body{padding:20px 22px 22px; display:flex; flex-direction:column; gap:14px; flex:1}
 .card-body h2, .card-body h3{font-size:19px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
 .card-meta{margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; color:var(--ink-2)}
-.chip-files{display:inline-flex; align-items:center; gap:6px; background:var(--blue-soft); color:var(--blue); font-family:var(--head); font-size:14px; line-height:1; padding:7px 12px; border-radius:999px; white-space:nowrap}
+.chip-files{display:inline-flex; align-items:center; gap:6px; background:var(--blue-soft); color:var(--blue); font-family:var(--head); font-weight:800; font-size:14px; line-height:1; padding:7px 12px; border-radius:999px; white-space:nowrap}
 .chip-files svg{width:15px; height:15px}
 @media (prefers-color-scheme: dark){ .chip-files{color:var(--link)} }
 @media (hover:hover) and (pointer:fine){
@@ -136,14 +141,14 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .empty-ic svg{width:40px; height:40px}
 .empty h2{margin-top:8px; font-size:26px}
 .empty p{margin:0; font-size:17px; line-height:1.6; color:var(--ink-2)}
-.btn-blue{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; padding:0 24px; border:0; border-radius:999px; background:var(--blue); color:var(--blue-ink); font-family:var(--head); font-size:17px; text-decoration:none; cursor:pointer}
+.btn-blue{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; padding:0 24px; border:0; border-radius:999px; background:var(--blue); color:var(--blue-ink); font-family:var(--head); font-weight:800; font-size:17px; text-decoration:none; cursor:pointer}
 .btn-blue svg{width:18px; height:18px}
 .empty .btn-blue{margin-top:12px}
 @media (max-width:560px){ .empty{padding:56px 20px; border-radius:22px} .empty h2{font-size:23px} .empty p{font-size:16px} }
 
 /* ---------- 강의 페이지 ---------- */
 .watch{padding-top:24px; padding-bottom:112px}
-.back-all{display:inline-flex; align-items:center; gap:2px; height:44px; padding:0 10px 0 2px; color:var(--ink); text-decoration:none; font-family:var(--head); font-size:17px; margin-bottom:12px; border-radius:999px}
+.back-all{display:inline-flex; align-items:center; gap:2px; height:44px; padding:0 10px 0 2px; color:var(--ink); text-decoration:none; font-family:var(--head); font-weight:800; font-size:17px; margin-bottom:12px; border-radius:999px}
 .back-all svg{width:22px; height:22px; color:var(--blue)}
 .watch-grid{display:flex; flex-wrap:wrap; gap:32px; align-items:flex-start}
 .watch-main{flex:999 1 560px; min-width:0; display:flex; flex-direction:column; gap:24px}
@@ -153,7 +158,7 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .lec-meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:15px; color:var(--ink-2)}
 .lec-meta .chip-new{position:static}
 .lec-info h1{font-size:clamp(26px,2.4vw,34px); line-height:1.38}
-.copy-btn{align-self:flex-start; margin-top:4px; height:48px; padding:0 22px; border:0; border-radius:999px; background:var(--card); color:var(--ink); font-family:var(--head); font-size:16px; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer}
+.copy-btn{align-self:flex-start; margin-top:4px; height:48px; padding:0 22px; border:0; border-radius:999px; background:var(--card); color:var(--ink); font-family:var(--head); font-weight:800; font-size:16px; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer}
 .copy-btn svg{width:20px; height:20px; color:var(--blue)}
 @media (prefers-color-scheme: dark){ .copy-btn svg{color:var(--link)} }
 
@@ -171,7 +176,7 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .intro-body{margin:0; font-size:16px; line-height:1.8; white-space:pre-line; color:var(--ink-body)}
 .intro-body.clamp{display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden}
 .intro-body a{color:var(--link)}
-.more{margin-top:12px; height:44px; padding:0 2px; border:0; background:transparent; color:var(--blue); font-family:var(--head); font-size:16px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; border-radius:10px}
+.more{margin-top:12px; height:44px; padding:0 2px; border:0; background:transparent; color:var(--blue); font-family:var(--head); font-weight:800; font-size:16px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; border-radius:10px}
 .more svg{width:18px; height:18px; transition:transform 200ms var(--ease)}
 .more[aria-expanded="true"] svg{transform:rotate(180deg)}
 @media (prefers-color-scheme: dark){ .more{color:var(--link)} }
@@ -181,15 +186,15 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .files-note{margin:0 0 10px 4px; font-size:14px; color:var(--ink-2)}
 .files{list-style:none; margin:0; padding:0; display:flex; flex-direction:column}
 .file{display:flex; align-items:center; gap:12px; padding:14px 4px}
-.ftype{flex:none; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:var(--head); font-size:14px; background:var(--zip-bg); color:var(--zip)}
+.ftype{flex:none; width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:var(--head); font-weight:800; font-size:14px; background:var(--zip-bg); color:var(--zip)}
 .ftype.pdf{background:var(--pdf-bg); color:var(--pdf)}
 .ftype.xlsx{background:var(--xls-bg); color:var(--xls)}
 .ftype.pptx{background:var(--ppt-bg); color:var(--ppt)}
 .ftype.docx, .ftype.hwp{background:var(--doc-bg); color:var(--doc)}
 .fname{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
-.fname strong{font-family:var(--head); font-weight:400; font-size:15px; line-height:1.4; overflow-wrap:anywhere}
+.fname strong{font-family:var(--head); font-weight:800; font-weight:400; font-size:15px; line-height:1.4; overflow-wrap:anywhere}
 .fname span{font-size:13px; color:var(--ink-2)}
-.dl{flex:none; height:44px; min-width:78px; padding:0 16px; border:0; border-radius:999px; background:var(--blue); color:var(--blue-ink); font-family:var(--head); font-size:16px; display:inline-flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; cursor:pointer; white-space:nowrap}
+.dl{flex:none; height:44px; min-width:78px; padding:0 16px; border:0; border-radius:999px; background:var(--blue); color:var(--blue-ink); font-family:var(--head); font-weight:800; font-size:16px; display:inline-flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; cursor:pointer; white-space:nowrap}
 .dl svg{width:16px; height:16px; flex:none}
 .dl.busy{background:var(--busy-bg); color:var(--busy-ink); font-size:14px; padding:0 12px; pointer-events:none}
 .dl.busy svg{color:var(--sky); animation:spin 800ms linear infinite}
@@ -251,14 +256,14 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .note{flex:1 1 560px; display:flex; align-items:flex-start; gap:14px; background:var(--note-bg); border-radius:18px; padding:20px 24px}
 .note svg{flex:none; width:26px; height:26px; margin-top:1px}
 .note p{margin:0; font-size:16px; line-height:1.75; color:#FFFFFF}
-.note strong{font-family:var(--head); font-weight:400; font-size:18px; color:var(--note-hi)}
+.note strong{font-family:var(--head); font-weight:800; font-weight:400; font-size:18px; color:var(--note-hi)}
 .note .chunk{display:inline-block}
-.org{font-family:var(--head); font-size:16px; color:#A9BCFF}
+.org{font-family:var(--head); font-weight:800; font-size:16px; color:#A9BCFF}
 @media (max-width:980px){ .foot .wrap{padding-top:32px; padding-bottom:calc(44px + env(safe-area-inset-bottom, 0px)); flex-direction:column; align-items:stretch; gap:14px} .note{flex:none; padding:18px 22px} .note svg{width:24px; height:24px} .note strong{font-size:17px} .org{font-size:15px} }
 @media (max-width:560px){ .foot .wrap{padding-top:26px; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px))} .note{border-radius:16px; padding:16px 18px; gap:12px} .note svg{width:22px; height:22px; margin-top:2px} .note p{font-size:15px; line-height:1.7} .note strong{font-size:16px} .org{display:none} }
 
 /* ---------- 토스트 ---------- */
-.toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); transform:translate(-50%, 16px); background:#07080C; color:#FFFFFF; border-radius:999px; padding:15px 24px; display:flex; align-items:center; gap:10px; font-family:var(--head); font-size:16px; box-shadow:0 12px 32px rgba(7,8,12,.35); opacity:0; pointer-events:none; transition:opacity 150ms ease, transform 150ms ease; z-index:50; max-width:calc(100% - 32px)}
+.toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); transform:translate(-50%, 16px); background:#07080C; color:#FFFFFF; border-radius:999px; padding:15px 24px; display:flex; align-items:center; gap:10px; font-family:var(--head); font-weight:800; font-size:16px; box-shadow:0 12px 32px rgba(7,8,12,.35); opacity:0; pointer-events:none; transition:opacity 150ms ease, transform 150ms ease; z-index:50; max-width:calc(100% - 32px)}
 .toast svg{width:20px; height:20px; flex:none; color:var(--sky)}
 .toast.show{opacity:1; transform:translate(-50%, 0); transition:opacity 220ms ease, transform 220ms var(--ease)}
 @media (max-width:560px){ .toast{left:16px; right:16px; transform:translateY(16px); font-size:15px; padding:15px 20px} .toast.show{transform:none} }
@@ -271,3 +276,108 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
   .toast, .toast.show{transform:translate(-50%,0); transition:opacity 150ms ease}
 }
 .none{padding:56px 0; text-align:center; font-size:17px; color:var(--ink-2)}
+
+/* ================= 디자인팀 추가 요청 (2026-10-27) ================= */
+
+/* #2 줄바꿈 규칙 */
+body{word-break:keep-all; overflow-wrap:break-word; line-break:strict}
+h1,h2,h3{text-wrap:balance}
+p{text-wrap:pretty}
+button{white-space:nowrap}
+.nowrap{white-space:nowrap}
+.card-body h3{text-wrap:wrap}
+.cm-box, .intro-body{overflow-wrap:anywhere}
+
+/* #3·#5 메뉴 바: '강의 N개' 없음 · 휴대폰은 15px / 18px 간격 */
+.bar-count{display:none!important}
+.menu{margin-right:0}
+@media (max-width:560px){ .menu{gap:18px} .menu a{font-size:15px} }
+
+/* #3·#6 메뉴 배지 (전체 화면 카드) */
+.mbadge{display:inline-flex; align-items:center; font-family:var(--head); font-weight:800; font-size:13px; line-height:1; padding:5px 10px; border-radius:999px; white-space:nowrap; background:#003CDC; color:#FFFFFF}
+.mbadge[data-menu="newbie"]{background:#D7F1FA; color:#0B5E7C}
+.mbadge[data-menu="partner"]{background:#07080C; color:#FFFFFF}
+@media (prefers-color-scheme: dark){ .mbadge[data-menu="partner"]{background:#2A2F4A} }
+.card-body > div:first-child{display:flex; margin-bottom:-4px}
+
+/* #4 카드 4열 · 3열 · 1열 */
+.grid{grid-template-columns:repeat(4,minmax(0,1fr)); gap:32px 24px}
+.card-body{padding:16px 18px 18px; gap:12px}
+.card-body h3{font-size:18px}
+.card-meta{gap:8px}
+.chip-files{font-size:13px}
+@media (max-width:980px){
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px 16px}
+  .card{border-radius:18px}
+  .card-body{padding:12px 14px 14px; gap:10px}
+  .card-body h3{font-size:15px}
+  .card .ch{display:none}
+  .mbadge{font-size:12px}
+  .chip-files{font-size:12px; padding:5px 9px}
+  .chip-files svg{width:13px; height:13px}
+  .card-meta{font-size:12.5px}
+}
+@media (max-width:560px){
+  .grid{grid-template-columns:minmax(0,1fr); gap:20px}
+  .card{border-radius:22px}
+  .card-body{padding:18px 20px 20px; gap:12px}
+  .card-body h3{font-size:18px}
+  .card .ch{display:inline}
+  .card-meta{font-size:14px}
+  .chip-files{font-size:13px; padding:6px 11px}
+}
+
+/* 페이지 번호 */
+.pager{display:flex; justify-content:center; align-items:center; gap:6px; margin-top:48px; flex-wrap:wrap}
+.pg{width:44px; height:44px; border:0; border-radius:999px; background:var(--card); color:var(--ink); font-family:var(--head); font-weight:800; font-size:16px; display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; transition:transform 160ms var(--ease), background 160ms ease}
+.pg-arrow{padding:0}
+.pg-arrow svg{width:20px; height:20px}
+.pg[aria-current="page"]{background:var(--blue); color:#FFFFFF}
+.pg:disabled{opacity:.35; cursor:default}
+.pg:active:not(:disabled){transform:scale(.95)}
+@media (hover:hover) and (pointer:fine){ .pg:not([aria-current]):not(:disabled):hover{background:var(--blue-soft)} }
+.pg-gap{width:24px; text-align:center; color:var(--ink-2); font-family:var(--head); font-weight:800}
+@media (max-width:980px){ .pager{margin-top:40px} }
+@media (max-width:560px){ .pager{margin-top:32px; gap:2px} .pg{width:38px} .pg-gap{width:18px} }
+
+/* #7 검색: 강의가 있으면 항상 · 휴대폰은 제목 아래 가로 꽉 */
+@media (max-width:560px){ .list-head{gap:14px} .search{flex:1 1 100%; height:50px; min-width:0} }
+.result{margin:-8px 0 18px 4px; font-size:15px; color:var(--ink-2)}
+.result .kw{font-family:var(--head); font-weight:800; color:var(--ink)}
+.result .num{font-family:var(--head); font-weight:800}
+.nores{background:var(--card); border-radius:22px; padding:56px 24px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px}
+.nores-ic{width:72px; height:72px; border-radius:24px; background:var(--blue-soft); color:var(--blue); display:flex; align-items:center; justify-content:center}
+.nores-ic svg{width:32px; height:32px}
+.nores h2{margin-top:6px; font-size:22px}
+.nores p{margin:0; font-size:15px; color:var(--ink-2)}
+.nores .btn-blue{margin-top:10px; height:48px}
+
+/* #8 맨 위로 · 맨 아래로 (화살표만 · 반투명 · 맨 아래 검은 바 위에서 멈춤) */
+.fab{position:fixed; right:20px; bottom:calc(20px + env(safe-area-inset-bottom, 0px)); z-index:40; display:flex; flex-direction:column; align-items:center; padding:3px; border-radius:999px; background:rgba(7,8,12,.72); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 8px 20px -10px rgba(7,8,12,.55)}
+.fab[hidden], .fab [hidden]{display:none}
+.fab button{width:40px; height:40px; border:0; border-radius:999px; background:transparent; color:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; transition:background 160ms ease, transform 160ms var(--ease)}
+.fab button svg{width:18px; height:18px}
+.fab button:active{transform:scale(.92)}
+@media (hover:hover) and (pointer:fine){ .fab button:hover{background:#003CDC} }
+.fab-line{width:16px; height:1px; background:rgba(255,255,255,.22)}
+@media (prefers-color-scheme: dark){ .fab{background:rgba(42,47,74,.78)} @media (hover:hover) and (pointer:fine){ .fab button:hover{background:#3D63FF} } }
+@media (max-width:560px){ .fab{right:12px; bottom:calc(16px + env(safe-area-inset-bottom, 0px))} }
+/* 내용 끝과 검은 바 사이에 버튼 자리(최소 120px) */
+.list-page, .watch{padding-bottom:max(120px, var(--end-gap, 0px))}
+@media (min-width:981px){ .list-page{padding-bottom:128px} }
+.state{padding-bottom:96px}
+
+/* #9 주아 글자 위아래 가운데 맞춤 — 이제 주아로 남은 높이 고정 메뉴에만 (#11) */
+@media (max-width:980px){
+}
+.menu a, .bar-back{padding-top:.15em}
+@media (prefers-reduced-motion:reduce){ .pg, .fab button{transition:none} .pg:active, .fab button:active{transform:none} }
+
+/* ================= #10·#11 글꼴 (2026-10-27 11:30) =================
+   주아: 19px 이상 제목·상단 메뉴·유의 문구 첫 줄 / 둥근바람 800: 카드 제목·버튼·배지 / 둥근바람 400: 본문 */
+body{font-weight:400}
+h3{font-weight:800}
+h1, h2, .menu a, .bar-back, .note strong{font-family:var(--jua); font-weight:400}
+.pg, .pg-gap{font-weight:400}
+.pg[aria-current="page"]{font-weight:800}
+.fname strong{font-weight:400}

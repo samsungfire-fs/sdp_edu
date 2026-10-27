@@ -9,12 +9,14 @@
 <meta name="theme-color" content="#07080C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
 <link rel="icon" href="assets/admin-favicon-48.png?v=1" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/admin-favicon-32.png?v=1" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
-<link rel="stylesheet" href="assets/site.css?v=20261027">
-<link rel="stylesheet" href="assets/admin.css?v=20261027">
+<link rel="preload" href="assets/TmoneyRoundWindRegular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=20261027d">
+<link rel="stylesheet" href="assets/admin.css?v=20261027d">
 </head>
 <body>
 
@@ -65,7 +67,7 @@
         <div class="f">
           <label for="newPw">새 관리자 비밀번호</label>
           <input type="password" id="newPw" class="in" autocomplete="new-password" required>
-          <span class="help">4자 이상. 숫자만 쓰기보다 글자와 숫자를 섞으면 더 안전해요.</span>
+          <span class="help">4자 이상으로 정해 주세요.<br>숫자만 쓰기보다 글자와 숫자를 섞으면 더 안전해요.</span>
         </div>
         <div class="f">
           <label for="newPw2">비밀번호 한 번 더</label>
@@ -87,7 +89,7 @@
     <div class="amain">
       <div class="page-head">
         <h1>강의 관리</h1>
-        <p>강의를 추가하거나 끌어서 순서를 바꾸고, 다 고치면 아래 저장을 눌러 주세요.</p>
+        <p>강의를 추가하거나 끌어서 순서를 바꾸고,<br>다 고치면 아래 저장을 눌러 주세요.</p>
       </div>
 
       <div class="noauth" id="noAuth" hidden>
@@ -132,7 +134,7 @@
           </summary>
           <div class="set-body">
             <div class="f"><label for="sNotice">맨 아래 고지 문구</label><textarea id="sNotice" class="in" rows="4" data-site="notice"></textarea>
-              <span class="help">첫 줄은 노란 글씨로 강조돼요. 줄을 바꾸면 그다음 줄부터 흰 글씨예요.</span></div>
+              <span class="help">첫 줄은 노란 글씨로 강조돼요.<br>줄을 바꾸면 그다음 줄부터 흰 글씨예요.</span></div>
           </div>
         </details>
         <details class="set" id="updBox">
@@ -142,7 +144,7 @@
             <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="set-body">
-            <p class="set-note">Claude가 고친 파일을 컴퓨터의 <b>sdp_edu</b> 폴더에서 읽어, 바뀐 것만 한 번에 올려요. 강의 목록은 건드리지 않아요.</p>
+            <p class="set-note upd-note">Claude가 고친 파일을 컴퓨터의 <b>sdp_edu</b> 폴더에서 읽어,<br>바뀐 것만 한&nbsp;번에 올려요.<br>강의 목록은 건드리지 않아요.</p>
             <button type="button" class="btn-main sm rp press" id="updRun">지금 업데이트</button>
             <span class="upd-folder" id="updFolder"></span>
             <input type="file" class="pick" id="updPick" webkitdirectory directory multiple tabindex="-1" aria-hidden="true">
@@ -163,7 +165,7 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261027"></script>
-<script src="assets/admin.js?v=20261027"></script>
+<script src="assets/common.js?v=20261027c"></script>
+<script src="assets/admin.js?v=20261027b"></script>
 </body>
 </html>

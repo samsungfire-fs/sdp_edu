@@ -31,6 +31,8 @@
   }
   function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); }
   var canSave = false, dirty = false, openV = null, armedDel = null, saving = false;
+  /* 저장된 상태와 비교: 바꿨다가 원래대로 되돌리면 저장할 필요 없음 */
+  var baseline = "", needPages = false;
 
   /* 저장소 자동 인식: 계정.github.io/저장소/admin.html */
   var owner = "", repo = "";
@@ -95,12 +97,12 @@
         if (apiKey) data.videos.forEach(function(v){ v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f, true); }); });
         /* 강의별 공유 페이지·메뉴 주소가 아직 없으면 저장 한 번으로 만들 수 있게 안내 */
         var pages = data.videos.filter(function(v){ return v.id && v.visible !== false; }).map(function(v){ return "v/" + v.id + "/index.html"; })
-          .concat(SC.CATS.map(function(c){ return c.id + "/index.html"; }));
+          .concat(SC.MENUS.map(function(c){ return c.id + "/index.html"; }));
         Promise.all(pages.map(function(u){
           return fetch(u + "?chk=" + Date.now(), { method:"HEAD", cache:"no-store" }).then(function(r){ return r.ok; }).catch(function(){ return true; });
         })).then(function(ok){
           if (ok.some(function(x){ return !x; })){
-            dirty = true; updateSaveBar();
+            needPages = true; dirty = true; updateSaveBar();
             $("saveText").textContent = "메뉴 주소와 카톡 공유 미리보기를 만들려면 저장을 한 번 눌러 주세요";
           }
         });
@@ -128,13 +130,14 @@
       };
     }) };
     /* 사이트 이름 변경: 시그니처클래스 → 영개파 (저장하면 사이트에 반영) */
+    baseline = JSON.stringify(cleanData()); needPages = false;
     var renamed = false;
     if (/^\s*시그니처클래스\s*교육\s*자료실\s*$/.test(data.site.title || "")){ data.site.title = "영개파 교육 자료"; renamed = true; }
     /* 고지 문구를 디자인팀 새 문구로 (예전 기본 문구였거나 비어 있으면) */
     var nt = SC.noticeText(data.site.notice);
     if (nt !== (data.site.notice || "")){ data.site.notice = nt; renamed = true; }
     document.querySelectorAll("[data-site]").forEach(function(el){ el.value = data.site[el.dataset.site] || ""; });
-    openV = null; dirty = renamed; render();
+    openV = null; dirty = JSON.stringify(cleanData()) !== baseline; render();
   }
 
   /* ---------- 유튜브 / 드라이브 정보 가져오기 ---------- */
@@ -258,7 +261,7 @@
   }
   function badges(v){
     var p = ['<span class="bdg priv">비공개</span>'];
-    p.push('<span class="bdg cat dim">' + esc(SC.catLabel(SC.catOf(v))) + '</span>');
+    p.push('<span class="bdg cat dim" data-menu="' + SC.catOf(v) + '">' + esc(SC.catLabel(SC.catOf(v))) + '</span>');
     if (!v.id){ p.push('<span class="bdg new dim">새 강의</span>'); return p.join(""); }
     var n = v.files.length, miss = v.files.filter(function(f){ return !SC.download(f.link, f.type).url; }).length;
     if (v.duration) p.push('<span class="bdg dim">' + esc(v.duration) + '</span>');
@@ -306,7 +309,8 @@
       '<div class="f"><span class="lbl" id="' + id + 'visL">공개 설정</span>' +
         '<div class="segs" role="radiogroup" aria-labelledby="' + id + 'visL">' +
           seg("visSet", i, "1", pub, "공개", IC.eye) + seg("visSet", i, "0", !pub, "비공개", IC.lock) + '</div>' +
-        '<span class="help">비공개로 하면 사이트 목록과 강의 주소에서 숨겨져요. 영상과 자료는 그대로 남아 있어서 언제든 다시 공개할 수 있어요.</span></div>' +
+        '<span class="help">' + (pub ? "사이트 목록과 강의 주소에서 누구나 볼 수 있어요."
+          : "사이트 목록·검색·다른 강의에서 빠지고, 강의 주소로 들어와도 보이지 않아요.<br>저장해야 반영돼요.") + '</span></div>' +
       '<div class="f"><span class="lbl" id="' + id + 'catL">메뉴</span>' +
         '<div class="segs" role="radiogroup" aria-labelledby="' + id + 'catL">' +
           SC.CATS.map(function(c){ return seg("cat", i, c.id, c.id === cat, c.label); }).join("") + '</div></div>' +
@@ -315,7 +319,7 @@
         '<div class="url-row">' + videoStatus(v) + (v.id ? '<button type="button" class="btn-soft rp press" data-act="refetch" data-i="' + i + '">' + IC.refresh + '유튜브에서 다시 가져오기</button>' : '') + '</div></div>' +
       '<div class="f"><label for="' + id + 'title">제목</label><input type="text" id="' + id + 'title" class="in" data-i="' + i + '" data-k="title" value="' + esc(v.title) + '"></div>' +
       '<div class="f"><label for="' + id + 'desc">강의 소개</label><textarea id="' + id + 'desc" class="in" rows="5" data-i="' + i + '" data-k="description">' + esc(v.description) + '</textarea>' +
-        '<span class="help">유튜브 영상 설명이 자동으로 들어가요. 고쳐도 돼요.</span></div>' +
+        '<span class="help">유튜브 영상 설명이 자동으로 들어가요.<br>고쳐도 돼요.</span></div>' +
       '<div class="fileset"><div class="fileset-h"><span class="lbl">교육자료 <span class="num">' + v.files.length + '</span>개</span>' +
         '<span class="help">드라이브에서 파일 우클릭 → 공유 → ‘링크가 있는 모든 사용자’ → 링크 복사</span></div>' +
         '<div class="fsort" data-i="' + i + '">' + files + '</div>' +
@@ -395,7 +399,7 @@
   }
 
   /* ---------- 저장 바 ---------- */
-  function markDirty(){ dirty = true; updateSaveBar(); }
+  function markDirty(){ dirty = needPages || JSON.stringify(cleanData()) !== baseline; updateSaveBar(); }
   function updateSaveBar(msg){
     var m = $("saveText"), b = $("saveBtn"), bar = document.querySelector(".savebar");
     bar.classList.toggle("dirty", !msg && canSave && !saving && dirty);
@@ -482,7 +486,7 @@
       if (v.visible === false) return;
       list.push({ path:"v/" + v.id + "/index.html", mode:"100644", type:"blob", content: sharePage(tpl, v, out.site, thumbs[k]) });
     });
-    SC.CATS.forEach(function(c){ list.push({ path: c.id + "/index.html", mode:"100644", type:"blob", content: catPage(tpl, c) }); });
+    SC.MENUS.forEach(function(c){ list.push({ path: c.id + "/index.html", mode:"100644", type:"blob", content: catPage(tpl, c) }); });
     return list;
   }
   function staleShare(remote, list){
@@ -517,7 +521,7 @@
       newCommit = c;
       return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) });
     }).then(function(){
-      sha = newSha; saving = false; dirty = false;
+      sha = newSha; saving = false; dirty = false; baseline = JSON.stringify(out); needPages = false;
       showLast(newCommit.committer && newCommit.committer.date); Deploy.expect(newCommit.sha);
       if (blank) data.videos = data.videos.filter(function(v){ return v.id; });
       render(); updateSaveBar();
@@ -605,6 +609,7 @@
 
   /* ================= 사이트 업데이트: 내 폴더를 읽어 바뀐 파일만 한 번에 올림 ================= */
   (function(){
+    var CHK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
     function log(html){ var li = document.createElement("li"); li.innerHTML = html; $("updLog").appendChild(li); return li; }
     function b64bytes(buf){ var b = new Uint8Array(buf), s = "", CH = 0x8000; for (var i = 0; i < b.length; i += CH) s += String.fromCharCode.apply(null, b.subarray(i, i + CH)); return btoa(s); }
     function allowed(path){ return !/^data\//.test(path) && /^(index\.html|admin\.html|404\.html|README\.md|\.nojekyll|assets\/[\w.\-]+)$/.test(path); }
@@ -623,8 +628,8 @@
     var dirHandle = null;
     function showFolder(){
       $("updFolder").innerHTML = dirHandle
-        ? '폴더: <b>' + esc(dirHandle.name) + '</b> <button type="button" class="linkbtn" id="updChange">바꾸기</button>'
-        : (canFS ? '처음 한 번 <b>sdp_edu</b> 폴더를 고르면 다음부터는 버튼만 누르면 돼요.' : '누를 때마다 <b>sdp_edu</b> 폴더를 골라 주세요.');
+        ? '<span class="nowrap">폴더 <b>' + esc(dirHandle.name) + '</b> <button type="button" class="linkbtn" id="updChange">바꾸기</button></span>'
+        : (canFS ? '처음 한&nbsp;번 <b>sdp_edu</b> 폴더를 고르면<br>다음부터는 버튼만 누르면 돼요.' : '누를 때마다 <b>sdp_edu</b> 폴더를 골라 주세요.');
       var c = $("updChange"); if (c) c.onclick = function(){ pickDir().then(function(h){ if (h) run(); }); };
     }
     if (canFS) kvGet("dir").then(function(h){ dirHandle = h; showFolder(); }); else showFolder();
@@ -664,8 +669,8 @@
     function setBusy(b, label){
       busy = b;
       var btn = $("updRun");
-      btn.disabled = b;
-      btn.innerHTML = b ? '<span class="spin" aria-hidden="true"></span> ' + esc(label || "업데이트 중") : "지금 업데이트";
+      btn.disabled = b; btn.classList.toggle("busy", b);
+      btn.innerHTML = b ? '<span class="spin" aria-hidden="true"></span>' + esc(label || "업데이트 중") : "지금 업데이트";
     }
     function upload(items){
       $("updLog").innerHTML = "";
@@ -713,7 +718,8 @@
           return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) });
         }).then(function(){
           var names = changed.map(function(x){ return x.path.replace(/^assets\//, ""); });
-          log('<span class="pill ok">' + changed.length + '개 올림</span> ' + esc(names.slice(0, 3).join(", ")) + (names.length > 3 ? " 외 " + (names.length - 3) + "개" : ""));
+          var all = names.join(", ");
+          log('<span class="pill ok nodot">' + CHK + changed.length + '개&nbsp;올림</span><span class="names" title="' + esc(all) + '">' + esc(all) + '</span>').className = "one";
           return changed;
         });
       }).then(function(changed){
@@ -728,9 +734,9 @@
       changed = changed.filter(function(x){ return x.path !== ".nojekyll"; });
       if (!changed.length) return Promise.resolve();
       setBusy(true, "사이트 반영 중");
-      var li = $("updLog").lastElementChild || log(""), base = li.innerHTML;
-      function show(h){ li.innerHTML = base + ' <span aria-hidden="true">·</span> ' + h; }
-      show('<span class="spin" aria-hidden="true"></span> 사이트에 반영하는 중 (보통 1~2분)');
+      var li = log(""); li.className = "stat";
+      function show(h){ li.innerHTML = h; }
+      show('<span class="spin" aria-hidden="true"></span><span>사이트에 반영하는 중 <span class="nowrap">(보통 1~2분)</span></span>');
       var started = Date.now();
       return new Promise(function(res){
         function check(){
@@ -740,12 +746,12 @@
           })).then(function(ok){
             var done = ok.filter(Boolean).length;
             if (done === changed.length){
-              show('<span class="pill ok">반영 완료</span> <button type="button" class="linkbtn" id="updReload">새로고침</button>');
+              show('<span class="pill ok nodot">' + CHK + '반영&nbsp;완료</span><button type="button" class="linkbtn" id="updReload">새로고침</button>');
               $("updReload").onclick = function(){ location.reload(); };
               toast("업데이트가 홈과 관리자에 반영됐어요"); return res();
             }
             if (Date.now() - started > 6 * 60 * 1000){ show('<span class="pill warn">반영이 늦어지고 있어요</span> 몇 분 뒤 새로고침해 보세요'); return res(); }
-            show('<span class="spin" aria-hidden="true"></span> 사이트에 반영하는 중 ' + done + '/' + changed.length);
+            show('<span class="spin" aria-hidden="true"></span><span>사이트에 반영하는 중 <span class="nowrap">' + done + '/' + changed.length + '</span></span>');
             setTimeout(check, 6000);
           });
         }
@@ -954,6 +960,7 @@
   });
   $("makePwBtn").addEventListener("click", function(){ showGate("first"); });
 
+  SC.ripple(); SC.fab();
   function boot(){
     fetchAuth().then(function(a){
       authInfo = a;

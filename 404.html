@@ -10,7 +10,7 @@
   /* 강의 공유 주소(v/영상ID/)나 메뉴 주소(signature/ 등)가 아직 만들어지기 전이면 사이트에서 바로 열어 줌 */
   var p = location.pathname, m;
   if ((m = p.match(/^(.*?\/)v\/([\w-]{6,})\/?/))) return location.replace(m[1] + "?v=" + m[2]);
-  if ((m = p.match(/^(.*?\/)(signature|newbie|partner)\/?(?:index\.html)?$/))) return location.replace(m[1] + "?c=" + m[2]);
+  if ((m = p.match(/^(.*?\/)(all|signature|newbie|partner)\/?(?:index\.html)?$/))) return location.replace(m[1] + "?c=" + m[2]);
   location.replace((p.match(/^\/[^\/]+\//) || ["/"])[0]);
 })();
 </script>
