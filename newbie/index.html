@@ -27,7 +27,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261027f">
+<link rel="stylesheet" href="assets/site.css?v=20261028a">
 </head>
 <body>
 
@@ -86,6 +86,7 @@
     send: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6l-.1 6.5L15 12 3.3 13.9z"/></svg>',
     video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5.5" width="14" height="13" rx="3"/><path d="m16.5 10.5 5-3v9l-5-3"/></svg>',
     videoX: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5.5" width="14" height="13" rx="3"/><path d="m16.5 10.5 5-3v9l-5-3M7 9.5l5 5M12 9.5l-5 5"/></svg>',
+    warn: '<svg class="lec-note-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.9 18.2A2 2 0 0 0 3.6 21h16.8a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z" fill="#FFD25E"/><path d="M12 9v4.5" stroke="#0B1030" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.25" fill="#0B1030"/></svg>',
     doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>'
   };
 
@@ -333,8 +334,9 @@
           '</div>' +
           '<aside class="files-card" aria-labelledby="filesH">' +
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
+            '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
             (files.length
-              ? '<p class="files-note">받기를 누르면 바로 저장돼요.</p><ul class="files">' + files.map(fileRow).join("") + '</ul>'
+              ? '<ul class="files">' + files.map(fileRow).join("") + '</ul>'
               : '<div class="files-empty"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>') +
           '</aside>' +
         '</div>' +
@@ -394,8 +396,9 @@
   SC.fab({ foot: ".foot", main: "#app" });
 
   /* 고지 문구: 첫 줄은 노란 강조, 둘째 줄은 쉼표 기준으로 두 덩어리(줄바꿈이 깔끔하게) */
-  function drawNotice(s){
-    var lines = SC.noticeText(s).split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
+  var NOTICE_SRC = "";
+  function noticeHtml(){
+    var lines = SC.noticeText(NOTICE_SRC).split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
     var html = '<strong>' + esc(lines.shift() || "") + '</strong>';
     lines.forEach(function(l){
       var cut = -1, best = 1e9;
@@ -404,8 +407,9 @@
         ? '<span class="chunk">' + esc(l.slice(0, cut + 1)) + '</span> <span class="chunk">' + esc(l.slice(cut + 2)) + '</span>'
         : esc(l));
     });
-    $("notice").innerHTML = html;
+    return html;
   }
+  function drawNotice(s){ NOTICE_SRC = s || ""; $("notice").innerHTML = noticeHtml(); }
   drawNotice("");
 
   fetch(ROOT + "data/videos.json?t=" + Date.now(), { cache:"no-store" })

@@ -387,3 +387,18 @@ h1, h2, .menu a, .bar-back, .note strong{font-family:var(--jua); font-weight:400
 .note .ex{stroke:var(--bar)} .note .ex-dot{fill:var(--bar)}
 @media (max-width:980px){ .note{padding:0} }
 @media (max-width:560px){ .note{padding:0; border-radius:0} }
+
+/* ================= #16 강의 페이지: 유의 문구를 "교육자료 N개" 제목 아래로 ================= */
+.files-card h2{margin-bottom:8px}
+.lec-note{display:flex; align-items:flex-start; gap:10px; margin:0 4px 12px}
+.lec-note-ic{flex:none; width:20px; height:20px; margin-top:1px}
+.lec-note p{margin:0; font-size:14px; line-height:1.65; color:#0B1030}
+.lec-note strong{font-family:var(--head); font-weight:800; font-size:15px; color:#8A5300}
+.lec-note .chunk{display:inline-block}
+@media (prefers-color-scheme: dark){ .lec-note p{color:#EEF1FF} .lec-note strong{color:#FFD25E} }
+@media (max-width:560px){ .files-card h2{margin-bottom:8px} .lec-note{margin-bottom:14px} }
+/* 강의 페이지 맨 아래 검은 바: 유의 문구 빼고 "삼성화재금융서비스 영업개발파트"만 */
+body.watch-page .foot .note{display:none}
+body.watch-page .foot .wrap{justify-content:flex-end}
+@media (max-width:980px){ body.watch-page .foot .wrap{align-items:flex-end} }
+@media (max-width:560px){ body.watch-page .org{display:block; font-size:14px} body.watch-page .foot .wrap{align-items:flex-start} }
