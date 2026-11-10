@@ -115,8 +115,9 @@
     for (var i = 0; i < SC.CATS.length; i++) if (SC.CATS[i].id === c) return c;
     return "signature";
   };
-  /* 사이트 메뉴: 맨 앞 '전체' + 강의 분류 */
-  SC.MENUS = [{ id: "all", label: "전체" }].concat(SC.CATS);
+  /* 사이트 메뉴: 맨 앞 '전체' + 강의 분류 + 상품연구 전략자료(영상 없는 자료실, 강의 분류 아님) */
+  SC.RESEARCH = { id: "research", label: "상품연구 전략자료" };
+  SC.MENUS = [{ id: "all", label: "전체" }].concat(SC.CATS, [SC.RESEARCH]);
   SC.catLabel = function (id) {
     for (var i = 0; i < SC.MENUS.length; i++) if (SC.MENUS[i].id === id) return SC.MENUS[i].label;
     return SC.CATS[0].label;

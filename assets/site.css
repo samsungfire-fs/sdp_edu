@@ -40,19 +40,17 @@
   --body:"RoundWind","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
   --ease:cubic-bezier(0.23,1,0.32,1);
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#07080C; --card:#141722; --ink:#EEF1FF; --ink-2:#A9B2D6; --ink-body:#D3D9F2;
-    --bar:#000000; --note-bg:#141722;
-    --blue:#3D63FF; --blue-soft:#18204A; --link:#A9BCFF; --thumb:#10142C; --field:#0E111A;
-    --cm-face:#1E2238; --cm-face-ink:#6E7799; --cm-box:#141722; --cm-ring:#262B40; --cm-send:#1E2238;
-    --busy-bg:#18204A; --busy-ink:#A9BCFF;
-    --ok:#6EE0A2; --ok-bg:#0F2E22; --warn:#FFCF6E; --warn-bg:#3A2F12; --bad:#FF9AA2; --bad-bg:#3A1A20; --idle:#A9B2D6; --idle-bg:#1E2238;
-    --pdf:#FF9AA2; --pdf-bg:#3A1A20; --xls:#6EE0A2; --xls-bg:#0F2E22; --ppt:#FFB27A; --ppt-bg:#3A2414; --doc:#A9BCFF; --doc-bg:#18204A; --zip:#A9B2D6; --zip-bg:#1E2238;
-    --title-band:#07080C; --title-band-sub:#A9B2D6; --title-band-btn:#141722; --title-band-btn-ink:#FFFFFF;
-    --hover-shadow:0 20px 40px -18px rgba(61,99,255,.5);
-    color-scheme:dark;
-  }
+:root[data-theme="dark"]{
+  --bg:#07080C; --card:#141722; --ink:#EEF1FF; --ink-2:#A9B2D6; --ink-body:#C9CFEA;
+  --bar:#000000; --note-bg:#141722;
+  --blue:#3D63FF; --blue-soft:#18204A; --link:#A9BCFF; --thumb:#1E2238; --field:#1E2238;
+  --cm-face:#1E2238; --cm-face-ink:#6E7799; --cm-box:#141722; --cm-ring:#262B40; --cm-send:#1E2238;
+  --busy-bg:#FFFFFF; --busy-ink:#0B1030;
+  --ok:#6EE0A2; --ok-bg:#0F2E22; --warn:#FFD25E; --warn-bg:#3A2E12; --bad:#FF9AA2; --bad-bg:#3A1A20; --idle:#6E779C; --idle-bg:#1E2238;
+  --pdf:#FF9AA2; --pdf-bg:#3A1A20; --xls:#6EE0A2; --xls-bg:#14301F; --ppt:#FFB877; --ppt-bg:#3A2612; --doc:#A9BCFF; --doc-bg:#18204A; --zip:#A9B2D6; --zip-bg:#1E2238;
+  --title-band:#07080C; --title-band-sub:#A9B2D6; --title-band-btn:#FFFFFF; --title-band-btn-ink:#07080C;
+  --hover-shadow:0 20px 40px -18px rgba(61,99,255,.5);
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -66,7 +64,7 @@ img{max-width:100%}
 .wrap{max-width:1320px; margin:0 auto; padding-left:max(20px, env(safe-area-inset-left, 0px)); padding-right:max(20px, env(safe-area-inset-right, 0px))}
 @media (max-width:520px){ .wrap{padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px))} }
 .num{color:var(--blue)}
-@media (prefers-color-scheme: dark){ .num{color:var(--link)} }
+[data-theme="dark"] .num{color:var(--link)}
 
 /* ---------- 물결(터치) 효과 ---------- */
 a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-color:transparent}
@@ -99,7 +97,7 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 @media (max-width:560px){
   .bar .wrap{height:56px} .menu{gap:20px} .menu a{font-size:16px}
   body.watch-page .bar .wrap{height:58px; padding-left:max(6px, env(safe-area-inset-left, 0px))}
-  body.watch-page .menu{display:none}
+  body.watch-page .menu-box{display:none}
   body.watch-page .bar-back{display:flex}
 }
 
@@ -128,7 +126,7 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .card-meta{margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; color:var(--ink-2)}
 .chip-files{display:inline-flex; align-items:center; gap:6px; background:var(--blue-soft); color:var(--blue); font-family:var(--head); font-weight:800; font-size:14px; line-height:1; padding:7px 12px; border-radius:999px; white-space:nowrap}
 .chip-files svg{width:15px; height:15px}
-@media (prefers-color-scheme: dark){ .chip-files{color:var(--link)} }
+[data-theme="dark"] .chip-files{color:var(--link)}
 @media (hover:hover) and (pointer:fine){
   .card:hover{transform:translateY(-4px); box-shadow:var(--hover-shadow)}
   .card:hover .play{opacity:1; transform:scale(1)}
@@ -160,7 +158,7 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .lec-info h1{font-size:clamp(26px,2.4vw,34px); line-height:1.38}
 .copy-btn{align-self:flex-start; margin-top:4px; height:48px; padding:0 22px; border:0; border-radius:999px; background:var(--card); color:var(--ink); font-family:var(--head); font-weight:800; font-size:16px; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer}
 .copy-btn svg{width:20px; height:20px; color:var(--blue)}
-@media (prefers-color-scheme: dark){ .copy-btn svg{color:var(--link)} }
+[data-theme="dark"] .copy-btn svg{color:var(--link)}
 
 .comments{display:flex; flex-direction:column; gap:10px}
 .comments h2{font-size:22px; margin-left:4px}
@@ -179,7 +177,7 @@ a.rp, button.rp, .rp{position:relative; overflow:hidden; -webkit-tap-highlight-c
 .more{margin-top:12px; height:44px; padding:0 2px; border:0; background:transparent; color:var(--blue); font-family:var(--head); font-weight:800; font-size:16px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; border-radius:10px}
 .more svg{width:18px; height:18px; transition:transform 200ms var(--ease)}
 .more[aria-expanded="true"] svg{transform:rotate(180deg)}
-@media (prefers-color-scheme: dark){ .more{color:var(--link)} }
+[data-theme="dark"] .more{color:var(--link)}
 
 .files-card{flex:1 1 380px; max-width:420px; min-width:300px; position:sticky; top:calc(90px + env(safe-area-inset-top, 0px)); background:var(--card); border-radius:22px; padding:24px 20px 14px}
 .files-card h2{font-size:23px; margin:0 0 6px 4px}
@@ -297,7 +295,7 @@ button{white-space:nowrap}
 .mbadge{display:inline-flex; align-items:center; font-family:var(--head); font-weight:800; font-size:13px; line-height:1; padding:5px 10px; border-radius:999px; white-space:nowrap; background:#003CDC; color:#FFFFFF}
 .mbadge[data-menu="newbie"]{background:#D7F1FA; color:#0B5E7C}
 .mbadge[data-menu="partner"]{background:#07080C; color:#FFFFFF}
-@media (prefers-color-scheme: dark){ .mbadge[data-menu="partner"]{background:#2A2F4A} }
+[data-theme="dark"] .mbadge[data-menu="partner"]{background:#2A2F4A}
 .card-body > div:first-child{display:flex; margin-bottom:-4px}
 
 /* #4 카드 4열 · 3열 · 1열 */
@@ -360,7 +358,7 @@ button{white-space:nowrap}
 .fab button:active{transform:scale(.92)}
 @media (hover:hover) and (pointer:fine){ .fab button:hover{background:#003CDC} }
 .fab-line{width:16px; height:1px; background:rgba(255,255,255,.22)}
-@media (prefers-color-scheme: dark){ .fab{background:rgba(42,47,74,.78)} @media (hover:hover) and (pointer:fine){ .fab button:hover{background:#3D63FF} } }
+[data-theme="dark"] .fab{background:rgba(42,47,74,.78)} @media (hover:hover) and (pointer:fine){ [data-theme="dark"] .fab button:hover{background:#3D63FF} }
 @media (max-width:560px){ .fab{right:12px; bottom:calc(16px + env(safe-area-inset-bottom, 0px))} }
 /* 내용 끝과 검은 바 사이에 버튼 자리(최소 120px) */
 .list-page, .watch{padding-bottom:max(120px, var(--end-gap, 0px))}
@@ -395,10 +393,192 @@ h1, h2, .menu a, .bar-back, .note strong{font-family:var(--jua); font-weight:400
 .lec-note p{margin:0; font-size:14px; line-height:1.65; color:#0B1030}
 .lec-note strong{font-family:var(--head); font-weight:800; font-size:15px; color:#8A5300}
 .lec-note .chunk{display:inline-block}
-@media (prefers-color-scheme: dark){ .lec-note p{color:#EEF1FF} .lec-note strong{color:#FFD25E} }
+[data-theme="dark"] .lec-note p{color:#EEF1FF} [data-theme="dark"] .lec-note strong{color:#FFD25E}
 @media (max-width:560px){ .files-card h2{margin-bottom:8px} .lec-note{margin-bottom:14px} }
 /* 강의 페이지 맨 아래 검은 바: 유의 문구 빼고 "삼성화재금융서비스 영업개발파트"만 */
 body.watch-page .foot .note{display:none}
 body.watch-page .foot .wrap{justify-content:flex-end}
 @media (max-width:980px){ body.watch-page .foot .wrap{align-items:flex-end} }
 @media (max-width:560px){ body.watch-page .org{display:block; font-size:14px} body.watch-page .foot .wrap{align-items:flex-start} }
+
+/* ================= 디자인팀 추가 요청 (2026-11-10) #17~#19 ================= */
+
+/* ---------- #18 라이트 / 다크 버튼 (메뉴 바 오른쪽 끝) ---------- */
+.bar .wrap{gap:16px}
+.menu-box{position:relative; flex:1 1 auto; min-width:0; height:100%; display:flex}
+.menu{flex:1 1 auto; min-width:0; position:relative}
+/* 휴대폰: 왼쪽이 잘려 있으면 "더 있음" 그라데이션 */
+.menu-box::before{content:""; position:absolute; left:0; top:0; bottom:0; width:36px; z-index:2; pointer-events:none; background:linear-gradient(90deg, var(--bar), rgba(7,8,12,0)); opacity:0; transition:opacity 160ms ease}
+[data-theme="dark"] .menu-box::before{background:linear-gradient(90deg, var(--bar), rgba(0,0,0,0))}
+.menu-box.cut::before{opacity:1}
+.tm{flex:none; display:flex; gap:2px; padding:3px; border-radius:999px; background:#1C2033}
+.tm button{height:34px; padding:0 12px; border:0; border-radius:999px; background:transparent; color:#AEB6D8; font-family:var(--body); font-weight:800; font-size:13px; line-height:1.25; display:flex; align-items:center; gap:5px; cursor:pointer; transition:background 200ms ease, color 200ms ease}
+.tm button svg{width:15px; height:15px; flex:none}
+.tm button[aria-checked="true"]{background:#FFFFFF; color:#07080C}
+[data-theme="dark"] .tm button[aria-checked="true"]{background:#3D63FF; color:#FFFFFF}
+@media (hover:hover) and (pointer:fine){ .tm button[aria-checked="false"]:hover{color:#FFFFFF} }
+.tm-ic{flex:none; display:none; width:40px; height:40px; padding:0; border:0; border-radius:999px; background:#1C2033; color:#FFFFFF; align-items:center; justify-content:center; cursor:pointer}
+.tm-ic svg{width:19px; height:19px; transition:transform 320ms var(--ease)}
+.tm-ic:active svg{transform:rotate(-30deg) scale(.9)}
+[data-theme="dark"] .tm-ic{background:#3D63FF}
+@media (max-width:980px){ .tm{display:none} .tm-ic{display:flex} }
+@media (max-width:560px){
+  .bar .wrap{gap:8px; padding-right:max(8px, env(safe-area-inset-right, 0px))}
+  .menu-box{margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)))}
+  .menu{padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:12px}
+  body.watch-page .menu, body.back-page .menu{display:flex}
+  body.watch-page .menu-box, body.back-page .menu-box{display:none}
+  body.back-page .bar .wrap{height:58px; padding-left:max(6px, env(safe-area-inset-left, 0px))}
+  body.back-page .bar-back{display:flex}
+  .bar-back{margin-right:auto; min-width:0}
+  .bar-back span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+}
+/* 다크 화면: 블루 글자·버튼 */
+[data-theme="dark"] .toast{background:#2A2F4A}
+[data-theme="dark"] .fab{background:rgba(42,47,74,.85)}
+[data-theme="dark"] .mbadge{background:#3D63FF}
+[data-theme="dark"] .mbadge[data-menu="newbie"]{background:#12323F; color:#7FD6F2}
+[data-theme="dark"] .dl.busy svg{color:#3D63FF}
+[data-theme="dark"] .empty-ic, [data-theme="dark"] .nores-ic, [data-theme="dark"] .state-ic{color:var(--link)}
+[data-theme="dark"] .back-all svg{color:var(--link)}
+
+/* ---------- #19 모션 M1~M8 (곡선은 모두 물결과 같은 cubic-bezier(0.23,1,0.32,1)) ---------- */
+@keyframes m-in{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
+/* M1 배너: 살짝 다가오기 + 하늘빛 줄이 한 번 지나감 */
+@keyframes m-push{from{transform:scale(1.06)}to{transform:scale(1)}}
+@keyframes m-sweep{from{transform:translateX(-130%) skewX(-18deg)}to{transform:translateX(330%) skewX(-18deg)}}
+.banner-link{position:relative; overflow:hidden}
+.banner{animation:m-push 1400ms var(--ease) both}
+.ban-sweep{position:absolute; top:0; bottom:0; left:0; width:34%; pointer-events:none; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(170,215,255,.32), rgba(255,255,255,0)); transform:translateX(-130%) skewX(-18deg); animation:m-sweep 1500ms cubic-bezier(0.45,0,0.2,1) 350ms both}
+/* M2 카드 순서대로 (목록 열 때 · 페이지 바꿀 때 · 다른 강의) */
+.grid > li{animation:m-in 520ms var(--ease) backwards}
+.grid > li:nth-child(1){animation-delay:60ms}  .grid > li:nth-child(2){animation-delay:105ms} .grid > li:nth-child(3){animation-delay:150ms}
+.grid > li:nth-child(4){animation-delay:195ms} .grid > li:nth-child(5){animation-delay:240ms} .grid > li:nth-child(6){animation-delay:285ms}
+.grid > li:nth-child(7){animation-delay:330ms} .grid > li:nth-child(8){animation-delay:375ms} .grid > li:nth-child(9){animation-delay:420ms}
+.grid > li:nth-child(10){animation-delay:465ms} .grid > li:nth-child(11){animation-delay:510ms} .grid > li:nth-child(12){animation-delay:555ms}
+/* M3 제목 숫자: 자릿수 폭 고정 */
+.list-head .num{font-variant-numeric:tabular-nums}
+.num.zero{color:var(--ink-2)!important}
+/* M4 라이트/다크 원형 전환 (startViewTransition) + 해/달 아이콘 */
+::view-transition-old(root), ::view-transition-new(root){animation:none; mix-blend-mode:normal}
+::view-transition-new(root){z-index:2}
+@keyframes m-icon{from{opacity:0; transform:rotate(-90deg) scale(.5)}to{opacity:1; transform:none}}
+.tm-ic svg, .tm button[aria-checked="true"] svg{animation:m-icon 420ms var(--ease) backwards}
+/* M5 받기 '요청됨' · 토스트 체크 그리기 */
+@keyframes m-draw{from{stroke-dashoffset:24}to{stroke-dashoffset:0}}
+.ck path{stroke-dasharray:24; animation:m-draw 420ms var(--ease) 120ms backwards}
+.dl{transition:background 200ms ease, color 200ms ease}
+/* M6 메뉴 밑줄: 하늘색 3px 하나가 미끄러짐 */
+.menu a[aria-current="page"]{box-shadow:none}
+.menu-ul{position:absolute; left:0; bottom:0; width:0; height:3px; background:var(--sky); pointer-events:none}
+.menu-ul.go{transition:transform 360ms var(--ease), width 360ms var(--ease)}
+@keyframes ul-grow{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0)}}
+.menu-ul.grow{animation:ul-grow 360ms var(--ease)}
+/* M7 썸네일 확대 (PC 마우스 올릴 때만) */
+@media (hover:hover) and (pointer:fine){
+  .card .thumb img{transition:transform 600ms var(--ease)}
+  .card:hover .thumb img{transform:scale(1.05)}
+}
+/* M8 구역 스크롤 등장 (화면 아래 구역만, 처음 들어올 때 한 번) */
+.rv{opacity:0}
+.rv-in{animation:m-in 520ms var(--ease) backwards}
+/* M9 펼침 (강의 소개 더보기) */
+@keyframes m-up8{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+.intro-body.unfold{animation:m-up8 260ms var(--ease)}
+.toast.show{animation:none}
+@media (prefers-reduced-motion:reduce){
+  .banner, .ban-sweep, .grid > li, .rv-in, .ck path, .menu-ul.grow, .tm-ic svg, .tm button svg, .intro-body.unfold{animation:none!important}
+  .ban-sweep{display:none}
+  .rv{opacity:1}
+  .menu-ul.go, .card .thumb img, .tm button, .tm-ic svg, .dl{transition:none}
+  .card:hover .thumb img{transform:none}
+}
+
+/* ---------- #17 상품연구 전략자료 ---------- */
+/* 썸네일: 올린 이미지는 cover, 기본(흰 바탕 로고)은 contain + 아래 1px 선 */
+.r-th{background:#FFFFFF}
+.r-th img[data-default]{object-fit:contain}
+.r-th.dflt::after{content:""; position:absolute; inset:0; box-shadow:inset 0 -1px 0 #E4E8F4; pointer-events:none}
+.r-card{border-radius:20px}
+.r-card .card-body h3{font-size:20px; font-weight:800}
+.r-card .card-meta{font-size:14px}
+.r-sub{color:var(--ink-2); white-space:nowrap}
+.r-grid{gap:32px 24px}
+@media (max-width:980px){ .r-card .card-body h3{font-size:18px} .r-grid{gap:22px 16px} }
+@media (max-width:560px){ .r-card{border-radius:20px} .r-card .card-body h3{font-size:19px} .r-grid{gap:18px} }
+
+/* ② 연령 목록: 위 돌아가기 */
+.r-sub-page{padding-top:24px}
+.r-sub-page .back-all{margin-bottom:10px}
+@media (max-width:980px){ .r-sub-page{padding-top:20px} }
+@media (max-width:560px){ .r-sub-page{padding-top:28px} }
+
+/* ③ 자료 받기: 왼쪽 썸네일·제목(고정) · 오른쪽 넓은 교육자료 */
+.rget{padding-top:24px; padding-bottom:112px}
+.rget .back-all{margin-bottom:10px}
+.rget-grid{display:flex; flex-wrap:wrap; gap:32px; align-items:flex-start}
+.rget-side{flex:1 1 360px; max-width:420px; min-width:300px; position:sticky; top:calc(90px + env(safe-area-inset-top, 0px)); display:flex; flex-direction:column; gap:18px}
+.rget-th{border-radius:22px}
+.rget-info{display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding:0 4px}
+.r-pill{display:inline-flex; align-items:center; background:var(--blue-soft); color:var(--blue); font-family:var(--body); font-weight:800; font-size:13px; line-height:1.25; padding:5px 11px; border-radius:999px; white-space:nowrap}
+[data-theme="dark"] .r-pill{color:var(--link)}
+.rget-info h1{font-size:clamp(30px,2.6vw,38px); line-height:1.3}
+.rget-count{margin:0; font-size:15px; color:var(--ink-2)}
+.r-copy{margin-top:0; height:48px; box-shadow:inset 0 0 0 2px #E4E8F4}
+[data-theme="dark"] .r-copy{box-shadow:inset 0 0 0 2px #262B40}
+.files-card.r-files{flex:999 1 560px; max-width:none; min-width:0; position:static; border-radius:24px; padding:30px 30px 18px}
+.r-files h2{font-size:26px; margin:0 0 8px 4px}
+.r-files .lec-note{margin-bottom:10px}
+.r-files .file{gap:16px; padding:16px 6px}
+.r-files .file + .file{box-shadow:inset 0 1px 0 #EEF1F7}
+[data-theme="dark"] .r-files .file + .file{box-shadow:inset 0 1px 0 #1E2238}
+.r-files .ftype{width:52px; height:52px; border-radius:14px; font-size:15px}
+.r-files .fname{gap:4px}
+.r-files .fname strong{font-weight:800; font-size:17px}
+.r-files .fname span{font-size:14px}
+.r-files .dl{height:48px; min-width:86px; padding:0 18px}
+.r-files .files-empty{padding:16px 6px 12px}
+.r-others > h2{font-size:30px}
+/* 태블릿: 위 흰 상자 한 줄(썸네일 260 + 제목·링크 복사) → 교육자료 → 다른 연령 3열 */
+@media (max-width:980px){
+  .rget{padding-top:16px; padding-bottom:96px}
+  .rget-grid{flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:20px}
+  .rget-side{position:static; max-width:none; min-width:0; flex:none; flex-direction:row; align-items:center; gap:22px; background:var(--card); border-radius:22px; padding:14px}
+  .rget-th{flex:none; width:260px; border-radius:14px}
+  .rget-info{flex:1; min-width:0; gap:10px; padding:0}
+  .rget-info h1{font-size:30px}
+  .rget-count{display:none}
+  .files-card.r-files{flex:none; width:100%; border-radius:22px; padding:24px 22px 12px}
+  .r-files h2{font-size:24px}
+  .r-others{margin-top:56px} .r-others > h2{font-size:26px}
+}
+/* 휴대폰: 썸네일 가로 꽉 → 검정 제목 칸 → 카드형 자료 → 다른 연령 2열 작은 카드 */
+@media (max-width:560px){
+  .rget{padding-top:0; padding-bottom:24px}
+  .rget-grid{gap:0}
+  .rget-side{flex-direction:column; align-items:stretch; gap:0; padding:0; border-radius:0; background:none; margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)))}
+  .rget-th{width:auto; border-radius:0}
+  .rget-info{padding:24px 20px 28px; gap:12px; background:var(--title-band); color:var(--title-band-ink)}
+  .rget-info .r-pill{background:rgba(91,194,231,.16); color:#5BC2E7}
+  .rget-info h1{font-size:26px; line-height:1.38; color:var(--title-band-ink)}
+  .rget-count{display:block; color:var(--title-band-sub); font-size:15px}
+  .r-copy{align-self:stretch; width:100%; height:52px; margin-top:4px; font-size:17px; background:var(--title-band-btn); color:var(--title-band-btn-ink); box-shadow:none}
+  [data-theme="dark"] .r-copy{box-shadow:none}
+  .files-card.r-files{background:none; padding:22px 0 0; border-radius:0}
+  .r-files h2{font-size:24px; margin:0 0 8px 4px}
+  .r-files .file, .r-files .file + .file{box-shadow:none; padding:14px 12px 14px 14px; gap:12px}
+  .r-files .ftype{width:44px; height:44px; border-radius:12px; font-size:14px}
+  .r-files .fname strong{font-size:15px}
+  .r-files .fname span{font-size:13px}
+  .r-files .dl{height:44px; min-width:78px; padding:0 16px}
+  .r-files .files-empty{padding:22px 18px}
+  .r-others{margin-top:36px} .r-others > h2{font-size:22px; margin:0 0 14px 4px}
+  .r-others .r-grid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px}
+  .r-others .r-card{border-radius:16px}
+  .r-others .card-body{padding:10px 12px 12px; gap:8px}
+  .r-others .r-card .card-body h3{font-size:16px}
+  .r-others .chip-files{font-size:12px; padding:5px 9px}
+  .r-others .chip-files svg{width:13px; height:13px}
+}
+/* 검정 제목 칸 위 흰 링크 복사 버튼: 다크에서도 블루 아이콘 */
+@media (max-width:560px){ [data-theme="dark"] .lec-info .copy-btn svg, [data-theme="dark"] .rget-info .r-copy svg{color:#003CDC} }

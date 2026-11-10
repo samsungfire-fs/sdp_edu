@@ -15,8 +15,8 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261027f">
-<link rel="stylesheet" href="assets/admin.css?v=20261027g">
+<link rel="stylesheet" href="assets/site.css?v=20261110a">
+<link rel="stylesheet" href="assets/admin.css?v=20261110a">
 </head>
 <body>
 
@@ -108,13 +108,14 @@
           </button>
         </div>
         <div class="tools">
-          <label class="asearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="aq" type="search" placeholder="이 메뉴에서 강의 제목 찾기" aria-label="이 메뉴에서 강의 제목 찾기" autocomplete="off"></label>
-          <label class="asort"><select id="asort" aria-label="정렬">
+          <label class="asearch" id="aqBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="aq" type="search" placeholder="이 메뉴에서 강의 제목 찾기" aria-label="이 메뉴에서 강의 제목 찾기" autocomplete="off"></label>
+          <label class="asort" id="asortBox"><select id="asort" aria-label="정렬">
             <option value="new">최신 업로드순</option><option value="old">오래된 업로드순</option><option value="title">제목 가나다순</option><option value="files">자료 많은순</option>
           </select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></label>
           <div class="vfilter" id="vfilter" role="radiogroup" aria-label="공개 상태">
             <button type="button" role="radio" aria-checked="true" data-vf="all">모두</button><button type="button" role="radio" aria-checked="false" data-vf="pub">공개</button><button type="button" role="radio" aria-checked="false" data-vf="priv">비공개</button>
           </div>
+          <span class="rnote" id="rnote" hidden>월은 연월 최신순으로 자동 정렬돼요.</span>
         </div>
         <p class="aresult" id="aresult" hidden></p>
         <ul class="videos" id="videos"><li class="empty-list">불러오는 중…</li></ul>
@@ -166,6 +167,16 @@
       </div>
       <p class="last" id="lastUpd"></p>
     </aside>
+
+    <!-- 편집 칸: 넓은 화면은 오른쪽, 980px 이하는 화면 전체 시트 -->
+    <section class="editor" id="editor" hidden aria-labelledby="edTitle">
+      <div class="ed-head">
+        <div class="ed-ht"><span class="ed-pill" id="edPill"></span><h2 id="edTitle"></h2></div>
+        <button type="button" class="ed-close rp" id="edClose" aria-label="편집 닫기" title="편집 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div class="ed-body" id="edBody"></div>
+    </section>
+    <input type="file" class="pick" id="thFile" accept="image/*" tabindex="-1" aria-hidden="true">
   </div>
 </main>
 
@@ -177,7 +188,7 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261027f"></script>
-<script src="assets/admin.js?v=20261027g"></script>
+<script src="assets/common.js?v=20261110a"></script>
+<script src="assets/admin.js?v=20261110a"></script>
 </body>
 </html>
