@@ -582,3 +582,47 @@ body.watch-page .foot .wrap{justify-content:flex-end}
 }
 /* 검정 제목 칸 위 흰 링크 복사 버튼: 다크에서도 블루 아이콘 */
 @media (max-width:560px){ [data-theme="dark"] .lec-info .copy-btn svg, [data-theme="dark"] .rget-info .r-copy svg{color:#003CDC} }
+
+/* ================= 디자인팀 추가 요청 (2026-11-10 오후) #23·#24 ================= */
+
+/* ---------- #24 메뉴 바 키 컬러 #003CDC (라이트·다크 같은 색) ---------- */
+.bar, [data-theme="dark"] .bar{background:#003CDC}
+.menu a{color:rgba(255,255,255,.74)}
+.menu a[aria-current="page"], .menu a:hover{color:#FFFFFF}
+.menu-box::before, [data-theme="dark"] .menu-box::before{background:linear-gradient(90deg, #003CDC, rgba(0,60,220,0))}
+.bar-back svg{color:#FFFFFF}
+.tm, [data-theme="dark"] .tm{background:rgba(255,255,255,.14)}
+.tm button{color:rgba(255,255,255,.74)}
+.tm button[aria-checked="true"], [data-theme="dark"] .tm button[aria-checked="true"]{background:#FFFFFF; color:#003CDC}
+.tm-ic, [data-theme="dark"] .tm-ic{background:rgba(255,255,255,.16); color:#FFFFFF}
+@media (hover:hover) and (pointer:fine){ .tm-ic:hover{background:rgba(255,255,255,.26)} }
+
+/* ---------- #23 M10 빛 라인 리빌 ----------
+   블루로 빛나는 줄 두 개가 겹쳐 그어진 뒤 아래 줄만 내려가며 그 사이로 내용이 드러남.
+   .lr 에 go 클래스가 붙을 때만 재생 (SC.lineReveal) */
+.lr{position:relative}
+.lr-t, .lr-b{display:none; position:absolute; left:-4px; right:-4px; top:0; height:3px; margin-top:-1.5px; border-radius:3px; pointer-events:none; z-index:4; opacity:0; background:#003CDC;
+  box-shadow:0 0 4px 1px rgba(0,60,220,.95), 0 0 14px 3px rgba(0,60,220,.55), 0 0 34px 6px rgba(0,60,220,.28)}
+[data-theme="dark"] .lr-t, [data-theme="dark"] .lr-b{box-shadow:0 0 5px 1px rgba(0,60,220,1), 0 0 18px 4px rgba(0,60,220,.85), 0 0 46px 10px rgba(0,60,220,.55)}
+.lr-b::before{content:""; position:absolute; left:4px; right:4px; bottom:1px; height:64px; border-radius:2px; background:linear-gradient(to top, rgba(0,60,220,.14), rgba(0,60,220,0))}
+[data-theme="dark"] .lr-b::before{background:linear-gradient(to top, rgba(0,60,220,.30), rgba(0,60,220,0))}
+.lr-b::after{content:""; position:absolute; top:50%; left:0; width:180px; height:16px; margin-top:-8px; border-radius:50%; background:radial-gradient(closest-side, #003CDC, rgba(0,60,220,.7) 50%, rgba(0,60,220,0))}
+.lr.wait > .lr-c{clip-path:inset(0 0 100% 0)}
+.lr.go > .lr-t, .lr.go > .lr-b{display:block}
+.lr.go > .lr-c{animation:lr-open var(--lr-d,900ms) cubic-bezier(0.65,0,0.25,1) calc(var(--lr-w,0ms) + 240ms) backwards}
+.lr.go > .lr-t{animation:lr-draw 240ms var(--ease) var(--lr-w,0ms) both, lr-fade 420ms ease-out calc(var(--lr-w,0ms) + 240ms + var(--lr-d,900ms)) forwards}
+.lr.go > .lr-b{animation:lr-draw 240ms var(--ease) var(--lr-w,0ms) both, lr-move var(--lr-d,900ms) cubic-bezier(0.65,0,0.25,1) calc(var(--lr-w,0ms) + 240ms) both, lr-fade 420ms ease-out calc(var(--lr-w,0ms) + 240ms + var(--lr-d,900ms)) forwards}
+.lr.go > .lr-b::after{animation:lr-flare var(--lr-d,900ms) cubic-bezier(0.45,0,0.2,1) calc(var(--lr-w,0ms) + 240ms) both}
+@keyframes lr-open{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes lr-draw{from{opacity:0; transform:scaleX(0)}to{opacity:1; transform:scaleX(1)}}
+@keyframes lr-move{from{top:0}to{top:100%}}
+@keyframes lr-fade{from{opacity:1}to{opacity:0}}
+@keyframes lr-flare{from{left:-6%; opacity:0}20%{opacity:1}to{left:calc(100% - 174px); opacity:.9}}
+/* M10이 도는 동안은 카드 올라오기(M2) 끔 — 두 효과가 겹치지 않게. 페이지 번호를 바꿀 땐 M2만 */
+.lr.go .grid > li{animation:none}
+/* 자료 목록·소개: 줄이 바깥 상자 모서리에 걸리지 않게 */
+.files-card .lr, .intro .lr{margin:0 -2px; padding:0 2px}
+@media (prefers-reduced-motion:reduce){
+  .lr-t, .lr-b, .lr.go > .lr-t, .lr.go > .lr-b{display:none}
+  .lr.go > .lr-c, .lr.wait > .lr-c{animation:none; clip-path:none}
+}

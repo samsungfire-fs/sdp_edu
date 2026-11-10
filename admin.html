@@ -6,7 +6,8 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>관리자 페이지</title>
-<meta name="theme-color" content="#07080C">
+<meta name="theme-color" content="#003CDC">
+<script>/* 라이트/다크: 사이트와 같은 저장값(없으면 기기 설정)을 CSS보다 먼저 붙여 깜빡임 방지 */(function(){var t;try{t=localStorage.getItem("sdp-theme")}catch(e){}if(t!=="dark"&&t!=="light")t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t)})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
@@ -15,8 +16,8 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261110a">
-<link rel="stylesheet" href="assets/admin.css?v=20261110a">
+<link rel="stylesheet" href="assets/site.css?v=20261110b">
+<link rel="stylesheet" href="assets/admin.css?v=20261110b">
 </head>
 <body>
 
@@ -26,6 +27,8 @@
     <div class="abar-right">
       <a class="deploy" id="deploy" href="#" target="_blank" rel="noopener" data-st="none" title="사이트 반영 상태" aria-label="사이트 반영 상태"><span class="dot" aria-hidden="true"></span></a>
       <a class="site-link rp" href="./" target="_blank" rel="noopener">사이트 보기 ↗</a>
+      <button type="button" class="abar-ic rp" id="tmIc" aria-label="다크 모드로 바꾸기"></button>
+      <button type="button" class="abar-ic set-btn rp" id="setBtn" aria-expanded="false" aria-controls="setPop" aria-label="설정" title="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
 </header>
@@ -118,55 +121,10 @@
           <span class="rnote" id="rnote" hidden>월은 연월 최신순으로 자동 정렬돼요.</span>
         </div>
         <p class="aresult" id="aresult" hidden></p>
-        <ul class="videos" id="videos"><li class="empty-list">불러오는 중…</li></ul>
+        <div class="lr" id="listLr" style="--lr-d:1000ms"><ul class="videos lr-c" id="videos"><li class="empty-list">불러오는 중…</li></ul><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
       </section>
     </div>
 
-    <aside class="aside" aria-labelledby="setH">
-      <h2 id="setH">설정</h2>
-      <div class="setbox">
-        <details class="set" id="conn">
-          <summary class="rp">
-            <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c0-3.8 3.4-6 7.5-6s7.5 2.2 7.5 6"/></svg>
-            <span class="set-t">계정</span><span class="pill idle" id="connState">확인 중</span>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-          </summary>
-          <div class="set-body">
-            <p class="set-note" id="connRepo"></p>
-            <div class="set-btns">
-              <button type="button" class="btn-soft rp press" id="changeBtn">비밀번호·토큰 바꾸기</button>
-              <button type="button" class="btn-line rp press" id="logoutBtn">로그아웃</button>
-            </div>
-          </div>
-        </details>
-        <details class="set" id="siteBox">
-          <summary class="rp">
-            <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 12h10M5 18h7"/></svg>
-            <span class="set-t">사이트 문구</span>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-          </summary>
-          <div class="set-body">
-            <div class="f"><label for="sNotice">맨 아래 고지 문구</label><textarea id="sNotice" class="in" rows="4" data-site="notice"></textarea>
-              <span class="help">첫 줄은 노란 글씨로 강조돼요.<br>줄을 바꾸면 그다음 줄부터 흰 글씨예요.</span></div>
-          </div>
-        </details>
-        <details class="set" id="updBox">
-          <summary class="rp">
-            <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
-            <span class="set-t">사이트 업데이트</span>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-          </summary>
-          <div class="set-body">
-            <p class="set-note upd-note">Claude가 고친 파일을 컴퓨터의 <b>sdp_edu</b> 폴더에서 읽어,<br>바뀐 것만 한&nbsp;번에 올려요.<br>강의 목록은 건드리지 않아요.</p>
-            <button type="button" class="btn-main sm rp press" id="updRun">지금 업데이트</button>
-            <span class="upd-folder" id="updFolder"></span>
-            <input type="file" class="pick" id="updPick" webkitdirectory directory multiple tabindex="-1" aria-hidden="true">
-            <ul class="upd-log" id="updLog"></ul>
-          </div>
-        </details>
-      </div>
-      <p class="last" id="lastUpd"></p>
-    </aside>
 
     <!-- 편집 칸: 넓은 화면은 오른쪽, 980px 이하는 화면 전체 시트 -->
     <section class="editor" id="editor" hidden aria-labelledby="edTitle">
@@ -174,11 +132,63 @@
         <div class="ed-ht"><span class="ed-pill" id="edPill"></span><h2 id="edTitle"></h2></div>
         <button type="button" class="ed-close rp" id="edClose" aria-label="편집 닫기" title="편집 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
-      <div class="ed-body" id="edBody"></div>
+      <div class="lr ed-lr" id="edLr" style="--lr-d:850ms"><div class="ed-body lr-c" id="edBody"></div><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
     </section>
     <input type="file" class="pick" id="thFile" accept="image/*" tabindex="-1" aria-hidden="true">
   </div>
 </main>
+
+<!-- ⚙ 설정 창 (#21): 맨 위 바 톱니 버튼 아래에 펼쳐짐 -->
+<div class="setpop" id="setPop" role="dialog" aria-modal="false" aria-labelledby="setH" hidden>
+  <div class="setpop-head">
+    <h2 id="setH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>설정</h2>
+    <button type="button" class="setpop-x rp" id="setClose" aria-label="설정 닫기" title="설정 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="lr" id="setLr" style="--lr-d:560ms;--lr-w:120ms"><div class="lr-c setpop-body">
+      <div class="setbox">
+      <details class="set" id="conn">
+        <summary class="rp">
+          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c0-3.8 3.4-6 7.5-6s7.5 2.2 7.5 6"/></svg>
+          <span class="set-t">계정</span><span class="pill idle" id="connState">확인 중</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="set-body">
+          <p class="set-note" id="connRepo"></p>
+          <div class="set-btns">
+            <button type="button" class="btn-soft rp press" id="changeBtn">비밀번호·토큰 바꾸기</button>
+            <button type="button" class="btn-line rp press" id="logoutBtn">로그아웃</button>
+          </div>
+        </div>
+      </details>
+      <details class="set" id="siteBox">
+        <summary class="rp">
+          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 12h10M5 18h7"/></svg>
+          <span class="set-t">사이트 문구</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="set-body">
+          <div class="f"><label for="sNotice">맨 아래 고지 문구</label><textarea id="sNotice" class="in" rows="4" data-site="notice"></textarea>
+            <span class="help">첫 줄은 노란 글씨로 강조돼요.<br>줄을 바꾸면 그다음 줄부터 흰 글씨예요.</span></div>
+        </div>
+      </details>
+      <details class="set" id="updBox">
+        <summary class="rp">
+          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
+          <span class="set-t">사이트 업데이트</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="set-body">
+          <p class="set-note upd-note">Claude가 고친 파일을 컴퓨터의 <b>sdp_edu</b> 폴더에서 읽어,<br>바뀐 것만 한&nbsp;번에 올려요.<br>강의 목록은 건드리지 않아요.</p>
+          <button type="button" class="btn-main sm rp press" id="updRun">지금 업데이트</button>
+          <span class="upd-folder" id="updFolder"></span>
+          <input type="file" class="pick" id="updPick" webkitdirectory directory multiple tabindex="-1" aria-hidden="true">
+          <ul class="upd-log" id="updLog"></ul>
+        </div>
+      </details>
+    </div>
+    <p class="last" id="lastUpd"></p>
+  </div><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
+</div>
 
 <div class="savebar" role="status">
   <div class="awrap">
@@ -188,7 +198,7 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261110a"></script>
-<script src="assets/admin.js?v=20261110a"></script>
+<script src="assets/common.js?v=20261110b"></script>
+<script src="assets/admin.js?v=20261110b"></script>
 </body>
 </html>

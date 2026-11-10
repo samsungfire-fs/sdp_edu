@@ -201,5 +201,74 @@
     return { check: check };
   };
 
+  /* 라이트 / 다크 (사이트·관리자 공통, 저장값 localStorage 'sdp-theme')
+     opts.tm: 두 칸 버튼 묶음(radiogroup, [data-theme-set]) · opts.ic: 해/달 아이콘 버튼
+     바뀔 때 누른 자리에서 원이 퍼지며 바뀜(startViewTransition, 지원 안 하면 바로) */
+  SC.THEME_KEY = "sdp-theme";
+  SC.themeUI = function (opts) {
+    opts = opts || {};
+    var root = document.documentElement, KEY = SC.THEME_KEY;
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>';
+    var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+    function cur() { return root.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+    function paint() {
+      var t = cur();
+      if (opts.tm) opts.tm.querySelectorAll("[data-theme-set]").forEach(function (b) { b.setAttribute("aria-checked", b.dataset.themeSet === t); });
+      if (opts.ic) {
+        opts.ic.innerHTML = t === "dark" ? SUN : MOON;
+        opts.ic.setAttribute("aria-label", t === "dark" ? "라이트 모드로 바꾸기" : "다크 모드로 바꾸기");
+        opts.ic.title = t === "dark" ? "라이트 모드" : "다크 모드";
+      }
+    }
+    function apply(t, x, y) {
+      var go = function () { root.setAttribute("data-theme", t); paint(); };
+      if (!document.startViewTransition || reduce) { go(); return; }
+      var r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+      try {
+        var vt = document.startViewTransition(go);
+        vt.ready.then(function () {
+          root.animate({ clipPath: ["circle(0px at " + x + "px " + y + "px)", "circle(" + r + "px at " + x + "px " + y + "px)"] },
+            { duration: 560, easing: "cubic-bezier(0.23,1,0.32,1)", pseudoElement: "::view-transition-new(root)" });
+        }).catch(function () {});
+      } catch (er) { go(); }
+    }
+    function set(t, e, el) {
+      if (t === cur()) return;
+      try { localStorage.setItem(KEY, t); } catch (er) {}
+      var x = e && e.clientX, y = e && e.clientY;
+      if (!x && !y && el) { var b = el.getBoundingClientRect(); x = b.left + b.width / 2; y = b.top + b.height / 2; }
+      apply(t, x || innerWidth - 40, y || 40);
+    }
+    if (opts.tm) {
+      opts.tm.addEventListener("click", function (e) { var b = e.target.closest("[data-theme-set]"); if (b) set(b.dataset.themeSet, e, b); });
+      opts.tm.addEventListener("keydown", function (e) {
+        if (!/^Arrow(Left|Right|Up|Down)$/.test(e.key)) return;
+        e.preventDefault();
+        var t = cur() === "dark" ? "light" : "dark", b = opts.tm.querySelector('[data-theme-set="' + t + '"]');
+        set(t, null, b); b.focus();
+      });
+    }
+    if (opts.ic) opts.ic.addEventListener("click", function (e) { set(cur() === "dark" ? "light" : "dark", e, this); });
+    /* 직접 고른 적이 없으면 기기 설정이 바뀔 때 따라감 */
+    if (window.matchMedia) {
+      var mq = matchMedia("(prefers-color-scheme: dark)"), follow = function () {
+        var saved = ""; try { saved = localStorage.getItem(KEY) || ""; } catch (er) {}
+        if (!saved) { root.setAttribute("data-theme", mq.matches ? "dark" : "light"); paint(); }
+      };
+      if (mq.addEventListener) mq.addEventListener("change", follow); else if (mq.addListener) mq.addListener(follow);
+    }
+    paint();
+    return { set: set, cur: cur };
+  };
+
+  /* M10 빛 라인 리빌: .lr 상자에 go 를 다시 붙여 처음부터 재생 (동작 줄이기면 아무것도 안 함) */
+  SC.lineReveal = function (box) {
+    if (!box || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    var cs = getComputedStyle(box), d = parseFloat(cs.getPropertyValue("--lr-d")) || 900, w = parseFloat(cs.getPropertyValue("--lr-w")) || 0;
+    box.classList.remove("go"); void box.offsetWidth; box.classList.add("go");
+    clearTimeout(box._lrT); box._lrT = setTimeout(function () { box.classList.remove("go"); }, w + 240 + d + 460);
+  };
+
   w.SC = SC;
 })(window);

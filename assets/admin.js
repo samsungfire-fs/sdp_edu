@@ -85,7 +85,7 @@
     canSave = false; updateSaveBar("불러오는 중…");
     if (!token){
       setConn("warn", "보기만", "토큰이 없어서 저장할 수 없어요.");
-      $("conn").open = true;
+      $("conn").open = true; openSet();
       return siteJson().then(function(r){ useData(r[0] || { site:{}, videos:[] }, r[1]); updateSaveBar(); });
     }
     return gh("")
@@ -109,7 +109,7 @@
         $("conn").open = false; updateSaveBar();
       })
       .catch(function(e){
-        $("conn").open = true;
+        $("conn").open = true; if (e.status !== 401) openSet();
         if (e.status === 401){ clearSession(); showGate(authInfo ? "change" : "first", "저장된 토큰이 만료됐거나 지워졌어요. 새 토큰을 넣어 주세요."); return; }
         else if (e.status === 403) setConn("bad", "권한 없음", "토큰에 쓰기 권한이 없어요.");
         else if (e.status === 404) setConn("bad", "저장소 없음", "저장소를 찾을 수 없어요. 토큰의 저장소 선택을 확인해 주세요.");
@@ -412,10 +412,30 @@
       $("videos").innerHTML = list.length ? list.map(function(x){ return itemHtml(x.v, x.i); }).join("")
         : (cond ? NORES : '<li class="empty-list">아직 ' + esc(label) + ' 강의가 없어요.<br>‘' + esc(label) + '에 강의 추가’를 눌러 첫 강의를 넣어 주세요.</li>');
     }
-    if (anim) replay($("videos"), "stag", 1200);
+    if (anim === "lr") SC.lineReveal($("listLr"));      /* 메뉴 칸 바꿀 때: M10 */
+    else if (anim) replay($("videos"), "stag", 1200);  /* 정렬·공개 필터: M9 */
     renderEditor();
     if (fid && $(fid)){ var el = $(fid); el.focus({ preventScroll:true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch(e){} }
   }
+
+  /* ---------- ⚙ 설정 창 (#21): 맨 위 바 톱니 버튼 아래에 펼쳐짐 ---------- */
+  function openSet(){
+    if (!$("setPop").hidden) return;
+    $("setPop").hidden = false; $("setBtn").setAttribute("aria-expanded", "true");
+    SC.lineReveal($("setLr"));
+  }
+  function closeSet(focusBtn){
+    if ($("setPop").hidden) return;
+    $("setPop").hidden = true; $("setBtn").setAttribute("aria-expanded", "false");
+    if (focusBtn) $("setBtn").focus();
+  }
+  $("setBtn").addEventListener("click", function(){ $("setPop").hidden ? openSet() : closeSet(); });
+  $("setClose").addEventListener("click", function(){ closeSet(true); });
+  document.addEventListener("pointerdown", function(e){
+    if ($("setPop").hidden || e.target.closest("#setPop") || e.target.closest("#setBtn")) return;
+    closeSet();
+  });
+  SC.themeUI({ ic: $("tmIc") });
 
   /* ---------- 편집 칸 (#20): 980px 넘으면 오른쪽, 이하는 화면 전체 시트 ---------- */
   var edKey = null;
@@ -439,13 +459,15 @@
     var body = $("edBody"), st = body.scrollTop;
     body.innerHTML = isR ? monthBody(openM, mi) : videoBody(openV, i);
     body.scrollTop = swap || opening ? 0 : st;
-    if (opening) replay(ed, "ed-in", 600); else if (swap) replay(body, "ed-swap", 500);
+    if (opening || swap) SC.lineReveal($("edLr"));   /* 편집 누를 때마다 M10 (M9 등장은 끔) */
     edKey = obj;
   }
   function closeEditor(){ openV = openM = openA = null; armedDel = null; render(); }
   $("edClose").addEventListener("click", closeEditor);
   document.addEventListener("keydown", function(e){
-    if (e.key === "Escape" && !$("editor").hidden && !e.target.closest("select")) closeEditor();
+    if (e.key !== "Escape" || e.target.closest("select")) return;
+    if (!$("setPop").hidden){ closeSet(true); return; }
+    if (!$("editor").hidden) closeEditor();
   });
   if (wide.addEventListener) wide.addEventListener("change", function(){ if (!$("editor").hidden) document.body.classList.toggle("sheet-open", !wide.matches); });
 
@@ -453,7 +475,7 @@
     var b = e.target.closest("[data-cat]"); if (!b || b.dataset.cat === view.cat) return;
     view.cat = b.dataset.cat; view.q = ""; view.vf = "all"; $("aq").value = ""; syncVf(); armedDel = null;
     openV = openM = openA = null;
-    LS.set("sc-admin-cat", view.cat); render(true);
+    LS.set("sc-admin-cat", view.cat); render("lr");
   });
   $("aq").addEventListener("input", function(){ view.q = this.value.trim(); render(); });
   $("asort").addEventListener("change", function(){ view.sort = this.value; render(true); });
@@ -1385,12 +1407,12 @@
 
   $("logoutBtn").addEventListener("click", function(){
     if (dirty){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return; }
-    clearSession(); canSave = false; data = { site:{}, videos:[] }; rdata = { months:[] }; openV = openM = openA = null; render();
+    clearSession(); canSave = false; data = { site:{}, videos:[] }; rdata = { months:[] }; openV = openM = openA = null; closeSet(); render();
     if (authInfo) showGate("login"); else showGate("first");
   });
   $("changeBtn").addEventListener("click", function(){
     if (dirty){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return; }
-    showGate("change");
+    closeSet(); showGate("change");
   });
   $("makePwBtn").addEventListener("click", function(){ showGate("first"); });
 

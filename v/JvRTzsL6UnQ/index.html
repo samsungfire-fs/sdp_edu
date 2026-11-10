@@ -15,7 +15,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>영개파 교육 자료</title>
 <meta name="description" content="교육자료 3개 · [시그니처클래스📖]  SPEC 1기 장병두 책임위원">
-<meta name="theme-color" content="#07080C">
+<meta name="theme-color" content="#003CDC">
 <script>/* 라이트/다크: 저장된 값(없으면 기기 설정)을 CSS보다 먼저 붙여 깜빡임 방지 */(function(){var t;try{t=localStorage.getItem("sdp-theme")}catch(e){}if(t!=="dark"&&t!=="light")t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t)})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +25,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261110a">
+<link rel="stylesheet" href="assets/site.css?v=20261110b">
 </head>
 <body>
 
@@ -67,7 +67,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261110a"></script>
+<script src="assets/common.js?v=20261110b"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -108,52 +108,8 @@
     toastT = setTimeout(function(){ t.classList.remove("show"); }, 3000);
   }
 
-  /* ---------- 라이트 / 다크 (#18 · M4) ---------- */
-  var THEME_KEY = "sdp-theme";
-  function curTheme(){ return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
-  function paintTheme(){
-    var t = curTheme();
-    document.querySelectorAll("#tm [data-theme-set]").forEach(function(b){ b.setAttribute("aria-checked", b.dataset.themeSet === t); });
-    $("tmIc").innerHTML = t === "dark" ? IC.sun : IC.moon;
-    $("tmIc").setAttribute("aria-label", t === "dark" ? "라이트 모드로 바꾸기" : "다크 모드로 바꾸기");
-    var mc = document.querySelector('meta[name="theme-color"]'); if (mc) mc.setAttribute("content", t === "dark" ? "#000000" : "#07080C");
-  }
-  function applyTheme(t, x, y){
-    var go = function(){ document.documentElement.setAttribute("data-theme", t); paintTheme(); };
-    if (!document.startViewTransition || REDUCE){ go(); return; }
-    var r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-    try {
-      var vt = document.startViewTransition(go);
-      vt.ready.then(function(){
-        document.documentElement.animate({ clipPath: ["circle(0px at " + x + "px " + y + "px)", "circle(" + r + "px at " + x + "px " + y + "px)"] },
-          { duration: 560, easing: "cubic-bezier(0.23,1,0.32,1)", pseudoElement: "::view-transition-new(root)" });
-      }).catch(function(){});
-    } catch(er){ go(); }
-  }
-  function setTheme(t, e, el){
-    if (t === curTheme()) return;
-    try { localStorage.setItem(THEME_KEY, t); } catch(er){}
-    var x = e && e.clientX, y = e && e.clientY;
-    if (!x && !y && el){ var r = el.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 2; }
-    applyTheme(t, x || innerWidth - 40, y || 40);
-  }
-  $("tm").addEventListener("click", function(e){ var b = e.target.closest("[data-theme-set]"); if (b) setTheme(b.dataset.themeSet, e, b); });
-  $("tm").addEventListener("keydown", function(e){
-    if (!/^Arrow(Left|Right|Up|Down)$/.test(e.key)) return;
-    e.preventDefault();
-    var t = curTheme() === "dark" ? "light" : "dark", b = $("tm").querySelector('[data-theme-set="' + t + '"]');
-    setTheme(t, null, b); b.focus();
-  });
-  $("tmIc").addEventListener("click", function(e){ setTheme(curTheme() === "dark" ? "light" : "dark", e, this); });
-  /* 직접 고른 적이 없으면 기기 설정이 바뀔 때 따라감 */
-  if (window.matchMedia){
-    var mq = matchMedia("(prefers-color-scheme: dark)"), follow = function(){
-      var saved = ""; try { saved = localStorage.getItem(THEME_KEY) || ""; } catch(er){}
-      if (!saved){ document.documentElement.setAttribute("data-theme", mq.matches ? "dark" : "light"); paintTheme(); }
-    };
-    if (mq.addEventListener) mq.addEventListener("change", follow); else if (mq.addListener) mq.addListener(follow);
-  }
-  paintTheme();
+  /* ---------- 라이트 / 다크 (#18 · M4) — common.js ---------- */
+  SC.themeUI({ tm: $("tm"), ic: $("tmIc") });
 
   /* ---------- 주소 ---------- */
   function menuUrl(m, page, q){
@@ -380,7 +336,24 @@
       if (pg && !pg.disabled){ L.page = +pg.dataset.page; drawGrid(); syncUrl(true); toListTop(); return; }
       if (e.target.closest("#clearQ")){ L.q = ""; L.page = 1; $("q").value = ""; drawGrid(); syncUrl(false); $("q").focus(); }
     });
-    drawGrid(); countUp();
+    drawGrid(); countUp(); SC.lineReveal($("listLr"));
+  }
+  /* M10 빛 라인 리빌로 감싸기: 목록(1.05초) · 자료/소개(0.85초) */
+  var LINES = '<i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i>';
+  function lrBox(inner, d, w, id){
+    return '<div class="lr"' + (id ? ' id="' + id + '"' : '') + ' style="--lr-d:' + d + 'ms;--lr-w:' + (w || 0) + 'ms">' + inner + LINES + '</div>';
+  }
+  var LIST_BODY = lrBox('<div class="lr-c" id="listBody"></div>', 1050, 0, "listLr");
+  /* 화면에 보이면 바로, 아래에 있으면 처음 들어올 때 재생 (그 전엔 내용을 접어 둠) */
+  var lrIo = (!REDUCE && "IntersectionObserver" in window) ? new IntersectionObserver(function(ents){
+    ents.forEach(function(e){ if (!e.isIntersecting) return; lrIo.unobserve(e.target); e.target.classList.remove("wait"); SC.lineReveal(e.target); });
+  }, { rootMargin: "0px 0px -10% 0px" }) : null;
+  function playLr(scope){
+    if (REDUCE) return;
+    scope.querySelectorAll(".lr").forEach(function(box){
+      if (!lrIo || box.getBoundingClientRect().top < innerHeight * 0.9) SC.lineReveal(box);
+      else { box.classList.add("wait"); lrIo.observe(box); }
+    });
   }
   function emptyBox(icon, title, sub){
     return '<div class="empty"><span class="empty-ic">' + icon + '</span><h2>' + title + '</h2><p>' + sub + '</p></div>';
@@ -401,7 +374,7 @@
     $("app").innerHTML = '<section class="list-page" aria-labelledby="listH">' +
       '<div class="list-head"><h1 id="listH">' + esc(title) + ' <span class="num" data-count="' + all.length + '">' + all.length + '</span></h1>' +
         '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기" autocomplete="off" enterkeyhint="search"></label>' +
-      '</div><div id="listBody"></div></section>';
+      '</div>' + LIST_BODY + '</section>';
     $("q").value = L.q;
     bindList();
     $("q").addEventListener("input", function(){ L.q = this.value.trim(); L.page = 1; drawGrid(); syncUrl(false); });
@@ -442,7 +415,7 @@
     L = { m: "research", page: r.page, q: "", items: months, search: false, gridCls: " r-grid", card: monthCard, url: function(p){ return rUrl("", "", p); } };
     $("app").innerHTML = '<section class="list-page" aria-labelledby="listH">' +
       '<div class="list-head"><h1 id="listH">상품연구 전략자료 <span class="num" data-count="' + months.length + '">' + months.length + '</span></h1></div>' +
-      '<div id="listBody"></div></section>';
+      LIST_BODY + '</section>';
     bindList();
     return rUrl("", "", L.page);
   }
@@ -462,7 +435,7 @@
     L = { m: "research", page: page, q: "", items: ages, search: false, gridCls: " r-grid", card: function(a){ return ageCard(mo, a); }, url: function(p){ return rUrl(code, "", p); } };
     $("app").innerHTML = '<section class="list-page r-sub-page" aria-labelledby="listH">' + head +
       '<div class="list-head"><h1 id="listH">' + esc(mo.title) + ' <span class="num nowrap">연령 <span data-count="' + ages.length + '">' + ages.length + '</span></span></h1></div>' +
-      '<div id="listBody"></div></section>';
+      LIST_BODY + '</section>';
     bindList();
     return rUrl(code, "", L.page);
   }
@@ -485,9 +458,9 @@
           '<section class="files-card r-files" aria-labelledby="filesH">' +
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
             '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
-            (files.length
-              ? '<ul class="files">' + files.map(fileRow).join("") + '</ul>'
-              : '<div class="files-empty"><span class="ftype">' + IC.doc + '</span><p>이 연령은 아직 받을 자료가 없어요.<br>곧 올라올 예정이에요.</p></div>') +
+            lrBox(files.length
+              ? '<ul class="files lr-c">' + files.map(fileRow).join("") + '</ul>'
+              : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 연령은 아직 받을 자료가 없어요.<br>곧 올라올 예정이에요.</p></div>', 850) +
           '</section>' +
         '</div>' +
         (others.length ? '<section class="others r-others" aria-labelledby="moreH"><h2 id="moreH">같은 달 다른 연령</h2><ul class="grid r-grid">' +
@@ -497,7 +470,7 @@
       var url = rUrl(code, a.id);
       SC.copy(url).then(function(){ toast("링크를 복사했어요. 카톡에 붙여 넣으세요", IC.link); }, function(){ toast(url, IC.link); });
     });
-    reveal(".rget .r-files, .rget .others");
+    reveal(".rget .others"); playLr($("app"));
     return rUrl(code, a.id);
   }
 
@@ -560,15 +533,15 @@
                 '<span class="cm-box"><span class="cm-send">' + IC.send + '</span></span>' +
               '</a></section>' +
             (v.description ? '<section class="intro" aria-labelledby="descH"><h2 id="descH">강의 소개</h2>' +
-              '<p class="intro-body clamp" id="descBody">' + SC.richText(v.description) + '</p>' +
+              lrBox('<p class="intro-body clamp lr-c" id="descBody">' + SC.richText(v.description) + '</p>', 850, 260) +
               '<button type="button" class="more rp" id="more" aria-expanded="false" hidden><span>더보기</span>' + IC.down + '</button></section>' : '') +
           '</div>' +
           '<aside class="files-card" aria-labelledby="filesH">' +
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
             '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
-            (files.length
-              ? '<ul class="files">' + files.map(fileRow).join("") + '</ul>'
-              : '<div class="files-empty"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>') +
+            lrBox(files.length
+              ? '<ul class="files lr-c">' + files.map(fileRow).join("") + '</ul>'
+              : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>', 850) +
           '</aside>' +
         '</div>' +
         (others.length ? '<section class="others" aria-labelledby="moreH"><h2 id="moreH">다른 강의</h2><ul class="grid">' + others.map(function(x){ return card(x, false); }).join("") + '</ul></section>' : '') +
@@ -590,7 +563,7 @@
         });
       } else body.classList.remove("clamp");
     });
-    reveal(".watch .comments, .watch .intro, .watch .files-card, .watch .others");
+    reveal(".watch .comments, .watch .others"); playLr($("app"));
   }
 
   /* ---------- 화면 고르기 ---------- */
