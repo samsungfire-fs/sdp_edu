@@ -213,7 +213,8 @@
     var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
     function cur() { return root.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
     function paint() {
-      var t = cur();
+      var t = cur(), mc = document.querySelector('meta[name="theme-color"]');
+      if (mc) mc.setAttribute("content", t === "dark" ? "#0B1442" : "#003CDC");
       if (opts.tm) opts.tm.querySelectorAll("[data-theme-set]").forEach(function (b) { b.setAttribute("aria-checked", b.dataset.themeSet === t); });
       if (opts.ic) {
         opts.ic.innerHTML = t === "dark" ? SUN : MOON;
@@ -265,9 +266,10 @@
   /* M10 빛 라인 리빌: .lr 상자에 go 를 다시 붙여 처음부터 재생 (동작 줄이기면 아무것도 안 함) */
   SC.lineReveal = function (box) {
     if (!box || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
-    var cs = getComputedStyle(box), d = parseFloat(cs.getPropertyValue("--lr-d")) || 900, w = parseFloat(cs.getPropertyValue("--lr-w")) || 0;
+    var cs = getComputedStyle(box), d = parseFloat(cs.getPropertyValue("--lr-d")) || 600, w = parseFloat(cs.getPropertyValue("--lr-w")) || 0;
     box.classList.remove("go"); void box.offsetWidth; box.classList.add("go");
-    clearTimeout(box._lrT); box._lrT = setTimeout(function () { box.classList.remove("go"); }, w + 240 + d + 460);
+    box.classList.remove("is-out");
+    clearTimeout(box._lrT); box._lrT = setTimeout(function () { box.classList.remove("go"); }, w + 160 + d + 320);
   };
 
   w.SC = SC;

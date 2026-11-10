@@ -388,6 +388,8 @@
   }
   function render(anim){
     var a = document.activeElement, fid = a && a.id, s0 = a && a.selectionStart, s1 = a && a.selectionEnd;
+    /* #26 편집 칸이 새로 열리면: 바뀌기 전 자리를 재 두었다가 목록이 왼쪽 칸으로 스르륵 (FLIP) */
+    var target = view.cat === RID ? openM : openV, first = ($("edWrap").hidden && target && motionOk()) ? flipFirst() : null;
     var V = data.videos, isR = view.cat === RID, label = isR ? SC.RESEARCH.label : SC.catLabel(view.cat);
     $("mtabs").innerHTML = SC.CATS.concat([SC.RESEARCH]).map(function(c){
       var n = c.id === RID ? rdata.months.length : V.filter(function(v){ return SC.catOf(v) === c.id; }).length;
@@ -412,9 +414,9 @@
       $("videos").innerHTML = list.length ? list.map(function(x){ return itemHtml(x.v, x.i); }).join("")
         : (cond ? NORES : '<li class="empty-list">아직 ' + esc(label) + ' 강의가 없어요.<br>‘' + esc(label) + '에 강의 추가’를 눌러 첫 강의를 넣어 주세요.</li>');
     }
-    if (anim === "lr") SC.lineReveal($("listLr"));      /* 메뉴 칸 바꿀 때: M10 */
-    else if (anim) replay($("videos"), "stag", 1200);  /* 정렬·공개 필터: M9 */
+    if (anim) SC.lineReveal($("listLr"));   /* 메뉴 칸·정렬·공개 필터 바꿀 때: M10 (#28 다른 등장 효과 없음) */
     renderEditor();
+    if (first) flipPlay(first);
     if (fid && $(fid)){ var el = $(fid); el.focus({ preventScroll:true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch(e){} }
   }
 
@@ -440,13 +442,40 @@
   /* ---------- 편집 칸 (#20): 980px 넘으면 오른쪽, 이하는 화면 전체 시트 ---------- */
   var edKey = null;
   var wide = window.matchMedia ? matchMedia("(min-width:981px)") : { matches: true };
+  /* 넓은 화면 + 동작 줄이기 꺼짐일 때만 FLIP · 거꾸로 닫기 */
+  function motionOk(){ return wide.matches && !REDUCE; }
+  function flipKey(el){ return el.dataset.flip || (el.dataset.v != null ? "v" + el.dataset.v : el.dataset.m != null ? "m" + el.dataset.m : ""); }
+  function flipEls(){ return Array.prototype.slice.call(document.querySelectorAll(".amain [data-flip], .videos > li[data-v], .videos > li[data-m]")); }
+  function flipFirst(){ var m = {}; flipEls().forEach(function(el){ var k = flipKey(el); if (k) m[k] = el.getBoundingClientRect(); }); return m; }
+  function flipPlay(first){
+    flipEls().forEach(function(el){
+      var a = first[flipKey(el)]; if (!a || !el.animate) return;
+      var r = el.getBoundingClientRect(), dx = a.left - r.left, dy = a.top - r.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      el.animate([{ transform: "translate(" + dx + "px," + dy + "px)" }, { transform: "none" }], { duration: 520, easing: "cubic-bezier(0.23,1,0.32,1)" });
+    });
+  }
+  var closing = null;
   function renderEditor(){
-    var ed = $("editor"), isR = view.cat === RID, obj = isR ? openM : openV, lay = document.querySelector(".admin");
+    var wrap = $("edWrap"), isR = view.cat === RID, obj = isR ? openM : openV, lay = document.querySelector(".admin");
     if (!obj){
-      ed.hidden = true; lay.classList.remove("is-edit"); document.body.classList.remove("sheet-open"); edKey = null; return;
+      if (wrap.hidden || closing) return;
+      edKey = null;
+      var finish = function(){
+        closing = null;
+        var f = motionOk() ? flipFirst() : null;
+        wrap.hidden = true; wrap.classList.remove("is-out", "go"); lay.classList.remove("is-edit"); document.body.classList.remove("sheet-open");
+        if (f) flipPlay(f);
+      };
+      if (!motionOk()){ finish(); return; }
+      /* #26 닫기: 라인 리빌 거꾸로(아래 줄이 위로) → 편집 칸 없애고 목록이 원래 자리로 */
+      clearTimeout(wrap._lrT); wrap.classList.remove("go"); void wrap.offsetWidth; wrap.classList.add("is-out");
+      closing = setTimeout(finish, 600 + 160 + 20);
+      return;
     }
-    var opening = ed.hidden, swap = !opening && edKey !== obj;
-    ed.hidden = false; lay.classList.add("is-edit"); document.body.classList.toggle("sheet-open", !wide.matches);
+    if (closing){ clearTimeout(closing); closing = null; wrap.classList.remove("is-out"); edKey = null; }
+    var opening = wrap.hidden, swap = !opening && edKey !== obj;
+    wrap.hidden = false; lay.classList.add("is-edit"); document.body.classList.toggle("sheet-open", !wide.matches);
     if (isR){
       var mi = rdata.months.indexOf(openM);
       $("edPill").textContent = "월 편집 · " + SC.RESEARCH.label;
@@ -459,7 +488,8 @@
     var body = $("edBody"), st = body.scrollTop;
     body.innerHTML = isR ? monthBody(openM, mi) : videoBody(openV, i);
     body.scrollTop = swap || opening ? 0 : st;
-    if (opening || swap) SC.lineReveal($("edLr"));   /* 편집 누를 때마다 M10 (M9 등장은 끔) */
+    /* 편집 칸 전체(테두리 포함)가 라인 리빌로: 처음 열 땐 목록이 자리 잡을 때까지 0.22초 기다림, 바꿀 땐 바로 */
+    if ((opening || swap) && wide.matches){ wrap.style.setProperty("--lr-w", opening ? "220ms" : "0ms"); SC.lineReveal(wrap); }
     edKey = obj;
   }
   function closeEditor(){ openV = openM = openA = null; armedDel = null; render(); }
@@ -467,9 +497,9 @@
   document.addEventListener("keydown", function(e){
     if (e.key !== "Escape" || e.target.closest("select")) return;
     if (!$("setPop").hidden){ closeSet(true); return; }
-    if (!$("editor").hidden) closeEditor();
+    if (!$("edWrap").hidden) closeEditor();
   });
-  if (wide.addEventListener) wide.addEventListener("change", function(){ if (!$("editor").hidden) document.body.classList.toggle("sheet-open", !wide.matches); });
+  if (wide.addEventListener) wide.addEventListener("change", function(){ if (!$("edWrap").hidden) document.body.classList.toggle("sheet-open", !wide.matches); });
 
   $("mtabs").addEventListener("click", function(e){
     var b = e.target.closest("[data-cat]"); if (!b || b.dataset.cat === view.cat) return;

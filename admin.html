@@ -16,8 +16,8 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261110b">
-<link rel="stylesheet" href="assets/admin.css?v=20261110b">
+<link rel="stylesheet" href="assets/site.css?v=20261110c">
+<link rel="stylesheet" href="assets/admin.css?v=20261110c">
 </head>
 <body>
 
@@ -100,17 +100,17 @@
         <button type="button" class="btn-soft rp press" id="makePwBtn">비밀번호 만들기</button>
       </div>
 
-      <div class="mtabs" id="mtabs" role="tablist" aria-label="메뉴"></div>
+      <div class="mtabs" data-flip="tabs" id="mtabs" role="tablist" aria-label="메뉴"></div>
 
       <section aria-labelledby="listH">
-        <div class="list-row">
+        <div class="list-row" data-flip="row">
           <h2 id="listH"><span id="catName">시그니처클래스</span> <span class="num" id="count"></span></h2>
           <span class="vis-count" id="visCount"></span>
           <button type="button" class="btn-add rp press" id="addVideo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span id="addLabel">강의 추가</span>
           </button>
         </div>
-        <div class="tools">
+        <div class="tools" data-flip="tools">
           <label class="asearch" id="aqBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="aq" type="search" placeholder="이 메뉴에서 강의 제목 찾기" aria-label="이 메뉴에서 강의 제목 찾기" autocomplete="off"></label>
           <label class="asort" id="asortBox"><select id="asort" aria-label="정렬">
             <option value="new">최신 업로드순</option><option value="old">오래된 업로드순</option><option value="title">제목 가나다순</option><option value="files">자료 많은순</option>
@@ -121,19 +121,21 @@
           <span class="rnote" id="rnote" hidden>월은 연월 최신순으로 자동 정렬돼요.</span>
         </div>
         <p class="aresult" id="aresult" hidden></p>
-        <div class="lr" id="listLr" style="--lr-d:1000ms"><ul class="videos lr-c" id="videos"><li class="empty-list">불러오는 중…</li></ul><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
+        <div class="lr" id="listLr" style="--lr-d:600ms"><ul class="videos lr-c" id="videos"><li class="empty-list">불러오는 중…</li></ul><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
       </section>
     </div>
 
 
     <!-- 편집 칸: 넓은 화면은 오른쪽, 980px 이하는 화면 전체 시트 -->
-    <section class="editor" id="editor" hidden aria-labelledby="edTitle">
+    <div class="lr ed-wrap" id="edWrap" hidden style="--lr-d:600ms;--lr-w:220ms">
+    <section class="editor lr-c" id="editor" aria-labelledby="edTitle">
       <div class="ed-head">
         <div class="ed-ht"><span class="ed-pill" id="edPill"></span><h2 id="edTitle"></h2></div>
         <button type="button" class="ed-close rp" id="edClose" aria-label="편집 닫기" title="편집 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
-      <div class="lr ed-lr" id="edLr" style="--lr-d:850ms"><div class="ed-body lr-c" id="edBody"></div><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
+      <div class="ed-body" id="edBody"></div>
     </section>
+    <i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
     <input type="file" class="pick" id="thFile" accept="image/*" tabindex="-1" aria-hidden="true">
   </div>
 </main>
@@ -144,7 +146,7 @@
     <h2 id="setH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>설정</h2>
     <button type="button" class="setpop-x rp" id="setClose" aria-label="설정 닫기" title="설정 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
-  <div class="lr" id="setLr" style="--lr-d:560ms;--lr-w:120ms"><div class="lr-c setpop-body">
+  <div class="lr" id="setLr" style="--lr-d:370ms;--lr-w:80ms"><div class="lr-c setpop-body">
       <div class="setbox">
       <details class="set" id="conn">
         <summary class="rp">
@@ -198,7 +200,7 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261110b"></script>
-<script src="assets/admin.js?v=20261110b"></script>
+<script src="assets/common.js?v=20261110c"></script>
+<script src="assets/admin.js?v=20261110c"></script>
 </body>
 </html>

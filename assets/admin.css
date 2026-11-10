@@ -477,7 +477,7 @@ body:not(.authed) .fab{display:none}
 body:not(.authed) .set-btn, body:not(.authed) .setpop{display:none!important}
 .setpop{position:fixed; z-index:45; top:calc(70px + env(safe-area-inset-top, 0px)); right:32px; width:340px; max-height:calc(100vh - 90px); max-height:calc(100dvh - 90px); overflow:auto; overscroll-behavior:contain;
   background:var(--card); border-radius:20px; padding:10px; box-shadow:0 0 0 1px #E4E8F4, 0 24px 48px -16px rgba(7,8,12,.35); transform-origin:top right; animation:pop-in 260ms var(--ease) backwards}
-[data-theme="dark"] .setpop{box-shadow:0 0 0 1px #262B40, 0 24px 48px -16px rgba(0,0,0,.6)}
+[data-theme="dark"] .setpop{box-shadow:0 0 0 1px #243066, 0 24px 48px -16px rgba(0,0,0,.6)}
 @keyframes pop-in{from{opacity:0; transform:translateY(-6px) scale(.96)}to{opacity:1; transform:none}}
 .setpop-head{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 4px 8px 8px}
 .setpop-head h2{display:flex; align-items:center; gap:8px; font-family:var(--body); font-weight:800; font-size:17px}
@@ -486,7 +486,7 @@ body:not(.authed) .set-btn, body:not(.authed) .setpop{display:none!important}
 .setpop-x svg{width:18px; height:18px}
 .setpop-body{display:flex; flex-direction:column; gap:8px}
 .setpop .setbox{background:#F8F9FD}
-[data-theme="dark"] .setpop .setbox{background:#1A1E2C}
+[data-theme="dark"] .setpop .setbox{background:#141C44}
 .setpop .last{margin:2px 8px 4px}
 @media (max-width:640px){ .setpop{right:12px; left:12px; top:calc(68px + env(safe-area-inset-top, 0px)); width:auto} }
 
@@ -509,25 +509,25 @@ body:not(.authed) .set-btn, body:not(.authed) .setpop{display:none!important}
 .ed-lr > .ed-body{flex:1 1 auto; min-height:0}
 
 /* ---------- #18 정정: 관리자도 라이트/다크 (사이트와 같은 저장값) ---------- */
-:root[data-theme="dark"]{ --sub:#1E2238; --row-off:#10131E; --switch-off:#3A4060; --grip:#6E7799; --danger:#FF6B5E; --drop:#18204A; --line:#262B40; --seg-on:#141722; }
+:root[data-theme="dark"]{ --sub:#18204A; --row-off:#10131E; --switch-off:#3A4060; --grip:#6E7799; --danger:#FF6B5E; --drop:#18204A; --line:#243066; --seg-on:#0E1533; }
 [data-theme="dark"] .btn-soft{color:var(--link)}
 [data-theme="dark"] .bdg.priv{background:#EEF1FF; color:#07080C}
 [data-theme="dark"] .bdg.files{color:var(--link)}
 [data-theme="dark"] .vs[aria-checked="true"]{color:var(--link)}
 [data-theme="dark"] .vs[aria-checked="true"] .vs-track{background:#3D63FF}
 [data-theme="dark"] .seg[aria-checked="true"]{color:var(--link)}
-[data-theme="dark"] .bdg.cat[data-menu="partner"]{background:#2A2F4A}
+[data-theme="dark"] .bdg.cat[data-menu="partner"]{background:#26306A}
 [data-theme="dark"] #updRun.busy{color:var(--link)}
 [data-theme="dark"] .mtab[aria-selected="true"]{background:#3D63FF}
-[data-theme="dark"] .vfilter{background:#1E2238}
-[data-theme="dark"] .vfilter button[aria-checked="true"]{background:#141722; color:var(--link)}
+[data-theme="dark"] .vfilter{background:#18204A}
+[data-theme="dark"] .vfilter button[aria-checked="true"]{background:#0E1533; color:var(--link)}
 [data-theme="dark"] .bdg.date{background:var(--idle-bg); color:var(--ink)}
 [data-theme="dark"] .vitem.editing, [data-theme="dark"] .vitem.editing[data-vis="false"]{background:#18204A; box-shadow:0 0 0 2px #3D63FF}
 [data-theme="dark"] .ed-btn[aria-pressed="true"]{background:#3D63FF}
 @media (hover:hover) and (pointer:fine){ [data-theme="dark"] .ed-btn[aria-pressed="false"]:hover{background:#18204A; color:#A9BCFF} }
 [data-theme="dark"] .editor{box-shadow:0 0 0 2px #3D63FF, 0 18px 44px -22px rgba(0,0,0,.6)}
 [data-theme="dark"] .ed-pill{color:var(--link)}
-[data-theme="dark"] .aitem{box-shadow:inset 0 0 0 2px #1E2238}
+[data-theme="dark"] .aitem{box-shadow:inset 0 0 0 2px #18204A}
 [data-theme="dark"] .aitem.open{box-shadow:inset 0 0 0 2px #3D63FF}
 [data-theme="dark"] .rcopy{background:#18204A}
 [data-theme="dark"] .th-drop{box-shadow:inset 0 0 0 2px #3A4060}
@@ -547,4 +547,15 @@ body:not(.authed) .set-btn, body:not(.authed) .setpop{display:none!important}
   .abrand{font-size:18px}
   .abar .site-link{padding:0 6px; font-size:14px}
   .deploy{width:28px}
+}
+
+/* ================= 디자인팀 추가 요청 (2026-11-10 저녁) #26·#29 ================= */
+/* #29 다크: 맨 위 바 한밤 남색 + 아래 2px 키 컬러 줄 */
+[data-theme="dark"] .abar{background:#0B1442; box-shadow:inset 0 -2px 0 #003CDC}
+/* #26 편집 칸: 라인 리빌로 감싸는 바깥 상자가 sticky, 안쪽 편집 칸은 sticky 아님 */
+.ed-wrap{min-width:0}
+.ed-wrap[hidden]{display:none!important}
+@media (min-width:981px){
+  .admin.is-edit > .ed-wrap{flex:1 1 auto; position:sticky; top:84px}
+  .ed-wrap > .editor{max-height:calc(100vh - 84px - 96px); max-height:calc(100dvh - 84px - 96px)}
 }
