@@ -291,12 +291,14 @@
   function edBtn(on, attrs){
     return '<button type="button" class="ed-btn rp" ' + attrs + ' aria-pressed="' + on + '">' + IC.pen + '<span>' + (on ? "편집 중" : "편집") + '</span></button>';
   }
+  /* #31 목록 줄 제목: 앞의 [메뉴명📖] 머리말은 빼고(메뉴 칸에 이미 보임), 전체 제목은 마우스를 올리면 */
+  function listTitle(t){ var s = String(t || "").replace(/^\[[^\]]*\]\s*/, ""); return s || t || "제목 없음"; }
   function itemHtml(v, i){
     var ed = v === openV, pub = v.visible !== false;
     return '<li class="vitem' + (ed ? " editing" : "") + '" data-v="' + i + '" data-vis="' + pub + '">' +
       '<div class="vrow" data-act="toggle" data-i="' + i + '">' +
       (v.id ? '<div class="vthumb dim">' + SC.thumbImg(v.id) + '</div>' : '<div class="vthumb blank dim">영상 없음</div>') +
-      '<div class="vtext"><h3 class="dim">' + esc(v.title || "제목 없음") + '</h3><div class="badges">' + badges(v) + '</div></div>' +
+      '<div class="vtext"><h3 class="dim vtitle" title="' + esc(v.title || "") + '">' + esc(listTitle(v.title)) + '</h3><div class="badges">' + badges(v) + '</div></div>' +
       '<button type="button" class="vs" role="switch" aria-checked="' + pub + '" data-act="vis" data-i="' + i + '" aria-label="사이트에 공개">' +
         '<span class="vs-track"><span class="vs-knob"></span></span><span class="vs-t">' + (pub ? "공개" : "비공개") + '</span></button>' +
       edBtn(ed, 'data-act="toggle" data-i="' + i + '"') +
@@ -470,7 +472,7 @@
       if (!motionOk()){ finish(); return; }
       /* #26 닫기: 라인 리빌 거꾸로(아래 줄이 위로) → 편집 칸 없애고 목록이 원래 자리로 */
       clearTimeout(wrap._lrT); wrap.classList.remove("go"); void wrap.offsetWidth; wrap.classList.add("is-out");
-      closing = setTimeout(finish, 600 + 160 + 20);
+      closing = setTimeout(finish, 450 + 120 + 20);
       return;
     }
     if (closing){ clearTimeout(closing); closing = null; wrap.classList.remove("is-out"); edKey = null; }
@@ -1027,7 +1029,7 @@
       v[t.dataset.k] = t.value; markDirty();
       if (t.dataset.k === "_url") later(v, function(){ fetchVideo(v); }, 450);
       if (t.dataset.k === "title"){
-        var h = document.querySelector('.vitem[data-v="' + i + '"] h3'); if (h) h.textContent = t.value || "제목 없음";
+        var h = document.querySelector('.vitem[data-v="' + i + '"] h3'); if (h){ h.textContent = listTitle(t.value); h.title = t.value; }
         $("edTitle").textContent = t.value || "새 강의";
       }
       return;

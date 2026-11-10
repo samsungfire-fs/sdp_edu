@@ -25,7 +25,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261110c">
+<link rel="stylesheet" href="assets/site.css?v=20261110d">
 </head>
 <body>
 
@@ -67,7 +67,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261110c"></script>
+<script src="assets/common.js?v=20261110d"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -338,7 +338,7 @@
     });
     drawGrid(); countUp(); SC.lineReveal($("listLr"));
   }
-  /* M10 빛 라인 리빌로 감싸기: 목록(1.05초) · 자료/소개(0.85초) */
+  /* M10 빛 라인 리빌로 감싸기 (#27 2배 빠르게): 홈 목록 0.55 · 상품연구 0.5 · 자료/소개 0.4초 */
   var LINES = '<i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i>';
   function lrBox(inner, d, w, id){
     return '<div class="lr"' + (id ? ' id="' + id + '"' : '') + ' style="--lr-d:' + d + 'ms;--lr-w:' + (w || 0) + 'ms">' + inner + LINES + '</div>';
@@ -374,7 +374,7 @@
     $("app").innerHTML = '<section class="list-page" aria-labelledby="listH">' +
       '<div class="list-head"><h1 id="listH">' + esc(title) + ' <span class="num" data-count="' + all.length + '">' + all.length + '</span></h1>' +
         '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기" autocomplete="off" enterkeyhint="search"></label>' +
-      '</div>' + listBody(730) + '</section>';
+      '</div>' + listBody(550) + '</section>';
     $("q").value = L.q;
     bindList();
     $("q").addEventListener("input", function(){ L.q = this.value.trim(); L.page = 1; drawGrid(); syncUrl(false); });
@@ -415,7 +415,7 @@
     L = { m: "research", page: r.page, q: "", items: months, search: false, gridCls: " r-grid", card: monthCard, url: function(p){ return rUrl("", "", p); } };
     $("app").innerHTML = '<section class="list-page" aria-labelledby="listH">' +
       '<div class="list-head"><h1 id="listH">상품연구 전략자료 <span class="num" data-count="' + months.length + '">' + months.length + '</span></h1></div>' +
-      listBody(670) + '</section>';
+      listBody(500) + '</section>';
     bindList();
     return rUrl("", "", L.page);
   }
@@ -435,7 +435,7 @@
     L = { m: "research", page: page, q: "", items: ages, search: false, gridCls: " r-grid", card: function(a){ return ageCard(mo, a); }, url: function(p){ return rUrl(code, "", p); } };
     $("app").innerHTML = '<section class="list-page r-sub-page" aria-labelledby="listH">' + head +
       '<div class="list-head"><h1 id="listH">' + esc(mo.title) + ' <span class="num nowrap">연령 <span data-count="' + ages.length + '">' + ages.length + '</span></span></h1></div>' +
-      listBody(670) + '</section>';
+      listBody(500) + '</section>';
     bindList();
     return rUrl(code, "", L.page);
   }
@@ -460,7 +460,7 @@
             '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
             lrBox(files.length
               ? '<ul class="files lr-c">' + files.map(fileRow).join("") + '</ul>'
-              : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 연령은 아직 받을 자료가 없어요.<br>곧 올라올 예정이에요.</p></div>', 530) +
+              : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 연령은 아직 받을 자료가 없어요.<br>곧 올라올 예정이에요.</p></div>', 400) +
           '</section>' +
         '</div>' +
         (others.length ? '<section class="others r-others" aria-labelledby="moreH"><h2 id="moreH">같은 달 다른 연령</h2><ul class="grid r-grid">' +
@@ -533,7 +533,7 @@
                 '<span class="cm-box"><span class="cm-send">' + IC.send + '</span></span>' +
               '</a></section>' +
             (v.description ? '<section class="intro" aria-labelledby="descH"><h2 id="descH">강의 소개</h2>' +
-              lrBox('<p class="intro-body clamp lr-c" id="descBody">' + SC.richText(v.description) + '</p>', 530, 170) +
+              lrBox('<p class="intro-body clamp lr-c" id="descBody">' + SC.richText(v.description) + '</p>', 400, 130) +
               '<button type="button" class="more rp" id="more" aria-expanded="false" hidden><span>더보기</span>' + IC.down + '</button></section>' : '') +
           '</div>' +
           '<aside class="files-card" aria-labelledby="filesH">' +
@@ -541,7 +541,7 @@
             '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
             lrBox(files.length
               ? '<ul class="files lr-c">' + files.map(fileRow).join("") + '</ul>'
-              : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>', 530) +
+              : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>', 400) +
           '</aside>' +
         '</div>' +
         (others.length ? '<section class="others" aria-labelledby="moreH"><h2 id="moreH">다른 강의</h2><ul class="grid">' + others.map(function(x){ return card(x, false); }).join("") + '</ul></section>' : '') +

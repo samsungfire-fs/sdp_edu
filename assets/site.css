@@ -609,10 +609,10 @@ body.watch-page .foot .wrap{justify-content:flex-end}
 .lr-b::after{content:""; position:absolute; top:50%; left:0; width:180px; height:16px; margin-top:-8px; border-radius:50%; background:radial-gradient(closest-side, #003CDC, rgba(0,60,220,.7) 50%, rgba(0,60,220,0))}
 .lr.wait > .lr-c{clip-path:inset(0 0 100% 0)}
 .lr.go > .lr-t, .lr.go > .lr-b{display:block}
-.lr.go > .lr-c{animation:lr-open var(--lr-d,600ms) cubic-bezier(0.65,0,0.25,1) calc(var(--lr-w,0ms) + 160ms) backwards}
-.lr.go > .lr-t{animation:lr-draw 160ms var(--ease) var(--lr-w,0ms) both, lr-fade 280ms ease-out calc(var(--lr-w,0ms) + 160ms + var(--lr-d,600ms)) forwards}
-.lr.go > .lr-b{animation:lr-draw 160ms var(--ease) var(--lr-w,0ms) both, lr-move var(--lr-d,600ms) cubic-bezier(0.65,0,0.25,1) calc(var(--lr-w,0ms) + 160ms) both, lr-fade 280ms ease-out calc(var(--lr-w,0ms) + 160ms + var(--lr-d,600ms)) forwards}
-.lr.go > .lr-b::after{animation:lr-flare var(--lr-d,600ms) cubic-bezier(0.45,0,0.2,1) calc(var(--lr-w,0ms) + 160ms) both}
+.lr.go > .lr-c{animation:lr-open var(--lr-d,600ms) cubic-bezier(0.65,0,0.25,1) calc(var(--lr-w,0ms) + 120ms) backwards}
+.lr.go > .lr-t{animation:lr-draw 120ms var(--ease) var(--lr-w,0ms) both, lr-fade 210ms ease-out calc(var(--lr-w,0ms) + 120ms + var(--lr-d,600ms)) forwards}
+.lr.go > .lr-b{animation:lr-draw 120ms var(--ease) var(--lr-w,0ms) both, lr-move var(--lr-d,600ms) cubic-bezier(0.65,0,0.25,1) calc(var(--lr-w,0ms) + 120ms) both, lr-fade 210ms ease-out calc(var(--lr-w,0ms) + 120ms + var(--lr-d,600ms)) forwards}
+.lr.go > .lr-b::after{animation:lr-flare var(--lr-d,600ms) cubic-bezier(0.45,0,0.2,1) calc(var(--lr-w,0ms) + 120ms) both}
 @keyframes lr-open{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
 @keyframes lr-draw{from{opacity:0; transform:scaleX(0)}to{opacity:1; transform:scaleX(1)}}
 @keyframes lr-move{from{top:0}to{top:100%}}
@@ -633,8 +633,8 @@ body.watch-page .foot .wrap{justify-content:flex-end}
 /* 거꾸로 닫기 (관리자 편집 칸): 다른 keyframes 이름이어야 다시 시작됨 */
 .lr.is-out > .lr-t, .lr.is-out > .lr-b{display:block}
 .lr.is-out > .lr-c{animation:lr-close var(--lr-d,600ms) cubic-bezier(0.65,0,0.25,1) 0ms both}
-.lr.is-out > .lr-t{animation:lr-undraw 160ms var(--ease) var(--lr-d,600ms) both}
-.lr.is-out > .lr-b{animation:lr-up var(--lr-d,600ms) cubic-bezier(0.65,0,0.25,1) 0ms both, lr-undraw 160ms var(--ease) var(--lr-d,600ms) both}
+.lr.is-out > .lr-t{animation:lr-undraw 120ms var(--ease) var(--lr-d,600ms) both}
+.lr.is-out > .lr-b{animation:lr-up var(--lr-d,600ms) cubic-bezier(0.65,0,0.25,1) 0ms both, lr-undraw 120ms var(--ease) var(--lr-d,600ms) both}
 .lr.is-out > .lr-b::after{animation:lr-flare-back var(--lr-d,600ms) cubic-bezier(0.45,0,0.2,1) 0ms both}
 @keyframes lr-close{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 100% 0)}}
 @keyframes lr-up{from{top:100%; opacity:1}to{top:0; opacity:1}}
