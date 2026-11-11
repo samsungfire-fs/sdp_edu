@@ -17,7 +17,7 @@
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css?v=20261111b">
-<link rel="stylesheet" href="assets/admin.css?v=20261111b">
+<link rel="stylesheet" href="assets/admin.css?v=20261111c">
 </head>
 <body>
 
@@ -230,6 +230,27 @@
           </details>
         </div>
       </details>
+      <!-- 기획 P3: 사번 사이트는 PC에서만 들어가져서 PC 매크로가 접속·명단 받기를 함 -->
+      <details class="set" id="pcBox" hidden>
+        <summary class="rp">
+          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+          <span class="set-t">PC 매크로</span><span class="pill idle" id="pcState">설치 안 됨</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="set-body">
+          <p class="set-note" id="pcNote"></p>
+          <div class="f pc-key" id="pcKeyBox" hidden>
+            <label for="pcKey">PC 키 (지금 한 번만 보여요)</label>
+            <input id="pcKey" class="in" type="text" readonly spellcheck="false">
+            <span class="help">설치.bat을 실행하면 이 키를 물어봐요. 붙여 넣고 Enter.<br>이 창을 닫으면 다시 볼 수 없어요. 새로 만들면 예전 키는 못 써요.</span>
+          </div>
+          <div class="set-btns">
+            <button type="button" class="btn-main sm rp press" id="pcMake">PC 키 만들기</button>
+            <button type="button" class="btn-soft rp press" id="pcKeyCopy">복사</button>
+          </div>
+          <p class="set-msg" id="pcMsg" role="status"></p>
+        </div>
+      </details>
     </div>
     <p class="last" id="lastUpd"></p>
   </div><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
@@ -244,6 +265,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/common.js?v=20261111a"></script>
-<script src="assets/admin.js?v=20261111c"></script>
+<script src="assets/admin.js?v=20261111d"></script>
 </body>
 </html>

@@ -1454,7 +1454,7 @@
      - 창구는 관리자가 보낸 GitHub 토큰으로 이 저장소 쓰기 권한을 확인한 뒤에만 대답함
      - 사번 사이트 아이디·비밀번호는 창구의 스크립트 속성에만 저장. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
-    var GATE_V = 4; /* 창구 코드(Code.gs) 최신 버전 */
+    var GATE_V = 5; /* 창구 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null;
     function call(action, extra){
@@ -1473,10 +1473,14 @@
     var TEST = {
       ok: ["ok", "접속 성공"],
       badcred: ["bad", "아이디나 비밀번호가 맞지 않아요"],
-      blocked: ["bad", "구글 서버에서 사번 사이트에 연결할 수 없어요"],
+      denied: ["bad", "사번 사이트가 접속을 막았어요"],
+      blocked: ["bad", "PC에서 사번 사이트에 연결할 수 없어요"],
       unknown: ["warn", "접속 결과를 확인하지 못했어요"],
       session: ["warn", "로그인은 됐는데 다음 화면에서 로그인이 풀려요"]
     };
+    var waitT = null, keyArmed = false;
+    function online(ag){ var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)/.exec(ag && ag.seen || ""); if (!m) return false;
+      var t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5], +m[6]); return Date.now() - t < 12 * 60 * 1000; }
     function paint(){
       var on = !!(url && st);
       pill("gateState", on ? "ok" : url ? "warn" : "idle", on ? "연결됨" : url ? "확인 안 됨" : "연결 안 됨");
@@ -1497,8 +1501,18 @@
       else {
         var t = st.lastTest, tt = t && TEST[t.result];
         $("acctNote").textContent = "저장된 아이디 " + a.id + (a.savedAt ? " · " + when(a.savedAt) + " 저장" : "") +
-          (tt ? "\n마지막 접속 확인 " + when(t.at) + " · " + tt[1] : "");
+          (tt ? "\n마지막 접속 확인 " + when(t.at) + (t.by === "pc" ? "(PC)" : "") + " · " + tt[1] : "");
       }
+      /* PC 매크로 (v5: 사번 사이트는 PC에서만 들어가짐) */
+      var ag = on && st.agent || {};
+      $("pcBox").hidden = !on;
+      var live = online(ag);
+      pill("pcState", !ag.has ? "idle" : !ag.seen ? "warn" : live ? "ok" : "idle", !ag.has ? "설치 안 됨" : !ag.seen ? "설치 기다림" : live ? "켜져 있음" : "쉬는 중");
+      $("pcNote").textContent = !ag.has ? "사번 사이트는 희수 님 PC에서만 들어가져서, 명단 받기는 PC 매크로가 해요.\n[PC 키 만들기] → 개발팀 폴더 '사번명단_매크로'의 설치.bat 더블클릭 → 키 붙여 넣기."
+        : !ag.seen ? "PC 키를 만들었어요(" + when(ag.madeAt) + ").\n설치.bat으로 설치하면 연결돼요."
+        : "PC " + (ag.host || "") + " · 마지막 신호 " + when(ag.seen) + (live ? "" : "\n평일 08:35~17:45에 5분마다 신호가 와요.");
+      $("pcMake").textContent = keyArmed ? "정말 새로 만들기" : ag.has ? "PC 키 새로 만들기" : "PC 키 만들기";
+      $("pcMake").className = (ag.has ? "btn-soft" : "btn-main sm") + " rp press";
     }
     function load(){
       return repoJson(CFG).then(function(f){
@@ -1511,6 +1525,7 @@
       return call("status").then(function(j){
         if (!j.ok){ st = null; paint(); msg("gateMsg", "bad", j.error === "notadmin" ? "이 토큰으로는 창구를 쓸 수 없어요. 저장소 쓰기 권한이 있는 토큰인지 확인해 주세요." : "창구가 대답하지 못했어요. 잠시 뒤 다시 해 주세요."); return; }
         st = j; msg("gateMsg"); paint();
+        if (j.testReq){ $("acctTest").disabled = true; $("acctTest").textContent = "PC 기다리는 중…"; msg("acctMsg", "warn", "PC에 접속 확인을 부탁해 둔 상태예요. PC가 켜져 있으면 5분 안에 결과가 나와요."); waitResult(j.testReq, 1); }
       }).catch(function(){ st = null; paint(); msg("gateMsg", "bad", "창구에 연결하지 못했어요. 주소와 배포 설정(액세스: 모든 사용자)을 확인해 주세요."); });
     }
     function connect(){
@@ -1555,7 +1570,7 @@
       var box = $("acctTrace");
       if (!j || j.result === "ok" || !j.trace){ box.hidden = true; return; }
       var lines = ["결과 " + j.result + (j.msg ? " · " + j.msg : "") + " · " + (j.at || ""),
-        "구글 서버 위치 " + ((j.net && j.net.country) || "?") + (j.net && j.net.org ? " (" + j.net.org + ")" : "") + " · 창구 v" + (st && st.v || "?")];
+        "PC " + (st && st.agent && st.agent.host || "?") + " · 창구 v" + (st && st.v || "?")];
       j.trace.forEach(function(t, i){
         if (t.retry){ lines.push((i + 1) + ". 다시 열기 " + t.retry + "번째 → " + t.code + (t.toLogin ? " · 로그인으로 돌려보냄" : " · 열림") + (t.setCookie && t.setCookie.length ? " · 쿠키 " + t.setCookie.join(",") : "") + " · " + t.len + "자"); return; }
         if (t.form){ lines.push((i + 1) + ". 로그인 칸 " + (t.form.found ? "찾음" : "못 찾음") + " · 숨은 값 " + (t.form.hidden.join(",") || "없음")); return; }
@@ -1566,22 +1581,71 @@
       $("acctTraceText").textContent = lines.join("\n");
       box.hidden = false; box.open = false;
     }
+    /* PC가 보낸 결과 보여 주기 */
+    function showResult(){
+      var t = st && st.lastTest; if (!t) return;
+      var tt = TEST[t.result] || TEST.unknown;
+      showTrace({ result: t.result, msg: t.msg, at: t.at, trace: st.lastTrace || [] });
+      msg("acctMsg", tt[0], tt[1] + (t.msg ? " · 사번 사이트 안내: " + t.msg : "") + (t.result === "ok" ? "" : " — 아래 '자세히 보기'를 복사해 개발팀에 알려 주세요."));
+    }
+    /* [접속 확인] → 창구에 부탁 → PC 매크로가 5분 안에 가져가서 확인 → 결과를 기다림 */
+    function waitResult(reqAt, n){
+      clearTimeout(waitT);
+      if (n > 48){ msg("acctMsg", "warn", "아직 PC에서 결과가 오지 않았어요. PC가 켜져 있는지, PC 매크로가 설치돼 있는지 확인해 주세요."); $("acctTest").disabled = false; $("acctTest").textContent = "접속 확인"; return; }
+      waitT = setTimeout(function(){
+        call("status").then(function(j){
+          if (!j.ok) return waitResult(reqAt, n + 1);
+          st = j; paint();
+          if (!j.testReq && j.lastTest && j.lastTest.at >= reqAt){ showResult(); $("acctTest").disabled = false; $("acctTest").textContent = "접속 확인"; return; }
+          waitResult(reqAt, n + 1);
+        }).catch(function(){ waitResult(reqAt, n + 1); });
+      }, n ? 15000 : 5000);
+    }
     function test(){
-      var btn = $("acctTest"); btn.disabled = true; btn.textContent = "확인하는 중…"; msg("acctMsg"); $("acctTrace").hidden = true;
+      var btn = $("acctTest"); btn.disabled = true; btn.textContent = "PC 기다리는 중…"; msg("acctMsg"); $("acctTrace").hidden = true;
       call("testLogin").then(function(j){
-        if (!j.ok){ msg("acctMsg", "bad", j.error === "noaccount" ? "먼저 아이디와 비밀번호를 저장해 주세요." : "확인하지 못했어요. 잠시 뒤 다시 해 주세요."); return; }
-        var t = TEST[j.result] || TEST.unknown;
-        st.lastTest = { at: j.at, result: j.result, msg: j.msg };
-        paint();
-        showTrace(j);
-        msg("acctMsg", t[0], t[1] + (j.msg ? (j.result === "blocked" ? " · 오류: " : " · 사번 사이트 안내: ") + j.msg : "") + (j.result === "blocked" || j.result === "unknown" || j.result === "session" ? " — 아래 '자세히 보기'를 복사해 개발팀에 알려 주세요." : ""));
-      }).catch(function(){ msg("acctMsg", "bad", "창구에 연결하지 못했어요. 잠시 뒤 다시 해 주세요."); })
-        .then(function(){ btn.textContent = "접속 확인"; btn.disabled = !(st && st.account && st.account.saved); });
+        if (!j.ok){
+          msg("acctMsg", "bad", j.error === "noaccount" ? "먼저 아이디와 비밀번호를 저장해 주세요." : j.error === "noagent" ? "먼저 아래 'PC 매크로'를 설치해 주세요." : "확인하지 못했어요. 잠시 뒤 다시 해 주세요.");
+          btn.disabled = false; btn.textContent = "접속 확인"; if (j.error === "noagent") $("pcBox").open = true; return;
+        }
+        st = j.status; paint();
+        msg("acctMsg", "warn", "PC에 접속 확인을 부탁했어요. PC가 켜져 있으면 5분 안에 결과가 여기에 나와요.");
+        waitResult(j.status.testReq, 0);
+      }).catch(function(){ msg("acctMsg", "bad", "창구에 연결하지 못했어요. 잠시 뒤 다시 해 주세요."); btn.disabled = false; btn.textContent = "접속 확인"; });
+    }
+    /* 설치를 기다리며 PC 신호가 오면 바로 '켜져 있음'으로 */
+    var agentT = null;
+    function watchAgent(n){
+      clearTimeout(agentT); if (n > 60) return;
+      agentT = setTimeout(function(){
+        call("status").then(function(j){
+          if (j.ok){ st = j; paint(); if (j.agent && j.agent.seen){ msg("pcMsg", "ok", "PC가 연결됐어요. 설치 창에 나온 접속 확인 결과도 위 '사번 사이트 계정'에 보여요."); if (j.lastTest) showResult(); return; } }
+          watchAgent(n + 1);
+        }).catch(function(){ watchAgent(n + 1); });
+      }, 10000);
+    }
+    function makeKey(){
+      var has = st && st.agent && st.agent.has;
+      if (has && !keyArmed){ keyArmed = true; paint(); msg("pcMsg", "warn", "새 키를 만들면 지금 설치된 PC는 새 키로 다시 설치해야 해요. 한 번 더 누르면 만들어요."); return; }
+      keyArmed = false;
+      var btn = $("pcMake"); btn.disabled = true; msg("pcMsg");
+      call("makeAgentKey").then(function(j){
+        if (!j.ok) throw new Error(j.error);
+        st = j.status; paint();
+        $("pcKey").value = j.key; $("pcKeyBox").hidden = false; $("pcKey").select();
+        msg("pcMsg", "ok", "PC 키를 만들었어요. [복사] → 설치.bat 실행 → 키 붙여 넣기.");
+        watchAgent(0);
+      }).catch(function(){ msg("pcMsg", "bad", "키를 만들지 못했어요. 창구 코드가 v5인지 확인해 주세요."); paint(); })
+        .then(function(){ btn.disabled = false; });
     }
     $("gateConnect").addEventListener("click", connect);
     $("gateUrl").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); connect(); } });
     $("acctForm").addEventListener("submit", save);
     $("acctTest").addEventListener("click", test);
+    $("pcMake").addEventListener("click", makeKey);
+    $("pcKeyCopy").addEventListener("click", function(){
+      SC.copy($("pcKey").value).then(function(){ toast("PC 키를 복사했어요. 설치 창에 붙여 넣으세요"); }, function(){ $("pcKey").select(); toast("복사하지 못했어요. 글자를 길게 눌러 복사해 주세요"); });
+    });
     $("acctTraceCopy").addEventListener("click", function(){
       var t = $("acctTraceText").textContent;
       (SC.copy ? SC.copy(t) : navigator.clipboard.writeText(t)).then(function(){ toast("복사했어요. 개발팀 채팅에 붙여 넣으세요"); }, function(){ toast("복사하지 못했어요. 글자를 길게 눌러 복사해 주세요"); });
