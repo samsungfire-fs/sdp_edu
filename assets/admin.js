@@ -1454,7 +1454,7 @@
      - 창구는 관리자가 보낸 GitHub 토큰으로 이 저장소 쓰기 권한을 확인한 뒤에만 대답함
      - 사번 사이트 아이디·비밀번호는 창구의 스크립트 속성에만 저장. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
-    var GATE_V = 2; /* 창구 코드(Code.gs) 최신 버전 */
+    var GATE_V = 4; /* 창구 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null;
     function call(action, extra){
@@ -1474,7 +1474,8 @@
       ok: ["ok", "접속 성공"],
       badcred: ["bad", "아이디나 비밀번호가 맞지 않아요"],
       blocked: ["bad", "구글 서버에서 사번 사이트에 연결할 수 없어요"],
-      unknown: ["warn", "접속 결과를 확인하지 못했어요"]
+      unknown: ["warn", "접속 결과를 확인하지 못했어요"],
+      session: ["warn", "로그인은 됐는데 다음 화면에서 로그인이 풀려요"]
     };
     function paint(){
       var on = !!(url && st);
@@ -1556,6 +1557,7 @@
       var lines = ["결과 " + j.result + (j.msg ? " · " + j.msg : "") + " · " + (j.at || ""),
         "구글 서버 위치 " + ((j.net && j.net.country) || "?") + (j.net && j.net.org ? " (" + j.net.org + ")" : "") + " · 창구 v" + (st && st.v || "?")];
       j.trace.forEach(function(t, i){
+        if (t.retry){ lines.push((i + 1) + ". 다시 열기 " + t.retry + "번째 → " + t.code + (t.toLogin ? " · 로그인으로 돌려보냄" : " · 열림") + (t.setCookie && t.setCookie.length ? " · 쿠키 " + t.setCookie.join(",") : "") + " · " + t.len + "자"); return; }
         if (t.form){ lines.push((i + 1) + ". 로그인 칸 " + (t.form.found ? "찾음" : "못 찾음") + " · 숨은 값 " + (t.form.hidden.join(",") || "없음")); return; }
         lines.push((i + 1) + ". " + t.m + " " + t.at + " → " + t.code + (t.loc ? " 이동 " + t.loc : "") + (t.js ? " 스크립트 이동 " + t.js : "") +
           (t.setCookie && t.setCookie.length ? " · 쿠키 " + t.setCookie.join(",") : "") + (t.title ? " · 제목 " + t.title : "") +
@@ -1572,7 +1574,7 @@
         st.lastTest = { at: j.at, result: j.result, msg: j.msg };
         paint();
         showTrace(j);
-        msg("acctMsg", t[0], t[1] + (j.msg ? (j.result === "blocked" ? " · 오류: " : " · 사번 사이트 안내: ") + j.msg : "") + (j.result === "blocked" || j.result === "unknown" ? " — 개발팀에 이 문구를 알려 주세요." : ""));
+        msg("acctMsg", t[0], t[1] + (j.msg ? (j.result === "blocked" ? " · 오류: " : " · 사번 사이트 안내: ") + j.msg : "") + (j.result === "blocked" || j.result === "unknown" || j.result === "session" ? " — 아래 '자세히 보기'를 복사해 개발팀에 알려 주세요." : ""));
       }).catch(function(){ msg("acctMsg", "bad", "창구에 연결하지 못했어요. 잠시 뒤 다시 해 주세요."); })
         .then(function(){ btn.textContent = "접속 확인"; btn.disabled = !(st && st.account && st.account.saved); });
     }
