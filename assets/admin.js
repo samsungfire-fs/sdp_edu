@@ -424,6 +424,16 @@
   }
 
   /* ---------- ⚙ 설정 창 (#21): 맨 위 바 톱니 버튼 아래에 펼쳐짐 ---------- */
+  /* ⚙ 설정 창: 한 칸을 열면 열려 있던 다른 칸은 닫힘 (한 번에 하나만) */
+  (function(){
+    var sets = document.querySelectorAll("#setPop details.set");
+    sets.forEach(function(d){
+      d.addEventListener("toggle", function(){
+        if (!d.open) return;
+        sets.forEach(function(o){ if (o !== d && o.open) o.open = false; });
+      });
+    });
+  })();
   function openSet(){
     if (!$("setPop").hidden) return;
     $("setPop").hidden = false; $("setBtn").setAttribute("aria-expanded", "true");
