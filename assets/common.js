@@ -32,6 +32,12 @@
   };
 
   /* 구글드라이브 공유 링크 → 바로 다운로드 주소 */
+  /* 자료 하나를 가리키는 짧은 키 (기록 · 받은 사람 수): 드라이브 파일 ID, 없으면 링크의 해시 — 관리자 기록과 같은 규칙 */
+  SC.fileKey = function (f) {
+    var id = SC.driveId(f.link); if (id) return id;
+    var h = 5381, s = String(f.link || ""); for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+    return "u" + h.toString(36);
+  };
   SC.driveId = function (link) {
     link = String(link || "").trim();
     var m = link.match(/\/d\/([\w-]{20,})/) || link.match(/[?&]id=([\w-]{20,})/);
@@ -221,6 +227,7 @@
       var bar = opts.bar || { light: "#003CDC", dark: "#0B1442" };
       if (mc) mc.setAttribute("content", bar[t]);
       if (opts.tm) opts.tm.querySelectorAll("[data-theme-set]").forEach(function (b) { b.setAttribute("aria-checked", b.dataset.themeSet === t); });
+      if (opts.sw) opts.sw.setAttribute("aria-checked", t === "dark" ? "true" : "false");
       if (opts.ic) {
         opts.ic.innerHTML = t === "dark" ? SUN : MOON;
         opts.ic.setAttribute("aria-label", t === "dark" ? "라이트 모드로 바꾸기" : "다크 모드로 바꾸기");
@@ -256,6 +263,11 @@
       });
     }
     if (opts.ic) opts.ic.addEventListener("click", function (e) { set(cur() === "dark" ? "light" : "dark", e, this); });
+    /* 관리자 #49: 라이트 (스위치) 다크 — 스위치를 누르거나 양옆 글자를 눌러도 바뀜 */
+    if (opts.sw) {
+      opts.sw.addEventListener("click", function (e) { set(cur() === "dark" ? "light" : "dark", e, this); });
+      if (opts.sw.parentElement) opts.sw.parentElement.addEventListener("click", function (e) { var l = e.target.closest("[data-theme-set]"); if (l) set(l.dataset.themeSet, e, opts.sw); });
+    }
     /* 직접 고른 적이 없으면 기기 설정이 바뀔 때 따라감 */
     if (window.matchMedia) {
       var mq = matchMedia("(prefers-color-scheme: dark)"), follow = function () {
@@ -275,6 +287,24 @@
     box.classList.remove("go"); void box.offsetWidth; box.classList.add("go");
     box.classList.remove("is-out");
     clearTimeout(box._lrT); box._lrT = setTimeout(function () { box.classList.remove("go"); }, w + 80 + d + 160);
+  };
+
+  /* 강의 · 자료 목록 잠금 (기획 P2 · 11-11): 저장소에는 암호로 잠근 data/*.enc.json 만 두고,
+     열쇠는 세일즈온 사번 목록이 로그인한 회원 · 관리자에게만 줌. AES-GCM 256 (브라우저 내장 암호) */
+  function b64e(buf){ var b = new Uint8Array(buf), s = "", i; for (i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
+  function b64d(str){ var s = atob(String(str || "")), b = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; }
+  function aesKey(k){ return crypto.subtle.importKey("raw", b64d(k), "AES-GCM", false, ["encrypt", "decrypt"]); }
+  SC.box = {
+    ok: !!(w.crypto && crypto.subtle),
+    lock: function (obj, key, gate) {
+      var iv = crypto.getRandomValues(new Uint8Array(12));
+      return aesKey(key).then(function (k) { return crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, k, new TextEncoder().encode(JSON.stringify(obj))); })
+        .then(function (ct) { return JSON.stringify({ v: 1, gate: gate || "", iv: b64e(iv), ct: b64e(ct) }) + "\n"; });
+    },
+    open: function (wrap, key) {
+      return aesKey(key).then(function (k) { return crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(wrap.iv) }, k, b64d(wrap.ct)); })
+        .then(function (pt) { return JSON.parse(new TextDecoder().decode(pt)); });
+    }
   };
 
   w.SC = SC;

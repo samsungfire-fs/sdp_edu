@@ -750,3 +750,112 @@ body.watch-page .foot .wrap{justify-content:flex-end}
 .vgrid .card-body h3, .others .vgrid .card:not(.r-card) .card-body h3{font-weight:400; font-size:17px; line-height:1.45}
 @media (max-width:980px){ .vgrid .card-body h3, .others .vgrid .card:not(.r-card) .card-body h3{font-size:16px} }
 @media (max-width:560px){ .vgrid .card-body h3, .others .vgrid .card:not(.r-card) .card-body h3{font-size:17px} }
+
+/* ================= 디자인 #47 (기획 P2 · P4 · P5-2) 사이트 사번 로그인 · 이름 · 조회수 · 다운로드 수 ================= */
+.bar-brand{display:none; font-family:var(--jua); font-size:21px; color:var(--ink); margin-right:auto; padding-top:.1em; white-space:nowrap}
+body.login-mode .bar-brand{display:block}
+body.login-mode .menu-box, body.login-mode .bar-back{display:none!important}
+@media (max-width:560px){ body.login-mode .bar-brand{font-size:19px; padding-left:4px} }
+/* 이름 칸 */
+.who{position:relative; flex:none; display:flex}
+.me{height:40px; border:0; border-radius:999px; background:transparent; display:flex; align-items:center; gap:8px; padding:0 10px 0 4px; font:inherit; color:var(--ink); cursor:pointer; max-width:220px; transition:background 140ms ease}
+.me:hover, .me.on{background:#E4E8F4}
+[data-theme="dark"] .me:hover, [data-theme="dark"] .me.on{background:rgba(255,255,255,.10)}
+.me .av, .me-pop .av{width:32px; height:32px; border-radius:999px; background:var(--blue); color:#FFFFFF; font-weight:800; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; flex:none; padding-bottom:.06em}
+.me .nm{font-weight:800; font-size:15px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; padding-top:.05em}
+.me .chev{width:14px; height:14px; flex:none; color:var(--ink-2); opacity:.8}
+.adm{display:inline-flex; align-items:center; height:20px; padding:0 7px .06em; border-radius:6px; background:#5BC2E7; color:#07080C; font-weight:800; font-size:11.5px; line-height:1; flex:none}
+#meAdmM{display:none}
+.me-pop{position:absolute; right:0; top:calc(100% + 4px); width:260px; background:var(--card); border-radius:18px; box-shadow:0 18px 40px -16px rgba(11,16,48,.32), 0 0 0 1px #E4E8F4; padding:8px; display:flex; flex-direction:column; z-index:40; color:var(--ink)}
+[data-theme="dark"] .me-pop{box-shadow:0 18px 40px -16px rgba(0,0,0,.7), 0 0 0 1px #243066}
+.me-pop[hidden]{display:none!important}
+.pop-h{display:flex; align-items:center; gap:12px; padding:12px 12px 14px; box-shadow:inset 0 -1px 0 #E4E8F4; margin-bottom:6px}
+[data-theme="dark"] .pop-h{box-shadow:inset 0 -1px 0 #243066}
+.pop-h .av{width:40px; height:40px; font-size:16px}
+.pop-id{display:flex; flex-direction:column; gap:2px; min-width:0}
+.pop-nm{display:flex; align-items:center; gap:6px; min-width:0}
+.pop-nm b{font-size:16px; font-weight:800; line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.pop-h .s{font-size:12.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; line-height:1.4}
+.me-pop .it{height:44px; border:0; border-radius:12px; background:transparent; display:flex; align-items:center; gap:10px; padding:0 12px; font:inherit; font-size:15px; color:var(--ink); text-decoration:none; cursor:pointer; width:100%; text-align:left}
+.me-pop .it:hover{background:#EEF1F7}
+[data-theme="dark"] .me-pop .it:hover{background:#18204A}
+.me-pop .it svg{width:18px; height:18px; color:var(--ink-2); flex:none}
+.me-pop .it-r{margin-left:auto; display:flex}
+.me-pop .it-r svg{width:14px; height:14px; color:#8A93B4}
+.me-pop .nt{margin:0; display:flex; align-items:center; gap:6px; font-size:12.5px; color:#8A93B4; padding:8px 12px 6px; line-height:1.5}
+.me-pop .nt svg{width:14px; height:14px; flex:none}
+@media (max-width:560px){
+  .me{padding:0 4px; gap:6px} .me .nm, .me .chev, #meAdm{display:none} #meAdmM:not([hidden]){display:inline-flex}
+  .me .av{width:36px; height:36px; font-size:15px}
+  .me-pop{position:fixed; right:12px; top:calc(env(safe-area-inset-top, 0px) + 62px)}
+}
+/* 로그인 화면 */
+.ulog{display:flex; justify-content:center; align-items:flex-start; padding:48px 0 72px}
+.ulog-card{width:100%; max-width:440px; background:var(--card); border-radius:26px; padding:40px 36px 32px; display:flex; flex-direction:column; gap:20px; box-shadow:0 24px 48px -24px rgba(11,16,48,.28)}
+[data-theme="dark"] .ulog-card{box-shadow:0 0 0 1px #243066, 0 24px 48px -20px rgba(0,0,0,.7)}
+.ulog-h{display:flex; flex-direction:column; gap:8px}
+.ulog-h h1{font-family:var(--jua); font-weight:400; font-size:30px; line-height:1.25}
+.ulog-h p{margin:0; font-size:16px; line-height:1.6; color:var(--ink-2)}
+.ulog-f{display:flex; flex-direction:column; gap:8px}
+.ulog-f label{font-weight:800; font-size:15px}
+.uin{height:58px; border:0; border-radius:16px; background:var(--bg); padding:0 18px; font:inherit; font-size:20px; letter-spacing:.08em; font-variant-numeric:tabular-nums; color:var(--ink); width:100%; outline:none; box-shadow:inset 0 0 0 1px transparent; transition:box-shadow 140ms ease}
+[data-theme="dark"] .uin{background:#07080C; box-shadow:inset 0 0 0 1px #243066}
+.uin::placeholder{color:#8A93B4; letter-spacing:0; font-size:17px}
+[data-theme="dark"] .uin::placeholder{color:#7480B0}
+.uin:focus{box-shadow:inset 0 0 0 2px var(--blue), 0 0 0 4px var(--blue-soft)}
+.uin.bad, .uin.bad:focus{box-shadow:inset 0 0 0 2px #D92D20}
+[data-theme="dark"] .uin.bad{box-shadow:inset 0 0 0 2px #FF7878}
+.uin[disabled]{opacity:.6}
+.ubtn{height:58px; border:0; border-radius:999px; background:var(--blue); color:#FFFFFF; font:inherit; font-weight:800; font-size:18px; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; cursor:pointer; transition:transform 160ms var(--ease)}
+.ubtn:active{transform:scale(.97)}
+.ubtn[disabled]{background:#C9D2EC; cursor:default}
+[data-theme="dark"] .ubtn[disabled]{background:#2A3047; color:#7480B0}
+.ubtn.busy, .ubtn.busy[disabled]{background:var(--blue); color:#FFFFFF; opacity:.85}
+.ubtn .spin{display:flex}
+.ubtn .spin svg{width:18px; height:18px; animation:u-sp 800ms linear infinite}
+@keyframes u-sp{to{transform:rotate(360deg)}}
+.umsg{display:flex; align-items:flex-start; gap:8px; border-radius:14px; padding:12px 14px; font-size:15px; line-height:1.55; margin:0}
+.umsg svg{flex:none; width:18px; height:18px; margin-top:2px}
+.umsg.er{background:var(--bad-bg); color:var(--bad)}
+.umsg.wa{background:var(--warn-bg); color:var(--warn)}
+.umsg.in2{background:var(--blue-soft); color:var(--link)}
+[data-theme="dark"] .umsg.er{background:rgba(255,120,120,.12); color:#FF9494}
+[data-theme="dark"] .umsg.wa{background:rgba(255,210,94,.12); color:#FFD25E}
+[data-theme="dark"] .umsg.in2{background:rgba(61,99,255,.18); color:#A9BCFF}
+.unote{margin:0; font-size:13.5px; line-height:1.6; color:#8A93B4; text-align:center}
+[data-theme="dark"] .unote{color:#7480B0}
+@media (max-width:980px){ .ulog-card{max-width:480px} }
+@media (max-width:560px){ .ulog{padding:24px 0 40px} .ulog-card{padding:28px 22px 24px} .ulog-h h1{font-size:26px} }
+/* 조회수 · 다운로드 수 */
+.vw{display:inline-flex; align-items:center; gap:4px; white-space:nowrap; flex:none; font-variant-numeric:tabular-nums}
+.vw svg{width:15px; height:15px; flex:none}
+.card-meta .meta-l{flex:1 1 auto}
+.lec-meta .sep{opacity:.6}
+.fsub{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.dn{display:inline-flex; align-items:center; gap:3px; white-space:nowrap; font-variant-numeric:tabular-nums}
+.dn svg{width:13px; height:13px; flex:none}
+.dn.up{color:var(--blue)!important; font-weight:800}
+[data-theme="dark"] .dn.up{color:#A9BCFF!important}
+.dn.up svg{animation:dn-bump 420ms cubic-bezier(0.23,1,0.32,1)}
+@keyframes dn-bump{0%{transform:translateY(-4px); opacity:.3}100%{transform:none; opacity:1}}
+@media (prefers-reduced-motion:reduce){ .dn.up svg, .ubtn .spin svg{animation:none} }
+/* 관리자에게만 보이는 비공개 */
+.priv{position:absolute; inset:0; background:rgba(7,8,12,.55); display:flex; align-items:flex-start; justify-content:flex-start; padding:10px; z-index:2; pointer-events:none}
+.priv span{display:inline-flex; align-items:center; gap:5px; background:#0B1030; color:#FFFFFF; font-weight:800; font-size:12.5px; line-height:1.3; padding:5px 10px 5px 8px; border-radius:999px; box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+.priv svg{width:13px; height:13px}
+.thumb .priv ~ .chip-new{z-index:3}
+.priv-pill{display:inline-flex; align-items:center; gap:5px; background:#0B1030; color:#FFFFFF; font-weight:800; font-size:12.5px; padding:4px 10px 4px 8px; border-radius:999px}
+.priv-pill svg{width:13px; height:13px}
+/* 불러오는 중 (강의 · 자료 받기) */
+.sk-watch{display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:32px; padding:32px 0 64px}
+.sk-player{aspect-ratio:16/9; border-radius:20px}
+.sk-side{display:flex; flex-direction:column; gap:6px}
+.sk-file{display:flex; align-items:center; gap:12px; padding:14px 0}
+.sk-ic{width:44px; height:44px; border-radius:12px; flex:none}
+.sk-tx{flex:1; display:flex; flex-direction:column}
+.sk-tx .sk-l{margin-top:4px}
+.sk-btn{width:78px; height:44px; border-radius:999px; flex:none}
+.sk-player, .sk-ic, .sk-btn{background:linear-gradient(90deg, #E4E8F4 25%, #F3F5FA 50%, #E4E8F4 75%); background-size:200% 100%; animation:sk-shine 1.2s linear infinite}
+[data-theme="dark"] .sk-player, [data-theme="dark"] .sk-ic, [data-theme="dark"] .sk-btn{background-image:linear-gradient(90deg, #18204A 25%, #243066 50%, #18204A 75%)}
+@media (prefers-reduced-motion:reduce){ .sk-player, .sk-ic, .sk-btn{animation:none} }
+@media (max-width:980px){ .sk-watch{grid-template-columns:1fr; gap:20px; padding-top:20px} }

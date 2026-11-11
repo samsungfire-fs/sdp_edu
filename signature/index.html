@@ -27,7 +27,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261111e">
+<link rel="stylesheet" href="assets/site.css?v=20261111f">
 </head>
 <body>
 
@@ -45,6 +45,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span id="barBackText">전체</span>
     </a>
     <div class="menu-box" id="menuBox"><nav class="menu" id="menu" aria-label="메뉴"></nav></div>
+    <span class="bar-brand" id="barBrand">영개파 교육 자료</span>
+    <div class="who" id="who" hidden>
+      <button type="button" class="me" id="meBtn" aria-haspopup="menu" aria-expanded="false"><span class="adm" id="meAdmM" hidden>관리자</span><span class="av" id="meAv"></span><span class="nm" id="meNm"></span><span class="adm" id="meAdm" hidden>관리자</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="me-pop" id="mePop" role="menu" hidden></div>
+    </div>
     <div class="tm" id="tm" role="radiogroup" aria-label="화면 모드">
       <button type="button" role="radio" aria-checked="true" data-theme-set="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>라이트</button>
       <button type="button" role="radio" aria-checked="false" data-theme-set="dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>다크</button>
@@ -69,7 +74,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261111d"></script>
+<script src="assets/common.js?v=20261111e"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -97,6 +102,16 @@
     warn: '<svg class="lec-note-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.9 18.2A2 2 0 0 0 3.6 21h16.8a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z" fill="#FFD25E"/><path d="M12 9v4.5" stroke="#0B1030" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.25" fill="#0B1030"/></svg>',
     doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',
     sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    dn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v13m0 0-5-5m5 5 5-5"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>',
+    out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/></svg>',
+    ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>',
+    alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg>',
+    tri: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>',
     moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>'
   };
 
@@ -142,7 +157,9 @@
 
   /* ---------- 데이터 ---------- */
   var DATA = { site:{}, videos:[] }, RES = { months:[] };
-  function pub(){ return (DATA.videos || []).filter(SC.isPublic); }
+  /* 기획 P5-2: 관리자 사번으로 로그인하면 비공개 강의 · 월 · 연령도 보임(비공개 표시와 함께) */
+  function vis(x){ return SC.isPublic(x) || (!!x && isAdm()); }
+  function pub(){ return (DATA.videos || []).filter(vis); }
   function newest(list){
     return list.map(function(v, i){ return { v:v, i:i }; })
       .sort(function(a, b){ return String(b.v.publishedAt || b.v.date || "").localeCompare(String(a.v.publishedAt || a.v.date || "")) || a.i - b.i; })
@@ -154,10 +171,10 @@
   }
   function ymCode(ym){ var x = String(ym || "").match(/^(\d{4})-(\d{2})$/); return x ? x[1].slice(2) + x[2] : ""; }
   function rMonths(){
-    return (RES.months || []).filter(function(m){ return SC.isPublic(m) && ymCode(m.ym); })
+    return (RES.months || []).filter(function(m){ return vis(m) && ymCode(m.ym); })
       .sort(function(a, b){ return String(b.ym).localeCompare(String(a.ym)); });
   }
-  function rAges(m){ return (m.ages || []).filter(SC.isPublic); }
+  function rAges(m){ return (m.ages || []).filter(vis); }
   function rFileCount(m){ return rAges(m).reduce(function(n, a){ return n + (a.files || []).length; }, 0); }
   function findMonth(code){ return rMonths().filter(function(m){ return ymCode(m.ym) === code; })[0]; }
 
@@ -250,12 +267,12 @@
   function card(v, withMenu){
     var n = (v.files || []).length;
     return '<li><a class="card rp" href="' + videoUrl(v.id) + '" data-go>' +
-      '<div class="thumb">' + SC.thumbImg(v.id) +
+      '<div class="thumb">' + SC.thumbImg(v.id) + (SC.isPublic(v) ? '' : privTag()) +
         (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') +
         (v.duration ? '<span class="chip-dur">' + esc(v.duration) + '</span>' : '') +
         '<span class="play" aria-hidden="true">' + IC.play + '</span></div>' +
       '<div class="card-body"><h3>' + esc(v.title || "제목 없음") + '</h3>' +
-        '<div class="card-meta"><span class="meta-l">' + (withMenu ? menuBadge(v) : '') + '<span class="date">' + metaText(v) + '</span></span>' +
+        '<div class="card-meta"><span class="meta-l">' + (withMenu ? menuBadge(v) : '') + '<span class="date">' + metaText(v) + '</span>' + vwHtml(v.id) + '</span>' +
           (n ? '<span class="chip-files">' + IC.dl + '자료&nbsp;' + n + '개</span>' : '') + '</div></div></a></li>';
   }
   /* 상품연구 카드 (월 · 연령): 썸네일 없으면 흰 바탕 로고 기본 썸네일 */
@@ -264,14 +281,14 @@
     return '<div class="thumb r-th' + (cls ? " " + cls : "") + (src ? "" : " dflt") + '">' +
       '<img src="' + esc(src || RDEF) + '" alt=""' + (src ? "" : ' data-default="true"') + (eager ? "" : ' loading="lazy"') + '></div>';
   }
-  function rCard(href, thumb, title, left, n){
-    return '<li><a class="card r-card rp" href="' + href + '" data-go>' + rThumb(thumb) +
+  function rCard(href, thumb, title, left, n, priv){
+    return '<li><a class="card r-card rp" href="' + href + '" data-go>' + rThumb(thumb, priv ? "has-priv" : "").replace(/<\/div>$/, (priv ? privTag() : '') + '</div>') +
       '<div class="card-body"><h3>' + esc(title || "제목 없음") + '</h3>' +
         '<div class="card-meta">' + (left ? '<span class="r-sub">' + left + '</span>' : '') +
           '<span class="chip-files">' + IC.dl + '자료&nbsp;' + n + '개</span></div></div></a></li>';
   }
-  function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령&nbsp;' + rAges(m).length + '개', rFileCount(m)); }
-  function ageCard(m, a){ return rCard(rUrl(ymCode(m.ym), a.id), a.thumb, a.title, "", (a.files || []).length); }
+  function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령&nbsp;' + rAges(m).length + '개', rFileCount(m), !SC.isPublic(m)); }
+  function ageCard(m, a){ return rCard(rUrl(ymCode(m.ym), a.id), a.thumb, a.title, "", (a.files || []).length, !SC.isPublic(a) || !SC.isPublic(m)); }
 
   /* ---------- 목록 화면 (전체 · 메뉴 · 상품연구 월/연령) ---------- */
   var L = null;            /* 지금 목록 상태 { m, page, q, items, card, search, url } */
@@ -524,7 +541,7 @@
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
             '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
             lrBox(files.length
-              ? '<ul class="files lr-c">' + files.map(fileRow).join("") + '</ul>'
+              ? '<ul class="files lr-c">' + files.map(function(f){ return fileRow(f, "rf:" + code + "/" + a.id + ":" + SC.fileKey(f)); }).join("") + '</ul>'
               : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 연령은 아직 받을 자료가 없어요.<br>곧 올라올 예정이에요.</p></div>', 265) +
           '</section>' +
         '</div>' +
@@ -549,15 +566,15 @@
       '<a class="btn-blue rp press" href="' + menuUrl("all") + '" data-go>전체 강의 보기</a></div>';
   }
 
-  function fileRow(f){
+  function fileRow(f, key){
     var sn = SC.splitName(f.name), t = f.type || sn.type || "pdf", d = SC.download(f.link, t);
     var cls = { pdf:"pdf", xlsx:"xlsx", pptx:"pptx", docx:"docx", hwp:"hwp" }[t] || "etc";
     var name = sn.name || "자료";
     var btn = d.url
-      ? '<a class="dl rp press" href="' + esc(d.url) + '" rel="noopener" aria-label="' + esc(name) + ' 받기">' + IC.dl + '<span>받기</span></a>'
+      ? '<a class="dl rp press" href="' + esc(d.url) + '" rel="noopener" data-k="' + esc(key || "") + '" aria-label="' + esc(name) + ' 받기">' + IC.dl + '<span>받기</span></a>'
       : '<span class="dl off">준비 중</span>';
     return '<li class="file"><span class="ftype ' + cls + '" aria-hidden="true">' + SC.typeLabel(t) + '</span>' +
-      '<div class="fname"><strong>' + esc(name) + '</strong><span class="nowrap">' + SC.typeLabel(t) + (d.url ? (f.size ? ' · ' + esc(f.size) : '') : ' · 링크 준비 중') + '</span></div>' + btn + '</li>';
+      '<div class="fname"><strong>' + esc(name) + '</strong><span class="fsub"><span class="nowrap">' + SC.typeLabel(t) + (d.url ? (f.size ? ' · ' + esc(f.size) : '') : ' · 링크 준비 중') + '</span>' + (d.url ? dnHtml(key) : '') + '</span></div>' + btn + '</li>';
   }
 
   function renderVideo(id){
@@ -588,7 +605,7 @@
               'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>' +
             '</div></div>' +
             '<section class="lec-info">' +
-              '<div class="lec-meta">' + (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') + '<span>' + metaText(v, true) + '</span></div>' +
+              '<div class="lec-meta">' + (SC.isPublic(v) ? '' : '<span class="priv-pill">' + IC.lock + '비공개 · 관리자에게만 보여요</span>') + (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') + '<span>' + metaText(v, true) + '</span>' + (LOCKED ? '<span class="sep">·</span>' + vwHtml(v.id) : '') + '</div>' +
               '<h1>' + esc(v.title || "제목 없음") + '</h1>' +
               '<button type="button" class="copy-btn rp press" id="share">' + IC.link + '강의 링크 복사</button>' +
             '</section>' +
@@ -605,7 +622,7 @@
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
             '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
             lrBox(files.length
-              ? '<ul class="files lr-c">' + files.map(fileRow).join("") + '</ul>'
+              ? '<ul class="files lr-c">' + files.map(function(f){ return fileRow(f, "f:" + v.id + ":" + SC.fileKey(f)); }).join("") + '</ul>'
               : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>', 265) +
           '</aside>' +
         '</div>' +
@@ -629,6 +646,7 @@
       } else body.classList.remove("clamp");
     });
     reveal(".watch .comments, .watch .others"); playLr($("app"));
+    track("siteView", "v:" + v.id);
   }
 
   /* ---------- 화면 고르기 ---------- */
@@ -650,6 +668,7 @@
     var a = e.target.closest("a[data-go]");
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
+    if (expired()){ if (a.href !== location.href) history.pushState(null, "", a.href); showLogin("expired"); window.scrollTo(0, 0); return; }
     if (lastView === "list") feedSave();
     restoreNext = lastView === "video" && !!a.closest("#barBack, .back-all");
     if (a.href !== location.href) history.pushState(null, "", a.href);
@@ -664,6 +683,8 @@
   /* 받기 누르면 바로 반응 보여주기 (다운로드가 시작되기까지 몇 초 걸릴 수 있어서) */
   document.addEventListener("click", function(e){
     var a = e.target.closest("a.dl"); if (!a || a.classList.contains("busy") || a.classList.contains("done")) return;
+    if (expired()){ e.preventDefault(); showLogin("expired"); window.scrollTo(0, 0); return; }
+    downed(a.dataset.k);
     var orig = a.innerHTML;
     a.classList.add("busy"); a.innerHTML = IC.spin + '<span>받는 중</span>';
     toast("다운로드를 시작했어요. 잠시만 기다려 주세요", IC.dl);
@@ -693,22 +714,222 @@
   function drawNotice(s){ NOTICE_SRC = s || ""; $("notice").innerHTML = noticeHtml(); }
   drawNotice("");
 
+  /* ================= 사이트 사번 로그인 · 이름 · 조회수 · 다운로드 수 (기획 P2 · P4 · P5-2 · 디자인 #47) =================
+     - 강의 · 자료 목록은 저장소에 잠가 둔 data/*.enc.json (관리자가 저장할 때 잠금). 잠긴 목록이 있으면 로그인해야 보임.
+     - 로그인하면 세일즈온 사번 목록이 그날 밤 12시까지 쓸 표 + 목록 열쇠를 줌 → 이 브라우저에 보관(그날은 다시 묻지 않음).
+     - 접속(10분에 한 번) · 강의 열기 · [받기]를 사번 목록에 기록. 숫자는 사번 목록이 1분마다 새로 셈(관리자는 뺌). */
+  var S_KEY = "sdp-site", GATE = "", LOCKED = false, WRAP = null, SES = null, STATS = null, booted = false;
+  function kstNow(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19); }
+  function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function lsSet(k, v){ try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch(e){} }
+  function sesRaw(){ try { return JSON.parse(lsGet(S_KEY) || "null"); } catch(e){ return null; } }
+  function sesSet(o){ lsSet(S_KEY, o ? JSON.stringify(o) : null); }
+  function devId(){ var d = lsGet("sdp-dev"); if (!d){ d = Math.random().toString(36).slice(2) + Date.now().toString(36); lsSet("sdp-dev", d); } return d; }
+  function isAdm(){ return !!(SES && SES.a && SES.e > kstNow()); }
+  function live(){ return !!(LOCKED && SES && SES.e > kstNow()); }
+  function expired(){ return !!(LOCKED && booted && !live()); }
+  function gate(body, keep){
+    return fetch(GATE, { method:"POST", body: JSON.stringify(body), cache:"no-store", redirect:"follow", keepalive: !!keep })
+      .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); });
+  }
+  function track(action, key){
+    if (!live() || !GATE) return;
+    var b = { action: action, t: SES.t }; if (key) b.key = key;
+    gate(b, true).catch(function(){});
+  }
+  function seen(){
+    if (!live()) return;
+    var k = "sdp-seen-" + SES.s, last = +(lsGet(k) || 0);
+    if (Date.now() - last < 10 * 60 * 1000) return;
+    lsSet(k, String(Date.now())); track("siteSeen");
+  }
+
+  /* 숫자: 1,234 · 1만 넘으면 1.2만 */
+  function fmtN(n){
+    n = n || 0;
+    if (n >= 10000){ var x = Math.round(n / 1000) / 10; return (x % 1 ? x.toFixed(1) : String(x)) + "만"; }
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  function vwHtml(id){
+    if (!LOCKED) return "";
+    var k = "v:" + id, n = STATS ? (STATS.views[k] || 0) : 0;
+    return '<span class="vw" data-vw="' + esc(k) + '"' + (STATS ? '' : ' hidden') + '>' + IC.eye + '<span>조회 ' + fmtN(n) + '</span></span>';
+  }
+  function dnHtml(key){
+    if (!LOCKED || !key) return "";
+    var n = STATS ? (STATS.downs[key] || 0) : 0;
+    return '<span class="dn" data-dn="' + esc(key) + '"' + (STATS ? '' : ' hidden') + '>' + IC.dn + '<span>' + fmtN(n) + '명</span></span>';
+  }
+  function privTag(){ return '<span class="priv" aria-hidden="true"><span>' + IC.lock + '비공개 · 관리자에게만 보여요</span></span>'; }
+  function paintStats(){
+    if (!STATS) return;
+    document.querySelectorAll("[data-vw]").forEach(function(el){ el.hidden = false; el.lastChild.textContent = "조회 " + fmtN(STATS.views[el.dataset.vw] || 0); });
+    document.querySelectorAll("[data-dn]").forEach(function(el){ el.hidden = false; el.lastChild.textContent = fmtN(STATS.downs[el.dataset.dn] || 0) + "명"; });
+  }
+  function loadStats(){
+    if (!live()) return;
+    gate({ action:"siteStats", t: SES.t }).then(function(r){
+      if (r.ok){ STATS = { views: r.views || {}, downs: r.downs || {} }; paintStats(); }
+      else if (r.error === "nosession"){ sesSet(null); SES = null; showLogin(""); }
+    }).catch(function(){});
+  }
+  /* [받기]: 기록 + 내가 처음 받는 자료면 숫자를 바로 +1 (관리자는 세지 않음) */
+  function mine(){ try { return JSON.parse(lsGet("sdp-dl-" + SES.s) || "{}"); } catch(e){ return {}; } }
+  function downed(key){
+    if (!live() || !key) return;
+    track("siteDown", key);
+    var m = mine(); if (m[key]) return;
+    m[key] = 1; lsSet("sdp-dl-" + SES.s, JSON.stringify(m));
+    if (!STATS || SES.a) return;
+    STATS.downs[key] = (STATS.downs[key] || 0) + 1;
+    document.querySelectorAll('[data-dn="' + key.replace(/"/g, "") + '"]').forEach(function(el){
+      el.hidden = false; el.lastChild.textContent = fmtN(STATS.downs[key]) + "명";
+      el.classList.remove("up"); void el.offsetWidth; el.classList.add("up");
+    });
+  }
+
+  /* ---------- 이름 칸 (메뉴 바 라이트/다크 왼쪽) ---------- */
+  function paintWho(){
+    var on = live() && !document.body.classList.contains("login-mode");
+    $("who").hidden = !on; if (!on){ closePop(); return; }
+    var nm = SES.n || "회원", first = nm.charAt(0);
+    $("meAv").textContent = first; $("meNm").textContent = nm + "님"; $("meNm").title = nm + "님";
+    $("meAdm").hidden = !SES.a; $("meAdmM").hidden = !SES.a;
+    $("meBtn").setAttribute("aria-label", nm + "님 메뉴");
+    $("mePop").innerHTML =
+      '<div class="pop-h"><span class="av">' + esc(first) + '</span><span class="pop-id"><span class="pop-nm"><b>' + esc(nm) + '님</b>' + (SES.a ? '<span class="adm">관리자</span>' : '') + '</span>' +
+        '<span class="s">사번 ' + esc(String(SES.s).slice(0, 4)) + '****</span></span></div>' +
+      (SES.a ? '<a class="it" role="menuitem" href="' + ROOT + 'admin.html" target="_blank" rel="noopener">' + IC.shield + '<span>관리자 페이지</span><span class="it-r">' + IC.ext + '</span></a>' : '') +
+      '<button type="button" class="it" role="menuitem" id="logout">' + IC.out + '<span>로그아웃</span></button>' +
+      '<p class="nt">' + IC.clock + '<span>오늘 밤 12시까지 로그인돼요.</span></p>';
+    $("logout").addEventListener("click", function(){ closePop(); sesSet(null); SES = null; STATS = null; showLogin(""); });
+  }
+  function closePop(){ $("mePop").hidden = true; $("meBtn").setAttribute("aria-expanded", "false"); $("meBtn").classList.remove("on"); }
+  $("meBtn").addEventListener("click", function(){
+    var open = $("mePop").hidden;
+    $("mePop").hidden = !open; this.setAttribute("aria-expanded", String(open)); this.classList.toggle("on", open);
+  });
+  document.addEventListener("pointerdown", function(e){ if (!$("mePop").hidden && !e.target.closest("#who")) closePop(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !$("mePop").hidden){ closePop(); $("meBtn").focus(); } });
+
+  /* ---------- 로그인 화면 ---------- */
+  var waitT = null;
+  function showLogin(kind){
+    L = null; booted = true;
+    document.body.classList.add("login-mode"); setBody("no-fab"); paintWho();
+    document.title = TAB_TITLE;
+    $("app").innerHTML = '<div class="ulog"><form class="ulog-card" id="ulog" novalidate>' +
+      (kind === "expired" ? '<p class="umsg in2" role="status">' + IC.cal + '<span>날짜가 바뀌어 다시 로그인해 주세요.</span></p>' : '') +
+      '<div class="ulog-h"><h1>영개파 교육 자료</h1><p>사번을 입력해 주세요.</p></div>' +
+      '<div class="ulog-f"><label for="usb">사번</label>' +
+        '<input id="usb" class="uin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="username" placeholder="숫자 8자리" aria-describedby="umsg">' +
+        '<p class="umsg" id="umsg" role="alert" hidden></p></div>' +
+      '<button type="submit" class="ubtn rp" id="ubtn">로그인</button>' +
+      '<p class="unote">로그인하면 오늘 밤 12시까지 유지돼요.</p></form></div>';
+    var inp = $("usb");
+    inp.addEventListener("input", function(){
+      var v = this.value.replace(/\D/g, "").slice(0, 8); if (v !== this.value) this.value = v;
+      this.classList.remove("bad"); if (!waitT) $("umsg").hidden = true;
+    });
+    $("ulog").addEventListener("submit", function(e){ e.preventDefault(); doLogin(); });
+    if (!SC.inApp || !SC.inApp()) setTimeout(function(){ try { inp.focus({ preventScroll:true }); } catch(er){} }, 60);
+  }
+  function loginMsg(cls, html, bad){
+    var m = $("umsg"), ic = cls === "er" ? IC.alert : (cls === "wa" && /잠시 후 다시 시도/.test(html) && !/할 수 없어요/.test(html)) ? IC.clock : IC.tri;
+    m.className = "umsg " + cls; m.innerHTML = ic + '<span>' + html + '</span>'; m.hidden = false;
+    $("usb").classList.toggle("bad", !!bad); if (bad) $("usb").setAttribute("aria-invalid", "true"); else $("usb").removeAttribute("aria-invalid");
+  }
+  function doLogin(){
+    var inp = $("usb"), btn = $("ubtn"), v = inp.value.replace(/\s+/g, "");
+    if (waitT) return;
+    if (!v){ loginMsg("er", "사번을 입력해 주세요.", true); inp.focus(); return; }
+    inp.disabled = true; btn.disabled = true; btn.classList.add("busy"); btn.setAttribute("aria-busy", "true");
+    btn.innerHTML = '<span class="spin">' + IC.spin + '</span>확인 중…';
+    function done(){ inp.disabled = false; btn.classList.remove("busy"); btn.removeAttribute("aria-busy"); btn.textContent = "로그인"; btn.disabled = !!waitT; }
+    gate({ action:"siteLogin", sabun: v, dev: devId() }).then(function(r){
+      if (r.ok){
+        SES = { t: r.t, s: r.sabun, n: r.name, a: r.admin ? 1 : 0, e: r.exp, k: r.key };
+        sesSet(SES); lsSet("sdp-seen-" + SES.s, String(Date.now()));   /* 로그인 자체가 접속 기록 */
+        return enter();
+      }
+      done();
+      if (r.error === "notnormal") loginMsg("er", "정상회원이 아닙니다", true);
+      else if (r.error === "nouser") loginMsg("er", "등록되지 않은 사번이에요. 다시 확인해 주세요.", true);
+      else if (r.error === "empty") loginMsg("er", "사번을 입력해 주세요.", true);
+      else if (r.error === "wait"){
+        loginMsg("wa", "잠시 후 다시 시도해 주세요.", false);
+        btn.disabled = true; clearTimeout(waitT);
+        waitT = setTimeout(function(){ waitT = null; var b = $("ubtn"); if (b) b.disabled = false; var m = $("umsg"); if (m) m.hidden = true; }, 60 * 1000);
+      }
+      else loginMsg("wa", "지금은 로그인할 수 없어요.<br>잠시 후 다시 시도해 주세요.", false);
+      inp.focus();
+    }).catch(function(){ done(); loginMsg("wa", "지금은 로그인할 수 없어요.<br>잠시 후 다시 시도해 주세요.", false); });
+  }
+
+  /* ---------- 목록 열기 · 화면 그리기 ---------- */
+  function enter(){
+    return Promise.all([SC.box.open(WRAP[0], SES.k), WRAP[1] ? SC.box.open(WRAP[1], SES.k) : null]).then(function(o){
+      DATA = o[0] || DATA; RES = (o[1] && o[1].months) ? o[1] : { months:[] };
+      booted = true;
+      document.body.classList.remove("login-mode");
+      drawNotice((DATA.site || {}).notice);
+      route(); window.scrollTo(0, 0);
+      paintWho(); loadStats(); seen();
+    }).catch(function(){
+      /* 열쇠가 바뀌었거나 표가 맞지 않으면 다시 로그인 */
+      sesSet(null); SES = null; showLogin("");
+    });
+  }
+  /* 링크 복사처럼 화면을 바꾸지 않는 동작 중에 로그인이 끝났으면: 토스트 후 로그인 화면 */
+  document.addEventListener("click", function(e){
+    if (!e.target.closest("#share") || !expired()) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    toast("날짜가 바뀌어 다시 로그인해 주세요.", IC.cal);
+    setTimeout(function(){ showLogin("expired"); window.scrollTo(0, 0); }, 1200);
+  }, true);
+
+  /* 불러오는 중: 0.3초 안에 오면 뼈대 없이 바로 */
+  function skeleton(){
+    if (booted) return;
+    var p = parse(), sk = '<li><div class="sk-th"></div><div class="sk-l"></div><div class="sk-l s"></div></li>';
+    if (p.v || (p.r && p.age)){
+      $("app").innerHTML = '<div class="sk-watch" aria-busy="true" aria-label="불러오는 중"><div class="sk-player"></div><div class="sk-side">' +
+        '<div class="sk-l" style="width:40%"></div><div class="sk-l" style="width:80%;height:22px"></div>' +
+        new Array(4).join('<div class="sk-file"><span class="sk-ic"></span><span class="sk-tx"><span class="sk-l"></span><span class="sk-l s"></span></span><span class="sk-btn"></span></div>') + '</div></div>';
+    } else {
+      $("app").innerHTML = '<section class="list-page" aria-busy="true" aria-label="불러오는 중"><div class="list-head"><div class="sk-l" style="width:220px;height:34px"></div></div>' +
+        '<ul class="grid vgrid skel" aria-hidden="true">' + new Array(cols() * 2 + 1).join(sk) + '</ul></section>';
+    }
+  }
+  setTimeout(skeleton, 300);
+
   var T = Date.now();
-  Promise.all([
-    fetch(ROOT + "data/videos.json?t=" + T, { cache:"no-store" }).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); }),
-    /* 상품연구 자료는 따로 (아직 파일이 없으면 빈 목록) */
-    fetch(ROOT + "data/research.json?t=" + T, { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
-  ]).then(function(res){
-    DATA = res[0] || DATA;
-    RES = (res[1] && res[1].months) ? res[1] : { months:[] };
-    drawNotice((DATA.site || {}).notice);
-    route();
-  }).catch(function(){
+  function getJson(path){ return fetch(ROOT + path + "?t=" + T, { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }); }
+  function failed(){
+    booted = true;
     var p = parse();
     drawMenu(p.r ? "research" : (p.m || "all"));
     setBody("no-fab");
     $("app").innerHTML = '<div class="state"><span class="state-ic">' + IC.videoX + '</span><h1>목록을 불러오지 못했어요</h1><p>잠시 후 새로고침해 주세요.</p></div>';
-  });
+  }
+  Promise.all([getJson("data/videos.enc.json"), getJson("data/research.enc.json")]).then(function(enc){
+    if (enc[0] && enc[0].ct){
+      LOCKED = true; WRAP = enc; GATE = enc[0].gate || "";
+      var raw = sesRaw();
+      SES = raw && raw.t && raw.k && raw.e > kstNow() ? raw : null;
+      if (!SES){ if (raw) sesSet(null); showLogin(raw && raw.t ? "expired" : ""); return; }
+      if (!SC.box.ok){ failed(); return; }
+      return enter();
+    }
+    /* 아직 잠그기 전(관리자가 사번 목록 v18로 저장하기 전): 예전처럼 누구나 */
+    return Promise.all([getJson("data/videos.json"), getJson("data/research.json")]).then(function(res){
+      if (!res[0]) throw new Error("nodata");
+      booted = true;
+      DATA = res[0]; RES = (res[1] && res[1].months) ? res[1] : { months:[] };
+      drawNotice((DATA.site || {}).notice);
+      route();
+    });
+  }).catch(failed);
 })();
 </script>
 </body>

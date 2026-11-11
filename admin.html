@@ -16,20 +16,22 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261111e">
-<link rel="stylesheet" href="assets/admin.css?v=20261111i">
+<link rel="stylesheet" href="assets/site.css?v=20261111f">
+<link rel="stylesheet" href="assets/admin.css?v=20261111k">
 </head>
 <body>
 
 <header class="abar">
   <div class="awrap">
     <a class="abrand" href="#/courses">관리자 페이지</a>
-    <nav class="bar-nav" id="barNav" aria-label="관리자 화면"><a href="#/courses" data-view="courses"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h10.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h10.5"></path></svg><span>강의 관리</span></a><a href="#/analytics" data-view="analytics"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>분석</span></a></nav>
+    <nav class="bar-nav" id="barNav" aria-label="관리자 화면"><a href="#/courses" data-view="courses"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h10.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h10.5"></path></svg><span>강의 관리</span></a><a href="#/analytics" data-view="analytics"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>분석</span></a><a href="#/members" data-view="members"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M2.8 19.5c1-3.1 3.4-4.8 6.2-4.8s5.2 1.7 6.2 4.8"></path><path d="M15.5 5.6a3.3 3.3 0 0 1 0 6.1M17.6 14.9c1.8.6 3 2.2 3.6 4.6"></path></svg><span>회원 관리</span></a><a href="#/settings/me" data-view="settings" id="barSet"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"></path></svg><span>설정</span></a></nav>
     <div class="abar-right">
-      <a class="deploy" id="deploy" href="#" target="_blank" rel="noopener" data-st="none" title="사이트 반영 상태" aria-label="사이트 반영 상태"><span class="dot" aria-hidden="true"></span></a>
-      <a class="site-link rp" href="./" target="_blank" rel="noopener">사이트 보기 ↗</a>
-      <button type="button" class="abar-ic rp" id="tmIc" aria-label="다크 모드로 바꾸기"></button>
-      <button type="button" class="abar-ic set-btn rp" id="setBtn" aria-label="설정" title="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <a class="svs" id="svs" href="#" target="_blank" rel="noopener" data-st="none" role="status" aria-live="polite" title="사이트 반영 기록 보기"><span class="d" aria-hidden="true"></span><span class="svs-t" id="svsT"></span></a>
+      <span class="bar-sep sep-svs" aria-hidden="true"></span>
+      <div class="thsw" id="thBox"><span class="lb-l" data-theme-set="light" aria-hidden="true">라이트</span><button type="button" class="thsw-b" id="thSw" role="switch" aria-checked="false" aria-label="다크 모드"><i class="kn" aria-hidden="true"></i></button><span class="lb-d" data-theme-set="dark" aria-hidden="true">다크</span></div>
+      <span class="bar-sep sep-out" aria-hidden="true"></span>
+      <a class="bar-lk bar-out" id="barOut" href="#/settings/me" role="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5H18a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-3.5"></path><path d="M10 16.5L5.5 12 10 7.5M5.5 12H15"></path></svg><span class="lk-t">로그아웃</span></a>
+      <a class="bar-lk" href="./" target="_blank" rel="noopener" aria-label="사이트 보기" title="사이트 보기"><span class="lk-t">사이트 보기</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg></a>
     </div>
   </div>
 </header>
@@ -126,7 +128,7 @@
     <div class="amain">
       <div class="page-head">
         <h1>강의 관리</h1>
-        <p>메뉴를 고르고 강의를 추가하세요. 목록은 유튜브에 올린 날짜 순으로 자동 정렬돼요.<br>완료되면 아래 저장을 눌러 주세요.</p>
+        <p>메뉴를 고르고 강의를 추가하세요. 목록은 유튜브에 올린 날짜 순으로 자동 정렬돼요.<br>고친 뒤에는 편집 칸 아래 [저장]을 눌러 주세요. 공개 스위치는 누르면 바로 저장돼요.</p>
       </div>
 
       <div class="noauth" id="noAuth" hidden>
@@ -168,28 +170,15 @@
         <button type="button" class="ed-close rp" id="edClose" aria-label="편집 닫기" title="편집 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
       <div class="ed-body" id="edBody"></div>
+      <div class="ed-foot" id="edFoot" role="status" aria-live="polite" hidden><span class="ef-s"><i aria-hidden="true"></i><span id="efText"></span></span><button type="button" class="ef-undo rp" id="efUndo">되돌리기</button><button type="button" class="ef-save rp" id="efSave">저장</button></div>
     </section>
     <i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
     <input type="file" class="pick" id="thFile" accept="image/*" tabindex="-1" aria-hidden="true">
   </div>
   <!-- 설정 페이지 (#44 · 기획 P6): 왼쪽 메뉴 + 오른쪽 내용, 🔒 마스터 설정은 마스터에게만 -->
   <div class="setv pv2" id="setView" hidden>
-    <nav class="nav" id="setNav" aria-label="설정 메뉴"><div class="nav-g"><span class="cap">회원</span><a class="nav-i" href="#/settings/members" data-set="members"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M2.8 19.5c1-3.1 3.4-4.8 6.2-4.8s5.2 1.7 6.2 4.8"></path><path d="M15.5 5.6a3.3 3.3 0 0 1 0 6.1M17.6 14.9c1.8.6 3 2.2 3.6 4.6"></path></svg><span>회원 관리</span><span class="n" id="navMem"></span></a><a class="nav-i" href="#/settings/roster" data-set="roster"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8"></path><path d="M4 3.5V8h4.5"></path><path d="M4 13a8 8 0 0 0 14.3 4.6L20 16"></path><path d="M20 20.5V16h-4.5"></path></svg><span>사번 명단</span></a></div><div class="nav-g"><span class="cap">계정</span><a class="nav-i" href="#/settings/me" data-set="me"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"></circle><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"></path></svg><span>내 계정</span></a></div><div class="nav-g"><span class="cap">사이트</span><a class="nav-i" href="#/settings/notice" data-set="notice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h9"></path></svg><span>사이트 문구</span></a><a class="nav-i" href="#/settings/update" data-set="update"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg><span>사이트 업데이트</span></a></div><div class="nav-g nav-m" id="navMaster"><span class="cap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터 설정</span><a class="nav-i" href="#/settings/admins" data-set="admins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z"></path><path d="M8.8 12.2l2.2 2.2 4.3-4.6"></path></svg><span>관리자</span><span class="n" id="navAdm"></span></a><a class="nav-i" href="#/settings/log" data-set="log"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"></path><path d="M4 4v4.5h4.5"></path><path d="M12 8v4.5l3 2"></path></svg><span>갱신 기록</span></a><a class="nav-i" href="#/settings/siteacc" data-set="siteacc"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M10.8 12.2L19 4M15.5 7.5l2.5 2.5M17.5 5.5l2 2"></path></svg><span>세일즈온 어드민 계정</span></a><a class="nav-i" href="#/settings/sheet" data-set="sheet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"></rect><path d="M4 9h16M4 14.5h16M10 9v11.5"></path></svg><span>세일즈온 사번 목록</span></a><a class="nav-i" href="#/settings/keys" data-set="keys"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"></path><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"></path></svg><span>GitHub 토큰 · API 키</span></a></div></nav>
+    <nav class="nav" id="setNav" aria-label="설정 메뉴"><div class="nav-g"><span class="cap">계정</span><a class="nav-i" href="#/settings/me" data-set="me"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"></circle><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"></path></svg><span>내 계정</span></a></div><div class="nav-g"><span class="cap">사이트</span><a class="nav-i" href="#/settings/notice" data-set="notice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h9"></path></svg><span>사이트 문구</span></a></div><div class="nav-g" id="navMaster"><span class="cap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터 설정</span><a class="nav-i" href="#/settings/roster" data-set="roster"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8"></path><path d="M4 3.5V8h4.5"></path><path d="M4 13a8 8 0 0 0 14.3 4.6L20 16"></path><path d="M20 20.5V16h-4.5"></path></svg><span>사번 명단</span></a><a class="nav-i" href="#/settings/update" data-set="update"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg><span>사이트 업데이트</span></a><a class="nav-i" href="#/settings/admins" data-set="admins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z"></path><path d="M8.8 12.2l2.2 2.2 4.3-4.6"></path></svg><span>관리자</span><span class="n" id="navAdm"></span></a><a class="nav-i" href="#/settings/log" data-set="log"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"></path><path d="M4 4v4.5h4.5"></path><path d="M12 8v4.5l3 2"></path></svg><span>갱신 기록</span></a><a class="nav-i" href="#/settings/siteacc" data-set="siteacc"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M10.8 12.2L19 4M15.5 7.5l2.5 2.5M17.5 5.5l2 2"></path></svg><span>세일즈온 어드민 계정</span></a><a class="nav-i" href="#/settings/sheet" data-set="sheet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"></rect><path d="M4 9h16M4 14.5h16M10 9v11.5"></path></svg><span>세일즈온 사번 목록</span></a><a class="nav-i" href="#/settings/keys" data-set="keys"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"></path><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"></path></svg><span>GitHub 토큰 · API 키</span></a></div></nav>
     <div class="setmain" id="setMain">
-      <!-- 회원 관리 (P7) -->
-      <div class="spage" data-page="members" hidden>
-        <div class="ph"><h1 class="k-h1">회원 관리</h1>
-          <p class="k-lead">세일즈온 사번 목록의 회원 명단이에요. 이름 · 소속 · 가입상태는 세일즈온 어드민에서 매일 가져와서 여기서는 고칠 수 없어요.</p>
-          <div class="meta" id="memMeta"></div></div>
-        <div class="mt" id="memTabs" role="tablist" aria-label="회원 구분"><button type="button" role="tab" data-tab="normal" aria-selected="true">정상 회원<b id="mtN"></b></button><button type="button" role="tab" data-tab="abnormal" aria-selected="false">비정상 회원<b id="mtA"></b></button><button type="button" role="tab" data-tab="nosabun" aria-selected="false">사번 없음<b id="mtS"></b></button></div>
-        <div class="k-msg wa" id="memNoLog" hidden></div>
-        <div class="k-msg in2" id="memNsNote" hidden></div>
-        <div class="tools2" id="memTools"><label class="srch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg><input class="k-in" id="memQ" type="search" placeholder="사번 · 이름 · 소속 검색" autocomplete="off" aria-label="사번 · 이름 · 소속 검색"></label>
-          <select class="k-in k-sel sel2" id="memSort" aria-label="정렬"><option value="last">마지막 접속 최신순</option><option value="views">조회 많은순</option><option value="downs">다운로드 많은순</option><option value="name">이름 가나다순</option></select>
-          <div class="chips" id="memFilter" role="radiogroup" aria-label="접속 여부"><button type="button" class="chip" role="radio" data-f="all" aria-checked="true">모두</button><button type="button" class="chip" role="radio" data-f="seen" aria-checked="false">접속한 적 있음</button><button type="button" class="chip" role="radio" data-f="never" aria-checked="false">접속한 적 없음</button></div>
-          <button type="button" class="k-btn k-btn3 sm rp k-xl" id="memXls" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"></path></svg>엑셀로 받기<span class="lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터</span></button></div>
-        <div class="split"><div class="tbl" id="memTbl" role="table" aria-label="회원 명단"></div><aside class="det" id="memDet" aria-label="회원 상세" hidden></aside></div>
-      </div>
       <!-- 🔒 관리자 -->
       <div class="spage" data-page="admins" hidden>
         <div class="ph"><div class="k-row k-g8"><h1 class="k-h1">관리자</h1><span class="lock"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터만 보여요</span></div>
@@ -199,7 +188,7 @@
         <p class="k-note">초기화는 두 번 눌러야 돼요: 한 번 누르면 빨간 테두리 '한 번 더 누르면 0000으로'로 바뀌고, 3초 안에 다시 누르면 비밀번호가 0000이 되고 그 사람 로그인이 끝나요.</p>
         <section class="pgcard"><span class="k-cap">로그인 규칙</span>
         <div class="k-kv"><label for="keepRule">자동 로그인 유지 기간</label><select class="k-in k-sel" id="keepRule"><option value="today">오늘 밤 12시까지</option><option value="1">1일</option><option value="7">7일</option><option value="30">30일</option></select></div>
-        <p class="k-note">'자동 로그인'을 체크하고 들어온 사람만 이 기간 동안 로그인이 유지돼요. 체크하지 않으면 다음에 접속할 때 다시 로그인해요.</p>
+        <p class="k-note">'자동 로그인'을 체크하고 들어온 사람만, <b>마지막으로 로그인한 때부터</b> 이 기간이 지나면 로그아웃돼요(그 사이에 들어와도 늘어나지 않아요). 기간을 바꾸면 이미 로그인한 사람에게도 바로 적용돼요. 체크하지 않으면 그날 밤 12시까지이고, 창을 닫으면 끝나요.</p>
         </section>
       </div>
       <!-- 🔒 갱신 기록 -->
@@ -209,7 +198,7 @@
         <div class="tbl cards scrollx" id="logTbl" style="--mw:1000px"></div>
       </div>
       <!-- 마스터만 볼 수 있어요 -->
-      <div class="spage" data-page="nomaster" hidden><div class="k-empty"><span class="ei"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg></span><b>마스터만 볼 수 있어요.</b><p>필요하면 소희수 프로에게 문의해 주세요.</p><a class="k-btn sm rp" href="#/settings/members">회원 관리로 가기</a></div></div>
+      <div class="spage" data-page="nomaster" hidden><div class="k-empty"><span class="ei"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg></span><b>마스터만 볼 수 있어요.</b><p>필요하면 소희수 프로에게 문의해 주세요.</p><a class="k-btn sm rp" href="#/settings/me">내 계정으로 가기</a></div></div>
 <section class="pgcard" id="syncBox" data-page="roster" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"/><path d="M2.8 19.5c1-3.1 3.4-4.8 6.2-4.8s5.2 1.7 6.2 4.8"/><path d="M15.5 5.6a3.3 3.3 0 0 1 0 6.1M17.6 14.9c1.8.6 3 2.2 3.6 4.6"/></svg></span><span class="tt">사번 명단</span><span class="sm" id="syncSum"></span></div><div class="k-acc-b pg-b">
         <p class="k-note" id="syncNote" hidden></p>
         <div id="syncMain">
@@ -252,6 +241,7 @@
 <section class="pgcard" id="siteBox" data-page="notice" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h9"/></svg></span><span class="tt">사이트 문구</span><span class="sm"></span></div><div class="k-acc-b pg-b">
         <div class="k-fld"><label class="k-lab sm" for="sNotice">유의 문구</label><textarea id="sNotice" class="k-in k-ta" rows="3" data-site="notice"></textarea></div>
         <p class="k-note">첫 줄은 강조, 줄을 바꾸면 둘째 줄. 맨 아래 검은 바와 강의 페이지 교육자료 칸에 같이 바뀌어요.</p>
+        <div class="k-row k-g8 ntc-save" id="noticeRow" hidden><span class="k-t3 k-grow" id="noticeMsg">저장하지 않은 변경이 있어요</span><button type="button" class="k-btn k-btn3 sm rp" id="noticeUndo">되돌리기</button><button type="button" class="k-btn sm rp" id="noticeSave">저장</button></div>
         <div class="k-stamp" id="noticeStamp" hidden></div></div></section>
 <section class="pgcard" id="updBox" data-page="update" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span><span class="tt">사이트 업데이트</span><span class="sm" id="updSum"></span></div><div class="k-acc-b pg-b">
         <p class="k-p">Claude가 고친 파일을 컴퓨터의 <b>sdp_edu</b> 폴더에서 읽어, 바뀐 것만 한&nbsp;번에 올려요. 강의 목록은 건드리지 않아요.</p>
@@ -294,6 +284,24 @@
     </div>
   </div>
 
+  <!-- 회원 관리 (#48 · 기획 P7): 맨 위 바 [회원 관리], 왼쪽 메뉴 없이 화면 전체 -->
+  <div class="memview pv2" id="memView" hidden>
+      <!-- 회원 관리 (P7) -->
+      <div class="spage memv">
+        <div class="ph"><h1 class="k-h1">회원 관리</h1>
+          <p class="k-lead">세일즈온 사번 목록의 회원 명단이에요. 이름 · 소속 · 가입상태는 세일즈온 어드민에서 매일 가져와서 여기서는 고칠 수 없어요.</p>
+          <div class="meta" id="memMeta"></div></div>
+        <div class="mt" id="memTabs" role="tablist" aria-label="회원 구분"><button type="button" role="tab" data-tab="normal" aria-selected="true">정상 회원<b id="mtN"></b></button><button type="button" role="tab" data-tab="abnormal" aria-selected="false">비정상 회원<b id="mtA"></b></button><button type="button" role="tab" data-tab="nosabun" aria-selected="false">사번 없음<b id="mtS"></b></button></div>
+        <div class="k-msg wa" id="memNoLog" hidden></div>
+        <div class="k-msg in2" id="memNsNote" hidden></div>
+        <div class="tools2" id="memTools"><label class="srch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg><input class="k-in" id="memQ" type="search" placeholder="사번 · 이름 · 소속 검색" autocomplete="off" aria-label="사번 · 이름 · 소속 검색"></label>
+          <select class="k-in k-sel sel2" id="memSort" aria-label="정렬"><option value="last">마지막 접속 최신순</option><option value="views">조회 많은순</option><option value="downs">다운로드 많은순</option><option value="name">이름 가나다순</option></select>
+          <div class="chips" id="memFilter" role="radiogroup" aria-label="접속 여부"><button type="button" class="chip" role="radio" data-f="all" aria-checked="true">모두</button><button type="button" class="chip" role="radio" data-f="seen" aria-checked="false">접속한 적 있음</button><button type="button" class="chip" role="radio" data-f="never" aria-checked="false">접속한 적 없음</button></div>
+          <button type="button" class="k-btn k-btn3 sm rp k-xl" id="memXls" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"></path></svg>엑셀로 받기<span class="lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터</span></button></div>
+        <div class="split"><div class="tbl" id="memTbl" role="table" aria-label="회원 명단"></div><aside class="det" id="memDet" aria-label="회원 상세" hidden></aside></div>
+      </div>
+  </div>
+
   <!-- 분석 (#45 · 기획 P8) -->
   <div class="anav pv2" id="anaView" hidden>
     <aside class="al" aria-label="콘텐츠 목록">
@@ -309,15 +317,9 @@
 
 
 
-<div class="savebar" role="status">
-  <div class="awrap">
-    <span class="msg" id="saveMsg"><span class="sdot" aria-hidden="true"></span><span id="saveText">불러오는 중…</span></span>
-    <button type="button" class="btn-main rp press" id="saveBtn" disabled>저장</button>
-  </div>
-</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261111d"></script>
-<script src="assets/admin.js?v=20261111p"></script>
+<script src="assets/common.js?v=20261111f"></script>
+<script src="assets/admin.js?v=20261111r"></script>
 </body>
 </html>

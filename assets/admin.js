@@ -35,7 +35,12 @@
     LS.set("sc-gh-token", remember ? token : ""); LS.set("sc-api-key", remember ? apiKey : "");
     SS.set("sc-gh-token", token); SS.set("sc-api-key", apiKey);
   }
-  function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); }
+  function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); setDKey(""); }
+  /* 기획 P2 (11-11): 강의 · 상품연구 목록을 잠그는 열쇠 — 사번 목록이 로그인한 관리자에게만 줌, 이 탭에만 보관 */
+  var DKEY = SS.get("sc-data-key") || "";
+  function setDKey(k){ DKEY = k || ""; SS.set("sc-data-key", DKEY); }
+  var VPATH = "data/videos.json", RPATH = "data/research.json";   /* 지금 sha가 가리키는 파일 (잠근 뒤엔 .enc.json) */
+  var ENC_V = "data/videos.enc.json", ENC_R = "data/research.enc.json", needLock = false;
   /* 기획 P5: 관리자 사번 로그인 — 창구(Apps Script) 주소 · 로그인한 관리자 · 세션(그날 밤 12시까지) */
   var GATE_URL = "", gateInfo = null, adminSes = null, SID_KEY = "sdp-admin-sid";
   var canSave = false, dirty = false, openV = null, armedDel = null, saving = false;
@@ -61,7 +66,14 @@
   })();
 
   var toastT;
-  function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 2600); }
+  function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.remove("act"); t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 2600); }
+  /* #51 바로 저장한 뒤 토스트: 초록 체크 · 문구 · [되돌리기] 5초 */
+  function toastAct(msg, undo){
+    var t = $("toast"), hide = function(){ t.classList.remove("show"); };
+    t.innerHTML = '<svg class="t-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="t-m">' + esc(msg) + '</span>' + (undo ? '<button type="button" class="t-undo">되돌리기</button>' : '');
+    t.classList.add("show", "act"); clearTimeout(toastT); toastT = setTimeout(hide, 5000);
+    var b = t.querySelector(".t-undo"); if (b) b.addEventListener("click", function(){ clearTimeout(toastT); hide(); undo(); });
+  }
 
   /* ---------- GitHub ---------- */
   function gh(path, opts){
@@ -93,12 +105,24 @@
     /* 11-11 속도: 사번 목록(설정 칸 · 누가 언제 기록)도 데이터와 동시에 부름 */
     Gate.load(); Audit.load();
     /* 11-11 속도: 저장소 정보와 강의 · 상품연구 데이터를 한꺼번에 받음(예전엔 차례로) */
-    return Promise.all([gh(""), repoJson("data/videos.json"), repoJson("data/research.json")])
+    /* 기획 P2: 잠근 목록(.enc.json)이 있으면 그걸 열쇠로 열고, 아직이면 예전 목록(.json)을 읽은 뒤 잠가 둠 */
+    function files4(){ return Promise.all([repoJson(ENC_V), repoJson(ENC_R), repoJson("data/videos.json"), repoJson("data/research.json")]); }
+    return Promise.all([gh(""), files4()])
       .then(function(all){
         var info = all[0];
-        if ((info.default_branch || "main") !== branch){ branch = info.default_branch || "main"; return Promise.all([repoJson("data/videos.json"), repoJson("data/research.json")]); }
         if (info.permissions && info.permissions.push === false) throw Object.assign(new Error("no push"), { status:403 });
-        return [all[1], all[2]];
+        if ((info.default_branch || "main") !== branch){ branch = info.default_branch || "main"; return files4(); }
+        return all[1];
+      })
+      .then(function(f){
+        var ev = f[0], er = f[1], pv = f[2], pr = f[3];
+        if ((ev || er) && !DKEY) throw Object.assign(new Error("nokey"), { status:"nokey" });
+        function open(x){ return x ? SC.box.open(x.json, DKEY).then(function(j){ return { sha: x.sha, json: j }; }) : Promise.resolve(null); }
+        return Promise.all([open(ev), open(er)]).then(function(o){
+          VPATH = ev ? ENC_V : "data/videos.json"; RPATH = er ? ENC_R : "data/research.json";
+          needLock = !!(DKEY && SC.box.ok && (pv || pr || !ev));
+          return [o[0] || pv, er ? o[1] : pr];
+        });
       })
       .then(function(r){
         var file = r[0], rf = r[1];
@@ -111,11 +135,12 @@
           rdata.months.forEach(function(m){ m.ages.forEach(function(a){ a.files.forEach(function(f){ if (f.link.trim()) fetchFile(f, true); }); }); });
         }
         /* 강의별 공유 페이지·메뉴 주소가 빠져 있으면 조용히 만들어 둠 (저장 버튼은 건드리지 않음) */
-        autoPages();
+        if (needLock) setTimeout(lockNow, 1500); else autoPages();
         Auth.afterLoad();
         updateSaveBar();
       })
       .catch(function(e){
+        if (e.status === "nokey"){ setConn("bad", "열쇠 없음", "강의 목록이 잠겨 있어요. 사번으로 로그인해야 열 수 있어요."); updateSaveBar(); return; }
         if (e.status !== 401) Route.go("#/settings/me");
         if (e.status === 401){ clearSession(); showGate(authInfo ? "change" : "first", "저장된 토큰이 만료됐거나 지워졌어요. 새 토큰을 넣어 주세요."); return; }
         else if (e.status === 403) setConn("bad", "권한 없음", "토큰에 쓰기 권한이 없어요.");
@@ -136,7 +161,7 @@
   }
 
   function fileIn(f){ return { name: f.name || "", type: f.type || "", link: f.link || "", size: f.size || "", _st: "" }; }
-  function useData(j, rj){
+  function useData(j, rj, quiet){
     data = { site: j.site || {}, videos: (j.videos || []).map(function(v){
       return {
         id: v.id || "", _url: v.id ? "https://youtu.be/" + v.id : "", title: v.title || "", channel: v.channel || "",
@@ -152,14 +177,40 @@
     }) };
     openM = openA = null; pendingImgs = {};
     /* 사이트 이름 변경: 시그니처클래스 → 영개파 (저장하면 사이트에 반영) */
-    baseline = snap();
     var renamed = false;
     if (/^\s*시그니처클래스\s*교육\s*자료실\s*$/.test(data.site.title || "")){ data.site.title = "영개파 교육 자료"; renamed = true; }
     /* 고지 문구를 디자인팀 새 문구로 (예전 기본 문구였거나 비어 있으면) */
     var nt = SC.noticeText(data.site.notice);
     if (nt !== (data.site.notice || "")){ data.site.notice = nt; renamed = true; }
     document.querySelectorAll("[data-site]").forEach(function(el){ el.value = data.site[el.dataset.site] || ""; });
-    openV = null; dirty = snap() !== baseline; render();
+    /* #51 저장 바가 없으니: 이름 바꾸기 같은 자동 정리는 다음 저장 때 함께 올라감(처음부터 '바뀜'으로 보이지 않게) */
+    baseline = snap();
+    openV = null; dirty = false; if (!quiet) render();
+  }
+  /* #51 되돌리기: 마지막 저장 상태로 (보던 편집 칸은 keep 이면 그대로 다시 엶) */
+  function revert(keep){
+    var st = {}, vk = keep && openV ? openV._oid : null, mk = keep && openM ? openM._oym : null, ak = keep && openA ? openA.id : null;
+    function keepSt(f){ if (f.link) st[f.link] = { s: f._st, z: f.size }; }
+    data.videos.forEach(function(v){ v.files.forEach(keepSt); });
+    rdata.months.forEach(function(m){ m.ages.forEach(function(a){ a.files.forEach(keepSt); }); });
+    var B = JSON.parse(baseline); useData(B.v, B.r, true);
+    function back(f){ var o = st[f.link]; if (o && o.s && (!f.size || f.size === o.z)) f._st = o.s; }
+    data.videos.forEach(function(v){ v.files.forEach(back); });
+    rdata.months.forEach(function(m){ m.ages.forEach(function(a){ a.files.forEach(back); }); });
+    openV = vk ? data.videos.filter(function(v){ return v._oid === vk; })[0] || null : null;
+    openM = mk ? rdata.months.filter(function(m){ return m._oym === mk; })[0] || null : null;
+    openA = openM && ak ? openM.ages.filter(function(a){ return a.id === ak; })[0] || null : null;
+    armedDel = null; render(); updateSaveBar();
+  }
+  /* 저장 안 한 새 강의(유튜브 주소 전) — 닫거나 다른 걸 고르면 조용히 뺌 */
+  function dropBlank(except){ data.videos = data.videos.filter(function(v){ return v.id || v === except; }); }
+  function touched(){ var v = openV; return dirty || !!(v && !v.id && (v._url || v.title || v.description || v.files.some(function(f){ return f.link; }))); }
+  /* 편집 칸을 닫거나 바꿀 때: 저장 안 한 변경이 있으면 묻고 되돌림. 나가도 되면 true */
+  function leaveEdit(){
+    if (saving){ toast("저장하는 중이에요. 잠시 뒤 다시 눌러 주세요"); return false; }
+    if (!touched()) return true;
+    if (!confirm("저장하지 않은 변경이 있어요. 저장하지 않고 닫을까요?")) return false;
+    revert(); return true;
   }
 
   /* ---------- 유튜브 / 드라이브 정보 가져오기 ---------- */
@@ -438,13 +489,13 @@
         : (cond ? NORES : '<li class="empty-list">아직 ' + esc(label) + ' 강의가 없어요.<br>‘' + esc(label) + '에 강의 추가’를 눌러 첫 강의를 넣어 주세요.</li>');
     }
     if (anim) SC.lineReveal($("listLr"));   /* 메뉴 칸·정렬·공개 필터 바꿀 때: M10 (#28 다른 등장 효과 없음) */
-    renderEditor();
+    renderEditor(); updateSaveBar();
     if (first) flipPlay(first);
     if (fid && $(fid)){ var el = $(fid); el.focus({ preventScroll:true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch(e){} }
   }
 
   /* ---------- 화면 3개 (#44 · 기획 P6): #/courses · #/analytics · #/settings/<메뉴> — 아래 Route 에서 ---------- */
-  var Theme = SC.themeUI({ ic: $("tmIc"), bar: { light: "#003CDC", dark: "#0F1115" } });
+  var Theme = SC.themeUI({ sw: $("thSw"), bar: { light: "#003CDC", dark: "#0F1115" } });
 
   /* ---------- 편집 칸 (#20): 980px 넘으면 오른쪽, 이하는 화면 전체 시트 ---------- */
   var edKey = null;
@@ -499,7 +550,7 @@
     if ((opening || swap) && wide.matches){ wrap.style.setProperty("--lr-w", opening ? "145ms" : "0ms"); SC.lineReveal(wrap); }
     edKey = obj;
   }
-  function closeEditor(){ openV = openM = openA = null; armedDel = null; render(); }
+  function closeEditor(){ if (!leaveEdit()) return; dropBlank(); openV = openM = openA = null; armedDel = null; render(); }
   $("edClose").addEventListener("click", closeEditor);
   document.addEventListener("keydown", function(e){
     if (e.key !== "Escape" || e.target.closest("select")) return;
@@ -509,6 +560,7 @@
 
   $("mtabs").addEventListener("click", function(e){
     var b = e.target.closest("[data-cat]"); if (!b || b.dataset.cat === view.cat) return;
+    if (!leaveEdit()) return; dropBlank();
     view.cat = b.dataset.cat; view.q = ""; view.vf = "all"; $("aq").value = ""; syncVf(); armedDel = null;
     openV = openM = openA = null;
     LS.set("sc-admin-cat", view.cat); render("lr");
@@ -716,7 +768,11 @@
     if (!m) return;
     if (act === "redit"){
       if (b.classList.contains("vrow") && (e.target.closest("button") || e.target.closest("a"))) return;
-      openM = openM === m ? null : m; openA = null; armedDel = null; render(); return;
+      if (openM === m){ closeEditor(); return; }
+      var mk = m._oym, mf = m._new ? m : null;
+      if (!leaveEdit()) return;
+      dropBlank();
+      openM = mf || rdata.months.filter(function(x){ return mk && x._oym === mk; })[0] || null; openV = null; openA = null; armedDel = null; render(); return;
     }
     if (act === "rage"){
       if (b.classList.contains("arow") && (e.target.closest("button") || e.target.closest("a"))) return;
@@ -724,7 +780,7 @@
       if (openA && !REDUCE){ var ab = document.querySelector(".aitem.open .abody"); replay(ab, "unfold", 400); }
       return;
     }
-    if (act === "rvis"){ m.visible = m.visible === false; markDirty(); render(); toast(m.visible ? "공개로 바꿨어요. 저장하면 사이트에 보여요" : "비공개로 바꿨어요. 저장하면 사이트에서 숨겨져요"); return; }
+    if (act === "rvis"){ quickVis(m, true); return; }
     if (act === "rvisSet"){ var nv = b.dataset.val === "1"; if (m.visible !== nv){ m.visible = nv; markDirty(); render(); } return; }
     if (act === "ravis"){ a.visible = a.visible === false; markDirty(); render(); return; }
     if (act === "ravisSet"){ var na = b.dataset.val === "1"; if (a.visible !== na){ a.visible = na; markDirty(); render(); } return; }
@@ -753,8 +809,11 @@
     }
     if (act === "rdel"){ armedDel = m; render(); return; }
     if (act === "radel"){ armedDel = a; render(); return; }
-    if (act === "rdelYes"){ rdata.months.splice(rdata.months.indexOf(m), 1); openM = openA = null; armedDel = null; markDirty(); render(); toast("이 달을 뺐어요. 저장을 눌러야 사이트에서도 빠져요"); return; }
-    if (act === "radelYes"){ m.ages.splice(m.ages.indexOf(a), 1); openA = null; armedDel = null; markDirty(); render(); toast("연령을 뺐어요. 저장을 눌러야 사이트에서도 빠져요"); return; }
+    if (act === "rdelYes"){
+      if (m._new){ revert(); toast("새 달을 지웠어요"); return; }
+      quickDel(true, m._oym); return;
+    }
+    if (act === "radelYes"){ m.ages.splice(m.ages.indexOf(a), 1); openA = null; armedDel = null; markDirty(); render(); toast("연령을 뺐어요. 아래 [저장]을 눌러야 사이트에서도 빠져요"); return; }
   }
   function rInput(t){
     var o = rObj(t); if (!o) return;
@@ -796,17 +855,65 @@
   /* ---------- 저장 바 ---------- */
   function snap(){ return JSON.stringify({ v: cleanData(), r: cleanResearch() }); }
   function markDirty(){ dirty = snap() !== baseline; updateSaveBar(); }
-  function updateSaveBar(msg){
-    var m = $("saveText"), b = $("saveBtn"), bar = document.querySelector(".savebar");
-    bar.classList.toggle("dirty", !msg && canSave && !saving && dirty);
-    bar.classList.toggle("saved", !msg && canSave && !saving && !dirty);
-    if (msg){ m.textContent = msg; b.disabled = true; return; }
-    if (!canSave){ m.textContent = "저장소에 연결되지 않았어요. 설정의 계정을 확인해 주세요"; b.disabled = true; return; }
-    if (saving){ m.textContent = "저장하는 중…"; b.disabled = true; b.textContent = "저장 중"; return; }
-    b.textContent = "저장";
-    var ls = Audit.lastSave();
-    m.innerHTML = esc(dirty ? "저장하지 않은 변경이 있어요" : "모든 변경이 저장됐어요") + (ls ? '<span class="who">· 마지막 저장 <b>' + esc(ls.n) + '</b> · ' + esc(fmtAt(ls.at)) + '</span>' : '');
-    b.disabled = !dirty;
+  /* #51 저장 줄: 편집 칸 맨 아래에 붙음. 바꾼 게 없으면 줄 자체가 없음 (맨 아래 저장 바는 없앰) */
+  var baseObjS = "", baseObj = null;
+  function base(){ if (baseObjS !== baseline){ baseObjS = baseline; baseObj = baseline ? JSON.parse(baseline) : null; } return baseObj; }
+  function filesN(a, b){
+    var n = 0, k = Math.max(a.length, b.length);
+    for (var i = 0; i < k; i++) if (!a[i] || !b[i] || a[i].link !== b[i].link || a[i].name !== b[i].name) n++;
+    return n;
+  }
+  /* 바꾼 것 개수: 칸 하나 = 1 (제목 · 소개 · 공개 · 메뉴 · 유튜브 주소 · 자료 줄마다 · 연령마다 …) */
+  function changeCount(){
+    var B = base(); if (!B) return 0;
+    var n = 0, out = cleanData(), bs = B.v.site || {};
+    ["eyebrow", "title", "desc", "notice"].forEach(function(k){ if ((bs[k] || "") !== (out.site[k] || "")) n++; });
+    var old = {}, used = {}; B.v.videos.forEach(function(v){ old[v.id] = v; });
+    var dv = data.videos.filter(function(v){ return v.id; });
+    out.videos.forEach(function(v, i){
+      var src = dv[i], o = old[src && src._oid] || old[v.id];
+      if (!o){ n++; return; }
+      used[o.id] = 1;
+      if (o.id !== v.id) n++;
+      if (o.title !== v.title) n++; if (o.description !== v.description) n++;
+      if ((o.visible !== false) !== (v.visible !== false)) n++; if (SC.catOf(o) !== SC.catOf(v)) n++;
+      n += filesN(o.files || [], v.files);
+    });
+    B.v.videos.forEach(function(o){ if (!used[o.id]) n++; });
+    var oldM = {}, usedM = {}; (B.r.months || []).forEach(function(m){ oldM[m.ym] = m; });
+    rSorted().forEach(function(x){
+      var m = x.m, o = oldM[m._oym] || (!m._new && oldM[m.ym]);
+      if (!o){ n++; return; }
+      usedM[o.ym] = 1;
+      if (o.ym !== m.ym) n++; if (o.title !== m.title.trim()) n++; if ((o.thumb || "") !== (m.thumb || "")) n++; if ((o.visible !== false) !== (m.visible !== false)) n++;
+      var oa = {}; o.ages.forEach(function(a){ oa[a.id] = a; });
+      var ord0 = o.ages.map(function(a){ return a.id; }).filter(function(id){ return m.ages.some(function(a){ return a.id === id; }); }).join(),
+          ord1 = m.ages.map(function(a){ return a.id; }).filter(function(id){ return oa[id]; }).join();
+      if (ord0 !== ord1) n++;
+      m.ages.forEach(function(a){
+        var x2 = oa[a.id]; if (!x2){ n++; return; }
+        if (x2.title !== a.title.trim()) n++; if ((x2.thumb || "") !== (a.thumb || "")) n++; if ((x2.visible !== false) !== (a.visible !== false)) n++;
+        n += filesN(x2.files || [], cleanFiles(a.files));
+      });
+      o.ages.forEach(function(a){ if (!m.ages.some(function(b){ return b.id === a.id; })) n++; });
+    });
+    (B.r.months || []).forEach(function(o){ if (!usedM[o.ym]) n++; });
+    return n || (dirty ? 1 : 0);
+  }
+  function updateSaveBar(){
+    var f = $("edFoot"); if (!f) return;
+    var isR = view.cat === RID, obj = isR ? openM : openV, isNew = !!obj && (isR ? !!obj._new : !obj._oid);
+    var show = canSave && !!obj && (dirty || isNew || saving);
+    f.hidden = !show; f.classList.toggle("is-new", isNew); f.classList.toggle("busy", saving);
+    if (show){
+      $("efText").textContent = saving ? "저장 중…" : isNew ? (isR ? "새 달 · 아직 저장 전" : "새 강의 · 아직 저장 전") : "저장하지 않은 변경 " + changeCount() + "개";
+      $("efUndo").textContent = isNew ? "취소" : "되돌리기"; $("efUndo").disabled = saving;
+      $("efSave").textContent = saving ? "저장 중" : "저장"; $("efSave").disabled = saving || (isNew && !isR && !obj.id);
+    }
+    /* 설정 → 사이트 문구: 그 칸 안의 [저장] */
+    var B = base(), nd = !!B && canSave && ((B.v.site || {}).notice || "") !== (data.site.notice || "").trim();
+    $("noticeRow").hidden = !(nd || (saving && document.body.dataset.view === "settings"));
+    $("noticeSave").disabled = saving; $("noticeUndo").disabled = saving; $("noticeSave").textContent = saving ? "저장 중" : "저장";
   }
 
   function cleanData(){
@@ -968,34 +1075,77 @@
       .then(function(){ autoBusy = false; });
   }
 
-  function save(){
-    if (!canSave || saving) return;
+  /* 기획 P2: 저장할 내용(강의 · 상품연구 목록)을 열쇠로 잠금 — 열쇠가 없으면(예전 방식 로그인) 예전처럼 그대로 */
+  function lockPair(json, rjson){
+    if (!(DKEY && SC.box.ok)) return Promise.all([gitSha(json), gitSha(rjson)]).then(function(s){ return { enc:false, v:json, r:rjson, vsha:s[0], rsha:s[1] }; });
+    return Promise.all([SC.box.lock(JSON.parse(json), DKEY, GATE_URL), SC.box.lock(JSON.parse(rjson), DKEY, GATE_URL)]).then(function(e){
+      return Promise.all([gitSha(e[0]), gitSha(e[1])]).then(function(s){ return { enc:true, v:e[0], r:e[1], vsha:s[0], rsha:s[1] }; });
+    });
+  }
+  function dataTree(pair, rout, remote){
+    var vp = pair.enc ? ENC_V : "data/videos.json", rp = pair.enc ? ENC_R : "data/research.json";
+    var tree = [{ path: vp, mode:"100644", type:"blob", content: pair.v }];
+    if (rout.months.length || remote["data/research.json"] || remote[ENC_R]) tree.push({ path: rp, mode:"100644", type:"blob", content: pair.r });
+    /* 잠갔으면 예전 그대로의 목록은 저장소에서 지움 (주소만 알면 누구나 열 수 있어서) */
+    if (pair.enc) ["data/videos.json", "data/research.json"].forEach(function(p){ if (remote[p]) tree.push({ path: p, mode:"100644", type:"blob", sha: null }); });
+    return tree;
+  }
+  /* 처음 한 번: 지금 목록을 잠가서 올리고 예전 목록은 지움 (화면에서 바꾼 것은 없음) */
+  var locking = false;
+  function lockNow(){
+    if (!needLock || locking || saving || !canSave || !baseline) return;
+    if (autoBusy){ setTimeout(lockNow, 2000); return; }
+    locking = true;
+    var B = JSON.parse(baseline), json = JSON.stringify(B.v, null, 2) + "\n", rjson = JSON.stringify(B.r, null, 2) + "\n", head, baseTree, remote = {}, pair;
+    gh("/git/ref/heads/" + encodeURIComponent(branch)).then(function(ref){ head = ref.object.sha; return gh("/git/commits/" + head); })
+      .then(function(c){ baseTree = c.tree.sha; return gh("/git/trees/" + baseTree + "?recursive=1"); })
+      .then(function(t){ (t.tree || []).forEach(function(e){ if (e.type === "blob") remote[e.path] = e.sha; }); return lockPair(json, rjson); })
+      .then(function(p){
+        pair = p; if (!pair.enc) throw new Error("nokey");
+        if (sha && remote[VPATH] && remote[VPATH] !== sha) throw new Error("changed");
+        return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: dataTree(pair, B.r, remote) }) });
+      })
+      .then(function(t){ return gh("/git/commits", { method:"POST", body: JSON.stringify({ message: "강의 · 자료 목록 잠금 (사번 로그인)", tree: t.sha, parents:[head] }) }); })
+      .then(function(c){ return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) }).then(function(){ return c; }); })
+      .then(function(c){
+        sha = pair.vsha; rsha = (B.r.months.length || rsha) ? pair.rsha : rsha; VPATH = ENC_V; RPATH = ENC_R; needLock = false;
+        showLast(c.committer && c.committer.date); Deploy.expect(c.sha);
+        toast("강의 · 자료 목록을 잠갔어요. 이제 사이트는 사번으로 로그인해야 볼 수 있어요");
+      })
+      .catch(function(){ /* 다음 저장 때 함께 잠가요 */ })
+      .then(function(){ locking = false; autoPages(); });
+  }
+
+  /* opts: { msg, undo } — 목록 공개 스위치 · 삭제처럼 바로 저장할 때 (#51). 성공하면 true */
+  function save(opts){
+    opts = opts || {};
+    if (!canSave || saving) return Promise.resolve(false);
     var bad = rProblem();
     if (bad){
       toast(bad.msg); view.cat = RID; LS.set("sc-admin-cat", RID); openM = bad.m; openA = bad.a || null; render();
       var fe = bad.focus && $(bad.focus); if (fe) fe.focus();
-      return;
+      if (opts.msg) revert(true);
+      return Promise.resolve(false);
     }
     var blank = data.videos.filter(function(v){ return !v.id; }).length;
     var out = cleanData(), json = JSON.stringify(out, null, 2) + "\n";
     var rout = cleanResearch(), rjson = JSON.stringify(rout, null, 2) + "\n", newRsha;
     var first = out.videos[0], before = JSON.parse(baseline || '{"v":{"site":{},"videos":[]},"r":{"months":[]}}');
     saving = true; updateSaveBar();
-    var head, baseTree, remote = {}, newSha, newCommit = {};
-    Promise.all([
+    var head, baseTree, remote = {}, newSha, newCommit = {}, pair0 = { enc: !!(DKEY && SC.box.ok) };
+    return Promise.all([
       gh("/git/ref/heads/" + encodeURIComponent(branch)).then(function(ref){ head = ref.object.sha; return gh("/git/commits/" + head); })
         .then(function(c){ baseTree = c.tree.sha; return gh("/git/trees/" + baseTree + "?recursive=1"); })
         .then(function(t){ (t.tree || []).forEach(function(e){ if (e.type === "blob") remote[e.path] = e.sha; }); }),
       fetch("index.html?tpl=" + Date.now(), { cache:"no-store" }).then(function(r){ if (!r.ok) throw new Error("tpl"); return r.text(); }),
       Promise.all(out.videos.map(function(v){ return bestThumb(v.id); })),
-      gitSha(json), gitSha(rjson)
+      lockPair(json, rjson)
     ]).then(function(r){
-      var tpl = r[1], thumbs = r[2]; newSha = r[3]; newRsha = r[4];
-      if (sha && remote["data/videos.json"] && remote["data/videos.json"] !== sha){ throw Object.assign(new Error("conflict"), { status:409 }); }
-      if (rsha && remote["data/research.json"] && remote["data/research.json"] !== rsha){ throw Object.assign(new Error("conflict"), { status:409 }); }
+      var tpl = r[1], thumbs = r[2], pair = r[3]; newSha = pair.vsha; newRsha = pair.rsha;
+      if (sha && remote[VPATH] && remote[VPATH] !== sha){ throw Object.assign(new Error("conflict"), { status:409 }); }
+      if (rsha && remote[RPATH] && remote[RPATH] !== rsha){ throw Object.assign(new Error("conflict"), { status:409 }); }
       var pages = builtPages(tpl, out, thumbs, rout);
-      var tree = [{ path:"data/videos.json", mode:"100644", type:"blob", content: json }];
-      if (rout.months.length || remote["data/research.json"]) tree.push({ path:"data/research.json", mode:"100644", type:"blob", content: rjson });
+      var tree = dataTree(pair, rout, remote);
       tree = tree.concat(pages, staleShare(remote, pages));
       return rThumbs(rout, remote).then(function(imgs){
         return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree.concat(imgs) }) });
@@ -1007,6 +1157,7 @@
       return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) });
     }).then(function(){
       sha = newSha; if (rout.months.length || rsha) rsha = newRsha; saving = false; dirty = false;
+      if (pair0.enc){ VPATH = ENC_V; RPATH = ENC_R; needLock = false; }
       rdata.months.forEach(function(m){ delete m._new; delete m._copied; });
       pendingImgs = {};
       baseline = JSON.stringify({ v: out, r: rout });
@@ -1015,14 +1166,49 @@
       var items = auditItems(before, out, rout);
       data.videos.forEach(function(v){ v._oid = v.id; }); rdata.months.forEach(function(m){ m._oym = m.ym; });
       render(); updateSaveBar(); Audit.add(items);
-      toast(blank ? "저장했어요. 유튜브 주소가 없는 강의 " + blank + "개는 빼고 저장했어요" : "저장했어요. 위쪽 원이 초록색이 되면 사이트에 반영된 거예요");
+      if (opts.msg) toastAct(opts.msg + " · 1~2분 뒤 사이트에 반영돼요", opts.undo);
+      else toastAct(blank ? "저장했어요. 유튜브 주소가 없는 강의 " + blank + "개는 빼고 저장했어요" : "저장했어요 · 1~2분 뒤 사이트에 반영돼요");
+      return true;
     }).catch(function(e){
       saving = false; updateSaveBar();
+      if (opts.msg) revert(true);   /* 바로 저장이 안 되면 화면도 원래대로 */
       if (e.status === 409 || e.status === 422) toast("다른 곳에서 먼저 저장됐어요. 새로고침한 뒤 다시 저장해 주세요");
       else if (e.status === 401) toast("토큰이 만료됐거나 맞지 않아요. 설정의 계정을 확인해 주세요");
       else if (e.status === 403 || e.status === 404) toast("토큰에 이 저장소 쓰기 권한이 없어요");
       else toast("저장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요");
+      return false;
     });
+  }
+  /* #51 목록 줄 공개 스위치: 누르면 바로 저장 + 토스트 [되돌리기]. 편집 칸에 저장 안 한 변경이 있으면 그 줄 개수에 더함 */
+  function quickVis(o, isM, again){
+    if (saving){ toast("저장하는 중이에요. 잠시 뒤 다시 눌러 주세요"); return; }
+    var held = dirty;
+    o.visible = o.visible === false; markDirty(); render();
+    var word = o.visible ? "공개로" : "비공개로";
+    if (held){ toast(word + " 바꿨어요. 편집 칸 아래 [저장]을 누르면 함께 저장돼요"); return; }
+    if (!dirty) return;
+    if (!canSave){ toast("저장소에 연결되지 않아 바꿀 수 없어요"); revert(true); return; }
+    var key = isM ? o._oym : o._oid;
+    toast(word + " 바꾸는 중…");
+    save({ msg: again ? "되돌렸어요" : word + " 바꿨어요", undo: again ? null : function(){
+      var x = isM ? rdata.months.filter(function(m){ return m._oym === key; })[0] : data.videos.filter(function(v){ return v._oid === key; })[0];
+      if (x) quickVis(x, isM, true);
+    } });
+  }
+  /* #51 강의 · 달 삭제: 확인 알약에서 [정말 삭제]를 누르면 바로 저장 (편집 칸이 닫혀 저장할 곳이 없어서) */
+  function quickDel(isM, key){
+    if (saving){ toast("저장하는 중이에요. 잠시 뒤 다시 눌러 주세요"); return; }
+    if (dirty) revert();
+    var list = isM ? rdata.months : data.videos, idx = -1;
+    list.forEach(function(x, i){ if ((isM ? x._oym : x._oid) === key) idx = i; });
+    openV = openM = openA = null; armedDel = null;
+    if (idx < 0){ render(); return; }
+    var obj = list.splice(idx, 1)[0]; markDirty(); render();
+    toast("삭제하는 중…");
+    save({ msg: isM ? "이 달을 삭제했어요" : "강의를 삭제했어요", undo: function(){
+      if (saving){ toast("저장하는 중이에요. 잠시 뒤 다시 눌러 주세요"); return; }
+      list.splice(Math.min(idx, list.length), 0, obj); markDirty(); render(); toast("되돌리는 중…"); save({ msg: "되돌렸어요" });
+    } });
   }
 
 
@@ -1063,15 +1249,22 @@
     if (!v) return;
     if (act === "toggle"){
       if (b.classList.contains("vrow") && (e.target.closest("button") || e.target.closest("a"))) return;
-      openV = (openV === v) ? null : v; armedDel = null; render(); return;
+      if (openV === v){ closeEditor(); return; }
+      var key = v._oid, fresh = !v.id ? v : null;
+      if (!leaveEdit()) return;
+      dropBlank(fresh);
+      openV = fresh || data.videos.filter(function(x){ return key && x._oid === key; })[0] || null; openM = openA = null; armedDel = null; render(); return;
     }
-    if (act === "vis"){ v.visible = v.visible === false; markDirty(); render(); toast(v.visible ? "공개로 바꿨어요. 저장하면 사이트에 보여요" : "비공개로 바꿨어요. 저장하면 사이트에서 숨겨져요"); return; }
+    if (act === "vis"){ quickVis(v, false); return; }
     if (act === "visSet"){ var nv = b.dataset.val === "1"; if (v.visible !== nv){ v.visible = nv; markDirty(); render(); } return; }
     if (act === "refetch"){ fetchVideo(v, true); v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f); }); return; }
     if (act === "addFile"){ v.files.push({ name:"", type:"", link:"", size:"", _st:"" }); markDirty(); render(); var el = $("v" + i + "f" + (v.files.length - 1) + "l"); if (el) el.focus(); return; }
     if (act === "fdel"){ v.files.splice(+b.dataset.f, 1); markDirty(); render(); return; }
     if (act === "del"){ armedDel = v; render(); return; }
-    if (act === "delYes"){ V.splice(i, 1); armedDel = null; openV = null; markDirty(); render(); toast("강의를 뺐어요. 저장을 눌러야 사이트에서도 빠져요"); return; }
+    if (act === "delYes"){
+      if (!v._oid){ V.splice(i, 1); armedDel = null; openV = null; markDirty(); render(); toast("새 강의를 지웠어요"); return; }
+      quickDel(false, v._oid); return;
+    }
   }
   function onKey(e){
     /* 공개 설정: 화살표 키로 고르기 */
@@ -1089,6 +1282,7 @@
     $(k).addEventListener("keydown", onKey);
   });
   $("addVideo").addEventListener("click", function(){
+    if (!leaveEdit()) return; dropBlank();
     if (view.cat === RID){ addMonth(); return; }
     var v = { id:"", _url:"", title:"", channel:"", description:"", duration:"", date:"", _st:"", category:view.cat, visible:true, files:[{ name:"", type:"", link:"", size:"", _st:"" }] };
     data.videos.unshift(v); openV = v; armedDel = null; render(true);
@@ -1097,8 +1291,16 @@
   document.querySelectorAll("[data-site]").forEach(function(el){
     el.addEventListener("input", function(){ data.site[el.dataset.site] = el.value; markDirty(); });
   });
-  $("saveBtn").addEventListener("click", save);
-  document.addEventListener("keydown", function(e){ if ((e.ctrlKey || e.metaKey) && e.key === "s"){ e.preventDefault(); save(); } });
+  /* #51 편집 칸 맨 아래 줄 · 사이트 문구 칸 */
+  $("efSave").addEventListener("click", function(){ save(); });
+  $("efUndo").addEventListener("click", function(){
+    var isR = view.cat === RID, obj = isR ? openM : openV;
+    if (obj && (isR ? obj._new : !obj._oid)){ revert(); dropBlank(); openV = openM = openA = null; render(); return; }   /* 새 달 · 새 강의: 취소 */
+    revert(true); toast("저장한 상태로 되돌렸어요");
+  });
+  $("noticeSave").addEventListener("click", function(){ save(); });
+  $("noticeUndo").addEventListener("click", function(){ revert(); });
+  document.addEventListener("keydown", function(e){ if ((e.ctrlKey || e.metaKey) && e.key === "s"){ e.preventDefault(); if (dirty) save(); } });
 
   function confirmLeave(){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return false; }
   window.addEventListener("beforeunload", function(e){ if (dirty){ e.preventDefault(); e.returnValue = ""; } });
@@ -1296,7 +1498,7 @@
   /* ================= 사이트 반영 상태 원 (깃헙 액션의 주황/초록) =================
      주황: 반영 중 · 초록: 반영 완료 · 빨강: 실패. 누르면 깃헙 액션 화면. */
   var Deploy = (function(){
-    var el = $("deploy"), timer = null, want = "", wantAt = 0, started = false, noAuth = false;
+    var el = $("svs"), timer = null, want = "", wantAt = 0, started = false, noAuth = false;
     function runs(){
       var url = "https://api.github.com/repos/" + owner + "/" + repo + "/actions/runs?per_page=1";
       var h = { "Accept":"application/vnd.github+json" };
@@ -1309,7 +1511,13 @@
       });
     }
     function hm(iso){ var d = new Date(iso), z = function(n){ return (n < 10 ? "0" : "") + n; }; return isNaN(d) ? "" : z(d.getHours()) + ":" + z(d.getMinutes()); }
-    function set(st, text){ el.dataset.st = st; el.title = text; el.setAttribute("aria-label", text); }
+    /* #51 맨 위 바 칸: 사이트 반영 상태만 (이름 · 시각 없음) */
+    var TXT = { ok: "사이트 반영 완료", run: '사이트에 반영 중<span class="t2"> · 1~2분</span>', bad: "사이트 반영 실패 · 눌러서 확인" };
+    function set(st, text){
+      el.dataset.st = st; $("svsT").innerHTML = TXT[st] || "";
+      el.querySelector(".d").className = "d " + ({ ok:"ok", run:"run", bad:"er" }[st] || "");
+      el.title = st === "none" ? "" : (text || "") + " · 눌러서 반영 기록 보기"; el.setAttribute("aria-label", st === "none" ? "사이트 반영 상태" : $("svsT").textContent);
+    }
     function tick(){
       clearTimeout(timer);
       if (document.hidden){ timer = setTimeout(tick, 15000); return; }
@@ -1546,14 +1754,14 @@
       adminSes = { sid: r.sid || (sidGet() || {}).sid, sabun: r.sabun, name: r.name, master: !!r.master, exp: r.exp, keep: !!keep, org: r.org || "", keepRule: r.keepRule };
       sidSet({ sid: adminSes.sid, exp: r.exp, keep: !!keep, p: { sabun: r.sabun, name: r.name, master: !!r.master, org: r.org || "", keepRule: r.keepRule } }, keep);
       if (GATE_URL) LS.set("sdp-gate-url", GATE_URL);
-      keepSession(r.secrets.ghToken, r.secrets.apiKey, false);
+      keepSession(r.secrets.ghToken, r.secrets.apiKey, false); setDKey(r.secrets.dataKey);
       useTheme(r.theme);
       enterApp();
     }
     /* 계정마다 마지막에 고른 라이트/다크 기억 (사용자 요청 11-11): 로그인하면 그 계정 값으로, 바꾸면 사번 목록에 저장 */
     var themeSent = "";
     function useTheme(t){
-      if (t === "dark" || t === "light"){ themeSent = t; if (Theme.cur() !== t) Theme.set(t, null, $("tmIc")); return; }
+      if (t === "dark" || t === "light"){ themeSent = t; if (Theme.cur() !== t) Theme.set(t, null, $("thSw")); return; }
       var sid = adminSes ? adminSes.sid : pending ? pending.sid : "";      // 아직 저장된 값이 없으면 지금 모드를 그 계정 값으로
       themeSent = Theme.cur(); if (sid) gateFetch({ action:"adminTheme", sid: sid, theme: themeSent }).catch(function(){ themeSent = ""; });
     }
@@ -1612,7 +1820,7 @@
     function kstNow(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19); }
     function quick(){
       var saved = sidGet(), url = LS.get("sdp-gate-url") || "";
-      if (!saved || !saved.sid || !saved.p || !url || !token) return false;
+      if (!saved || !saved.sid || !saved.p || !url || !token || !DKEY) return false;
       if (saved.exp && String(saved.exp).slice(0, 19) <= kstNow()) return false;
       GATE_URL = url; gateInfo = { ok:true, hasSecrets:true };
       var p = saved.p;
@@ -1623,6 +1831,7 @@
           adminSes.master = !!r.master; adminSes.name = r.name; adminSes.org = r.org || ""; adminSes.exp = r.exp; adminSes.keepRule = r.keepRule;
           sidSet({ sid: saved.sid, exp: r.exp, keep: !!saved.keep, p: { sabun: r.sabun, name: r.name, master: !!r.master, org: r.org || "", keepRule: r.keepRule } }, !!saved.keep);
           if (r.secrets && r.secrets.ghToken && r.secrets.ghToken !== token) keepSession(r.secrets.ghToken, r.secrets.apiKey, false);
+          if (r.secrets && r.secrets.dataKey && r.secrets.dataKey !== DKEY) setDKey(r.secrets.dataKey);
           paintMe(); Route.master();
           return;
         }
@@ -1798,6 +2007,8 @@
     if (authInfo) showGate("login"); else showGate("first");
   });
   $("makePwBtn").addEventListener("click", function(){ showGate("first"); });
+  /* #49 맨 위 바 [↪ 로그아웃] = 내 계정의 로그아웃과 같음 */
+  $("barOut").addEventListener("click", function(e){ e.preventDefault(); if (touched() && !dirty){ dropBlank(); openV = null; render(); } $("logoutBtn").click(); });
 
   /* ================= 디자인 #42: 올린 사람 · 바꾼 사람 기록 =================
      저장·업데이트·연결이 끝난 뒤 바뀐 것을 사번 목록의 '변경 기록' 탭에 보내고(누가 = 로그인한 관리자, 언제 = 한국 시간),
@@ -2244,14 +2455,16 @@
   }
 
   var Route = (function(){
-    var MENUS = ["members", "roster", "me", "notice", "update", "admins", "log", "siteacc", "sheet", "keys"], MASTER = { admins:1, log:1, siteacc:1, sheet:1, keys:1 };
+    /* #48: 회원 관리는 맨 위 바 칸으로, 설정 = 계정 · 사이트 · 🔒 마스터 설정(사번 명단 · 사이트 업데이트 포함) */
+    var MENUS = ["me", "notice", "roster", "update", "admins", "log", "siteacc", "sheet", "keys"], MASTER = { roster:1, update:1, admins:1, log:1, siteacc:1, sheet:1, keys:1 };
     var cur = "", curView = "";
     function isMaster(){ return adminSes ? !!adminSes.master : !!token; }
     function parse(h){
       var p = String(h || "").replace(/^#\/?/, "").split("/");
       if (p[0] === "analytics") return { view:"analytics" };
+      if (p[0] === "members" || (p[0] === "settings" && p[1] === "members")) return { view:"members" };
       if (p[0] === "settings"){
-        var m = p[1]; if (MENUS.indexOf(m) < 0){ m = LS.get("sc-admin-set") || "members"; if (MENUS.indexOf(m) < 0) m = "members"; }
+        var m = p[1]; if (MENUS.indexOf(m) < 0){ m = LS.get("sc-admin-set") || "me"; if (MENUS.indexOf(m) < 0) m = "me"; }
         return { view:"settings", menu:m };
       }
       return { view:"courses" };
@@ -2259,18 +2472,22 @@
     function hashOf(r){ return r.view === "settings" ? "#/settings/" + r.menu : "#/" + r.view; }
     function apply(){
       var r = parse(location.hash), h = hashOf(r);
-      if (curView === "courses" && r.view !== "courses" && dirty && !confirm("저장하지 않은 변경이 있어요. 나갈까요?")){ history.replaceState(null, "", cur); return; }
+      /* #51 저장 안 한 변경(편집 칸 · 사이트 문구)이 있으면 묻고, 나가면 저장한 상태로 되돌림 */
+      if (cur && h !== cur && touched()){
+        if (saving || !confirm("저장하지 않은 변경이 있어요. 저장하지 않고 나갈까요?")){ history.replaceState(null, "", cur); return; }
+        revert();
+      }
       if (location.hash !== h) history.replaceState(null, "", h);
       var changed = r.view !== curView; cur = h; curView = r.view;
       document.body.dataset.view = r.view;
-      $("app").hidden = r.view !== "courses"; $("setView").hidden = r.view !== "settings"; $("anaView").hidden = r.view !== "analytics";
+      $("app").hidden = r.view !== "courses"; $("setView").hidden = r.view !== "settings"; $("anaView").hidden = r.view !== "analytics"; $("memView").hidden = r.view !== "members";
       document.querySelectorAll("#barNav [data-view]").forEach(function(a){ if (a.dataset.view === r.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-      if (r.view === "settings") $("setBtn").setAttribute("aria-current", "page"); else $("setBtn").removeAttribute("aria-current");
       if (r.view !== "courses"){ if (!$("edWrap").hidden) closeEditor(); document.body.classList.remove("sheet-open"); }
       if (changed) window.scrollTo(0, 0);
       if (!document.body.classList.contains("authed")) return;
       if (r.view === "settings") menu(r.menu, changed);
       if (r.view === "analytics") Ana.show();
+      if (r.view === "members") Members.show();
     }
     function menu(m, first){
       var lock = MASTER[m] && !isMaster();
@@ -2278,7 +2495,6 @@
       document.querySelectorAll("#setNav [data-set]").forEach(function(a){ if (a.dataset.set === m) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
       document.querySelectorAll("#setMain [data-page]").forEach(function(el){ el.hidden = el.dataset.page !== (lock ? "nomaster" : m); });
       if (!lock){
-        if (m === "members") Members.show();
         if (m === "admins" || m === "keys") Auth.listAdmins();
         if (m === "log") SyncLog.show();
       }
@@ -2291,7 +2507,8 @@
     function go(h){ if (location.hash === h) apply(); else location.hash = h; }
     function count(id, n){ var e = $(id); if (e) e.textContent = n == null ? "" : nf(n); }
     window.addEventListener("hashchange", apply);
-    $("setBtn").addEventListener("click", function(){ go("#/settings/" + (LS.get("sc-admin-set") || "members")); });
+    /* #49 맨 위 바 [설정] 칸: 마지막에 본 설정 메뉴로 */
+    $("barSet").addEventListener("click", function(e){ e.preventDefault(); var m = LS.get("sc-admin-set"); go("#/settings/" + (MENUS.indexOf(m) > -1 ? m : "me")); });
     return { apply: apply, go: go, master: master, count: count, rel: relAt, org: org2, isMaster: isMaster };
   })();
 
@@ -2399,7 +2616,7 @@
           list(r.views, false, PI.views, "본 강의") + list(r.downs, true, PI.files, "받은 자료");
       }).catch(function(e){ if (my !== dseq) return; sessionGone(e); det.innerHTML = '<div class="det-h"><span class="k-col"><b>불러오지 못했어요.</b></span><button type="button" class="x" data-detx aria-label="회원 상세 닫기">' + PI.x + '</button></div>'; });
     }
-    function open(sb){ q.tab = "normal"; q.q = sb; q.page = 1; $("memQ").value = sb; Route.go("#/settings/members"); fetch1(true); detail(sb); }
+    function open(sb){ q.tab = "normal"; q.q = sb; q.page = 1; $("memQ").value = sb; Route.go("#/members"); fetch1(true); detail(sb); }
     function saveNs(uid){
       var inp = document.querySelector('#memTbl [data-ns="' + CSS.escape(uid) + '"]'), v = (inp ? inp.value : "").replace(/\s+/g, "");
       if (v && !/^\d{8}$/.test(v)){ nsState[uid] = { s:"bad", v:v }; paint(); return; }
