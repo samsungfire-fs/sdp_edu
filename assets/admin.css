@@ -582,3 +582,7 @@ body:not(.authed) .set-btn, body:not(.authed) .setpop{display:none!important}
 #pcBox[hidden]{display:none}
 #pcKey{font:13px/1 ui-monospace,Consolas,monospace; letter-spacing:.02em}
 #pcKeyBox[hidden] ~ .set-btns #pcKeyCopy{display:none}
+#syncNote{white-space:pre-line}
+#syncBox[hidden]{display:none}
+#syncBox .help{display:block}
+.set-btns .btn-main[disabled]{opacity:.5; cursor:default}

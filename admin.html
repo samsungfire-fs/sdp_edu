@@ -17,7 +17,7 @@
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css?v=20261111b">
-<link rel="stylesheet" href="assets/admin.css?v=20261111c">
+<link rel="stylesheet" href="assets/admin.css?v=20261111d">
 </head>
 <body>
 
@@ -230,6 +230,29 @@
           </details>
         </div>
       </details>
+      <!-- 기획 P3 2단계: 사번 명단 매일 갱신 (P3-4) -->
+      <details class="set" id="syncBox" hidden>
+        <summary class="rp">
+          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M17 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-3.5-5.8"/></svg>
+          <span class="set-t">사번 명단</span><span class="pill idle" id="syncState">아직 안 받음</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="set-body">
+          <p class="set-note" id="syncNote"></p>
+          <div class="set-btns">
+            <button type="button" class="btn-main sm rp press" id="syncGo">지금 갱신</button>
+            <button type="button" class="btn-soft rp press" id="syncDry">미리 확인</button>
+            <button type="button" class="btn-soft rp press" id="syncAuto">자동 켜기</button>
+          </div>
+          <span class="help">[미리 확인]은 명단을 받아 숫자만 보여 주고 시트는 바꾸지 않아요.<br>받을 때마다 사번 사이트에 '검색 사유: 시스템확인용' 조회 기록이 남아요.</span>
+          <p class="set-msg" id="syncMsg" role="status"></p>
+          <details class="acct-trace" id="syncTrace" hidden>
+            <summary class="rp">자세히 보기 (개발팀 전달용)</summary>
+            <pre id="syncTraceText"></pre>
+            <button type="button" class="btn-soft rp press" id="syncTraceCopy">복사</button>
+          </details>
+        </div>
+      </details>
       <!-- 기획 P3: 사번 사이트는 PC에서만 들어가져서 PC 매크로가 접속·명단 받기를 함 -->
       <details class="set" id="pcBox" hidden>
         <summary class="rp">
@@ -265,6 +288,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/common.js?v=20261111a"></script>
-<script src="assets/admin.js?v=20261111f"></script>
+<script src="assets/admin.js?v=20261111g"></script>
 </body>
 </html>

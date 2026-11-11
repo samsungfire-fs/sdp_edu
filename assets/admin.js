@@ -1464,7 +1464,7 @@
      - 창구는 관리자가 보낸 GitHub 토큰으로 이 저장소 쓰기 권한을 확인한 뒤에만 대답함
      - 사번 사이트 아이디·비밀번호는 창구의 스크립트 속성에만 저장. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
-    var GATE_V = 6; /* 창구 코드(Code.gs) 최신 버전 */
+    var GATE_V = 7; /* 창구 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null;
     function call(action, extra){
@@ -1512,6 +1512,24 @@
         var t = st.lastTest, tt = t && TEST[t.result];
         $("acctNote").textContent = "저장된 아이디 " + a.id + (a.savedAt ? " · " + when(a.savedAt) + " 저장" : "") +
           (tt ? "\n마지막 접속 확인 " + when(t.at) + (t.by === "pc" ? "(PC)" : t.by === "google" ? "(구글)" : "") + " · " + tt[1] : "");
+      }
+      /* 사번 명단 (P3 2단계 · P3-4) */
+      var sy = on && st.sync || {}, L = sy.last;
+      $("syncBox").hidden = !on;
+      if (on){
+        var running = !!sy.running || syncBusy;
+        pill("syncState", running ? "warn" : !L ? "idle" : L.ok ? "ok" : "bad", running ? "받는 중" : !L ? "아직 안 받음" : L.ok ? "성공" : "실패");
+        var lines = [];
+        if (L) lines.push("마지막 갱신 " + when(L.at) + " · " + (L.ok ? "성공" : "실패 — 어제 명단 사용 중") + " (" + (L.why === "auto" ? "자동" : L.why === "retry" ? "자동 다시" : "지금 갱신") + ")");
+        var ok = L && L.ok ? L : null;
+        if (ok) lines.push("정상회원 " + num(ok.normal) + "명 · 전체 " + num(ok.people) + "명");
+        else if (!L) lines.push("아직 명단을 받은 적이 없어요.");
+        lines.push(sy.auto === null ? "자동 갱신: 권한 승인이 필요해요(Apps Script에서 setup ▶ 실행)" : sy.auto ? "자동 갱신: 매일 새벽 5시 (실패하면 1시간 뒤 한 번 더)" + (sy.retry ? " · 다시 받기 예약됨" : "") : "자동 갱신: 꺼짐");
+        $("syncNote").textContent = lines.join("\n");
+        $("syncAuto").textContent = sy.auto ? "자동 끄기" : "자동 켜기";
+        $("syncAuto").disabled = sy.auto === null || syncBusy;
+        var acc = st.account && st.account.saved;
+        $("syncGo").disabled = !acc || running; $("syncDry").disabled = !acc || running;
       }
       /* PC 매크로 (v5: 사번 사이트는 PC에서만 들어가짐) */
       var ag = on && st.agent || {};
@@ -1575,6 +1593,41 @@
       }).catch(function(){ msg("acctMsg", "bad", "저장하지 못했어요. 잠시 뒤 다시 해 주세요."); })
         .then(function(){ btn.disabled = false; btn.textContent = "저장"; });
     }
+    /* ---------- 사번 명단 (P3 2단계) ---------- */
+    var syncBusy = false;
+    function num(n){ return String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+    function showSyncDiag(info, show){
+      var box = $("syncTrace"), d = info && info.diag || {};
+      if (!show){ box.hidden = true; return; }
+      var lines = ["결과 " + (info.ok ? "성공" : "실패") + (info.msg ? " · " + info.msg : "") + " · " + (info.at || "") + " · " + (info.sec || 0) + "초 · 창구 v" + (st && st.v || "?")];
+      ["tries","code","type","disp","size","sig","lines","badId","org","loc","alert","snip"].forEach(function(k){ if (d[k] !== undefined && d[k] !== "") lines.push(k + ": " + d[k]); });
+      if (d.header) lines.push("머리 줄: " + d.header.join(" | "));
+      if (d.states) lines.push("가입상태: " + Object.keys(d.states).map(function(k){ return k + " " + d.states[k]; }).join(", "));
+      $("syncTraceText").textContent = lines.join("\n"); box.hidden = false; box.open = !info.ok;
+    }
+    function syncRun(dry){
+      if (syncBusy) return;
+      syncBusy = true; paint();
+      var btn = $(dry ? "syncDry" : "syncGo"), label = btn.textContent;
+      btn.textContent = "받는 중… (1~2분)";
+      msg("syncMsg", "warn", "사번 사이트에서 명단을 받는 중이에요. 이 창을 닫지 마세요.");
+      call("syncNow", { dry: dry }).then(function(j){
+        if (j.status) st = j.status;
+        var info = j.info || {};
+        if (j.ok) msg("syncMsg", "ok", (dry ? "미리 확인: " : "갱신했어요: ") + "정상회원 " + num(j.normal) + "명 · 전체 " + num(j.people) + "명 (엑셀 " + num(j.total) + "줄, 같은 사번은 합침)" + (dry ? " · 시트는 바꾸지 않았어요." : ""));
+        else msg("syncMsg", "bad", (j.msg || "명단을 받지 못했어요.") + (dry ? "" : " 시트는 어제 명단 그대로예요.") + " — 아래 '자세히 보기'를 복사해 개발팀에 알려 주세요.");
+        showSyncDiag(info, !j.ok || dry);
+      }).catch(function(){ msg("syncMsg", "bad", "창구 응답을 받지 못했어요. 잠시 뒤 [사번 명단]을 다시 열어 결과를 확인해 주세요."); })
+        .then(function(){ syncBusy = false; btn.textContent = label; paint(); });
+    }
+    function syncAutoToggle(){
+      var on = !(st && st.sync && st.sync.auto), btn = $("syncAuto"); btn.disabled = true;
+      call("syncAuto", { on: on }).then(function(j){
+        if (!j.ok) throw new Error(j.error);
+        st = j.status; paint(); msg("syncMsg", "ok", on ? "자동 갱신을 켰어요. 매일 새벽 5시에 명단을 받아요." : "자동 갱신을 껐어요.");
+      }).catch(function(){ msg("syncMsg", "bad", "바꾸지 못했어요. Apps Script에서 setup을 한 번 실행해 권한을 승인해 주세요."); paint(); });
+    }
+
     /* 접속 확인이 실패하면 단계별 기록을 보여 줌 (비밀번호·쿠키 값·개인정보 없음) */
     function showTrace(j){
       var box = $("acctTrace");
@@ -1654,6 +1707,12 @@
     $("acctForm").addEventListener("submit", save);
     $("acctTest").addEventListener("click", test);
     $("pcMake").addEventListener("click", makeKey);
+    $("syncGo").addEventListener("click", function(){ syncRun(false); });
+    $("syncDry").addEventListener("click", function(){ syncRun(true); });
+    $("syncAuto").addEventListener("click", syncAutoToggle);
+    $("syncTraceCopy").addEventListener("click", function(){
+      SC.copy($("syncTraceText").textContent).then(function(){ toast("복사했어요. 개발팀 채팅에 붙여 넣으세요"); }, function(){ toast("복사하지 못했어요. 글자를 길게 눌러 복사해 주세요"); });
+    });
     $("pcKeyCopy").addEventListener("click", function(){
       SC.copy($("pcKey").value).then(function(){ toast("PC 키를 복사했어요. 설치 창에 붙여 넣으세요"); }, function(){ $("pcKey").select(); toast("복사하지 못했어요. 글자를 길게 눌러 복사해 주세요"); });
     });
