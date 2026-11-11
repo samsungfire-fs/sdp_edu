@@ -578,11 +578,20 @@ body:not(.authed) .set-btn, body:not(.authed) .setpop{display:none!important}
 .acct-trace summary{cursor:pointer; font-size:13.5px; font-family:var(--head); font-weight:800; color:var(--ink-2); list-style:none}
 .acct-trace summary::-webkit-details-marker{display:none}
 .acct-trace pre{margin:10px 0; white-space:pre-wrap; overflow-wrap:anywhere; font:12.5px/1.6 ui-monospace,Consolas,monospace; color:var(--ink); max-height:260px; overflow:auto}
-#pcNote{white-space:pre-line}
-#pcBox[hidden]{display:none}
-#pcKey{font:13px/1 ui-monospace,Consolas,monospace; letter-spacing:.02em}
-#pcKeyBox[hidden] ~ .set-btns #pcKeyCopy{display:none}
 #syncNote{white-space:pre-line}
 #syncBox[hidden]{display:none}
 #syncBox .help{display:block}
 .set-btns .btn-main[disabled]{opacity:.5; cursor:default}
+
+/* ================= 기획 P5: 관리자 사번 로그인 · 관리자 계정(마스터) ================= */
+.gate-alt{background:none; border:0; padding:6px 0; font:inherit; font-size:13.5px; color:var(--ink-2); text-decoration:underline; text-underline-offset:3px; cursor:pointer; align-self:center}
+.gate-form.err #aPw{box-shadow:0 0 0 2px var(--danger)}
+#admBox[hidden]{display:none}
+.adm-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px}
+.adm-list li{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; background:var(--card)}
+.adm-list .who{flex:1; min-width:0; font-size:14px; line-height:1.45}
+.adm-list .who b{font-family:var(--head); font-weight:800}
+.adm-list .who small{display:block; color:var(--ink-2); font-size:12.5px}
+.adm-list .btn-soft{height:36px; padding:0 14px; font-size:13px}
+.adm-list .btn-soft.armed{background:var(--danger); color:#fff}
+#connRepo{white-space:pre-line}

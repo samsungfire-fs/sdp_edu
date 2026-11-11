@@ -36,6 +36,8 @@
     SS.set("sc-gh-token", token); SS.set("sc-api-key", apiKey);
   }
   function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); }
+  /* 기획 P5: 관리자 사번 로그인 — 창구(Apps Script) 주소 · 로그인한 관리자 · 세션(그날 밤 12시까지) */
+  var GATE_URL = "", gateInfo = null, adminSes = null, SID_KEY = "sdp-admin-sid";
   var canSave = false, dirty = false, openV = null, armedDel = null, saving = false;
   /* 상품연구 전략자료 (data/research.json): 월 → 연령 → 자료. 새로 올린 썸네일은 저장 때까지 pendingImgs에 */
   var rdata = { months:[] }, rsha = null, openM = null, openA = null, pendingImgs = {};
@@ -98,7 +100,7 @@
         var file = r[0], rf = r[1];
         sha = file ? file.sha : null; rsha = rf ? rf.sha : null;
         useData(file ? file.json : { site:{ title:"교육 자료실" }, videos:[] }, rf ? rf.json : null);
-        canSave = true; setConn("ok", "연결됨", "저장소 " + owner + "/" + repo);
+        canSave = true; setConn("ok", "연결됨", (adminSes ? "로그인 " + adminSes.name + (adminSes.master ? "(마스터)" : "") + " · 사번 " + adminSes.sabun + " · 오늘 밤 12시까지\n" : "") + "저장소 " + owner + "/" + repo);
         lastUpdate(); Deploy.start();
         if (apiKey){
           data.videos.forEach(function(v){ v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f, true); }); });
@@ -107,6 +109,7 @@
         /* 강의별 공유 페이지·메뉴 주소가 빠져 있으면 조용히 만들어 둠 (저장 버튼은 건드리지 않음) */
         autoPages();
         Gate.load();
+        Auth.afterLoad();
         $("conn").open = false; updateSaveBar();
       })
       .catch(function(e){
@@ -1372,7 +1375,9 @@
   var setupMode = "first";
   function showGate(mode, msg){
     document.body.classList.remove("authed");
-    $("loginForm").hidden = mode !== "login"; $("setupForm").hidden = mode === "login";
+    $("loginForm").hidden = mode !== "login"; $("setupForm").hidden = !(mode === "first" || mode === "change");
+    $("sabunForm").hidden = mode !== "sabun"; $("pwForm").hidden = mode !== "pw";
+    if (mode === "sabun" || mode === "pw"){ Auth.show(mode, msg); return; }
     $("loginMsg").textContent = ""; $("setupMsg").textContent = msg || ""; $("loginForm").classList.remove("err"); $("pwSame").hidden = true;
     if (mode === "login"){
       $("gateTitle").textContent = "관리자 로그인";
@@ -1393,7 +1398,7 @@
   }
   function enterApp(){
     document.body.classList.add("authed");
-    $("noAuth").hidden = !!authInfo;
+    $("noAuth").hidden = !!authInfo || !!adminSes || !!GATE_URL;
     load();
   }
 
@@ -1448,14 +1453,168 @@
   $("pw").addEventListener("input", function(){ $("loginForm").classList.remove("err"); $("loginMsg").textContent = ""; });
   ["newPw", "newPw2"].forEach(function(k){ $(k).addEventListener("input", function(){ var a = $("newPw").value, b = $("newPw2").value; $("pwSame").hidden = !(a.length >= 4 && a === b); }); });
 
+
+  /* ================= 기획 P5: 관리자 사번 + 비밀번호 로그인 =================
+     창구가 관리자 탭·비밀번호를 확인하고, 비밀번호를 바꾼 관리자에게만 GitHub 토큰·API 키를 내줌.
+     처음 비밀번호(0000)로 들어오면 비밀번호 바꾸기 화면만 보임. 초기화는 마스터만(관리자 계정 칸). */
+  var Auth = (function(){
+    var pending = null, voluntary = false, armed = null;
+    function gateCall(action, extra){
+      var body = { action: action }; for (var k in (extra || {})) body[k] = extra[k];
+      return fetch(GATE_URL, { method:"POST", body: JSON.stringify(body), cache:"no-store", redirect:"follow" })
+        .then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+    }
+    function sidGet(){ try { return JSON.parse(LS.get(SID_KEY) || "null"); } catch(e){ return null; } }
+    function sidSet(o){ LS.set(SID_KEY, o ? JSON.stringify(o) : ""); }
+    function show(mode, msg){
+      if (mode === "sabun"){
+        $("gateTitle").textContent = "관리자 로그인";
+        $("gateLead").textContent = "사번과 비밀번호를 넣어 주세요.";
+        $("sabunMsg").textContent = msg || ""; $("sabunForm").classList.remove("err");
+        $("aPw").value = ""; $("oldLoginLink").hidden = !authInfo;
+        setTimeout(function(){ ($("aSabun").value ? $("aPw") : $("aSabun")).focus(); }, 50);
+      } else {
+        voluntary = !!adminSes;
+        $("gateTitle").textContent = voluntary ? "비밀번호 바꾸기" : "새 비밀번호 만들기";
+        $("gateLead").textContent = voluntary ? "새 비밀번호를 두 번 넣어 주세요." : "처음 들어왔어요. 앞으로 쓸 비밀번호로 바꿔야 시작할 수 있어요.";
+        $("pwMsg").textContent = msg || ""; $("aNew").value = ""; $("aNew2").value = ""; $("aSame").hidden = true;
+        $("pwUser").value = pending ? pending.sabun : "";
+        $("pwCancel").hidden = !voluntary; $("pwBtn").textContent = voluntary ? "바꾸기" : "비밀번호 바꾸고 시작하기";
+        setTimeout(function(){ $("aNew").focus(); }, 50);
+      }
+    }
+    function enterWith(r){
+      adminSes = { sid: r.sid || (sidGet() || {}).sid, sabun: r.sabun, name: r.name, master: !!r.master, exp: r.exp };
+      sidSet({ sid: adminSes.sid, exp: r.exp });
+      keepSession(r.secrets.ghToken, r.secrets.apiKey, false);
+      enterApp();
+    }
+    $("sabunForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var sab = $("aSabun").value.replace(/\D/g, ""), pw = $("aPw").value, btn = $("sabunBtn");
+      if (!sab || !pw){ $("sabunMsg").textContent = "사번과 비밀번호를 넣어 주세요."; return; }
+      btn.disabled = true; btn.textContent = "확인 중…"; $("sabunMsg").textContent = "";
+      gateCall("adminLogin", { sabun: sab, pw: pw }).then(function(r){
+        if (!r.ok){
+          $("sabunForm").classList.add("err");
+          $("sabunMsg").textContent = r.error === "notadmin" ? "관리자 권한이 없는 사번이에요."
+            : r.error === "locked" ? "여러 번 틀려서 잠시 막혔어요. 15분 뒤 다시 해 주세요."
+            : r.error === "badpw" ? "비밀번호가 맞지 않아요." + (r.left ? " (" + r.left + "번 더 틀리면 15분 동안 막혀요)" : "")
+            : "지금은 로그인할 수 없어요. 잠시 뒤 다시 해 주세요.";
+          $("aPw").select(); return;
+        }
+        if (r.must){ pending = r; voluntary = false; sidSet({ sid: r.sid, exp: r.exp }); showGate("pw"); return; }
+        enterWith(r);
+      }).catch(function(){ $("sabunMsg").textContent = "지금은 로그인할 수 없어요. 잠시 뒤 다시 해 주세요."; })
+        .then(function(){ btn.disabled = false; btn.textContent = "로그인"; });
+    });
+    $("aPw").addEventListener("input", function(){ $("sabunForm").classList.remove("err"); $("sabunMsg").textContent = ""; });
+    ["aNew", "aNew2"].forEach(function(k){ $(k).addEventListener("input", function(){ var a = $("aNew").value, b = $("aNew2").value; $("aSame").hidden = !(a.length >= 8 && a === b); $("pwMsg").textContent = ""; }); });
+    $("pwForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var a = $("aNew").value, b = $("aNew2").value, btn = $("pwBtn"), label = btn.textContent;
+      if (a.length < 8 || !/[A-Za-z]/.test(a) || !/\d/.test(a)){ $("pwMsg").textContent = "8자 이상, 영문과 숫자를 섞어 주세요."; return; }
+      if (a === "0000"){ $("pwMsg").textContent = "처음 비밀번호는 쓸 수 없어요."; return; }
+      if (a !== b){ $("pwMsg").textContent = "두 비밀번호가 서로 달라요."; return; }
+      var sid = (adminSes && adminSes.sid) || (pending && pending.sid) || (sidGet() || {}).sid;
+      btn.disabled = true; btn.textContent = "바꾸는 중…";
+      gateCall("adminChangePw", { sid: sid, pw: a }).then(function(r){
+        if (!r.ok){
+          if (r.error === "nosession" || r.error === "expired"){ sidSet(null); pending = null; showGate("sabun", "로그인 시간이 지났어요. 다시 로그인해 주세요."); return; }
+          $("pwMsg").textContent = r.error === "weak" ? "8자 이상, 영문과 숫자를 섞어 주세요." : "바꾸지 못했어요. 잠시 뒤 다시 해 주세요."; return;
+        }
+        r.sid = sid; pending = null;
+        if (voluntary && adminSes){ voluntary = false; enterApp(); toast("비밀번호를 바꿨어요"); return; }
+        enterWith(r); toast("비밀번호를 바꿨어요. 다음부터 새 비밀번호로 로그인하세요");
+      }).catch(function(){ $("pwMsg").textContent = "바꾸지 못했어요. 잠시 뒤 다시 해 주세요."; })
+        .then(function(){ btn.disabled = false; btn.textContent = label; });
+    });
+    $("pwCancel").addEventListener("click", function(){ voluntary = false; enterApp(); });
+    $("oldLoginLink").addEventListener("click", function(){ showGate("login"); });
+
+    /* 처음 열 때: 창구 주소(공개 data/config.json) → 창구 상태 → 오늘 로그인이 남아 있으면 바로 */
+    function boot(fallback){
+      fetch("data/config.json?t=" + Date.now(), { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
+        .then(function(cfg){
+          GATE_URL = cfg && cfg.gate || "";
+          if (!GATE_URL) return fallback();
+          return gateCall("gateInfo").then(function(info){
+            gateInfo = info;
+            if (!info.ok || !info.hasSecrets) return fallback();          // 아직 토큰을 창구로 옮기기 전 → 예전 방식
+            LS.set("sc-gh-token", ""); LS.set("sc-api-key", "");          // 이 기기에 남아 있던 예전 로그인은 지움
+            var saved = sidGet();
+            if (!saved || !saved.sid){ clearSession(); showGate("sabun"); return; }
+            return gateCall("adminSession", { sid: saved.sid }).then(function(r){
+              if (!r.ok){ sidSet(null); clearSession(); showGate("sabun", r.error === "expired" ? "날짜가 바뀌어 다시 로그인해 주세요." : ""); return; }
+              if (r.must){ pending = { sid: saved.sid, sabun: r.sabun }; voluntary = false; showGate("pw"); return; }
+              r.sid = saved.sid; enterWith(r);
+            });
+          }).catch(function(){ fallback(); });
+        });
+    }
+    function logout(){
+      if (adminSes) gateCall("adminLogout", { sid: adminSes.sid }).catch(function(){});
+      sidSet(null); adminSes = null; pending = null;
+    }
+
+    /* 들어온 뒤: 토큰을 창구로 처음 옮기기 · 마스터 칸 */
+    function afterLoad(){
+      if (GATE_URL && gateInfo && !gateInfo.hasSecrets && token){
+        gateCall("setSecrets", { token: token, ghToken: token, apiKey: apiKey }).then(function(r){
+          if (r.ok){ gateInfo.hasSecrets = true; toast("관리자 로그인이 사번 방식으로 바뀌었어요. 다음부터 사번으로 로그인하세요"); }
+        }).catch(function(){});
+      }
+      $("changeBtn").textContent = adminSes ? "비밀번호 바꾸기" : "비밀번호·토큰 바꾸기";
+      $("admBox").hidden = !(adminSes && adminSes.master);
+      if (adminSes && adminSes.master) listAdmins();
+    }
+    function when(s){ var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(s || ""); return m ? (+m[2]) + "월 " + (+m[3]) + "일" : ""; }
+    function drawAdmins(list){
+      $("admList").innerHTML = (list || []).map(function(a){
+        var st = a.locked ? "잠김(15분)" : a.state === "init" ? "처음 비밀번호(0000)" : "비밀번호 바꿈" + (a.changedAt ? " · " + when(a.changedAt) : "");
+        return '<li><span class="who"><b>' + esc(a.name || "(이름 없음)") + '</b> · ' + esc(a.sabun) + (a.master ? ' · 마스터' : '') + '<small>' + esc(st) + '</small></span>' +
+          (a.sabun === adminSes.sabun ? '' : '<button type="button" class="btn-soft rp press" data-reset="' + esc(a.sabun) + '">' + (armed === a.sabun ? '정말 초기화' : '초기화') + '</button>') + '</li>';
+      }).join("") || '<li><span class="who">관리자 탭이 비어 있어요.</span></li>';
+      var b = $("admList").querySelector('[data-reset="' + armed + '"]'); if (b) b.classList.add("armed");
+    }
+    var lastList = [];
+    function listAdmins(){
+      gateCall("adminList", { sid: adminSes.sid }).then(function(r){ if (r.ok){ lastList = r.admins; drawAdmins(lastList); } else msgAdm("bad", "목록을 불러오지 못했어요."); }).catch(function(){ msgAdm("bad", "목록을 불러오지 못했어요."); });
+    }
+    function msgAdm(cls, t){ var p = $("admMsg"); p.className = "set-msg" + (cls ? " " + cls : ""); p.textContent = t || ""; }
+    $("admList").addEventListener("click", function(e){
+      var b = e.target.closest("[data-reset]"); if (!b) return;
+      var who = b.getAttribute("data-reset");
+      if (armed !== who){ armed = who; drawAdmins(lastList); msgAdm("warn", "한 번 더 누르면 비밀번호가 0000으로 돌아가고, 그 사람은 다음 로그인 때 새 비밀번호를 만들어요."); return; }
+      armed = null; b.disabled = true;
+      gateCall("adminReset", { sid: adminSes.sid, target: who }).then(function(r){
+        if (!r.ok) throw new Error(r.error);
+        lastList = r.admins; drawAdmins(lastList); msgAdm("ok", "초기화했어요. 처음 비밀번호 0000을 그 사람에게 알려 주세요.");
+      }).catch(function(){ drawAdmins(lastList); msgAdm("bad", "초기화하지 못했어요."); });
+    });
+    $("sSave").addEventListener("click", function(){
+      var g = $("sGh").value.trim(), k = $("sKey").value.trim();
+      if (!/^(github_pat_|ghp_)/.test(g)){ msgAdm("bad", "GitHub 토큰을 확인해 주세요. github_pat_로 시작해요."); return; }
+      var extra = { sid: adminSes.sid, ghToken: g }; if (k) extra.apiKey = k;
+      gateCall("setSecrets", extra).then(function(r){
+        if (!r.ok) throw new Error(r.error);
+        keepSession(g, k || apiKey, false); $("sGh").value = ""; $("sKey").value = "";
+        msgAdm("ok", "저장했어요. 모든 관리자가 새 토큰으로 저장해요.");
+      }).catch(function(){ msgAdm("bad", "저장하지 못했어요. 이 저장소에 쓰기 권한이 있는 토큰인지 확인해 주세요."); });
+    });
+    return { show: show, boot: boot, logout: logout, afterLoad: afterLoad };
+  })();
+
   $("logoutBtn").addEventListener("click", function(){
     if (dirty){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return; }
     clearSession(); canSave = false; data = { site:{}, videos:[] }; rdata = { months:[] }; openV = openM = openA = null; closeSet(); render();
+    $("admBox").hidden = true;
+    if (adminSes || (gateInfo && gateInfo.hasSecrets)){ Auth.logout(); showGate("sabun"); return; }
     if (authInfo) showGate("login"); else showGate("first");
   });
   $("changeBtn").addEventListener("click", function(){
     if (dirty){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return; }
-    closeSet(); showGate("change");
+    closeSet(); showGate(adminSes ? "pw" : "change");
   });
   $("makePwBtn").addEventListener("click", function(){ showGate("first"); });
 
@@ -1464,7 +1623,7 @@
      - 창구는 관리자가 보낸 GitHub 토큰으로 이 저장소 쓰기 권한을 확인한 뒤에만 대답함
      - 사번 사이트 아이디·비밀번호는 창구의 스크립트 속성에만 저장. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
-    var GATE_V = 8; /* 창구 코드(Code.gs) 최신 버전 */
+    var GATE_V = 10; /* 창구 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null;
     function call(action, extra){
@@ -1484,13 +1643,10 @@
       ok: ["ok", "접속 성공"],
       badcred: ["bad", "아이디나 비밀번호가 맞지 않아요"],
       denied: ["bad", "사번 사이트가 접속을 막았어요"],
-      blocked: ["bad", "PC에서 사번 사이트에 연결할 수 없어요"],
+      blocked: ["bad", "사번 사이트에 연결할 수 없어요"],
       unknown: ["warn", "접속 결과를 확인하지 못했어요"],
       session: ["warn", "로그인은 됐는데 다음 화면에서 계속 로그인이 풀려요"]
     };
-    var waitT = null, keyArmed = false;
-    function online(ag){ var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)/.exec(ag && ag.seen || ""); if (!m) return false;
-      var t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5], +m[6]); return Date.now() - t < 12 * 60 * 1000; }
     function paint(){
       var on = !!(url && st);
       pill("gateState", on ? "ok" : url ? "warn" : "idle", on ? "연결됨" : url ? "확인 안 됨" : "연결 안 됨");
@@ -1531,16 +1687,6 @@
         var acc = st.account && st.account.saved;
         $("syncGo").disabled = !acc || running; $("syncDry").disabled = !acc || running;
       }
-      /* PC 매크로 (v5: 사번 사이트는 PC에서만 들어가짐) */
-      var ag = on && st.agent || {};
-      $("pcBox").hidden = !on;
-      var live = online(ag);
-      pill("pcState", !ag.has ? "idle" : !ag.seen ? "warn" : live ? "ok" : "idle", !ag.has ? "설치 안 됨" : !ag.seen ? "설치 기다림" : live ? "켜져 있음" : "쉬는 중");
-      $("pcNote").textContent = !ag.has ? "구글 서버가 명단을 못 받을 때 대신 하는 대비용이에요.\n필요할 때 [PC 키 만들기] → 개발팀 폴더 '사번명단_매크로'의 설치.bat 더블클릭 → 키 붙여 넣기."
-        : !ag.seen ? "PC 키를 만들었어요(" + when(ag.madeAt) + ").\n설치.bat으로 설치하면 연결돼요."
-        : "대비용 · PC " + (ag.host || "") + " · 마지막 신호 " + when(ag.seen) + (live ? "" : "\n평일 08:35~17:45에 5분마다 신호가 와요.");
-      $("pcMake").textContent = keyArmed ? "정말 새로 만들기" : ag.has ? "PC 키 새로 만들기" : "PC 키 만들기";
-      $("pcMake").className = (ag.has ? "btn-soft" : "btn-main sm") + " rp press";
     }
     function load(){
       return repoJson(CFG).then(function(f){
@@ -1553,7 +1699,6 @@
       return call("status").then(function(j){
         if (!j.ok){ st = null; paint(); msg("gateMsg", "bad", j.error === "notadmin" ? "이 토큰으로는 창구를 쓸 수 없어요. 저장소 쓰기 권한이 있는 토큰인지 확인해 주세요." : "창구가 대답하지 못했어요. 잠시 뒤 다시 해 주세요."); return; }
         st = j; msg("gateMsg"); paint();
-        if (j.testReq){ $("acctTest").disabled = true; $("acctTest").textContent = "PC 기다리는 중…"; msg("acctMsg", "warn", "PC에 접속 확인을 부탁해 둔 상태예요. PC가 켜져 있으면 5분 안에 결과가 나와요."); waitResult(j.testReq, 1); }
       }).catch(function(){ st = null; paint(); msg("gateMsg", "bad", "창구에 연결하지 못했어요. 주소와 배포 설정(액세스: 모든 사용자)을 확인해 주세요."); });
     }
     function connect(){
@@ -1618,7 +1763,7 @@
       call("syncNow", { dry: dry }).then(function(j){
         if (j.status) st = j.status;
         var info = j.info || {};
-        if (j.ok) msg("syncMsg", "ok", (dry ? "미리 확인: " : "갱신했어요: ") + "정상회원 " + num(j.normal) + "명 · 전체 " + num(j.people) + "명 (엑셀 " + num(j.total) + "줄, 같은 사번은 합침" + (j.info && j.info.diag && j.info.diag.noSabun ? " · 아이디에 사번이 없는 " + num(j.info.diag.noSabun) + "줄은 뺌" : "") + ")" + (dry ? " · 시트는 바꾸지 않았어요." : ""));
+        if (j.ok) msg("syncMsg", "ok", (dry ? "미리 확인: " : "갱신했어요: ") + "정상회원 " + num(j.normal) + "명 · 전체 " + num(j.people) + "명 (엑셀 " + num(j.total) + "줄, 같은 사번은 합침" + (j.info && j.info.diag && j.info.diag.noSabun ? " · 아이디에 사번이 없는 " + num(j.info.diag.noSabun) + "줄은 뺌" : "") + ")" + (j.admins ? " · 관리자 " + num(j.admins.total) + "명(영업개발파트 " + num(j.admins.team) + "명" + (j.admins.added ? " · 새로 " + j.admins.added + "명" : "") + (j.admins.removed ? " · 빠짐 " + j.admins.removed + "명" : "") + (j.admins.masters && j.admins.masters.length ? " · 마스터 " + j.admins.masters.join(", ") : "") + ")" + (dry ? "" : "") : "") + (dry ? " · 시트는 바꾸지 않았어요." : ""));
         else msg("syncMsg", "bad", (j.msg || "명단을 받지 못했어요.") + (dry ? "" : " 시트는 어제 명단 그대로예요.") + " — 아래 '자세히 보기'를 복사해 개발팀에 알려 주세요.");
         showSyncDiag(info, !j.ok || dry);
       }).catch(function(){ msg("syncMsg", "bad", "창구 응답을 받지 못했어요. 잠시 뒤 [사번 명단]을 다시 열어 결과를 확인해 주세요."); })
@@ -1637,7 +1782,7 @@
       var box = $("acctTrace");
       if (!j || j.result === "ok" || !j.trace){ box.hidden = true; return; }
       var lines = ["결과 " + j.result + (j.msg ? " · " + j.msg : "") + " · " + (j.at || ""),
-        "확인한 곳 " + (j.by === "pc" ? "PC " + (st && st.agent && st.agent.host || "?") : "구글 서버") + " · 창구 v" + (st && st.v || "?")];
+        "확인한 곳 " + (j.by === "pc" ? "PC" : "구글 서버") + " · 창구 v" + (st && st.v || "?")];
       j.trace.forEach(function(t, i){
         if (t.retry){ lines.push((i + 1) + ". 다시 열기 " + t.retry + "번째 → " + t.code + (t.toLogin ? " · 로그인으로 돌려보냄" : " · 열림") + (t.setCookie && t.setCookie.length ? " · 쿠키 " + t.setCookie.join(",") : "") + " · " + t.len + "자"); return; }
         if (t.form){ lines.push((i + 1) + ". 로그인 칸 " + (t.form.found ? "찾음" : "못 찾음") + " · 숨은 값 " + (t.form.hidden.join(",") || "없음")); return; }
@@ -1655,70 +1800,26 @@
       showTrace({ result: t.result, msg: t.msg, at: t.at, by: t.by, trace: st.lastTrace || [] });
       msg("acctMsg", tt[0], tt[1] + (t.msg ? " · 사번 사이트 안내: " + t.msg : "") + (t.result === "ok" ? "" : " — 아래 '자세히 보기'를 복사해 개발팀에 알려 주세요."));
     }
-    /* [접속 확인] → 창구에 부탁 → PC 매크로가 5분 안에 가져가서 확인 → 결과를 기다림 */
-    function waitResult(reqAt, n){
-      clearTimeout(waitT);
-      if (n > 48){ msg("acctMsg", "warn", "아직 PC에서 결과가 오지 않았어요. PC가 켜져 있는지, PC 매크로가 설치돼 있는지 확인해 주세요."); $("acctTest").disabled = false; $("acctTest").textContent = "접속 확인"; return; }
-      waitT = setTimeout(function(){
-        call("status").then(function(j){
-          if (!j.ok) return waitResult(reqAt, n + 1);
-          st = j; paint();
-          if (!j.testReq && j.lastTest && j.lastTest.at >= reqAt){ showResult(); $("acctTest").disabled = false; $("acctTest").textContent = "접속 확인"; return; }
-          waitResult(reqAt, n + 1);
-        }).catch(function(){ waitResult(reqAt, n + 1); });
-      }, n ? 15000 : 5000);
-    }
     function test(){
       var btn = $("acctTest"); btn.disabled = true; btn.textContent = "확인하는 중…"; msg("acctMsg"); $("acctTrace").hidden = true;
       call("testLogin").then(function(j){
         if (!j.ok){
-          msg("acctMsg", "bad", j.error === "noaccount" ? "먼저 아이디와 비밀번호를 저장해 주세요." : j.error === "noagent" ? "먼저 아래 'PC 매크로'를 설치해 주세요." : "확인하지 못했어요. 잠시 뒤 다시 해 주세요.");
-          btn.disabled = false; btn.textContent = "접속 확인"; if (j.error === "noagent") $("pcBox").open = true; return;
+          msg("acctMsg", "bad", j.error === "noaccount" ? "먼저 아이디와 비밀번호를 저장해 주세요." : "확인하지 못했어요. 잠시 뒤 다시 해 주세요.");
+          btn.disabled = false; btn.textContent = "접속 확인"; return;
         }
         st = j.status; paint();
-        if (!j.queued){ showResult(); btn.disabled = false; btn.textContent = "접속 확인"; return; }   /* 구글에서 바로 확인 (v6) */
-        msg("acctMsg", "warn", "PC에 접속 확인을 부탁했어요. PC가 켜져 있으면 5분 안에 결과가 여기에 나와요.");
-        waitResult(j.status.testReq, 0);
+        showResult(); btn.disabled = false; btn.textContent = "접속 확인";   /* 구글에서 바로 확인 */
       }).catch(function(){ msg("acctMsg", "bad", "창구에 연결하지 못했어요. 잠시 뒤 다시 해 주세요."); btn.disabled = false; btn.textContent = "접속 확인"; });
-    }
-    /* 설치를 기다리며 PC 신호가 오면 바로 '켜져 있음'으로 */
-    var agentT = null;
-    function watchAgent(n){
-      clearTimeout(agentT); if (n > 60) return;
-      agentT = setTimeout(function(){
-        call("status").then(function(j){
-          if (j.ok){ st = j; paint(); if (j.agent && j.agent.seen){ msg("pcMsg", "ok", "PC가 연결됐어요. 설치 창에 나온 접속 확인 결과도 위 '사번 사이트 계정'에 보여요."); if (j.lastTest) showResult(); return; } }
-          watchAgent(n + 1);
-        }).catch(function(){ watchAgent(n + 1); });
-      }, 10000);
-    }
-    function makeKey(){
-      var has = st && st.agent && st.agent.has;
-      if (has && !keyArmed){ keyArmed = true; paint(); msg("pcMsg", "warn", "새 키를 만들면 지금 설치된 PC는 새 키로 다시 설치해야 해요. 한 번 더 누르면 만들어요."); return; }
-      keyArmed = false;
-      var btn = $("pcMake"); btn.disabled = true; msg("pcMsg");
-      call("makeAgentKey").then(function(j){
-        if (!j.ok) throw new Error(j.error);
-        st = j.status; paint();
-        $("pcKey").value = j.key; $("pcKeyBox").hidden = false; $("pcKey").select();
-        msg("pcMsg", "ok", "PC 키를 만들었어요. [복사] → 설치.bat 실행 → 키 붙여 넣기.");
-        watchAgent(0);
-      }).catch(function(){ msg("pcMsg", "bad", "키를 만들지 못했어요. 창구 코드가 v5인지 확인해 주세요."); paint(); })
-        .then(function(){ btn.disabled = false; });
     }
     $("gateConnect").addEventListener("click", connect);
     $("gateUrl").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); connect(); } });
     $("acctForm").addEventListener("submit", save);
     $("acctTest").addEventListener("click", test);
-    $("pcMake").addEventListener("click", makeKey);
     $("syncGo").addEventListener("click", function(){ syncRun(false); });
     $("syncDry").addEventListener("click", function(){ syncRun(true); });
     $("syncAuto").addEventListener("click", syncAutoToggle);
     $("syncTraceCopy").addEventListener("click", function(){
       SC.copy($("syncTraceText").textContent).then(function(){ toast("복사했어요. 개발팀 채팅에 붙여 넣으세요"); }, function(){ toast("복사하지 못했어요. 글자를 길게 눌러 복사해 주세요"); });
-    });
-    $("pcKeyCopy").addEventListener("click", function(){
-      SC.copy($("pcKey").value).then(function(){ toast("PC 키를 복사했어요. 설치 창에 붙여 넣으세요"); }, function(){ $("pcKey").select(); toast("복사하지 못했어요. 글자를 길게 눌러 복사해 주세요"); });
     });
     $("acctTraceCopy").addEventListener("click", function(){
       var t = $("acctTraceText").textContent;
@@ -1732,9 +1833,11 @@
   function boot(){
     fetchAuth().then(function(a){
       authInfo = a;
-      if (token) enterApp();
-      else if (a) showGate("login");
-      else showGate("first");
+      Auth.boot(function(){                       /* 창구가 없거나 아직 토큰을 옮기기 전: 예전 방식 */
+        if (token) enterApp();
+        else if (a) showGate("login");
+        else showGate("first");
+      });
     });
   }
   boot();
