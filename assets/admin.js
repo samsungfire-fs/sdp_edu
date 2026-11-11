@@ -106,6 +106,7 @@
         }
         /* 강의별 공유 페이지·메뉴 주소가 빠져 있으면 조용히 만들어 둠 (저장 버튼은 건드리지 않음) */
         autoPages();
+        Gate.load();
         $("conn").open = false; updateSaveBar();
       })
       .catch(function(e){
@@ -1447,6 +1448,121 @@
     closeSet(); showGate("change");
   });
   $("makePwBtn").addEventListener("click", function(){ showGate("first"); });
+
+  /* ================= 구글 시트 창구 (기획 P2~P5 공통) · 사번 사이트 계정 (기획 P3 1단계) =================
+     - 창구 = 회원 명단 구글 시트에 붙은 Apps Script 웹 앱. 주소는 data/config.json 의 gate 에 둠(비밀 아님)
+     - 창구는 관리자가 보낸 GitHub 토큰으로 이 저장소 쓰기 권한을 확인한 뒤에만 대답함
+     - 사번 사이트 아이디·비밀번호는 창구의 스크립트 속성에만 저장. 이 화면에는 가린 아이디만 다시 보임 */
+  var Gate = (function(){
+    var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
+    var url = "", cfg = {}, csha = null, st = null;
+    function call(action, extra){
+      var body = { action: action, token: token };
+      for (var k in (extra || {})) body[k] = extra[k];
+      /* text/plain 으로 보내야 미리 확인 요청 없이 바로 감 (Apps Script 웹 앱 규칙) */
+      return fetch(url, { method:"POST", body: JSON.stringify(body), cache:"no-store", redirect:"follow" })
+        .then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+    }
+    function when(s){
+      var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(s || ""); if (!m) return "";
+      return (+m[2]) + "월 " + (+m[3]) + "일 " + m[4] + ":" + m[5];
+    }
+    function pill(id, cls, text){ var p = $(id); p.className = "pill " + cls; p.textContent = text; }
+    function msg(id, cls, text){ var p = $(id); p.className = "set-msg" + (cls ? " " + cls : ""); p.textContent = text || ""; }
+    var TEST = {
+      ok: ["ok", "접속 성공"],
+      badcred: ["bad", "아이디나 비밀번호가 맞지 않아요"],
+      blocked: ["bad", "구글 서버에서 사번 사이트에 연결할 수 없어요"],
+      unknown: ["warn", "접속 결과를 확인하지 못했어요"]
+    };
+    function paint(){
+      var on = !!(url && st);
+      pill("gateState", on ? "ok" : url ? "warn" : "idle", on ? "연결됨" : url ? "확인 안 됨" : "연결 안 됨");
+      $("gateUrl").value = url;
+      $("gateConnect").textContent = on ? "다시 연결" : "연결";
+      $("gateSheet").hidden = !(on && st.sheet && st.sheet.url);
+      if (on && st.sheet) $("gateSheet").href = st.sheet.url;
+      $("gateNote").textContent = on ? "시트 '" + (st.sheet ? st.sheet.name : "") + "'에 연결돼 있어요." : "회원 명단 구글 시트에 붙인 창구(Apps Script)의 웹 앱 주소를 넣고 연결하세요.";
+      var a = on && st.account || {};
+      pill("acctState", a.saved ? "ok" : "idle", a.saved ? "저장됨" : "저장 안 됨");
+      $("acctForm").hidden = !on;
+      $("acctTest").disabled = !a.saved;
+      if (!on) $("acctNote").textContent = "먼저 구글 시트 창구를 연결해 주세요.";
+      else if (!a.saved) $("acctNote").textContent = "아직 저장하지 않았어요. 사번 사이트 아이디와 비밀번호를 적고 저장하세요.";
+      else {
+        var t = st.lastTest, tt = t && TEST[t.result];
+        $("acctNote").textContent = "저장된 아이디 " + a.id + (a.savedAt ? " · " + when(a.savedAt) + " 저장" : "") +
+          (tt ? "\n마지막 접속 확인 " + when(t.at) + " · " + tt[1] : "");
+      }
+    }
+    function load(){
+      return repoJson(CFG).then(function(f){
+        cfg = f ? f.json : {}; csha = f ? f.sha : null; url = cfg.gate || ""; st = null; paint();
+        if (url) return refresh();
+      }).catch(function(){ paint(); });
+    }
+    function refresh(){
+      pill("gateState", "idle", "확인 중");
+      return call("status").then(function(j){
+        if (!j.ok){ st = null; paint(); msg("gateMsg", "bad", j.error === "notadmin" ? "이 토큰으로는 창구를 쓸 수 없어요. 저장소 쓰기 권한이 있는 토큰인지 확인해 주세요." : "창구가 대답하지 못했어요. 잠시 뒤 다시 해 주세요."); return; }
+        st = j; msg("gateMsg"); paint();
+      }).catch(function(){ st = null; paint(); msg("gateMsg", "bad", "창구에 연결하지 못했어요. 주소와 배포 설정(액세스: 모든 사용자)을 확인해 주세요."); });
+    }
+    function connect(){
+      var u = $("gateUrl").value.trim(), btn = $("gateConnect");
+      if (!canSave){ msg("gateMsg", "bad", "저장소에 연결된 뒤에 할 수 있어요."); return; }
+      if (!RE.test(u)){ msg("gateMsg", "bad", "주소를 확인해 주세요. https://script.google.com/macros/s/로 시작하고 /exec로 끝나요."); return; }
+      var prev = url; url = u; btn.disabled = true; btn.textContent = "연결하는 중…"; msg("gateMsg");
+      call("status").then(function(j){
+        if (!j.ok) throw Object.assign(new Error(j.error), { gate: j.error });
+        st = j;
+        if (cfg.gate === u) return null;
+        cfg.gate = u;
+        return gh("/contents/" + CFG, { method:"PUT", body: JSON.stringify({
+          message: "구글 시트 창구 연결", branch: branch, sha: csha || undefined,
+          content: b64enc(JSON.stringify(cfg, null, 2) + "\n")
+        }) }).then(function(res){ csha = res.content.sha; if (res.commit) Deploy.expect(res.commit.sha); });
+      }).then(function(){
+        paint(); msg("gateMsg", "ok", st.sheet && st.sheet.made && st.sheet.made.length ? "연결했어요. 시트에 탭 " + st.sheet.made.length + "개를 만들었어요." : "연결했어요.");
+        if (!st.account.saved){ $("acctBox").open = true; }
+      }).catch(function(er){
+        url = prev; st = prev ? st : null; paint();
+        msg("gateMsg", "bad", er.gate === "notadmin" ? "이 토큰으로는 창구를 쓸 수 없어요. 저장소 쓰기 권한이 있는 토큰인지 확인해 주세요."
+          : er.gate ? "창구가 대답하지 못했어요(" + er.gate + "). 코드를 다시 붙여 넣었는지 확인해 주세요."
+          : er.status ? "주소를 저장하지 못했어요. 잠시 뒤 다시 해 주세요."
+          : "창구에 연결하지 못했어요. 주소와 배포 설정(실행: 나 · 액세스: 모든 사용자)을 확인해 주세요.");
+      }).then(function(){ btn.disabled = false; if (btn.textContent === "연결하는 중…") btn.textContent = st ? "다시 연결" : "연결"; });
+    }
+    function save(e){
+      e.preventDefault();
+      var id = $("acctId").value.trim(), pw = $("acctPw").value, btn = $("acctSave");
+      if (!id || !pw){ msg("acctMsg", "bad", "아이디와 비밀번호를 모두 적어 주세요."); return; }
+      btn.disabled = true; btn.textContent = "저장하는 중…"; msg("acctMsg");
+      call("saveAccount", { id: id, pw: pw }).then(function(j){
+        if (!j.ok) throw new Error(j.error);
+        st = j; $("acctId").value = ""; $("acctPw").value = ""; paint();
+        msg("acctMsg", "ok", "저장했어요. [접속 확인]으로 사번 사이트에 들어가지는지 확인해 보세요.");
+      }).catch(function(){ msg("acctMsg", "bad", "저장하지 못했어요. 잠시 뒤 다시 해 주세요."); })
+        .then(function(){ btn.disabled = false; btn.textContent = "저장"; });
+    }
+    function test(){
+      var btn = $("acctTest"); btn.disabled = true; btn.textContent = "확인하는 중…"; msg("acctMsg");
+      call("testLogin").then(function(j){
+        if (!j.ok){ msg("acctMsg", "bad", j.error === "noaccount" ? "먼저 아이디와 비밀번호를 저장해 주세요." : "확인하지 못했어요. 잠시 뒤 다시 해 주세요."); return; }
+        var t = TEST[j.result] || TEST.unknown;
+        st.lastTest = { at: j.at, result: j.result, msg: j.msg };
+        paint();
+        msg("acctMsg", t[0], t[1] + (j.msg ? (j.result === "blocked" ? " · 오류: " : " · 사번 사이트 안내: ") + j.msg : "") + (j.result === "blocked" || j.result === "unknown" ? " — 개발팀에 이 문구를 알려 주세요." : ""));
+      }).catch(function(){ msg("acctMsg", "bad", "창구에 연결하지 못했어요. 잠시 뒤 다시 해 주세요."); })
+        .then(function(){ btn.textContent = "접속 확인"; btn.disabled = !(st && st.account && st.account.saved); });
+    }
+    $("gateConnect").addEventListener("click", connect);
+    $("gateUrl").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); connect(); } });
+    $("acctForm").addEventListener("submit", save);
+    $("acctTest").addEventListener("click", test);
+    paint();
+    return { load: load };
+  })();
 
   SC.ripple(); SC.fab();
   function boot(){

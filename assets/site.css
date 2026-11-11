@@ -662,7 +662,7 @@ body.watch-page .foot .wrap{justify-content:flex-end}
 .fname strong, .r-files .fname strong{font-weight:400; line-height:1.45}
 .fname strong{font-size:16px}
 .r-files .fname strong{font-size:18px}
-@media (max-width:980px){ .fname strong, .r-files .fname strong{font-size:17px} }
+@media (max-width:980px){ .fname strong{font-size:16px} .r-files .fname strong{font-size:18px} } /* #38 태블릿: 강의 16 · 상품연구 18 */
 @media (max-width:560px){
   .lec-note p{font-size:15px} .lec-note strong{font-size:19px}
   .fname strong, .r-files .fname strong{font-size:16px}
@@ -735,3 +735,15 @@ body.watch-page .foot .wrap{justify-content:flex-end}
 [data-theme="dark"] .bar-back, [data-theme="dark"] .bar-back svg{color:#FFFFFF}
 @media (max-width:980px){ .menu a{font-size:19px} }
 @media (max-width:560px){ .menu a{font-size:17px} }
+
+/* ================= 디자인팀 추가 요청 (2026-11-11) #36~#39 ================= */
+
+/* #36 강의 페이지 '다른 강의'도 유튜브식 (.vgrid 값 그대로 · 메뉴 알약 없음) */
+.others .vgrid{gap:40px 24px}
+@media (max-width:980px){ .others .vgrid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:32px 20px} }
+@media (max-width:560px){ .others .vgrid{grid-template-columns:minmax(0,1fr); gap:28px} }
+
+/* #39 카드 제목(홈 · 다른 강의) 둥근바람 400 · PC 17 / 태블릿 16 / 휴대폰 17px · 줄간격 1.45 */
+.vgrid .card-body h3, .others .vgrid .card:not(.r-card) .card-body h3{font-weight:400; font-size:17px; line-height:1.45}
+@media (max-width:980px){ .vgrid .card-body h3, .others .vgrid .card:not(.r-card) .card-body h3{font-size:16px} }
+@media (max-width:560px){ .vgrid .card-body h3, .others .vgrid .card:not(.r-card) .card-body h3{font-size:17px} }

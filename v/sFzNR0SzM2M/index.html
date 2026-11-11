@@ -25,7 +25,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261111a">
+<link rel="stylesheet" href="assets/site.css?v=20261111b">
 </head>
 <body>
 
@@ -375,12 +375,29 @@
     var bar = document.querySelector(".bar").offsetHeight;
     window.scrollTo({ top: h.getBoundingClientRect().top + scrollY - bar - 20, behavior: REDUCE ? "auto" : "smooth" });
   }
-  function bindList(){
+  /* #37 홈으로 돌아오면 보던 묶음·스크롤 위치 그대로 (뒤로 가기 · 화면의 돌아가기) */
+  var FEED_KEY = "sdp-feed", restoreNext = false, lastView = "", didRestore = false;
+  function feedSave(){
+    if (!L || !L.infinite || !$("listBody")) return;
+    var st = { url: L.url(1, L.q), count: L.count, y: Math.round(scrollY) };
+    feedMem = st; try { sessionStorage.setItem(FEED_KEY, JSON.stringify(st)); } catch (er) {}
+  }
+  var feedMem = null;
+  function feedLoad(){
+    if (feedMem) return feedMem;
+    try { return JSON.parse(sessionStorage.getItem(FEED_KEY) || "null"); } catch (er) { return null; }
+  }
+  function bindList(restore){
     $("listBody").addEventListener("click", function(e){
       var pg = e.target.closest("button[data-page]");
       if (pg && !pg.disabled){ L.page = +pg.dataset.page; drawGrid(true); syncUrl(true); toListTop(); return; }
       if (e.target.closest("#clearQ")){ L.q = ""; L.page = 1; L.count = 0; $("q").value = ""; drawGrid(); syncUrl(false); $("q").focus(); }
     });
+    if (restore){
+      didRestore = true; L.count = restore.count; drawGrid();
+      var y = restore.y; window.scrollTo(0, y); requestAnimationFrame(function(){ window.scrollTo(0, y); });
+      return;
+    }
     drawGrid(); countUp(); SC.lineReveal($("listLr"));
   }
   /* M10 빛 라인 리빌로 감싸기 (#27 2배 빠르게): 홈 목록 0.55 · 상품연구 0.5 · 자료/소개 0.4초 */
@@ -421,7 +438,8 @@
         '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기" autocomplete="off" enterkeyhint="search"></label>' +
       '</div>' + listBody(550) + '</section>';
     $("q").value = L.q;
-    bindList();
+    var saved = restoreNext ? feedLoad() : null;
+    bindList(saved && saved.url === L.url(1, L.q) ? saved : null);
     $("q").addEventListener("input", function(){ L.q = this.value.trim(); L.page = 1; L.count = 0; drawGrid(); syncUrl(false); });
     $("q").addEventListener("keydown", function(e){ if (e.key === "Enter") this.blur(); });
     lastList = menuUrl(L.m, L.page, L.q);
@@ -589,7 +607,7 @@
               : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>', 400) +
           '</aside>' +
         '</div>' +
-        (others.length ? '<section class="others" aria-labelledby="moreH"><h2 id="moreH">다른 강의</h2><ul class="grid">' + others.map(function(x){ return card(x, false); }).join("") + '</ul></section>' : '') +
+        (others.length ? '<section class="others" aria-labelledby="moreH"><h2 id="moreH">다른 강의</h2><ul class="grid vgrid">' + others.map(function(x){ return card(x, false); }).join("") + '</ul></section>' : '') +
       '</div>';
 
     $("share").addEventListener("click", function(){
@@ -614,12 +632,15 @@
   /* ---------- 화면 고르기 ---------- */
   function route(){
     var r = parse(), want;
+    var view = r.v ? "video" : r.r ? "research" : "list";
+    didRestore = false;
     document.title = TAB_TITLE;
     if (r.v){ renderVideo(r.v); want = videoUrl(r.v); }
     else if (r.r) want = renderResearch(r);
     else want = renderList(r);
     /* 주소창을 정식 주소로 맞춤 (예: 맨 위 주소 → all/) */
     if (location.href.split("#")[0] !== want) history.replaceState(null, "", want + location.hash);
+    restoreNext = false; lastView = view;
   }
 
   /* 같은 사이트 안 이동은 새로 불러오지 않고 바로 바꿈 */
@@ -627,10 +648,16 @@
     var a = e.target.closest("a[data-go]");
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
+    if (lastView === "list") feedSave();
+    restoreNext = lastView === "video" && !!a.closest("#barBack, .back-all");
     if (a.href !== location.href) history.pushState(null, "", a.href);
-    route(); window.scrollTo(0, 0);
+    route(); if (!didRestore) window.scrollTo(0, 0);
   });
-  window.addEventListener("popstate", route);
+  window.addEventListener("popstate", function(){
+    if (lastView === "list") feedSave();
+    restoreNext = lastView === "video";
+    route();
+  });
 
   /* 받기 누르면 바로 반응 보여주기 (다운로드가 시작되기까지 몇 초 걸릴 수 있어서) */
   document.addEventListener("click", function(e){

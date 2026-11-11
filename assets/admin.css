@@ -562,3 +562,14 @@ body:not(.authed) .set-btn, body:not(.authed) .setpop{display:none!important}
 
 /* #31 관리자 강의 줄 제목: 두 줄까지 + 말줄임, 줄간격 1.4, 단어 중간에서 안 끊음 */
 .vtext h3.vtitle, .admin.is-edit .vtext h3.vtitle{-webkit-line-clamp:2; line-height:1.4; word-break:keep-all; overflow-wrap:break-word}
+
+/* ================= 기획 P2~P5 공통 · P3 1단계: 구글 시트 창구 · 사번 사이트 계정 (⚙ 설정 창) ================= */
+.acct-form{display:flex; flex-direction:column; gap:12px}
+.acct-form[hidden]{display:none}
+#acctNote{white-space:pre-line}
+.set-msg{margin:0; font-size:14px; line-height:1.55; color:var(--ink-2)}
+.set-msg:empty{display:none}
+.set-msg.ok{color:var(--ok)} .set-msg.bad{color:var(--bad)} .set-msg.warn{color:var(--warn)}
+.setpop .set .in{background:var(--card); height:46px; font-size:15px}
+#gateUrl{font-size:13.5px}
+.set-btns .btn-soft[disabled]{opacity:.45; cursor:default}
