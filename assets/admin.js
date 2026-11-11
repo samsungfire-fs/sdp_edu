@@ -1464,7 +1464,7 @@
      - 창구는 관리자가 보낸 GitHub 토큰으로 이 저장소 쓰기 권한을 확인한 뒤에만 대답함
      - 사번 사이트 아이디·비밀번호는 창구의 스크립트 속성에만 저장. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
-    var GATE_V = 5; /* 창구 코드(Code.gs) 최신 버전 */
+    var GATE_V = 6; /* 창구 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null;
     function call(action, extra){
@@ -1486,7 +1486,7 @@
       denied: ["bad", "사번 사이트가 접속을 막았어요"],
       blocked: ["bad", "PC에서 사번 사이트에 연결할 수 없어요"],
       unknown: ["warn", "접속 결과를 확인하지 못했어요"],
-      session: ["warn", "로그인은 됐는데 다음 화면에서 로그인이 풀려요"]
+      session: ["warn", "로그인은 됐는데 다음 화면에서 계속 로그인이 풀려요"]
     };
     var waitT = null, keyArmed = false;
     function online(ag){ var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)/.exec(ag && ag.seen || ""); if (!m) return false;
@@ -1511,16 +1511,16 @@
       else {
         var t = st.lastTest, tt = t && TEST[t.result];
         $("acctNote").textContent = "저장된 아이디 " + a.id + (a.savedAt ? " · " + when(a.savedAt) + " 저장" : "") +
-          (tt ? "\n마지막 접속 확인 " + when(t.at) + (t.by === "pc" ? "(PC)" : "") + " · " + tt[1] : "");
+          (tt ? "\n마지막 접속 확인 " + when(t.at) + (t.by === "pc" ? "(PC)" : t.by === "google" ? "(구글)" : "") + " · " + tt[1] : "");
       }
       /* PC 매크로 (v5: 사번 사이트는 PC에서만 들어가짐) */
       var ag = on && st.agent || {};
       $("pcBox").hidden = !on;
       var live = online(ag);
       pill("pcState", !ag.has ? "idle" : !ag.seen ? "warn" : live ? "ok" : "idle", !ag.has ? "설치 안 됨" : !ag.seen ? "설치 기다림" : live ? "켜져 있음" : "쉬는 중");
-      $("pcNote").textContent = !ag.has ? "사번 사이트는 희수 님 PC에서만 들어가져서, 명단 받기는 PC 매크로가 해요.\n[PC 키 만들기] → 개발팀 폴더 '사번명단_매크로'의 설치.bat 더블클릭 → 키 붙여 넣기."
+      $("pcNote").textContent = !ag.has ? "구글 서버가 명단을 못 받을 때 대신 하는 대비용이에요.\n필요할 때 [PC 키 만들기] → 개발팀 폴더 '사번명단_매크로'의 설치.bat 더블클릭 → 키 붙여 넣기."
         : !ag.seen ? "PC 키를 만들었어요(" + when(ag.madeAt) + ").\n설치.bat으로 설치하면 연결돼요."
-        : "PC " + (ag.host || "") + " · 마지막 신호 " + when(ag.seen) + (live ? "" : "\n평일 08:35~17:45에 5분마다 신호가 와요.");
+        : "대비용 · PC " + (ag.host || "") + " · 마지막 신호 " + when(ag.seen) + (live ? "" : "\n평일 08:35~17:45에 5분마다 신호가 와요.");
       $("pcMake").textContent = keyArmed ? "정말 새로 만들기" : ag.has ? "PC 키 새로 만들기" : "PC 키 만들기";
       $("pcMake").className = (ag.has ? "btn-soft" : "btn-main sm") + " rp press";
     }
@@ -1580,7 +1580,7 @@
       var box = $("acctTrace");
       if (!j || j.result === "ok" || !j.trace){ box.hidden = true; return; }
       var lines = ["결과 " + j.result + (j.msg ? " · " + j.msg : "") + " · " + (j.at || ""),
-        "PC " + (st && st.agent && st.agent.host || "?") + " · 창구 v" + (st && st.v || "?")];
+        "확인한 곳 " + (j.by === "pc" ? "PC " + (st && st.agent && st.agent.host || "?") : "구글 서버") + " · 창구 v" + (st && st.v || "?")];
       j.trace.forEach(function(t, i){
         if (t.retry){ lines.push((i + 1) + ". 다시 열기 " + t.retry + "번째 → " + t.code + (t.toLogin ? " · 로그인으로 돌려보냄" : " · 열림") + (t.setCookie && t.setCookie.length ? " · 쿠키 " + t.setCookie.join(",") : "") + " · " + t.len + "자"); return; }
         if (t.form){ lines.push((i + 1) + ". 로그인 칸 " + (t.form.found ? "찾음" : "못 찾음") + " · 숨은 값 " + (t.form.hidden.join(",") || "없음")); return; }
@@ -1595,7 +1595,7 @@
     function showResult(){
       var t = st && st.lastTest; if (!t) return;
       var tt = TEST[t.result] || TEST.unknown;
-      showTrace({ result: t.result, msg: t.msg, at: t.at, trace: st.lastTrace || [] });
+      showTrace({ result: t.result, msg: t.msg, at: t.at, by: t.by, trace: st.lastTrace || [] });
       msg("acctMsg", tt[0], tt[1] + (t.msg ? " · 사번 사이트 안내: " + t.msg : "") + (t.result === "ok" ? "" : " — 아래 '자세히 보기'를 복사해 개발팀에 알려 주세요."));
     }
     /* [접속 확인] → 창구에 부탁 → PC 매크로가 5분 안에 가져가서 확인 → 결과를 기다림 */
@@ -1612,13 +1612,14 @@
       }, n ? 15000 : 5000);
     }
     function test(){
-      var btn = $("acctTest"); btn.disabled = true; btn.textContent = "PC 기다리는 중…"; msg("acctMsg"); $("acctTrace").hidden = true;
+      var btn = $("acctTest"); btn.disabled = true; btn.textContent = "확인하는 중…"; msg("acctMsg"); $("acctTrace").hidden = true;
       call("testLogin").then(function(j){
         if (!j.ok){
           msg("acctMsg", "bad", j.error === "noaccount" ? "먼저 아이디와 비밀번호를 저장해 주세요." : j.error === "noagent" ? "먼저 아래 'PC 매크로'를 설치해 주세요." : "확인하지 못했어요. 잠시 뒤 다시 해 주세요.");
           btn.disabled = false; btn.textContent = "접속 확인"; if (j.error === "noagent") $("pcBox").open = true; return;
         }
         st = j.status; paint();
+        if (!j.queued){ showResult(); btn.disabled = false; btn.textContent = "접속 확인"; return; }   /* 구글에서 바로 확인 (v6) */
         msg("acctMsg", "warn", "PC에 접속 확인을 부탁했어요. PC가 켜져 있으면 5분 안에 결과가 여기에 나와요.");
         waitResult(j.status.testReq, 0);
       }).catch(function(){ msg("acctMsg", "bad", "창구에 연결하지 못했어요. 잠시 뒤 다시 해 주세요."); btn.disabled = false; btn.textContent = "접속 확인"; });
