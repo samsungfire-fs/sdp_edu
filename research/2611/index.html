@@ -15,7 +15,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>영개파 교육 자료</title>
 <meta name="description" content="연령 1개 · 자료 1개">
-<meta name="theme-color" content="#003CDC">
+<meta name="theme-color" content="#F1F3FA">
 <script>/* 라이트/다크: 저장된 값(없으면 기기 설정)을 CSS보다 먼저 붙여 깜빡임 방지 */(function(){var t;try{t=localStorage.getItem("sdp-theme")}catch(e){}if(t!=="dark"&&t!=="light")t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t)})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +25,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261110d">
+<link rel="stylesheet" href="assets/site.css?v=20261111a">
 </head>
 <body>
 
@@ -67,7 +67,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261110d"></script>
+<script src="assets/common.js?v=20261111a"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -109,7 +109,7 @@
   }
 
   /* ---------- 라이트 / 다크 (#18 · M4) — common.js ---------- */
-  SC.themeUI({ tm: $("tm"), ic: $("tmIc") });
+  SC.themeUI({ tm: $("tm"), ic: $("tmIc"), bar: { light: "#F1F3FA", dark: "#07080C" } });
 
   /* ---------- 주소 ---------- */
   function menuUrl(m, page, q){
@@ -252,9 +252,8 @@
         (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') +
         (v.duration ? '<span class="chip-dur">' + esc(v.duration) + '</span>' : '') +
         '<span class="play" aria-hidden="true">' + IC.play + '</span></div>' +
-      '<div class="card-body">' + (withMenu ? '<div>' + menuBadge(v) + '</div>' : '') +
-        '<h3>' + esc(v.title || "제목 없음") + '</h3>' +
-        '<div class="card-meta"><span class="date">' + metaText(v) + '</span>' +
+      '<div class="card-body"><h3>' + esc(v.title || "제목 없음") + '</h3>' +
+        '<div class="card-meta"><span class="meta-l">' + (withMenu ? menuBadge(v) : '') + '<span class="date">' + metaText(v) + '</span></span>' +
           (n ? '<span class="chip-files">' + IC.dl + '자료&nbsp;' + n + '개</span>' : '') + '</div></div></a></li>';
   }
   /* 상품연구 카드 (월 · 연령): 썸네일 없으면 흰 바탕 로고 기본 썸네일 */
@@ -300,7 +299,53 @@
     if (location.href === u) return;
     if (push) history.pushState(null, "", u); else history.replaceState(null, "", u);
   }
+  /* #34 홈 목록: 3·2·1열 × 8줄씩, 끝에서 700px 남으면 다음 묶음 (페이지 번호 없음) */
+  function cols(){ return innerWidth > 980 ? 3 : innerWidth > 560 ? 2 : 1; }
+  function batchSize(){ return cols() * 8; }
+  var feeding = false;
+  function drawFeed(){
+    var list = filtered(), box = $("listBody"), html = "";
+    L.count = Math.min(Math.max(L.count || 0, batchSize()), list.length);
+    if (L.q) html += '<p class="result">‘<span class="kw">' + esc(L.q) + '</span>’ 검색 결과 <span class="num">' + list.length + '</span>개</p>';
+    if (!list.length){
+      html += '<div class="nores"><span class="nores-ic">' + IC.search + '</span><h2>찾는 강의가 없어요</h2><p>다른 낱말로 다시 찾아 보세요.</p>' +
+        '<button type="button" class="btn-blue rp press" id="clearQ">검색어 지우기</button></div>';
+    } else html += '<ul class="grid vgrid">' + list.slice(0, L.count).map(L.card).join("") + '</ul><div class="feed-end" id="feedEnd"></div>';
+    box.innerHTML = html;
+    feedTail();
+    setTimeout(feedCheck, 60);
+  }
+  function feedTail(){
+    var e = $("feedEnd"), n = filtered().length; if (!e) return;
+    e.innerHTML = L.count >= n && n > batchSize() ? '<p class="feed-done">모든 강의를 다 봤어요</p>' : '';
+  }
+  function feedMore(){
+    if (!L || !L.infinite || feeding || !$("feedEnd")) return;
+    if (L.count >= filtered().length) return;
+    feeding = true;
+    var myL = L, sk = '<li><div class="sk-th"></div><div class="sk-l"></div><div class="sk-l s"></div></li>';
+    $("feedEnd").innerHTML = '<ul class="grid vgrid skel" aria-hidden="true">' + new Array(cols() + 1).join(sk) + '</ul>';
+    setTimeout(function(){
+      feeding = false;
+      if (L !== myL || !$("feedEnd")) return;
+      var add = filtered().slice(L.count, L.count + batchSize());
+      L.count += add.length;
+      /* 새로 붙는 묶음만 라인 리빌 (이미 보이던 카드는 그대로) */
+      var wrap = document.createElement("div");
+      wrap.className = "lr vbatch"; wrap.style.cssText = "--lr-d:550ms;--lr-w:0ms";
+      wrap.innerHTML = '<ul class="grid vgrid lr-c">' + add.map(L.card).join("") + '</ul>' + LINES;
+      $("feedEnd").parentNode.insertBefore(wrap, $("feedEnd"));
+      $("feedEnd").innerHTML = "";
+      feedTail(); SC.lineReveal(wrap);
+      setTimeout(feedCheck, 60);
+    }, REDUCE ? 0 : 700);
+  }
+  function feedCheck(){
+    if (L && L.infinite && document.documentElement.scrollHeight - (scrollY + innerHeight) < 700) feedMore();
+  }
+  window.addEventListener("scroll", feedCheck, { passive:true });
   function drawGrid(m2){
+    if (L.infinite) return drawFeed();
     var list = filtered(), per = perPage(), pages = Math.max(1, Math.ceil(list.length / per));
     if (L.page > pages) L.page = pages;
     var shown = list.slice((L.page - 1) * per, L.page * per);
@@ -334,7 +379,7 @@
     $("listBody").addEventListener("click", function(e){
       var pg = e.target.closest("button[data-page]");
       if (pg && !pg.disabled){ L.page = +pg.dataset.page; drawGrid(true); syncUrl(true); toListTop(); return; }
-      if (e.target.closest("#clearQ")){ L.q = ""; L.page = 1; $("q").value = ""; drawGrid(); syncUrl(false); $("q").focus(); }
+      if (e.target.closest("#clearQ")){ L.q = ""; L.page = 1; L.count = 0; $("q").value = ""; drawGrid(); syncUrl(false); $("q").focus(); }
     });
     drawGrid(); countUp(); SC.lineReveal($("listLr"));
   }
@@ -363,7 +408,7 @@
     setBody("");
     drawMenu(r.m);
     var all = listOf(r.m);
-    L = { m: r.m, page: r.page, q: r.q, items: all, search: true, card: function(v){ return card(v, r.m === "all"); }, url: function(p, q){ return menuUrl(r.m, p, q); } };
+    L = { m: r.m, page: 1, count: 0, infinite: true, q: r.q, items: all, search: true, card: function(v){ return card(v, r.m === "all"); }, url: function(p, q){ return menuUrl(r.m, 1, q); } };
     if (!all.length){
       L = null;
       lastList = menuUrl(r.m);
@@ -377,7 +422,7 @@
       '</div>' + listBody(550) + '</section>';
     $("q").value = L.q;
     bindList();
-    $("q").addEventListener("input", function(){ L.q = this.value.trim(); L.page = 1; drawGrid(); syncUrl(false); });
+    $("q").addEventListener("input", function(){ L.q = this.value.trim(); L.page = 1; L.count = 0; drawGrid(); syncUrl(false); });
     $("q").addEventListener("keydown", function(e){ if (e.key === "Enter") this.blur(); });
     lastList = menuUrl(L.m, L.page, L.q);
     return lastList;
@@ -385,7 +430,7 @@
   /* 창 너비가 바뀌어 한 페이지 개수가 달라지면, 보던 첫 카드가 있는 페이지로 */
   window.addEventListener("resize", function(){
     var per = perPage();
-    if (!L || !$("listBody") || per === lastPer) return;
+    if (!L || L.infinite || !$("listBody") || per === lastPer) return;
     var first = (L.page - 1) * lastPer;
     L.page = Math.floor(first / per) + 1;
     drawGrid(); syncUrl(false);

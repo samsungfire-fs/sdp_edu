@@ -214,7 +214,8 @@
     function cur() { return root.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
     function paint() {
       var t = cur(), mc = document.querySelector('meta[name="theme-color"]');
-      if (mc) mc.setAttribute("content", t === "dark" ? "#0B1442" : "#003CDC");
+      var bar = opts.bar || { light: "#003CDC", dark: "#0B1442" };
+      if (mc) mc.setAttribute("content", bar[t]);
       if (opts.tm) opts.tm.querySelectorAll("[data-theme-set]").forEach(function (b) { b.setAttribute("aria-checked", b.dataset.themeSet === t); });
       if (opts.ic) {
         opts.ic.innerHTML = t === "dark" ? SUN : MOON;
