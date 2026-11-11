@@ -1464,7 +1464,7 @@
      - 창구는 관리자가 보낸 GitHub 토큰으로 이 저장소 쓰기 권한을 확인한 뒤에만 대답함
      - 사번 사이트 아이디·비밀번호는 창구의 스크립트 속성에만 저장. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
-    var GATE_V = 7; /* 창구 코드(Code.gs) 최신 버전 */
+    var GATE_V = 8; /* 창구 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null;
     function call(action, extra){
@@ -1600,8 +1600,12 @@
       var box = $("syncTrace"), d = info && info.diag || {};
       if (!show){ box.hidden = true; return; }
       var lines = ["결과 " + (info.ok ? "성공" : "실패") + (info.msg ? " · " + info.msg : "") + " · " + (info.at || "") + " · " + (info.sec || 0) + "초 · 창구 v" + (st && st.v || "?")];
-      ["tries","code","type","disp","size","sig","lines","badId","org","loc","alert","snip"].forEach(function(k){ if (d[k] !== undefined && d[k] !== "") lines.push(k + ": " + d[k]); });
-      if (d.header) lines.push("머리 줄: " + d.header.join(" | "));
+      [["all", "전체 명단"], ["normal", "정상회원 명단"]].forEach(function(t){
+        var x = d[t[0]]; if (!x) return;
+        lines.push(t[1] + ": " + ["tries","code","type","size","sig","lines","alert","snip"].filter(function(k){ return x[k] !== undefined && x[k] !== ""; }).map(function(k){ return k + " " + x[k]; }).join(" · "));
+        if (x.header) lines.push("  머리 줄: " + x.header.join(" | "));
+      });
+      ["total","normalIds","noSabun","noSabunNormal"].forEach(function(k){ if (d[k] !== undefined) lines.push(k + ": " + d[k]); });
       if (d.states) lines.push("가입상태: " + Object.keys(d.states).map(function(k){ return k + " " + d.states[k]; }).join(", "));
       $("syncTraceText").textContent = lines.join("\n"); box.hidden = false; box.open = !info.ok;
     }
@@ -1614,7 +1618,7 @@
       call("syncNow", { dry: dry }).then(function(j){
         if (j.status) st = j.status;
         var info = j.info || {};
-        if (j.ok) msg("syncMsg", "ok", (dry ? "미리 확인: " : "갱신했어요: ") + "정상회원 " + num(j.normal) + "명 · 전체 " + num(j.people) + "명 (엑셀 " + num(j.total) + "줄, 같은 사번은 합침)" + (dry ? " · 시트는 바꾸지 않았어요." : ""));
+        if (j.ok) msg("syncMsg", "ok", (dry ? "미리 확인: " : "갱신했어요: ") + "정상회원 " + num(j.normal) + "명 · 전체 " + num(j.people) + "명 (엑셀 " + num(j.total) + "줄, 같은 사번은 합침" + (j.info && j.info.diag && j.info.diag.noSabun ? " · 아이디에 사번이 없는 " + num(j.info.diag.noSabun) + "줄은 뺌" : "") + ")" + (dry ? " · 시트는 바꾸지 않았어요." : ""));
         else msg("syncMsg", "bad", (j.msg || "명단을 받지 못했어요.") + (dry ? "" : " 시트는 어제 명단 그대로예요.") + " — 아래 '자세히 보기'를 복사해 개발팀에 알려 주세요.");
         showSyncDiag(info, !j.ok || dry);
       }).catch(function(){ msg("syncMsg", "bad", "창구 응답을 받지 못했어요. 잠시 뒤 [사번 명단]을 다시 열어 결과를 확인해 주세요."); })
