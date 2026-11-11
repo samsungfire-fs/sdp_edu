@@ -90,11 +90,15 @@
       Route.go("#/settings/me");
       return siteJson().then(function(r){ useData(r[0] || { site:{}, videos:[] }, r[1]); updateSaveBar(); });
     }
-    return gh("")
-      .then(function(info){
-        branch = info.default_branch || "main";
+    /* 11-11 속도: 사번 목록(설정 칸 · 누가 언제 기록)도 데이터와 동시에 부름 */
+    Gate.load(); Audit.load();
+    /* 11-11 속도: 저장소 정보와 강의 · 상품연구 데이터를 한꺼번에 받음(예전엔 차례로) */
+    return Promise.all([gh(""), repoJson("data/videos.json"), repoJson("data/research.json")])
+      .then(function(all){
+        var info = all[0];
+        if ((info.default_branch || "main") !== branch){ branch = info.default_branch || "main"; return Promise.all([repoJson("data/videos.json"), repoJson("data/research.json")]); }
         if (info.permissions && info.permissions.push === false) throw Object.assign(new Error("no push"), { status:403 });
-        return Promise.all([repoJson("data/videos.json"), repoJson("data/research.json")]);
+        return [all[1], all[2]];
       })
       .then(function(r){
         var file = r[0], rf = r[1];
@@ -108,9 +112,7 @@
         }
         /* 강의별 공유 페이지·메뉴 주소가 빠져 있으면 조용히 만들어 둠 (저장 버튼은 건드리지 않음) */
         autoPages();
-        Gate.load();
         Auth.afterLoad();
-        Audit.load();
         updateSaveBar();
       })
       .catch(function(e){
@@ -1542,7 +1544,8 @@
     }
     function enterWith(r, keep){
       adminSes = { sid: r.sid || (sidGet() || {}).sid, sabun: r.sabun, name: r.name, master: !!r.master, exp: r.exp, keep: !!keep, org: r.org || "", keepRule: r.keepRule };
-      sidSet({ sid: adminSes.sid, exp: r.exp, keep: !!keep }, keep);
+      sidSet({ sid: adminSes.sid, exp: r.exp, keep: !!keep, p: { sabun: r.sabun, name: r.name, master: !!r.master, org: r.org || "", keepRule: r.keepRule } }, keep);
+      if (GATE_URL) LS.set("sdp-gate-url", GATE_URL);
       keepSession(r.secrets.ghToken, r.secrets.apiKey, false);
       useTheme(r.theme);
       enterApp();
@@ -1604,11 +1607,43 @@
     $("pwOut").addEventListener("click", function(){ logout(); showGate("sabun"); });
 
     /* 처음 열 때: 사번 목록 주소(공개 data/config.json) → 상태 → 남아 있는 로그인이 있으면 바로 */
+    /* 11-11 속도: 이 탭에서 이미 로그인했으면(세션 · 토큰 · 사번 목록 주소가 남아 있고 아직 안 끝났으면) 확인을 기다리지 않고 바로 들어감.
+       확인은 뒤에서 하고, 로그인이 끝났거나 풀렸으면 그때 로그인 화면으로 */
+    function kstNow(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19); }
+    function quick(){
+      var saved = sidGet(), url = LS.get("sdp-gate-url") || "";
+      if (!saved || !saved.sid || !saved.p || !url || !token) return false;
+      if (saved.exp && String(saved.exp).slice(0, 19) <= kstNow()) return false;
+      GATE_URL = url; gateInfo = { ok:true, hasSecrets:true };
+      var p = saved.p;
+      adminSes = { sid: saved.sid, sabun: p.sabun, name: p.name, master: !!p.master, exp: saved.exp, keep: !!saved.keep, org: p.org || "", keepRule: p.keepRule };
+      enterApp();
+      gateFetch({ action:"adminSession", sid: saved.sid }).then(function(r){
+        if (r.ok && !r.must){
+          adminSes.master = !!r.master; adminSes.name = r.name; adminSes.org = r.org || ""; adminSes.exp = r.exp; adminSes.keepRule = r.keepRule;
+          sidSet({ sid: saved.sid, exp: r.exp, keep: !!saved.keep, p: { sabun: r.sabun, name: r.name, master: !!r.master, org: r.org || "", keepRule: r.keepRule } }, !!saved.keep);
+          if (r.secrets && r.secrets.ghToken && r.secrets.ghToken !== token) keepSession(r.secrets.ghToken, r.secrets.apiKey, false);
+          paintMe(); Route.master();
+          return;
+        }
+        if (dirty) return;                                            /* 고치던 중이면 저장할 기회를 남김(저장할 때 다시 로그인 안내) */
+        sidSet(null); adminSes = null; clearSession(); canSave = false;
+        if (r.must){ pending = { sid: saved.sid, sabun: r.sabun, name: r.name, master: r.master, keep: !!saved.keep }; showGate("pw"); return; }
+        showGate("sabun", r.error === "expired" && saved.keep ? "날짜가 바뀌어 다시 로그인해 주세요." : "", "in2");
+      }).catch(function(){});                                         /* 잠깐 연결이 안 되면 그대로 둠 */
+      gateFetch({ action:"gateInfo" }).then(function(i){ if (i && i.ok) gateInfo = i; }).catch(function(){});
+      fetch("data/config.json?t=" + Date.now(), { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(cfg){
+        if (cfg && cfg.gate && cfg.gate !== url){ LS.set("sdp-gate-url", cfg.gate); GATE_URL = cfg.gate; }
+      }).catch(function(){});
+      return true;
+    }
     function boot(fallback){
+      if (quick()) return;
       fetch("data/config.json?t=" + Date.now(), { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
         .then(function(cfg){
           GATE_URL = cfg && cfg.gate || "";
           if (!GATE_URL) return fallback();
+          LS.set("sdp-gate-url", GATE_URL);
           return gateFetch({ action:"gateInfo" }).then(function(info){
             gateInfo = info;
             if (!info.ok || !info.hasSecrets) return fallback();          // 아직 토큰을 사번 목록으로 옮기기 전 → 예전 방식(자동)
@@ -1772,7 +1807,7 @@
     function on(){ return !!(GATE_URL && adminSes && adminSes.sid); }
     function load(){
       if (!on()) return Promise.resolve();
-      return gateFetch({ action:"auditGet", sid: adminSes.sid }).then(function(r){ if (r.ok){ map = r.map || {}; more = {}; paint(); render(); } }).catch(function(){});
+      return gateFetch({ action:"auditGet", sid: adminSes.sid }).then(function(r){ if (r.ok){ map = r.map || {}; more = {}; paint(); if (baseline) render(); } }).catch(function(){});
     }
     function add(items){
       items = (items || []).filter(Boolean);

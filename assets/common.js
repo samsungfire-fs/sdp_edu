@@ -21,10 +21,14 @@
     return "https://i.ytimg.com/vi/" + id + "/" + (hi ? "maxresdefault" : "hqdefault") + ".jpg";
   };
 
-  /* 썸네일 이미지 태그 (고화질 없으면 일반 화질로) */
-  SC.thumbImg = function (id, eager) {
-    return '<img src="' + SC.thumb(id, true) + '" alt="" ' + (eager ? "" : 'loading="lazy" ') +
-      'onerror="this.onerror=null;this.src=\'' + SC.thumb(id, false) + '\'">';
+  /* 썸네일 이미지 태그 — 칸 크기에 맞는 화질만 받음(11-11 속도: 늘 1280px 고화질을 받던 것 → 휴대폰·PC 칸에 맞게 640/480px).
+     고화질이 없는 영상이면 일반 화질로 */
+  var THUMB_SIZES = "(max-width:560px) 52vw, (max-width:980px) 34vw, 420px";
+  SC.thumbImg = function (id, eager, sizes) {
+    var b = "https://i.ytimg.com/vi/" + id + "/";
+    return '<img src="' + b + 'hqdefault.jpg" srcset="' + b + 'hqdefault.jpg 480w, ' + b + 'sddefault.jpg 640w, ' + b + 'maxresdefault.jpg 1280w" sizes="' + (sizes || THUMB_SIZES) + '" alt="" ' +
+      (eager ? 'fetchpriority="high" ' : 'loading="lazy" decoding="async" ') +
+      'onerror="this.onerror=null;this.removeAttribute(\'srcset\');this.src=\'' + b + 'hqdefault.jpg\'">';
   };
 
   /* 구글드라이브 공유 링크 → 바로 다운로드 주소 */

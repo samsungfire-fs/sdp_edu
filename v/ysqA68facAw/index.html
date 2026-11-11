@@ -19,13 +19,13 @@
 <script>/* 라이트/다크: 저장된 값(없으면 기기 설정)을 CSS보다 먼저 붙여 깜빡임 방지 */(function(){var t;try{t=localStorage.getItem("sdp-theme")}catch(e){}if(t!=="dark"&&t!=="light")t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t)})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap"></noscript>
 <link rel="icon" href="assets/favicon-48.png?v=3" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
-<link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261111d">
+<link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=20261111e">
 </head>
 <body>
 
@@ -67,7 +67,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261111c"></script>
+<script src="assets/common.js?v=20261111d"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };

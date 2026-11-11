@@ -10,20 +10,20 @@
 <script>/* 라이트/다크: 사이트와 같은 저장값(없으면 기기 설정)을 CSS보다 먼저 붙여 깜빡임 방지 */(function(){var t;try{t=localStorage.getItem("sdp-theme")}catch(e){}if(t!=="dark"&&t!=="light")t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t)})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap"></noscript>
 <link rel="icon" href="assets/admin-favicon-48.png?v=1" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/admin-favicon-32.png?v=1" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
-<link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261111d">
+<link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=20261111e">
 <link rel="stylesheet" href="assets/admin.css?v=20261111i">
 </head>
 <body>
 
 <header class="abar">
   <div class="awrap">
-    <a class="abrand" href="admin.html">관리자 페이지</a>
+    <a class="abrand" href="#/courses">관리자 페이지</a>
     <nav class="bar-nav" id="barNav" aria-label="관리자 화면"><a href="#/courses" data-view="courses"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h10.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h10.5"></path></svg><span>강의 관리</span></a><a href="#/analytics" data-view="analytics"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>분석</span></a></nav>
     <div class="abar-right">
       <a class="deploy" id="deploy" href="#" target="_blank" rel="noopener" data-st="none" title="사이트 반영 상태" aria-label="사이트 반영 상태"><span class="dot" aria-hidden="true"></span></a>
@@ -317,7 +317,7 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261111c"></script>
-<script src="assets/admin.js?v=20261111o"></script>
+<script src="assets/common.js?v=20261111d"></script>
+<script src="assets/admin.js?v=20261111p"></script>
 </body>
 </html>
