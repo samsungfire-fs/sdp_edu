@@ -16,65 +16,63 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261111b">
-<link rel="stylesheet" href="assets/admin.css?v=20261111f">
+<link rel="stylesheet" href="assets/site.css?v=20261111d">
+<link rel="stylesheet" href="assets/admin.css?v=20261111i">
 </head>
 <body>
 
 <header class="abar">
   <div class="awrap">
     <a class="abrand" href="admin.html">관리자 페이지</a>
+    <nav class="bar-nav" id="barNav" aria-label="관리자 화면"><a href="#/courses" data-view="courses"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h10.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h10.5"></path></svg><span>강의 관리</span></a><a href="#/analytics" data-view="analytics"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>분석</span></a></nav>
     <div class="abar-right">
       <a class="deploy" id="deploy" href="#" target="_blank" rel="noopener" data-st="none" title="사이트 반영 상태" aria-label="사이트 반영 상태"><span class="dot" aria-hidden="true"></span></a>
       <a class="site-link rp" href="./" target="_blank" rel="noopener">사이트 보기 ↗</a>
       <button type="button" class="abar-ic rp" id="tmIc" aria-label="다크 모드로 바꾸기"></button>
-      <button type="button" class="abar-ic set-btn rp" id="setBtn" aria-expanded="false" aria-controls="setPop" aria-label="설정" title="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button type="button" class="abar-ic set-btn rp" id="setBtn" aria-label="설정" title="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
 </header>
 
 <main>
-  <!-- 로그인 · 처음 설정 -->
+  <!-- 로그인 · 새 비밀번호 (#41 · 기획 P5) -->
   <section class="gate" id="gate" aria-labelledby="gateTitle">
-    <div class="gate-card">
-      <span class="gate-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span>
-      <h1 id="gateTitle">관리자 로그인</h1>
-      <p class="gate-lead" id="gateLead">확인 중…</p>
+    <div class="gwrap">
+    <div class="gate-card" id="gateCard">
+      <div class="g-head">
+        <span class="gate-ic" id="gateIc" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z"/><path d="M8.8 12.2l2.2 2.2 4.3-4.6"/></svg></span>
+        <h1 id="gateTitle">관리자 로그인</h1>
+        <p class="gate-lead" id="gateLead">확인 중…</p>
+      </div>
 
-      <!-- 기획 P5: 사번 + 비밀번호 -->
-      <form id="sabunForm" class="gate-form" hidden autocomplete="on">
-        <div class="f">
-          <label for="aSabun">사번</label>
-          <input type="text" id="aSabun" class="in" inputmode="numeric" autocomplete="username" maxlength="12" spellcheck="false" required>
-        </div>
-        <div class="f">
-          <label for="aPw">비밀번호</label>
-          <input type="password" id="aPw" class="in" autocomplete="current-password" required>
-        </div>
-        <p class="gate-msg" id="sabunMsg" role="alert"></p>
-        <button type="submit" class="btn-main rp press" id="sabunBtn">로그인</button>
-        <button type="button" class="gate-alt rp" id="oldLoginLink" hidden>창구에 문제가 있을 때: 예전 비밀번호로 들어가기</button>
+      <!-- 사번 + 비밀번호 -->
+      <form id="sabunForm" class="k-form" hidden autocomplete="on" novalidate>
+        <div class="k-fld"><label class="k-lab" for="aSabun">사번</label>
+          <input type="text" id="aSabun" class="k-in k-num" inputmode="numeric" autocomplete="username" maxlength="8" spellcheck="false" placeholder="숫자 8자리" aria-describedby="aSabunErr">
+          <p class="k-ferr" id="aSabunErr" hidden>사번은 숫자 8자리예요.</p></div>
+        <div class="k-fld"><div class="k-row k-sb"><label class="k-lab" for="aPw">비밀번호</label><span class="k-pill ac" id="aPwHint">초기 비밀번호 0000</span></div>
+          <div class="k-inwrap"><input type="password" id="aPw" class="k-in" autocomplete="current-password" aria-describedby="aPwHint aPwCaps sabunMsg" data-caps="aPwCaps"><span class="k-caps" id="aPwCaps" role="status" hidden></span><button type="button" class="k-eye" data-eye="aPw" aria-label="비밀번호 보기"></button></div>
+          <div class="k-msg" id="sabunMsg" role="alert" hidden></div></div>
+        <div class="k-row k-cbs"><label class="k-cb"><input type="checkbox" id="aKeep" checked>자동 로그인</label><label class="k-cb"><input type="checkbox" id="aRem" checked>사번 저장</label></div>
+        <button type="submit" class="k-btn" id="sabunBtn">로그인</button>
+        <p class="k-ask">비밀번호 초기화 문의 · <b>소희수 프로</b></p>
       </form>
 
-      <form id="pwForm" class="gate-form" hidden autocomplete="off">
+      <!-- 처음 비밀번호(0000)로 들어왔을 때: 새 비밀번호 만들기 -->
+      <form id="pwForm" class="k-form" hidden autocomplete="off" novalidate>
         <input type="text" id="pwUser" autocomplete="username" hidden>
-        <div class="f">
-          <label for="aNew">새 비밀번호</label>
-          <input type="password" id="aNew" class="in" autocomplete="new-password" required>
-          <span class="help">8자 이상, 영문과 숫자를 섞어 주세요.<br>처음 비밀번호(0000)는 쓸 수 없어요.</span>
-        </div>
-        <div class="f">
-          <label for="aNew2">새 비밀번호 한 번 더</label>
-          <input type="password" id="aNew2" class="in" autocomplete="new-password" required>
-          <span class="same" id="aSame" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>비밀번호가 같아요</span>
-        </div>
-        <p class="gate-msg" id="pwMsg" role="alert"></p>
-        <div class="gate-btns">
-          <button type="button" class="btn-sub rp press" id="pwCancel" hidden>취소</button>
-          <button type="submit" class="btn-main rp press" id="pwBtn">비밀번호 바꾸고 시작하기</button>
-        </div>
+        <div class="k-who" id="pwWho"></div>
+        <div class="k-fld"><label class="k-lab" for="aNew">새 비밀번호</label>
+          <div class="k-inwrap"><input type="password" id="aNew" class="k-in" autocomplete="new-password" data-caps="aNewCaps" aria-describedby="aNewCaps"><span class="k-caps" id="aNewCaps" role="status" hidden></span><button type="button" class="k-eye" data-eye="aNew" aria-label="비밀번호 보기"></button></div></div>
+        <div class="k-fld"><label class="k-lab" for="aNew2">비밀번호 확인</label>
+          <div class="k-inwrap"><input type="password" id="aNew2" class="k-in" autocomplete="new-password" data-caps="aNew2Caps" aria-describedby="aNew2Caps pwChk pwMsg"><span class="k-caps" id="aNew2Caps" role="status" hidden></span><button type="button" class="k-eye" data-eye="aNew2" aria-label="비밀번호 보기"></button></div>
+          <ul class="k-chk" id="pwChk" aria-label="비밀번호 조건" data-for="aNew aNew2"></ul>
+          <p class="k-ferr" id="pwMsg" role="alert" hidden></p></div>
+        <button type="submit" class="k-btn" id="pwBtn" disabled>변경하기</button>
+        <p class="k-ask">비밀번호 초기화 문의 · <b>소희수 프로</b></p>
       </form>
 
+      <!-- 예전 방식(창구로 토큰을 옮기기 전에만 자동으로 보임) -->
       <form id="loginForm" class="gate-form" hidden autocomplete="on">
         <input type="text" name="username" value="admin" autocomplete="username" hidden>
         <div class="f">
@@ -119,6 +117,8 @@
         </div>
       </form>
     </div>
+    <button type="button" class="k-lnk" id="pwOut" hidden>로그아웃</button>
+    </div>
   </section>
 
   <!-- 강의 관리 -->
@@ -155,13 +155,13 @@
           <span class="rnote" id="rnote" hidden>월은 연월 최신순으로 자동 정렬돼요.</span>
         </div>
         <p class="aresult" id="aresult" hidden></p>
-        <div class="lr" id="listLr" style="--lr-d:450ms"><ul class="videos lr-c" id="videos"><li class="empty-list">불러오는 중…</li></ul><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
+        <div class="lr" id="listLr" style="--lr-d:300ms"><ul class="videos lr-c" id="videos"><li class="empty-list">불러오는 중…</li></ul><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
       </section>
     </div>
 
 
     <!-- 편집 칸: 넓은 화면은 오른쪽, 980px 이하는 화면 전체 시트 -->
-    <div class="lr ed-wrap" id="edWrap" hidden style="--lr-d:450ms;--lr-w:220ms">
+    <div class="lr ed-wrap" id="edWrap" hidden style="--lr-d:300ms;--lr-w:145ms">
     <section class="editor lr-c" id="editor" aria-labelledby="edTitle">
       <div class="ed-head">
         <div class="ed-ht"><span class="ed-pill" id="edPill"></span><h2 id="edTitle"></h2></div>
@@ -172,141 +172,142 @@
     <i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
     <input type="file" class="pick" id="thFile" accept="image/*" tabindex="-1" aria-hidden="true">
   </div>
+  <!-- 설정 페이지 (#44 · 기획 P6): 왼쪽 메뉴 + 오른쪽 내용, 🔒 마스터 설정은 마스터에게만 -->
+  <div class="setv pv2" id="setView" hidden>
+    <nav class="nav" id="setNav" aria-label="설정 메뉴"><div class="nav-g"><span class="cap">회원</span><a class="nav-i" href="#/settings/members" data-set="members"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M2.8 19.5c1-3.1 3.4-4.8 6.2-4.8s5.2 1.7 6.2 4.8"></path><path d="M15.5 5.6a3.3 3.3 0 0 1 0 6.1M17.6 14.9c1.8.6 3 2.2 3.6 4.6"></path></svg><span>회원 관리</span><span class="n" id="navMem"></span></a><a class="nav-i" href="#/settings/roster" data-set="roster"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8"></path><path d="M4 3.5V8h4.5"></path><path d="M4 13a8 8 0 0 0 14.3 4.6L20 16"></path><path d="M20 20.5V16h-4.5"></path></svg><span>사번 명단</span></a></div><div class="nav-g"><span class="cap">계정</span><a class="nav-i" href="#/settings/me" data-set="me"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"></circle><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"></path></svg><span>내 계정</span></a></div><div class="nav-g"><span class="cap">사이트</span><a class="nav-i" href="#/settings/notice" data-set="notice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h9"></path></svg><span>사이트 문구</span></a><a class="nav-i" href="#/settings/update" data-set="update"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg><span>사이트 업데이트</span></a></div><div class="nav-g nav-m" id="navMaster"><span class="cap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터 설정</span><a class="nav-i" href="#/settings/admins" data-set="admins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z"></path><path d="M8.8 12.2l2.2 2.2 4.3-4.6"></path></svg><span>관리자</span><span class="n" id="navAdm"></span></a><a class="nav-i" href="#/settings/log" data-set="log"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"></path><path d="M4 4v4.5h4.5"></path><path d="M12 8v4.5l3 2"></path></svg><span>갱신 기록</span></a><a class="nav-i" href="#/settings/siteacc" data-set="siteacc"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M10.8 12.2L19 4M15.5 7.5l2.5 2.5M17.5 5.5l2 2"></path></svg><span>세일즈온 어드민 계정</span></a><a class="nav-i" href="#/settings/sheet" data-set="sheet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"></rect><path d="M4 9h16M4 14.5h16M10 9v11.5"></path></svg><span>세일즈온 사번 목록</span></a><a class="nav-i" href="#/settings/keys" data-set="keys"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"></path><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"></path></svg><span>GitHub 토큰 · API 키</span></a></div></nav>
+    <div class="setmain" id="setMain">
+      <!-- 회원 관리 (P7) -->
+      <div class="spage" data-page="members" hidden>
+        <div class="ph"><h1 class="k-h1">회원 관리</h1>
+          <p class="k-lead">세일즈온 사번 목록의 회원 명단이에요. 이름 · 소속 · 가입상태는 세일즈온 어드민에서 매일 가져와서 여기서는 고칠 수 없어요.</p>
+          <div class="meta" id="memMeta"></div></div>
+        <div class="mt" id="memTabs" role="tablist" aria-label="회원 구분"><button type="button" role="tab" data-tab="normal" aria-selected="true">정상 회원<b id="mtN"></b></button><button type="button" role="tab" data-tab="abnormal" aria-selected="false">비정상 회원<b id="mtA"></b></button><button type="button" role="tab" data-tab="nosabun" aria-selected="false">사번 없음<b id="mtS"></b></button></div>
+        <div class="k-msg wa" id="memNoLog" hidden></div>
+        <div class="k-msg in2" id="memNsNote" hidden></div>
+        <div class="tools2" id="memTools"><label class="srch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg><input class="k-in" id="memQ" type="search" placeholder="사번 · 이름 · 소속 검색" autocomplete="off" aria-label="사번 · 이름 · 소속 검색"></label>
+          <select class="k-in k-sel sel2" id="memSort" aria-label="정렬"><option value="last">마지막 접속 최신순</option><option value="views">조회 많은순</option><option value="downs">다운로드 많은순</option><option value="name">이름 가나다순</option></select>
+          <div class="chips" id="memFilter" role="radiogroup" aria-label="접속 여부"><button type="button" class="chip" role="radio" data-f="all" aria-checked="true">모두</button><button type="button" class="chip" role="radio" data-f="seen" aria-checked="false">접속한 적 있음</button><button type="button" class="chip" role="radio" data-f="never" aria-checked="false">접속한 적 없음</button></div>
+          <button type="button" class="k-btn k-btn3 sm rp k-xl" id="memXls" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"></path></svg>엑셀로 받기<span class="lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터</span></button></div>
+        <div class="split"><div class="tbl" id="memTbl" role="table" aria-label="회원 명단"></div><aside class="det" id="memDet" aria-label="회원 상세" hidden></aside></div>
+      </div>
+      <!-- 🔒 관리자 -->
+      <div class="spage" data-page="admins" hidden>
+        <div class="ph"><div class="k-row k-g8"><h1 class="k-h1">관리자</h1><span class="lock"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터만 보여요</span></div>
+          <p class="k-lead">세일즈온 사번 목록의 '관리자' 탭이에요. 추가·삭제는 시트에서 하고, 영업개발파트 정상 회원은 명단을 갱신할 때 자동으로 들어와요.</p></div>
+        <div class="tbl cards scrollx" id="admList" style="--mw:1080px"></div>
+        <div class="k-msg" id="admMsg" role="status" hidden></div>
+        <p class="k-note">초기화는 두 번 눌러야 돼요: 한 번 누르면 빨간 테두리 '한 번 더 누르면 0000으로'로 바뀌고, 3초 안에 다시 누르면 비밀번호가 0000이 되고 그 사람 로그인이 끝나요.</p>
+        <section class="pgcard"><span class="k-cap">로그인 규칙</span>
+        <div class="k-kv"><label for="keepRule">자동 로그인 유지 기간</label><select class="k-in k-sel" id="keepRule"><option value="today">오늘 밤 12시까지</option><option value="1">1일</option><option value="7">7일</option><option value="30">30일</option></select></div>
+        <p class="k-note">'자동 로그인'을 체크하고 들어온 사람만 이 기간 동안 로그인이 유지돼요. 체크하지 않으면 다음에 접속할 때 다시 로그인해요.</p>
+        </section>
+      </div>
+      <!-- 🔒 갱신 기록 -->
+      <div class="spage" data-page="log" hidden>
+        <div class="ph"><div class="k-row k-g8"><h1 class="k-h1">갱신 기록</h1><span class="lock"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터만 보여요</span></div>
+          <p class="k-lead">사번 명단을 가져온 기록이에요. 최근 것이 위에 있어요.</p></div>
+        <div class="tbl cards scrollx" id="logTbl" style="--mw:1000px"></div>
+      </div>
+      <!-- 마스터만 볼 수 있어요 -->
+      <div class="spage" data-page="nomaster" hidden><div class="k-empty"><span class="ei"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg></span><b>마스터만 볼 수 있어요.</b><p>필요하면 소희수 프로에게 문의해 주세요.</p><a class="k-btn sm rp" href="#/settings/members">회원 관리로 가기</a></div></div>
+<section class="pgcard" id="syncBox" data-page="roster" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"/><path d="M2.8 19.5c1-3.1 3.4-4.8 6.2-4.8s5.2 1.7 6.2 4.8"/><path d="M15.5 5.6a3.3 3.3 0 0 1 0 6.1M17.6 14.9c1.8.6 3 2.2 3.6 4.6"/></svg></span><span class="tt">사번 명단</span><span class="sm" id="syncSum"></span></div><div class="k-acc-b pg-b">
+        <p class="k-note" id="syncNote" hidden></p>
+        <div id="syncMain">
+          <div class="k-stats">
+            <div class="k-stat hi"><span class="k">정상 회원</span><span class="v" id="stNormal">–</span><span class="s">로그인할 수 있는 사람</span></div>
+            <div class="k-stat"><span class="k">전체</span><span class="v" id="stAll">–</span><span class="s" id="stAllSub"></span></div>
+            <div class="k-stat"><span class="k">관리자</span><span class="v" id="stAdm">–</span></div>
+            <div class="k-stat"><span class="k">사번 없음</span><span class="v" id="stNo">–</span><span class="s" id="stNoSub"></span></div>
+          </div>
+          <div class="k-msg er" id="syncFail" hidden></div>
+          <div class="k-kv"><span>마지막 갱신</span><span class="k-row k-g8"><b class="k-val" id="syncLast">–</b><span class="k-pill" id="syncLastPill" hidden></span></span></div>
+          <div id="syncStamps"></div>
+          <div class="k-kv"><span>자동 갱신 <span class="k-t3">· 매일 새벽 5시</span></span><button type="button" class="k-sw" role="switch" id="syncAuto" aria-checked="false" aria-label="자동 갱신"></button></div>
+          <div class="k-row"><button type="button" class="k-btn k-btn3 sm k-grow rp" id="syncDry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>미리 확인</button><button type="button" class="k-btn sm k-grow rp" id="syncGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>지금 갱신</button></div>
+          <div class="k-msg" id="syncMsg" role="status" hidden></div>
+          <p class="k-note">미리 확인은 시트를 바꾸지 않고 숫자만 보여 줘요. 정상 회원이 어제의 절반보다 적으면 바꾸지 않고 어제 명단을 그대로 둬요.</p>
+          <button type="button" class="k-lnk k-tog" id="syncTraceBtn" aria-expanded="false" hidden>자세히 보기 (개발팀 전달용) <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="k-trace" id="syncTrace" hidden><pre class="k-mono" id="syncTraceText"></pre>
+            <div class="k-row"><button type="button" class="k-btn k-btn3 sm rp" id="syncTraceCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>복사</button><button type="button" class="k-btn sm rp" id="syncRetry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>다시 갱신</button></div></div>
+          <div class="k-msg wa" id="syncMissed" hidden></div>
+          <a class="k-lnk k-ext" id="syncSheet" href="#" target="_blank" rel="noopener" hidden>시트 열기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+        </div></div></section>
+<section class="pgcard" id="meBox" data-page="me" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg></span><span class="tt">내 계정</span><span class="sm" id="meSum"></span></div><div class="k-acc-b pg-b">
+        <div class="k-row" id="meRow"><span class="k-av" id="meAv"></span><span class="k-col"><b id="meName"></b><span class="k-sub" id="meSub"></span></span><span class="k-pill ac k-ml" id="meMaster" hidden>마스터</span></div>
+        <div class="k-kv" id="meKeepRow"><span>자동 로그인 <span class="k-t3">· 이 기기</span></span><span class="k-row k-g8"><span class="k-tab" id="meKeepT"></span><span class="k-pill s" id="meKeep"></span></span></div>
+        <p class="k-note" id="meNote" hidden></p>
+        <div class="k-row" id="meBtns"><button type="button" class="k-btn k-btn3 sm k-grow rp" id="changeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L19 4M15.5 7.5l2.5 2.5M17.5 5.5l2 2"/></svg>비밀번호 바꾸기</button><button type="button" class="k-btn k-btn3 sm rp" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14M10 16l-4-4 4-4M6 12h10"/></svg>로그아웃</button></div>
+        <form class="k-form k-in-acc" id="meForm" hidden autocomplete="off" novalidate>
+          <div class="k-hr"></div>
+          <input type="text" id="meUser" autocomplete="username" hidden>
+          <div class="k-fld"><label class="k-lab sm" for="meOld">지금 비밀번호</label><div class="k-inwrap"><input type="password" id="meOld" class="k-in h48" autocomplete="current-password" data-caps="meOldCaps"><span class="k-caps" id="meOldCaps" role="status" hidden></span><button type="button" class="k-eye" data-eye="meOld" aria-label="비밀번호 보기"></button></div></div>
+          <div class="k-fld"><label class="k-lab sm" for="meNew">새 비밀번호</label><div class="k-inwrap"><input type="password" id="meNew" class="k-in h48" autocomplete="new-password" data-caps="meNewCaps"><span class="k-caps" id="meNewCaps" role="status" hidden></span><button type="button" class="k-eye" data-eye="meNew" aria-label="비밀번호 보기"></button></div></div>
+          <div class="k-fld"><label class="k-lab sm" for="meNew2">비밀번호 확인</label><div class="k-inwrap"><input type="password" id="meNew2" class="k-in h48" autocomplete="new-password" data-caps="meNew2Caps"><span class="k-caps" id="meNew2Caps" role="status" hidden></span><button type="button" class="k-eye" data-eye="meNew2" aria-label="비밀번호 보기"></button></div>
+            <ul class="k-chk" id="meChk" aria-label="비밀번호 조건" data-for="meNew meNew2"></ul>
+            <p class="k-ferr" id="meMsg" role="alert" hidden></p></div>
+          <div class="k-row"><button type="button" class="k-btn k-btn3 sm rp" id="meCancel">취소</button><button type="submit" class="k-btn sm k-grow rp" id="meSave" disabled>변경하기</button></div>
+          <p class="k-note">비밀번호를 변경하면 다른 기기에서도 로그아웃돼요.</p>
+        </form>
+        <div class="k-stamp" id="meStamp" hidden></div></div></section>
+<section class="pgcard" id="siteBox" data-page="notice" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h9"/></svg></span><span class="tt">사이트 문구</span><span class="sm"></span></div><div class="k-acc-b pg-b">
+        <div class="k-fld"><label class="k-lab sm" for="sNotice">유의 문구</label><textarea id="sNotice" class="k-in k-ta" rows="3" data-site="notice"></textarea></div>
+        <p class="k-note">첫 줄은 강조, 줄을 바꾸면 둘째 줄. 맨 아래 검은 바와 강의 페이지 교육자료 칸에 같이 바뀌어요.</p>
+        <div class="k-stamp" id="noticeStamp" hidden></div></div></section>
+<section class="pgcard" id="updBox" data-page="update" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span><span class="tt">사이트 업데이트</span><span class="sm" id="updSum"></span></div><div class="k-acc-b pg-b">
+        <p class="k-p">Claude가 고친 파일을 컴퓨터의 <b>sdp_edu</b> 폴더에서 읽어, 바뀐 것만 한&nbsp;번에 올려요. 강의 목록은 건드리지 않아요.</p>
+        <button type="button" class="k-btn sm rp" id="updRun">지금 업데이트</button>
+        <div class="k-kv" id="updFolder"></div>
+        <input type="file" class="pick" id="updPick" webkitdirectory directory multiple tabindex="-1" aria-hidden="true">
+        <ul class="upd-log" id="updLog"></ul>
+        <div class="k-stamp" id="updStamp" hidden></div></div></section>
+<section class="pgcard" id="acctBox" data-page="siteacc" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L19 4M15.5 7.5l2.5 2.5M17.5 5.5l2 2"/></svg></span><span class="tt">세일즈온 어드민 계정</span><span class="sm" id="acctSum"></span><span class="lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터만</span></div><div class="k-acc-b pg-b">
+        <p class="k-note" id="acctNote" hidden>먼저 세일즈온 사번 목록을 연결해 주세요.</p>
+        <div id="acctMain" class="k-col k-g14">
+          <div class="k-kv"><span>저장된 아이디</span><span class="k-row k-g8"><b class="k-tab" id="acctSaved">없음</b><span class="k-by" id="acctBy"></span></span></div>
+          <form class="k-form k-in-acc" id="acctForm" autocomplete="off" novalidate>
+            <div class="k-fld"><label class="k-lab sm" for="acctId">아이디</label><input id="acctId" class="k-in h48" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="바꿀 때만 입력"></div>
+            <div class="k-fld"><label class="k-lab sm" for="acctPw">비밀번호</label><div class="k-inwrap"><input id="acctPw" class="k-in h48" type="password" autocomplete="new-password" placeholder="바꿀 때만 입력" data-caps="acctPwCaps"><span class="k-caps" id="acctPwCaps" role="status" hidden></span><button type="button" class="k-eye" data-eye="acctPw" aria-label="비밀번호 보기"></button></div></div>
+            <button type="submit" class="k-btn k-btn2 sm rp" id="acctSave">저장</button>
+          </form>
+          <p class="k-note k-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg>세일즈온 사번 목록의 비밀 칸에만 저장되고, 이 화면에는 다시 보이지 않아요.</p>
+          <div class="k-msg" id="acctMsg" role="status" hidden></div>
+          <div class="k-hr"></div>
+          <div class="k-kv"><span>접속 확인</span><button type="button" class="k-btn k-btn3 xs rp" id="acctTest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>다시 확인</button></div>
+          <div class="k-msg" id="acctRes" role="status" hidden></div>
+          <button type="button" class="k-lnk k-tog" id="acctTraceBtn" aria-expanded="false" hidden>자세히 보기 (개발팀 전달용) <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="k-trace" id="acctTrace" hidden><pre class="k-mono" id="acctTraceText"></pre><div class="k-row"><button type="button" class="k-btn k-btn3 sm rp" id="acctTraceCopy">복사</button></div></div>
+          <div class="k-stamp" id="acctStamp" hidden></div>
+        </div></div></section>
+<section class="pgcard" id="gateBox" data-page="sheet" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg></span><span class="tt">세일즈온 사번 목록</span><span class="sm" id="gateSum"></span><span class="lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터만</span></div><div class="k-acc-b pg-b">
+        <div class="k-kv"><span class="k-row k-g8"><span class="k-dot" id="gateDot"></span><b id="gateStateT">연결 안 됨</b><span class="k-t3" id="gateVer"></span></span><a class="k-lnk k-ext" id="gateSheet" href="#" target="_blank" rel="noopener" hidden>시트 열기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a></div>
+        <div class="k-fld"><label class="k-lab sm" for="gateUrl">웹 앱 주소</label><div class="k-row k-g8"><input id="gateUrl" class="k-in h48 f14 k-grow" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec"><button type="button" class="k-btn k-btn2 sm h48 rp" id="gateConnect">연결</button></div></div>
+        <p class="k-note">코드를 고칠 땐 '배포 관리 → 편집 → 새 버전'으로 하면 주소가 그대로예요. 새 배포를 만들면 주소가 바뀌니 여기서 다시 연결해 주세요.</p>
+        <div class="k-msg" id="gateMsg" role="status" hidden></div>
+        <div class="k-stamp" id="gateStamp" hidden></div>
+        <div class="k-msg wa" id="gateOld" hidden></div></div></section>
+<section class="pgcard" id="keysBox" data-page="keys" hidden><div class="pgcard-h"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"></path><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"></path></svg></span><span class="tt">GitHub 토큰 · API 키</span><span class="sm"></span><span class="lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터만</span></div><div class="k-acc-b pg-b">
+        <div class="k-kv"><span>GitHub 토큰 <span class="k-t3 k-tab" id="ghMask"></span></span><button type="button" class="k-btn k-btn3 xs rp" data-keyopen="gh">바꾸기</button></div>
+        <div class="k-keyin" id="ghIn" hidden><input type="password" id="sGh" class="k-in h48 f14" placeholder="github_pat_로 시작" autocomplete="off" spellcheck="false" aria-label="새 GitHub 토큰"><button type="button" class="k-btn k-btn2 sm rp" id="sGhSave">저장</button></div>
+        <div class="k-kv"><span>Google API 키 <span class="k-t3 k-tab" id="apiMask"></span></span><button type="button" class="k-btn k-btn3 xs rp" data-keyopen="api">바꾸기</button></div>
+        <div class="k-keyin" id="apiIn" hidden><input type="password" id="sKey" class="k-in h48 f14" placeholder="AIza로 시작" autocomplete="off" spellcheck="false" aria-label="새 Google API 키"><button type="button" class="k-btn k-btn2 sm rp" id="sKeySave">저장</button></div><div class="k-msg" id="keyMsg" role="status" hidden></div><p class="k-note">[바꾸기]를 누르면 그 줄 아래에 입력칸이 열려요. 비밀번호를 바꾼 관리자에게만 내줘요.</p></div></section>
+      <p class="sdr-f" id="lastSave"></p>
+    </div>
+  </div>
+
+  <!-- 분석 (#45 · 기획 P8) -->
+  <div class="anav pv2" id="anaView" hidden>
+    <aside class="al" aria-label="콘텐츠 목록">
+      <div class="mt full" id="anaKind" role="tablist"><button type="button" role="tab" data-kind="v" aria-selected="true">강의</button><button type="button" role="tab" data-kind="r" aria-selected="false">상품연구 전략자료</button></div>
+      <div class="k-row k-g8"><label class="srch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg><input class="k-in" id="anaQ" type="search" placeholder="제목 검색" autocomplete="off" aria-label="제목 검색"></label>
+        <select class="k-in k-sel sel2" id="anaSort" aria-label="정렬"><option value="new">최신순</option><option value="views">조회 많은순</option><option value="viewers">본 사람 많은순</option></select></div>
+      <label class="ana-pick" id="anaPickBox"><select id="anaPick" aria-label="콘텐츠 고르기"></select></label>
+      <div class="al-list" id="anaList"></div>
+    </aside>
+    <section class="ar" id="anaMain" aria-label="분석"></section>
+  </div>
 </main>
 
-<!-- ⚙ 설정 창 (#21): 맨 위 바 톱니 버튼 아래에 펼쳐짐 -->
-<div class="setpop" id="setPop" role="dialog" aria-modal="false" aria-labelledby="setH" hidden>
-  <div class="setpop-head">
-    <h2 id="setH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>설정</h2>
-    <button type="button" class="setpop-x rp" id="setClose" aria-label="설정 닫기" title="설정 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-  </div>
-  <div class="lr" id="setLr" style="--lr-d:280ms;--lr-w:60ms"><div class="lr-c setpop-body">
-      <div class="setbox">
-      <details class="set" id="conn">
-        <summary class="rp">
-          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c0-3.8 3.4-6 7.5-6s7.5 2.2 7.5 6"/></svg>
-          <span class="set-t">계정</span><span class="pill idle" id="connState">확인 중</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="set-body">
-          <p class="set-note" id="connRepo"></p>
-          <div class="set-btns">
-            <button type="button" class="btn-soft rp press" id="changeBtn">비밀번호·토큰 바꾸기</button>
-            <button type="button" class="btn-line rp press" id="logoutBtn">로그아웃</button>
-          </div>
-        </div>
-      </details>
-      <!-- 기획 P5: 마스터만 — 관리자 비밀번호 초기화 · GitHub 토큰/API 키 -->
-      <details class="set" id="admBox" hidden>
-        <summary class="rp">
-          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.2-7.5 9.5-4.3-1.3-7.5-5-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg>
-          <span class="set-t">관리자 계정</span><span class="pill idle" id="admState">마스터</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="set-body">
-          <p class="set-note">관리자는 구글 시트 '관리자' 탭에 사번·이름을 적으면 생겨요.<br>'권한' 칸에 마스터라고 적으면 마스터예요.<br>[초기화]하면 그 사람 비밀번호가 처음 비밀번호(0000)로 돌아가요.</p>
-          <ul class="adm-list" id="admList"></ul>
-          <p class="set-msg" id="admMsg" role="status"></p>
-          <div class="f"><label for="sGh">GitHub 토큰 바꾸기</label><input type="password" id="sGh" class="in mono" placeholder="github_pat_로 시작" autocomplete="off" spellcheck="false"></div>
-          <div class="f"><label for="sKey">Google API 키 바꾸기</label><input type="password" id="sKey" class="in mono" placeholder="AIza로 시작 (그대로 두려면 비워 두기)" autocomplete="off" spellcheck="false"></div>
-          <div class="set-btns"><button type="button" class="btn-soft rp press" id="sSave">토큰·키 저장</button></div>
-        </div>
-      </details>
-      <details class="set" id="siteBox">
-        <summary class="rp">
-          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 12h10M5 18h7"/></svg>
-          <span class="set-t">사이트 문구</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="set-body">
-          <div class="f"><label for="sNotice">맨 아래 고지 문구</label><textarea id="sNotice" class="in" rows="4" data-site="notice"></textarea>
-            <span class="help">첫 줄은 노란 글씨로 강조돼요.<br>줄을 바꾸면 그다음 줄부터 흰 글씨예요.</span></div>
-        </div>
-      </details>
-      <details class="set" id="updBox">
-        <summary class="rp">
-          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
-          <span class="set-t">사이트 업데이트</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="set-body">
-          <p class="set-note upd-note">Claude가 고친 파일을 컴퓨터의 <b>sdp_edu</b> 폴더에서 읽어,<br>바뀐 것만 한&nbsp;번에 올려요.<br>강의 목록은 건드리지 않아요.</p>
-          <button type="button" class="btn-main sm rp press" id="updRun">지금 업데이트</button>
-          <span class="upd-folder" id="updFolder"></span>
-          <input type="file" class="pick" id="updPick" webkitdirectory directory multiple tabindex="-1" aria-hidden="true">
-          <ul class="upd-log" id="updLog"></ul>
-        </div>
-      </details>
-      <!-- 기획 P2~P5 공통: 구글 시트 창구(Apps Script) 연결 -->
-      <details class="set" id="gateBox">
-        <summary class="rp">
-          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg>
-          <span class="set-t">구글 시트 창구</span><span class="pill idle" id="gateState">연결 안 됨</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="set-body">
-          <p class="set-note" id="gateNote">회원 명단 구글 시트에 붙인 창구(Apps Script)의 웹 앱 주소를 넣고 연결하세요.</p>
-          <div class="f"><label for="gateUrl">창구 주소</label><input id="gateUrl" class="in" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec"></div>
-          <div class="set-btns">
-            <button type="button" class="btn-main sm rp press" id="gateConnect">연결</button>
-            <a class="btn-soft rp press" id="gateSheet" href="#" target="_blank" rel="noopener" hidden>시트 열기 ↗</a>
-          </div>
-          <p class="set-msg" id="gateMsg" role="status"></p>
-        </div>
-      </details>
-      <!-- 기획 P3 1단계: 사번 사이트 계정 (값은 창구의 비밀 저장칸에만) -->
-      <details class="set" id="acctBox">
-        <summary class="rp">
-          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg>
-          <span class="set-t">사번 사이트 계정</span><span class="pill idle" id="acctState">저장 안 됨</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="set-body">
-          <p class="set-note" id="acctNote">먼저 구글 시트 창구를 연결해 주세요.</p>
-          <form class="acct-form" id="acctForm" autocomplete="off">
-            <div class="f"><label for="acctId">아이디</label><input id="acctId" class="in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
-            <div class="f"><label for="acctPw">비밀번호</label><input id="acctPw" class="in" type="password" autocomplete="new-password"></div>
-            <span class="help">저장하면 창구의 비밀 저장칸에만 들어가요.<br>화면·시트·문서에는 다시 보이지 않아요.<br>사번 사이트 비밀번호를 바꾸면 여기에 새로 적고 저장하세요.</span>
-            <div class="set-btns">
-              <button type="submit" class="btn-main sm rp press" id="acctSave">저장</button>
-              <button type="button" class="btn-soft rp press" id="acctTest">접속 확인</button>
-            </div>
-          </form>
-          <p class="set-msg" id="acctMsg" role="status"></p>
-          <details class="acct-trace" id="acctTrace" hidden>
-            <summary class="rp">자세히 보기 (개발팀 전달용)</summary>
-            <pre id="acctTraceText"></pre>
-            <button type="button" class="btn-soft rp press" id="acctTraceCopy">복사</button>
-          </details>
-        </div>
-      </details>
-      <!-- 기획 P3 2단계: 사번 명단 매일 갱신 (P3-4) -->
-      <details class="set" id="syncBox" hidden>
-        <summary class="rp">
-          <svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M17 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-3.5-5.8"/></svg>
-          <span class="set-t">사번 명단</span><span class="pill idle" id="syncState">아직 안 받음</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="set-body">
-          <p class="set-note" id="syncNote"></p>
-          <div class="set-btns">
-            <button type="button" class="btn-main sm rp press" id="syncGo">지금 갱신</button>
-            <button type="button" class="btn-soft rp press" id="syncDry">미리 확인</button>
-            <button type="button" class="btn-soft rp press" id="syncAuto">자동 켜기</button>
-          </div>
-          <span class="help">[미리 확인]은 명단을 받아 숫자만 보여 주고 시트는 바꾸지 않아요.<br>받을 때마다 사번 사이트에 '검색 사유: 시스템확인용' 조회 기록이 남아요.</span>
-          <p class="set-msg" id="syncMsg" role="status"></p>
-          <details class="acct-trace" id="syncTrace" hidden>
-            <summary class="rp">자세히 보기 (개발팀 전달용)</summary>
-            <pre id="syncTraceText"></pre>
-            <button type="button" class="btn-soft rp press" id="syncTraceCopy">복사</button>
-          </details>
-        </div>
-      </details>
-    </div>
-    <p class="last" id="lastUpd"></p>
-  </div><i class="lr-t" aria-hidden="true"></i><i class="lr-b" aria-hidden="true"></i></div>
-</div>
+
 
 <div class="savebar" role="status">
   <div class="awrap">
@@ -316,7 +317,7 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261111a"></script>
-<script src="assets/admin.js?v=20261111l"></script>
+<script src="assets/common.js?v=20261111c"></script>
+<script src="assets/admin.js?v=20261111o"></script>
 </body>
 </html>

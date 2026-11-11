@@ -267,10 +267,10 @@
   /* M10 빛 라인 리빌: .lr 상자에 go 를 다시 붙여 처음부터 재생 (동작 줄이기면 아무것도 안 함) */
   SC.lineReveal = function (box) {
     if (!box || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
-    var cs = getComputedStyle(box), d = parseFloat(cs.getPropertyValue("--lr-d")) || 450, w = parseFloat(cs.getPropertyValue("--lr-w")) || 0;
+    var cs = getComputedStyle(box), d = parseFloat(cs.getPropertyValue("--lr-d")) || 300, w = parseFloat(cs.getPropertyValue("--lr-w")) || 0;
     box.classList.remove("go"); void box.offsetWidth; box.classList.add("go");
     box.classList.remove("is-out");
-    clearTimeout(box._lrT); box._lrT = setTimeout(function () { box.classList.remove("go"); }, w + 120 + d + 240);
+    clearTimeout(box._lrT); box._lrT = setTimeout(function () { box.classList.remove("go"); }, w + 80 + d + 160);
   };
 
   w.SC = SC;
