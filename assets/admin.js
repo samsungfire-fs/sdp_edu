@@ -1454,6 +1454,7 @@
      - 창구는 관리자가 보낸 GitHub 토큰으로 이 저장소 쓰기 권한을 확인한 뒤에만 대답함
      - 사번 사이트 아이디·비밀번호는 창구의 스크립트 속성에만 저장. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
+    var GATE_V = 2; /* 창구 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null;
     function call(action, extra){
@@ -1482,7 +1483,10 @@
       $("gateConnect").textContent = on ? "다시 연결" : "연결";
       $("gateSheet").hidden = !(on && st.sheet && st.sheet.url);
       if (on && st.sheet) $("gateSheet").href = st.sheet.url;
-      $("gateNote").textContent = on ? "시트 '" + (st.sheet ? st.sheet.name : "") + "'에 연결돼 있어요." : "회원 명단 구글 시트에 붙인 창구(Apps Script)의 웹 앱 주소를 넣고 연결하세요.";
+      var old = on && (st.v || 1) < GATE_V;
+      if (old) pill("gateState", "warn", "코드 바꾸기 필요");
+      $("gateNote").textContent = old ? "창구 코드가 예전 것(v" + (st.v || 1) + ")이에요. 새 Code.gs로 바꾸고 배포 관리 → 편집 → 새 버전으로 배포해 주세요."
+        : on ? "시트 '" + (st.sheet ? st.sheet.name : "") + "'에 연결돼 있어요." : "회원 명단 구글 시트에 붙인 창구(Apps Script)의 웹 앱 주소를 넣고 연결하세요.";
       var a = on && st.account || {};
       pill("acctState", a.saved ? "ok" : "idle", a.saved ? "저장됨" : "저장 안 됨");
       $("acctForm").hidden = !on;
@@ -1545,13 +1549,29 @@
       }).catch(function(){ msg("acctMsg", "bad", "저장하지 못했어요. 잠시 뒤 다시 해 주세요."); })
         .then(function(){ btn.disabled = false; btn.textContent = "저장"; });
     }
+    /* 접속 확인이 실패하면 단계별 기록을 보여 줌 (비밀번호·쿠키 값·개인정보 없음) */
+    function showTrace(j){
+      var box = $("acctTrace");
+      if (!j || j.result === "ok" || !j.trace){ box.hidden = true; return; }
+      var lines = ["결과 " + j.result + (j.msg ? " · " + j.msg : "") + " · " + (j.at || ""),
+        "구글 서버 위치 " + ((j.net && j.net.country) || "?") + (j.net && j.net.org ? " (" + j.net.org + ")" : "") + " · 창구 v" + (st && st.v || "?")];
+      j.trace.forEach(function(t, i){
+        if (t.form){ lines.push((i + 1) + ". 로그인 칸 " + (t.form.found ? "찾음" : "못 찾음") + " · 숨은 값 " + (t.form.hidden.join(",") || "없음")); return; }
+        lines.push((i + 1) + ". " + t.m + " " + t.at + " → " + t.code + (t.loc ? " 이동 " + t.loc : "") + (t.js ? " 스크립트 이동 " + t.js : "") +
+          (t.setCookie && t.setCookie.length ? " · 쿠키 " + t.setCookie.join(",") : "") + (t.title ? " · 제목 " + t.title : "") +
+          " · " + t.len + "자" + (t.loginPage ? " · 로그인 화면" : "") + (t.alert ? " · 안내창 " + t.alert : "") + (t.snip ? " · 내용 " + t.snip : ""));
+      });
+      $("acctTraceText").textContent = lines.join("\n");
+      box.hidden = false; box.open = false;
+    }
     function test(){
-      var btn = $("acctTest"); btn.disabled = true; btn.textContent = "확인하는 중…"; msg("acctMsg");
+      var btn = $("acctTest"); btn.disabled = true; btn.textContent = "확인하는 중…"; msg("acctMsg"); $("acctTrace").hidden = true;
       call("testLogin").then(function(j){
         if (!j.ok){ msg("acctMsg", "bad", j.error === "noaccount" ? "먼저 아이디와 비밀번호를 저장해 주세요." : "확인하지 못했어요. 잠시 뒤 다시 해 주세요."); return; }
         var t = TEST[j.result] || TEST.unknown;
         st.lastTest = { at: j.at, result: j.result, msg: j.msg };
         paint();
+        showTrace(j);
         msg("acctMsg", t[0], t[1] + (j.msg ? (j.result === "blocked" ? " · 오류: " : " · 사번 사이트 안내: ") + j.msg : "") + (j.result === "blocked" || j.result === "unknown" ? " — 개발팀에 이 문구를 알려 주세요." : ""));
       }).catch(function(){ msg("acctMsg", "bad", "창구에 연결하지 못했어요. 잠시 뒤 다시 해 주세요."); })
         .then(function(){ btn.textContent = "접속 확인"; btn.disabled = !(st && st.account && st.account.saved); });
@@ -1560,6 +1580,10 @@
     $("gateUrl").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); connect(); } });
     $("acctForm").addEventListener("submit", save);
     $("acctTest").addEventListener("click", test);
+    $("acctTraceCopy").addEventListener("click", function(){
+      var t = $("acctTraceText").textContent;
+      (SC.copy ? SC.copy(t) : navigator.clipboard.writeText(t)).then(function(){ toast("복사했어요. 개발팀 채팅에 붙여 넣으세요"); }, function(){ toast("복사하지 못했어요. 글자를 길게 눌러 복사해 주세요"); });
+    });
     paint();
     return { load: load };
   })();

@@ -17,7 +17,7 @@
 <link rel="preload" href="assets/TmoneyRoundWindRegular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/TmoneyRoundWindExtraBold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css?v=20261111b">
-<link rel="stylesheet" href="assets/admin.css?v=20261111a">
+<link rel="stylesheet" href="assets/admin.css?v=20261111b">
 </head>
 <body>
 
@@ -223,6 +223,11 @@
             </div>
           </form>
           <p class="set-msg" id="acctMsg" role="status"></p>
+          <details class="acct-trace" id="acctTrace" hidden>
+            <summary class="rp">자세히 보기 (개발팀 전달용)</summary>
+            <pre id="acctTraceText"></pre>
+            <button type="button" class="btn-soft rp press" id="acctTraceCopy">복사</button>
+          </details>
         </div>
       </details>
     </div>
@@ -239,6 +244,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/common.js?v=20261111a"></script>
-<script src="assets/admin.js?v=20261111a"></script>
+<script src="assets/admin.js?v=20261111b"></script>
 </body>
 </html>

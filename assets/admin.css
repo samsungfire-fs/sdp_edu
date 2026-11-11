@@ -573,3 +573,8 @@ body:not(.authed) .set-btn, body:not(.authed) .setpop{display:none!important}
 .setpop .set .in{background:var(--card); height:46px; font-size:15px}
 #gateUrl{font-size:13.5px}
 .set-btns .btn-soft[disabled]{opacity:.45; cursor:default}
+.acct-trace{border-radius:14px; background:var(--sub); padding:10px 12px}
+.acct-trace[hidden]{display:none}
+.acct-trace summary{cursor:pointer; font-size:13.5px; font-family:var(--head); font-weight:800; color:var(--ink-2); list-style:none}
+.acct-trace summary::-webkit-details-marker{display:none}
+.acct-trace pre{margin:10px 0; white-space:pre-wrap; overflow-wrap:anywhere; font:12.5px/1.6 ui-monospace,Consolas,monospace; color:var(--ink); max-height:260px; overflow:auto}
