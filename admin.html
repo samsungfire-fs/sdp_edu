@@ -17,7 +17,7 @@
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css?v=20261112h">
-<link rel="stylesheet" href="assets/admin.css?v=20261112h">
+<link rel="stylesheet" href="assets/admin.css?v=20261112i">
 </head>
 <body>
 <script>/* 11-12: 저장된 관리자 로그인이 있으면 처음부터 관리자 화면으로 그림('확인 중' 화면 없이). 확인은 admin.js가 뒤에서 */(function(){try{var k="sdp-admin-sid",o=JSON.parse(localStorage.getItem(k)||sessionStorage.getItem(k)||"null"),n=new Date(Date.now()+324e5).toISOString().slice(0,19);if(o&&o.sid&&o.p&&localStorage.getItem("sdp-gate-url")&&!(o.exp&&String(o.exp).slice(0,19)<=n))document.body.classList.add("authed")}catch(e){}})();</script>
@@ -55,8 +55,8 @@
         <div class="k-fld"><label class="k-lab" for="aSabun">사번</label>
           <input type="text" id="aSabun" class="k-in k-num" inputmode="numeric" pattern="[0-9]*" autocomplete="username" maxlength="8" spellcheck="false" placeholder="숫자 8자리" aria-describedby="aSabunErr">
           <p class="k-ferr" id="aSabunErr" hidden>사번은 숫자 8자리예요.</p></div>
-        <div class="k-fld"><div class="k-row k-sb"><label class="k-lab" for="aPw">비밀번호</label><span class="k-pill ac" id="aPwHint">초기 비밀번호 0000</span></div>
-          <div class="k-inwrap"><input type="password" id="aPw" class="k-in" autocomplete="current-password" aria-describedby="aPwHint aPwCaps sabunMsg" data-caps="aPwCaps"><span class="k-caps" id="aPwCaps" role="status" hidden></span><button type="button" class="k-eye" data-eye="aPw" aria-label="비밀번호 보기"></button></div>
+        <div class="k-fld"><div class="k-row k-sb"><label class="k-lab" for="aPw">비밀번호</label></div>
+          <div class="k-inwrap"><input type="password" id="aPw" class="k-in" autocomplete="current-password" aria-describedby="aPwCaps sabunMsg" data-caps="aPwCaps"><span class="k-caps" id="aPwCaps" role="status" hidden></span><button type="button" class="k-eye" data-eye="aPw" aria-label="비밀번호 보기"></button></div>
           <div class="k-msg" id="sabunMsg" role="alert" hidden></div></div>
         <div class="k-row k-cbs"><label class="k-cb"><input type="checkbox" id="aKeep" checked>자동 로그인</label><label class="k-cb"><input type="checkbox" id="aRem" checked>사번 저장</label></div>
         <button type="submit" class="k-btn" id="sabunBtn">로그인</button>
@@ -223,9 +223,13 @@
           <div class="k-kv"><span>마지막 갱신</span><span class="k-row k-g8"><b class="k-val" id="syncLast">–</b><span class="k-pill" id="syncLastPill" hidden></span></span></div>
           <div id="syncStamps"></div>
           <div class="k-kv"><span>자동 갱신 <span class="k-t3">· 매일 새벽 5시</span></span><button type="button" class="k-sw" role="switch" id="syncAuto" aria-checked="false" aria-label="자동 갱신"></button></div>
-          <div class="k-row"><button type="button" class="k-btn k-btn3 sm k-grow rp" id="syncDry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>미리 확인</button><button type="button" class="k-btn sm k-grow rp" id="syncGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>지금 갱신</button></div>
+          <div class="k-row"><button type="button" class="k-btn k-btn3 sm k-grow rp" id="syncDry" title="명단을 받아서 인원수만 보여 줘요. 실제 명단은 바뀌지 않아요."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>미리 확인</button><button type="button" class="k-btn sm k-grow rp" id="syncGo" title="받은 명단으로 실제로 바꿔요."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>지금 갱신</button></div>
           <div class="k-msg" id="syncMsg" role="status" hidden></div>
-          <p class="k-note">미리 확인은 시트를 바꾸지 않고 숫자만 보여 줘요. 정상 회원이 어제의 절반보다 적으면 바꾸지 않고 어제 명단을 그대로 둬요.</p>
+          <ul class="k-note sync-help">
+            <li><b>미리 확인</b> 명단을 받아서 인원수만 보여 줘요. 실제 명단은 바뀌지 않아요.</li>
+            <li><b>지금 갱신</b> 받은 명단으로 실제로 바꿔요. 새 사번은 바로 로그인할 수 있어요.</li>
+            <li><b>안전장치</b> 받아 온 정상 회원이 어제의 절반도 안 되면 잘못 받은 걸로 보고, 어제 명단을 그대로 써요.</li>
+          </ul>
           <button type="button" class="k-lnk k-tog" id="syncTraceBtn" aria-expanded="false" hidden>자세히 보기 (개발팀 전달용) <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
           <div class="k-trace" id="syncTrace" hidden><pre class="k-mono" id="syncTraceText"></pre>
             <div class="k-row"><button type="button" class="k-btn k-btn3 sm rp" id="syncTraceCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>복사</button><button type="button" class="k-btn sm rp" id="syncRetry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>다시 갱신</button></div></div>
@@ -340,6 +344,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/common.js?v=20261112d"></script>
-<script src="assets/admin.js?v=20261112k"></script>
+<script src="assets/admin.js?v=20261112n"></script>
 </body>
 </html>

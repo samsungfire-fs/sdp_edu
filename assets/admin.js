@@ -2421,7 +2421,7 @@
      - 세일즈온 어드민 아이디·비밀번호는 사번 목록의 비밀 칸(스크립트 속성)에만. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
     var SCRIPT_ID = "1gq8_W7tE25FrOxcws0xbun4pj72lIY3eJywh-XkulrjDFzvSQvLKtbuc";   /* 11-12 사용자가 알려 준 세일즈온 사번 목록 Apps Script (코드 v19부터는 서버가 알려 준 값을 먼저 씀) */
-    var GATE_V = 20; /* 사번 목록 코드(Code.gs) 최신 버전 */
+    var GATE_V = 21; /* 사번 목록 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null, lastRun = null, syncBusy = false, testBusy = false;
     function call(action, extra){
@@ -2562,10 +2562,10 @@
       var lines = ["결과 " + (info.ok ? "성공" : "실패") + (info.msg ? " · " + info.msg : "") + " · " + (info.at || "") + " · " + (info.sec || 0) + "초 · 코드 v" + (st && st.v || "?")];
       [["all", "전체 명단"], ["normal", "정상 회원 명단"]].forEach(function(t){
         var x = d[t[0]]; if (!x) return;
-        lines.push(t[1] + ": " + ["tries","code","type","size","sig","lines","alert","snip"].filter(function(k){ return x[k] !== undefined && x[k] !== ""; }).map(function(k){ return k + " " + x[k]; }).join(" · "));
+        lines.push(t[1] + ": " + ["tries","bounces","code","type","size","sig","lines","alert","snip","bounce"].filter(function(k){ return x[k] !== undefined && x[k] !== ""; }).map(function(k){ return k + " " + x[k]; }).join(" · "));
         if (x.header) lines.push("  머리 줄: " + x.header.join(" | "));
       });
-      ["total","normalIds","noSabun","noSabunNormal"].forEach(function(k){ if (d[k] !== undefined) lines.push(k + ": " + d[k]); });
+      ["logins","cookies","total","normalIds","noSabun","noSabunNormal"].forEach(function(k){ if (d[k] !== undefined) lines.push(k + ": " + d[k]); });
       if (d.states) lines.push("가입상태: " + Object.keys(d.states).map(function(k){ return k + " " + d.states[k]; }).join(", "));
       $("syncTraceText").textContent = lines.join("\n");
       btn.hidden = false; $("syncRetry").hidden = !!info.ok;
@@ -2590,7 +2590,7 @@
           if (A) parts.push("관리자 " + num(A.total) + "명(영업개발파트 " + num(A.team) + "명" + (A.added ? " · 새로 " + A.added + "명" : "") + (A.removed ? " · 빠짐 " + A.removed + "명" : "") + (A.masters && A.masters.length ? " · 마스터 " + A.masters.join(", ") : "") + ")");
           if (j.noSabun) parts.push(noSabunLine(j.noSabun));
           if (A && A.missed && A.missed.length) parts.push("영업개발파트인데 못 넣은 사람: " + A.missed.join(", "));
-          kmsg("syncMsg", "ok", K.ok + "<span><b>" + (dry ? "미리 확인" : "갱신했어요") + "</b><br>" + parts.map(esc).join("<br>") + (dry ? "<br>시트는 바꾸지 않았어요." : "") + "</span>");
+          kmsg("syncMsg", "ok", K.ok + "<span><b>" + (dry ? "미리 확인" : "갱신했어요") + "</b><br>" + parts.map(esc).join("<br>") + (dry ? "<br>미리 확인이라 실제 명단은 바꾸지 않았어요." : "") + "</span>");
         } else kmsg("syncMsg", "er", K.alert + "<span>" + esc(j.msg || "명단을 받지 못했어요.") + (dry ? "" : " 시트는 어제 명단 그대로예요.") + " — '자세히 보기'를 복사해 개발팀에 알려 주세요.</span>");
         showSyncDiag(info, !j.ok || dry);
         if (!dry) Audit.load();
@@ -2770,15 +2770,15 @@
   var Members = (function(){
     var q = { tab:"all", q:"", sort:"last", filter:"all", page:1 }, seq = 0, res = null, sel = null, dseq = 0, typeT = null, nsState = {};
     function meta(r){
-      /* #72 '명단 갱신'과 '통계 기록 시작'을 상자 2개로 나눔(휴대폰은 한 줄 글) */
+      /* #72 '사번 갱신'과 '통계 기록 시작'을 상자 2개로 나눔(휴대폰은 한 줄 글) */
       var ls = r && r.lastSync, lg = r && r.logStart, m = /^(\d{4})-(\d\d)-(\d\d)/.exec(lg || "");
       $("memMeta").className = "meta mbx";
       $("memMeta").innerHTML =
-        '<div class="mb"><span class="ic">' + PI.refresh + '</span><span class="k-col"><span class="l1"><i>명단 갱신</i><b>' + (ls ? esc(fmtAt(ls)) : "아직 없음") + '</b></span>' +
-          '<span class="l2">' + (ls ? "세일즈온 사번 목록을 가져온 때 · 매일 새벽 5시" : "설정 → 사번 명단에서 [지금 갱신]") + '</span></span></div>' +
+        '<div class="mb"><span class="ic">' + PI.refresh + '</span><span class="k-col"><span class="l1"><i>사번 갱신</i><b>' + (ls ? esc(fmtAt(ls)) : "아직 없음") + '</b></span>' +
+          '<span class="l2">' + (ls ? "세일즈온 사번 목록을 매일 새벽 5시에 가져와요" : "설정 → 사번 명단에서 [지금 갱신]") + '</span></span></div>' +
         '<div class="mb hi"><span class="ic">' + PI.cal + '</span><span class="k-col"><span class="l1"><i>통계 기록 시작</i><b>' + (m ? m[1] + "년 " + (+m[2]) + "월 " + (+m[3]) + "일부터" : "아직 없음") + '</b></span>' +
-          '<span class="l2">' + (m ? "마지막 접속 · 조회 · 다운로드를 이날부터 세요" : "사이트에 사번 로그인이 붙으면 이날부터 세요") + '</span></span></div>' +
-        '<p class="mb-s"><span>명단 갱신 <b>' + (ls ? esc(fmtAt(ls, "dot")) : "아직 없음") + '</b></span><span class="sep" aria-hidden="true"></span><span>통계 기록 시작 <b>' + (m ? m[2] + "." + m[3] : "아직 없음") + '</b></span></p>';
+          '<span class="l2">' + (m ? "모든 분석 자료를 카운트하기 시작한 날이에요" : "사이트에 사번 로그인이 붙으면 이날부터 세요") + '</span></span></div>' +
+        '<p class="mb-s"><span>사번 갱신 <b>' + (ls ? esc(fmtAt(ls, "dot")) : "아직 없음") + '</b></span><span class="sep" aria-hidden="true"></span><span>통계 기록 시작 <b>' + (m ? m[2] + "." + m[3] : "아직 없음") + '</b></span></p>';
     }
     function tabs(r){
       var c = r ? r.counts : null;
