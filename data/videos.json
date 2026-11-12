@@ -40,7 +40,7 @@
       "date": "2026-10-30",
       "publishedAt": "2026-10-30T01:00:23Z",
       "category": "signature",
-      "visible": false,
+      "visible": true,
       "files": [
         {
           "name": "[시그니처클래스]순환계치료비_백인혜",
