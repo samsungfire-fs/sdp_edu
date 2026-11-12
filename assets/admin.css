@@ -1666,3 +1666,63 @@ body.modal-open{overflow:hidden}
 /* #59 키패드가 올라오면 아래 탭 바 · 토스트 · 맨 위로 버튼도 키패드 위로 · 높이는 dvh */
 .toast, .fab, body.authed .bnav{margin-bottom:var(--kb, 0px)}
 .setv, .anav, .memview{min-height:calc(100dvh - 60px)}
+
+/* ================= #66 강의 카드 = 늘 같은 4줄 (제목 2줄 자리 · 날짜 줄 · 조회/다운로드 · 마지막 손댄 사람) ================= */
+#app .vitem.lrow, #app .vitem.lrow > .vrow{min-height:150px}
+#app .vitem.lrow > .vrow{grid-template-columns:168px minmax(0,1fr) auto; align-items:stretch; padding:16px}
+#app .lrow .vthumb{width:168px}
+#app.is-edit .lrow .vthumb{width:168px}
+#app .lrow .vtext{gap:6px; justify-content:flex-start}
+#app .lrow .vtext h3{min-height:2.84em}
+#app .lrow .mm{flex-wrap:nowrap; overflow:hidden; white-space:nowrap}
+#app .lrow .mm .fl{font-weight:800 !important}
+#app .lrow .sl{display:flex; gap:14px; font-size:13px; color:var(--k-t2); font-variant-numeric:tabular-nums}
+#app .lrow .sl span{display:inline-flex; align-items:center; gap:4px}
+#app .lrow .sl svg{width:14px; height:14px; color:var(--k-t3); flex:none}
+#app .lrow .wh{display:flex !important; align-items:center; gap:5px; margin-top:auto; padding-top:8px; border-top:1px dashed var(--k-ln); font-size:12.5px; color:var(--k-t3)}
+#app .lrow .wh svg{width:12px; height:12px; flex:none}
+#app .lrow .lac{justify-content:space-between}
+#app .videos{align-items:stretch}
+@media (max-width:560px){
+  #app .vitem.lrow, #app .vitem.lrow > .vrow{min-height:0}
+  #app .vitem.lrow > .vrow{grid-template-columns:120px minmax(0,1fr); grid-template-areas:"th tx" "ac ac"; padding:12px; gap:10px 12px}
+  #app .lrow .vthumb{width:120px}
+  #app .lrow .lac{padding-top:10px; border-top:1px solid var(--k-ln)}
+}
+
+/* ================= #68 [🕒 수정 기록 N] + 수정 기록 창 ================= */
+.ftr .ftr-r{display:flex; gap:10px; margin-left:auto; flex-wrap:wrap}
+.ftr .ftr-r .lk.dg{margin-left:0}
+.ftr .lkn{display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:6px; background:var(--k-acs); color:var(--k-act); font-size:12px; font-weight:800 !important; margin-left:2px}
+@media (max-width:560px){ .ftr .ftr-r{margin-left:0; width:100%} }
+.modal.logm{width:560px; max-height:min(640px, calc(100dvh - 48px)); padding:22px 0 0; gap:0; overflow:hidden}
+.logm .lgh{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 22px}
+.logm .lgh h3 b{color:var(--k-act); font-weight:400}
+.logm .lgs{margin:2px 22px 0; font-size:13px; color:var(--k-t3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.logm .lgl{flex:1 1 auto; overflow:auto; overscroll-behavior:contain; padding:14px 22px 6px; margin-top:12px; box-shadow:inset 0 1px 0 var(--k-ln)}
+.logm .lge{margin:24px 0; text-align:center; font-size:14.5px; color:var(--k-t3)}
+.lgo{list-style:none; margin:0; padding:0}
+.lgo li{position:relative; padding:14px 0 14px 18px; display:flex; flex-direction:column; gap:7px; box-shadow:inset 0 -1px 0 var(--k-ln)}
+.lgo li:last-child{box-shadow:none}
+.lgo li::before{content:""; position:absolute; left:0; top:21px; width:8px; height:8px; border-radius:999px; background:var(--k-off)}
+.lgo li.now::before{background:var(--k-ac)}
+.lgw{display:flex; align-items:baseline; gap:8px}
+.lgw b{font-size:15px; color:var(--k-t1); font-weight:800 !important}
+.lgw span{font-size:13px; color:var(--k-t3); font-variant-numeric:tabular-nums}
+.lgr{display:flex; align-items:flex-start; gap:8px; font-size:14px; line-height:1.55; color:var(--k-t1)}
+.lgx{min-width:0; overflow-wrap:anywhere}
+.lgx del{color:var(--k-t3)}
+.lgx .mu{color:var(--k-t3)}
+.lgt{flex:none; display:inline-flex; align-items:center; height:22px; padding:0 7px; border-radius:6px; font-size:12px; font-weight:800 !important; white-space:nowrap; background:var(--k-s2); color:var(--k-t2)}
+.lgt.g{background:var(--k-okb); color:var(--k-ok)}
+.lgt.r{background:var(--k-erb); color:var(--k-er)}
+.lgt.b{background:var(--k-acs); color:var(--k-act)}
+.logm .lgf{margin:0; padding:12px 22px 18px; font-size:12.5px; color:var(--k-t3); box-shadow:inset 0 1px 0 var(--k-ln); background:var(--k-bg2)}
+@media (max-width:560px){ .modal.logm{max-height:88dvh} .logm .lgf{padding-bottom:calc(18px + env(safe-area-inset-bottom, 0px))} }
+
+/* ================= #69 업로드하는 방법 팝업: [구글 드라이브로 가기 ↗] [알겠어요] ================= */
+.modal.how .bt2{display:grid; grid-template-columns:1.25fr 1fr; gap:8px}
+.modal.how .bt2 .bb{height:48px; border-radius:12px; font-size:15px}
+.modal.how .bt2 .bb.g{background:var(--k-s1); color:var(--k-t1); box-shadow:inset 0 0 0 1px var(--k-ln2)}
+.modal.how .bt2 .ext{color:var(--k-t3); font-size:14px; margin-left:-2px}
+@media (max-width:420px){ .modal.how .bt2{grid-template-columns:1fr} }

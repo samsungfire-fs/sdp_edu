@@ -1200,3 +1200,9 @@ body .lg-logo{font-weight:800 !important; font-size:36px; line-height:1.2; lette
 [data-theme="dark"] .lec-note-ic path:first-child{fill:#3D63FF}
 .lec-note-ic path:nth-child(2){stroke:#FFFFFF}
 .lec-note-ic circle{fill:#FFFFFF}
+
+/* ================= #67 썸네일 배지 여백 12px (NEW · 비공개 · 영상 길이) ================= */
+.card .thumb .chip-new{left:12px; top:12px}
+.card .thumb .chip-dur{right:12px; bottom:12px}
+.card .thumb .priv{padding:12px}
+.card .thumb .priv span{padding:4px 10px 4px 8px}

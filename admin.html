@@ -16,8 +16,8 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261112e">
-<link rel="stylesheet" href="assets/admin.css?v=20261112d">
+<link rel="stylesheet" href="assets/site.css?v=20261112f">
+<link rel="stylesheet" href="assets/admin.css?v=20261112e">
 </head>
 <body>
 <script>/* 11-12: 저장된 관리자 로그인이 있으면 처음부터 관리자 화면으로 그림('확인 중' 화면 없이). 확인은 admin.js가 뒤에서 */(function(){try{var k="sdp-admin-sid",o=JSON.parse(localStorage.getItem(k)||sessionStorage.getItem(k)||"null"),n=new Date(Date.now()+324e5).toISOString().slice(0,19);if(o&&o.sid&&o.p&&localStorage.getItem("sdp-gate-url")&&!(o.exp&&String(o.exp).slice(0,19)<=n))document.body.classList.add("authed")}catch(e){}})();</script>
@@ -340,6 +340,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/common.js?v=20261112b"></script>
-<script src="assets/admin.js?v=20261112i"></script>
+<script src="assets/admin.js?v=20261112j"></script>
 </body>
 </html>

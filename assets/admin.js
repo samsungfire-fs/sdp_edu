@@ -83,6 +83,7 @@
   /* #52 확인 창 · 설명 팝업: [취소] · Esc · 바깥 누르기 = 닫기. 휴대폰은 아래에서 올라오는 시트 */
   var IC_OUT = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14M10 16l-4-4 4-4M6 12h10"/></svg>';
   var IC_BIN = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
+  var IC_DRIVE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 3.5h6.8l6.1 10.6-3.4 5.9H5.9L2.5 14.1z"/><path d="M8.6 3.5l6.5 11.2M15.4 3.5 9 14.7M2.5 14.1h19"/></svg>';
   var IC_X = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var Modal = (function(){
     var wrap = $("modal"), box = $("modalBox"), back = null;
@@ -121,9 +122,10 @@
         '<li><span><b>링크를 복사해요</b>같은 창에서 <span class="ui">링크 복사</span>.</span></li>' +
         '<li><span><b>[자료 추가]를 누르고 붙여 넣어요</b>파일 이름 · 용량을 가져오고, 누르면 바로 받아지는 링크로 바꿔 줘요.</span></li></ol>' +
         '<p class="tip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><span>‘제한됨’으로 두면 설계사가 받을 수 없어요. 사이트에서 받기가 안 되면 2번을 다시 확인해 주세요.</span></p>' +
-        '<button type="button" class="bb p rp" data-close data-ok>알겠어요</button>', "how");
+        '<div class="bt2"><a class="bb g rp" href="https://drive.google.com/drive/my-drive" target="_blank" rel="noopener">' + IC_DRIVE + '구글 드라이브로 가기<span class="ext" aria-hidden="true">↗</span></a>' +
+        '<button type="button" class="bb p rp" data-close data-ok>알겠어요</button></div>', "how");
     }
-    return { ask: ask, howto: howto, close: close };
+    return { ask: ask, howto: howto, close: close, show: open };
   })();
 
   /* ---------- GitHub ---------- */
@@ -444,6 +446,33 @@
   function lsw(on, attrs, label){
     return '<button type="button" class="vs lsw' + (on ? " y" : "") + '" role="switch" aria-checked="' + on + '" ' + attrs + ' aria-label="' + (label || "사이트에 공개") + '"><i aria-hidden="true"></i><span class="vs-t">' + (on ? "공개" : "비공개") + '</span></button>';
   }
+  /* #66 목록 카드 셋째 줄: 조회수 · 다운로드 수 (분석과 같은 숫자, 1분 보관) */
+  var CST = { s: null, at: 0, busy: false };
+  try { var cst0 = JSON.parse(SS.get("sc-cstats") || "null"); if (cst0){ CST.s = cst0.s; CST.at = cst0.at; } } catch(e){}
+  function cstLoad(){
+    if (CST.busy || Date.now() - CST.at < 60000 || !(GATE_URL && adminSes && adminSes.sid)) return;
+    CST.busy = true;
+    gateFetch({ action:"contentStats", sid: adminSes.sid }).then(function(r){
+      CST.busy = false; if (!r.ok) return; CST.s = r.stats || {}; CST.at = Date.now();
+      try { SS.set("sc-cstats", JSON.stringify({ s: CST.s, at: CST.at })); } catch(e){}
+      if (document.body.dataset.view === "courses") render();
+    }).catch(function(){ CST.busy = false; CST.at = Date.now() - 45000; });
+  }
+  function cstOf(key, prefix){
+    if (!CST.s) return null;
+    var o = { views: 0, downs: 0 };
+    Object.keys(CST.s).forEach(function(k){ if (k === key || (prefix && k.indexOf(key + "/") === 0)){ o.views += CST.s[k].views || 0; o.downs += CST.s[k].downs || 0; } });
+    return o;
+  }
+  function fmtK(n){ n = n || 0; if (n >= 10000){ var x = Math.round(n / 1000) / 10; return (x % 1 ? x.toFixed(1) : String(x)) + "만"; } return nf(n); }
+  var IC_DN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>';
+  function statLine(st, noV){
+    var v = st ? st.views : null, d = st ? st.downs : null, t = function(x){ return x == null ? "—" : fmtK(x); };
+    return '<div class="sl">' + (noV ? '' : '<span title="조회수" aria-label="조회 ' + t(v) + '회">' + IC.eye + t(v) + '</span>') +
+      '<span title="다운로드 수(교육자료 받은 횟수 합)" aria-label="다운로드 ' + t(d) + '회">' + IC_DN + t(d) + '</span></div>';
+  }
+  function whoLine(html){ return '<div class="wh">' + IC_CLK + html + '</div>'; }
+  var IC_CLK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
   function itemHtml(v, i){
     var ed = v === openV, pub = v.visible !== false, n = v.files.length, miss = v.files.filter(function(f){ return !SC.download(f.link, f.type).url; }).length;
     var th = v.id ? '<div class="vthumb dim">' + SC.thumbImg(v.id) + (v.duration ? '<span class="dur">' + esc(v.duration) + '</span>' : '') + '</div>' : '<div class="vthumb blank dim">영상 없음</div>';
@@ -453,7 +482,8 @@
     return '<li class="vitem lrow' + (ed ? " editing" : "") + (pub ? "" : " off") + '" data-v="' + i + '" data-vis="' + pub + '">' +
       '<div class="vrow" data-act="toggle" data-i="' + i + '">' + th +
       '<div class="vtext"><h3 class="dim vtitle" title="' + esc(v.title || "") + '">' + esc(listTitle(v.title)) + '</h3><div class="mm">' + mm + '</div>' +
-        (v.id ? '<div class="wh">' + Audit.rowWho("v:" + v.id) + '</div>' : '') + '</div>' +
+        statLine(v._oid ? cstOf("v:" + v._oid) : { views: 0, downs: 0 }) +
+        whoLine(v._oid ? (Audit.rowWho("v:" + v._oid) || '<span class="am-who">업로드' + (v.date ? " " + esc(fmtAt(v.date + "T00:00", "md")) : "") + '</span>') : '<span class="am-who">아직 저장 전</span>') + '</div>' +
       '<div class="lac">' + lsw(pub, 'data-act="vis" data-i="' + i + '"') + edBtn(ed, 'data-act="toggle" data-i="' + i + '"') + '</div>' +
       '</div></li>';
   }
@@ -506,10 +536,10 @@
       (v.date ? '<span>유튜브에 올린 날짜 <b>' + longDate(v.publishedAt || v.date) + '</b></span>' : '') + (v.duration ? '<span>길이 <b>' + esc(v.duration) + '</b></span>' : '') + '</span></div>' +
       '<button type="button" class="bb g rp" data-act="refetch" data-i="' + i + '">' + IC.refresh + '다시 가져오기</button>';
   }
-  function edFoot(t, merge, siteHref, moveSel, delAttrs, delLabel){
+  function edFoot(t, merge, siteHref, moveSel, delAttrs, delLabel, title){
     return Audit.histLine(t, merge) +
       '<div class="ftr">' + (siteHref ? '<a class="lk rp" href="' + siteHref + '" target="_blank" rel="noopener">' + NEWWIN + '사이트에서 보기</a>' : '') + (moveSel || '') +
-      '<button type="button" class="lk dg rp" ' + delAttrs + '>' + IC.del + delLabel + '</button></div>';
+      '<span class="ftr-r">' + (t ? Audit.logBtn(t, merge, title) : '') + '<button type="button" class="lk dg rp" ' + delAttrs + '>' + IC.del + delLabel + '</button></span></div>';
   }
   function videoBody(v, i){
     var id = "v" + i, pub = v.visible !== false, cat = SC.catOf(v), n = v.files.length;
@@ -525,7 +555,7 @@
       '<div class="ed-end">' + edFoot(v._oid ? "v:" + v._oid : "", false, v.id && pub && v._oid ? 'v/' + esc(v.id) + '/' : '',
         '<label class="lk amove">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M14 7l5 5-5 5"/></svg>' + '<span>메뉴 옮기기</span><select data-move="' + i + '" aria-label="메뉴 옮기기">' +
           SC.CATS.map(function(c){ return '<option value="' + c.id + '"' + (c.id === cat ? ' selected' : '') + '>' + esc(c.label) + '</option>'; }).join("") + '</select></label>',
-        'data-act="del" data-i="' + i + '"', "강의 삭제") + '</div>';
+        'data-act="del" data-i="' + i + '"', "강의 삭제", v.title) + '</div>';
   }
   /* ---------- 목록 보기: 메뉴 칸 · 검색 · 정렬 · 공개 필터 (보기만 바뀌고 저장되지 않음) ---------- */
   var RID = "research";
@@ -560,6 +590,7 @@
     clearTimeout(el["_t" + cls]); el["_t" + cls] = setTimeout(function(){ el.classList.remove(cls); }, ms || 900);
   }
   function render(anim){
+    if (document.body.dataset.view === "courses") cstLoad();
     var a = document.activeElement, fid = a && a.id, s0 = a && a.selectionStart, s1 = a && a.selectionEnd;
     /* #26 편집 칸이 새로 열리면: 바뀌기 전 자리를 재 두었다가 목록이 왼쪽 칸으로 스르륵 (FLIP) */
     var target = view.cat === RID ? openM : openV, first = ($("edWrap").hidden && target && motionOk()) ? flipFirst() : null;
@@ -729,7 +760,8 @@
           (m._new ? '<span class="new">새 달 · 아직 저장 전</span>' : '') +
           '<span>연령 ' + m.ages.length + '개</span>' + (nf ? '<span class="fl">자료 ' + nf + '개</span>' : '<span>자료 없음</span>') +
           (miss ? '<span class="miss">링크 없음 ' + miss + '</span>' : '') + '</div>' +
-          (m._oym ? '<div class="wh">' + Audit.rowWho("r:" + ymCode(m._oym), true) + '</div>' : '') + '</div>' +
+          statLine(m._oym ? cstOf("r:" + ymCode(m._oym), true) : { views: 0, downs: 0 }, true) +
+          whoLine(m._oym ? (Audit.rowWho("r:" + ymCode(m._oym), true) || '<span class="am-who">업로드</span>') : '<span class="am-who">아직 저장 전</span>') + '</div>' +
         '<div class="lac">' + lsw(pub, 'data-act="rvis" ' + at) + edBtn(ed, 'data-act="redit" ' + at) + '</div>' +
       '</div></li>';
   }
@@ -767,7 +799,7 @@
           '<div><b>지난달 연령 그대로 가져오기</b><span>' + esc(prev.title || "지난달") + '의 연령 ' + prev.ages.length + '개(제목·썸네일·순서)를 복사해요. 자료는 비워 둬요.</span></div></div>' : '') +
         '<ul class="ages">' + m.ages.map(function(a, ai){ return ageHtml(m, mi, a, ai); }).join("") + '</ul>' +
         '<button type="button" class="add rp" data-act="raddAge" ' + at + '>' + IC.plus + '연령 추가</button>', HOWTO_BTN) +
-      '<div class="ed-end">' + edFoot(wt, true, pub && code && saved ? 'research/' + code + '/' : '', '', 'data-act="rdel" ' + at, "월 삭제") + '</div>';
+      '<div class="ed-end">' + edFoot(wt, true, pub && code && saved ? 'research/' + code + '/' : '', '', 'data-act="rdel" ' + at, "월 삭제", m.title) + '</div>';
   }
   /* 저장된 상태에도 있는 달인지(사이트에서 보기 링크용) */
   function dirtyMonth(m){
@@ -1317,7 +1349,7 @@
     toast("삭제하는 중…");
     save({ msg: isM ? "달을 삭제했어요" : "강의를 삭제했어요", undo: function(){
       if (saving){ toast("저장하는 중이에요. 잠시 뒤 다시 눌러 주세요"); return; }
-      list.splice(Math.min(idx, list.length), 0, obj); markDirty(); render(); toast("되돌리는 중…"); save({ msg: "되돌렸어요" });
+      list.splice(Math.min(idx, list.length), 0, obj); markDirty(); render(); toast("되돌리는 중…"); restoring = true; save({ msg: "되돌렸어요" }).then(function(){ restoring = false; }, function(){ restoring = false; });
     } });
   }
 
@@ -2201,7 +2233,7 @@
     /* 목록 줄 끝: '박유진 수정 11.11' / '소희수 업로드 10.28' */
     function rowWho(t, merge){
       var o = merge ? merged(t) : get(t); if (!o) return "";
-      var up = o.count === 1 || /업로드했어요|만들었어요/.test(o.last.x);
+      var up = /업로드했어요|만들었어요/.test(o.last.x);
       return '<span class="am-who">' + esc(o.last.n) + " " + (up ? "업로드" : "수정") + " " + esc(fmtAt(o.last.at, "md")) + '</span>';
     }
     /* 편집 칸 요약 2줄: 업로드 · 마지막 수정 */
@@ -2230,20 +2262,70 @@
       var t = b.dataset.hist; b.disabled = true; b.textContent = "불러오는 중…";
       gateFetch({ action:"auditList", sid: adminSes.sid, target: t }).then(function(r){ if (r.ok){ more[t] = r.list; render(); } }).catch(function(){ b.disabled = false; b.textContent = "다시 불러오기"; });
     });
-    var histOpen = {};
+    var IC_CLOCK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5v4h4M12 7.5V12l3 2"/></svg>';
+    /* #68 맨 아래 위 줄: '🕒 마지막 수정 박유진 · 2026.11.11 09:41' 한 줄만 */
     function histLine(t, merge){
       if (!t) return "";
       var o = merge ? merged(t) : get(t); if (!o) return "";
-      var open = !!histOpen[t];
-      return '<div class="hline"><span class="hist2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5v4h4M12 7.5V12l3 2"/></svg>' +
-        '<span class="nowrap">변경 기록 <b>' + o.count + '</b></span><span class="nowrap">· 마지막 ' + (o.count === 1 ? "업로드 " : "수정 ") + esc(o.last.n) + ' ' + esc(fmtAt(o.last.at, "md")) + '</span>' +
-        '<button type="button" class="lnk" data-histt="' + esc(t) + '" aria-expanded="' + open + '">' + (open ? "접기" : "보기") + '</button></span>' +
-        (open ? histHtml(t, merge) : '') + '</div>';
+      return '<div class="hline"><span class="hist2">' + IC_CLOCK + '<span class="nowrap">마지막 ' + (/업로드했어요|만들었어요/.test(o.last.x) ? "업로드" : "수정") + ' <b>' + esc(o.last.n) + '</b> · ' + esc(fmtAt(o.last.at, "full")) + '</span></span></div>';
     }
-    document.addEventListener("click", function(e){ var b = e.target.closest("[data-histt]"); if (!b) return; var t = b.dataset.histt; histOpen[t] = !histOpen[t]; render(); });
+    /* [🕒 수정 기록 N] — 강의 삭제 바로 왼쪽 */
+    function logBtn(t, merge, title){
+      var o = t ? (merge ? merged(t) : get(t)) : null;
+      return '<button type="button" class="lk rp" data-log="' + esc(t || "") + '"' + (merge ? ' data-merge="1"' : '') + ' data-logt="' + esc(title || "") + '">' + IC_CLOCK + '수정 기록' + (o ? '<span class="lkn">' + o.count + '</span>' : '') + '</button>';
+    }
+    var KIND = { g: "g", r: "r", b: "b", n: "n" };
+    function tag(label, c){ return '<span class="lgt ' + (KIND[c] || "n") + '">' + esc(label) + '</span>'; }
+    function fromD(c){
+      if (c.k === "title") return [tag("제목", "n"), '<del>' + esc(c.o || "(없음)") + '</del> → ' + esc(c.n || "(없음)")];
+      if (c.k === "desc") return [tag("강의 소개", "n"), esc(c.ol + "줄 → " + c.nl + "줄") + (c.oc !== c.nc ? ' <span class="mu">(' + esc(c.oc + "자 → " + c.nc + "자") + ')</span>' : '')];
+      if (c.k === "undo") return [tag("삭제 되돌리기", "r"), "삭제한 강의를 되돌렸어요"];
+      return null;
+    }
+    function fromX(x){
+      var m;
+      if (/^강의를 업로드|^달을 만들었어요|^연령을 만들었어요/.test(x)) return [[tag(/^강의/.test(x) ? "강의 추가" : "추가", "g"), esc(x)]];
+      if ((m = /^자료 (\d+)개를 (업로드|추가)했어요(?: · (.*))?$/.exec(x))) return [[tag("교육자료 추가", "g"), esc(m[3] || m[1] + "개")]];
+      if ((m = /^자료 (\d+)개를 삭제했어요(?: · (.*))?$/.exec(x))) return [[tag("교육자료 삭제", "r"), esc(m[2] || m[1] + "개")]];
+      if ((m = /^자료 링크를 바꿨어요 · (.*)$/.exec(x))) return [[tag("교육자료 링크", "n"), esc(m[1])]];
+      if (/^비공개 → 공개/.test(x)) return [[tag("공개", "b"), "비공개 → 공개"]];
+      if (/^공개 → 비공개/.test(x)) return [[tag("비공개", "b"), "공개 → 비공개"]];
+      if ((m = /^메뉴를 옮겼어요 · (.*)$/.exec(x))) return [[tag("메뉴", "n"), esc(m[1])]];
+      if (/유튜브 주소/.test(x)) return [[tag("유튜브 주소", "n"), "영상 주소를 바꿨어요"]];
+      if (/^삭제를 되돌렸어요/.test(x)) return [[tag("삭제 되돌리기", "r"), "삭제한 강의를 되돌렸어요"]];
+      if ((m = /^강의를 삭제했어요 · (.*)$/.exec(x))) return [[tag("강의 삭제", "r"), esc(m[1])]];
+      if ((m = /^(.+?)[을를] 바꿨어요$/.exec(x))) return m[1].split("·").map(function(w){ return [tag(w, "n"), "바꿨어요"]; });
+      return [[tag("수정", "n"), esc(x)]];
+    }
+    function logRows(e){
+      var out = [];
+      if (e.d && e.d.length){ e.d.forEach(function(c){ var r = fromD(c); if (r) out.push(r); }); if (out.length) return out; }
+      return fromX(e.x);
+    }
+    function openLog(t, merge, title){
+      var o = t ? (merge ? merged(t) : get(t)) : null, n = o ? o.count : 0;
+      var head = '<div class="lgh"><h3 id="modalT">수정 기록' + (n ? ' <b>' + n + '</b>' : '') + '</h3><button type="button" class="xx rp" data-close aria-label="닫기">' + IC_X + '</button></div>' +
+        (title ? '<p class="lgs" title="' + esc(title) + '">' + esc(title) + '</p>' : '');
+      var foot = '<p class="lgf">공개 스위치 · 메뉴 옮기기 · 삭제 되돌리기도 여기에 남아요. 기록은 지울 수 없어요.</p>';
+      Modal.show(head + '<div class="lgl" id="logBody">' + (o ? '<p class="lge">불러오는 중…</p>' : '<p class="lge">아직 기록이 없어요.</p>') + '</div>' + foot, "logm");
+      if (!o || !on()) return;
+      gateFetch({ action:"auditList", sid: adminSes.sid, target: t }).then(function(r){
+        var box = $("logBody"); if (!box) return;
+        if (!r.ok){ box.innerHTML = '<p class="lge">기록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; return; }
+        var list = (r.list || []).filter(function(e){ return e.x && e.x !== "업로드"; }), groups = [], gk = {};
+        list.forEach(function(e){ var k = e.n + "|" + e.at; if (!gk[k]){ gk[k] = { n: e.n, at: e.at, rows: [] }; groups.push(gk[k]); } gk[k].rows = gk[k].rows.concat(logRows(e)); });
+        if (!groups.length){ box.innerHTML = '<p class="lge">아직 기록이 없어요.</p>'; return; }
+        var h = box.closest(".modal").querySelector("#modalT"); if (h) h.innerHTML = '수정 기록 <b>' + groups.length + '</b>';
+        box.innerHTML = '<ol class="lgo">' + groups.map(function(g, i){
+          return '<li class="' + (i ? "" : "now") + '"><div class="lgw"><b>' + esc(g.n) + '</b><span>' + esc(fmtAt(g.at, "full")) + '</span></div>' +
+            g.rows.map(function(r){ return '<div class="lgr">' + r[0] + '<span class="lgx">' + r[1] + '</span></div>'; }).join("") + '</li>';
+        }).join("") + '</ol>';
+      }).catch(function(){ var box = $("logBody"); if (box) box.innerHTML = '<p class="lge">기록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; });
+    }
+    document.addEventListener("click", function(e){ var b = e.target.closest("[data-log]"); if (!b) return; openLog(b.dataset.log, !!b.dataset.merge, b.dataset.logt); });
     function lastSave(){ var sv = get("save"); return sv ? sv.last : null; }
     function reset(){ map = null; more = {}; }
-    return { load: load, add: add, get: get, rowWho: rowWho, sumWho: sumWho, fileWho: fileWho, histHtml: histHtml, histLine: histLine, lastSave: lastSave, reset: reset, on: on, paint: paint };
+    return { load: load, add: add, get: get, merged: merged, rowWho: rowWho, sumWho: sumWho, fileWho: fileWho, histHtml: histHtml, histLine: histLine, logBtn: logBtn, lastSave: lastSave, reset: reset, on: on, paint: paint };
   })();
 
   /* 저장 전·후를 비교해 '변경 기록'에 남길 줄 만들기 (여러 칸을 한 번에 바꾸면 한 줄로 묶음) */
@@ -2260,6 +2342,9 @@
   }
   /* '제목·강의 소개를 바꿨어요' — 마지막 낱말 받침으로 을/를 */
   function changed(words){ var w = words[words.length - 1], c = w.charCodeAt(w.length - 1) - 0xAC00; return words.join("·") + (c >= 0 && c < 11172 && c % 28 ? "을" : "를") + " 바꿨어요"; }
+  var restoring = false;
+  function cut(x, n){ x = String(x || ""); return x.length > n ? x.slice(0, n) + "…" : x; }
+  function lineN(x){ return String(x || "").split(/\n/).filter(function(l){ return l.trim(); }).length; }
   function auditItems(S, out, rout){
     var items = [], oldV = {}, newIds = {}, catL = function(c){ return SC.catLabel(c); };
     S.v.videos.forEach(function(v){ oldV[v.id] = v; });
@@ -2270,14 +2355,16 @@
       var t = "v:" + v.id, oid = moved[v.id], o = oldV[v.id] || (oid && oldV[oid]);
       if (oid){ items.push({ t: t, from: "v:" + oid, x: "유튜브 주소를 바꿨어요" }); items.push({ t: "f:" + v.id, from: "f:" + oid }); }
       if (!o){
+        if (restoring){ items.push({ t: t, x: "삭제를 되돌렸어요", d: [{ k: "undo" }] }); return; }
         items.push({ t: t, x: "강의를 업로드했어요" });
         if (v.files.length) items.push({ t: t, x: "자료 " + v.files.length + "개를 업로드했어요" });
         v.files.forEach(function(f){ items.push({ t: "f:" + v.id + ":" + fileKey(f), x: "업로드" }); });
         return;
       }
-      var ch = [];
-      if (o.title !== v.title) ch.push("제목"); if (o.description !== v.description) ch.push("강의 소개");
-      if (ch.length) items.push({ t: t, x: changed(ch) });
+      var ch = [], dd = [];
+      if (o.title !== v.title){ ch.push("제목"); dd.push({ k: "title", o: cut(o.title, 140), n: cut(v.title, 140) }); }
+      if (o.description !== v.description){ ch.push("강의 소개"); dd.push({ k: "desc", ol: lineN(o.description), nl: lineN(v.description), oc: (o.description || "").length, nc: (v.description || "").length }); }
+      if (ch.length) items.push({ t: t, x: changed(ch), d: dd });
       if ((o.visible !== false) !== (v.visible !== false)) items.push({ t: t, x: v.visible !== false ? "비공개 → 공개로 바꿨어요" : "공개 → 비공개로 바꿨어요" });
       if (SC.catOf(o) !== SC.catOf(v)) items.push({ t: t, x: "메뉴를 옮겼어요 · " + catL(SC.catOf(o)) + " → " + catL(SC.catOf(v)) });
       filesDiff(o.files || [], v.files, "f:" + v.id, items, t);
