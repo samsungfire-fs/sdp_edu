@@ -1208,4 +1208,4 @@ body .lg-logo{font-weight:800 !important; font-size:36px; line-height:1.2; lette
 .card .thumb .priv span{padding:4px 10px 4px 8px}
 
 /* 사용자 요청: 키패드가 올라와 있을 때 아래로 더 내릴 수 있게 키패드 높이만큼 여백 (iOS · 카톡 인앱 포함) */
-html.kb-up body{padding-bottom:var(--kb, 0px)}
+html.kb-in body{padding-bottom:max(var(--kb, 0px), 60vh)}

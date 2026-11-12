@@ -16,8 +16,8 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261112g">
-<link rel="stylesheet" href="assets/admin.css?v=20261112f">
+<link rel="stylesheet" href="assets/site.css?v=20261112h">
+<link rel="stylesheet" href="assets/admin.css?v=20261112h">
 </head>
 <body>
 <script>/* 11-12: 저장된 관리자 로그인이 있으면 처음부터 관리자 화면으로 그림('확인 중' 화면 없이). 확인은 admin.js가 뒤에서 */(function(){try{var k="sdp-admin-sid",o=JSON.parse(localStorage.getItem(k)||sessionStorage.getItem(k)||"null"),n=new Date(Date.now()+324e5).toISOString().slice(0,19);if(o&&o.sid&&o.p&&localStorage.getItem("sdp-gate-url")&&!(o.exp&&String(o.exp).slice(0,19)<=n))document.body.classList.add("authed")}catch(e){}})();</script>
@@ -320,7 +320,7 @@
     <aside class="al" aria-label="콘텐츠 목록">
       <div class="mt full" id="anaKind" role="tablist"><button type="button" role="tab" data-kind="v" aria-selected="true">강의</button><button type="button" role="tab" data-kind="r" aria-selected="false">상품연구 전략자료</button></div>
       <div class="k-row k-g8"><label class="srch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg><input class="k-in" id="anaQ" type="search" placeholder="제목 검색" autocomplete="off" aria-label="제목 검색"></label>
-        <select class="k-in k-sel sel2" id="anaSort" aria-label="정렬"><option value="new">최신순</option><option value="views">조회 많은순</option><option value="viewers">본 사람 많은순</option></select></div>
+        <select class="k-in k-sel sel2" id="anaSort" aria-label="정렬"><option value="new">최신순</option><option value="views">조회 많은순</option><option value="viewers">시청자 수 많은순</option></select></div>
       <label class="ana-pick" id="anaPickBox"><select id="anaPick" aria-label="콘텐츠 고르기"></select></label>
       <div class="al-list" id="anaList"></div>
     </aside>
@@ -339,7 +339,7 @@
 <div class="dimm" id="modal" hidden><div class="modal" id="modalBox" role="alertdialog" aria-modal="true" aria-labelledby="modalT"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261112c"></script>
-<script src="assets/admin.js?v=20261112j"></script>
+<script src="assets/common.js?v=20261112d"></script>
+<script src="assets/admin.js?v=20261112k"></script>
 </body>
 </html>

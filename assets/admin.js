@@ -2770,8 +2770,15 @@
   var Members = (function(){
     var q = { tab:"all", q:"", sort:"last", filter:"all", page:1 }, seq = 0, res = null, sel = null, dseq = 0, typeT = null, nsState = {};
     function meta(r){
-      $("memMeta").innerHTML = '<span>' + PI.refresh + '마지막 갱신 <b>' + (r && r.lastSync ? esc(fmtAt(r.lastSync)) : "—") + '</b></span>' +
-        '<span>' + PI.cal + '기록 시작 <b>' + (r && r.logStart ? esc(fmtAt(r.logStart).replace(/ \d\d:\d\d$/, "")) : "아직 안 함") + '</b> <small>(마지막 접속 · 조회 · 다운로드를 세기 시작한 날)</small></span>';
+      /* #72 '명단 갱신'과 '통계 기록 시작'을 상자 2개로 나눔(휴대폰은 한 줄 글) */
+      var ls = r && r.lastSync, lg = r && r.logStart, m = /^(\d{4})-(\d\d)-(\d\d)/.exec(lg || "");
+      $("memMeta").className = "meta mbx";
+      $("memMeta").innerHTML =
+        '<div class="mb"><span class="ic">' + PI.refresh + '</span><span class="k-col"><span class="l1"><i>명단 갱신</i><b>' + (ls ? esc(fmtAt(ls)) : "아직 없음") + '</b></span>' +
+          '<span class="l2">' + (ls ? "세일즈온 사번 목록을 가져온 때 · 매일 새벽 5시" : "설정 → 사번 명단에서 [지금 갱신]") + '</span></span></div>' +
+        '<div class="mb hi"><span class="ic">' + PI.cal + '</span><span class="k-col"><span class="l1"><i>통계 기록 시작</i><b>' + (m ? m[1] + "년 " + (+m[2]) + "월 " + (+m[3]) + "일부터" : "아직 없음") + '</b></span>' +
+          '<span class="l2">' + (m ? "마지막 접속 · 조회 · 다운로드를 이날부터 세요" : "사이트에 사번 로그인이 붙으면 이날부터 세요") + '</span></span></div>' +
+        '<p class="mb-s"><span>명단 갱신 <b>' + (ls ? esc(fmtAt(ls, "dot")) : "아직 없음") + '</b></span><span class="sep" aria-hidden="true"></span><span>통계 기록 시작 <b>' + (m ? m[2] + "." + m[3] : "아직 없음") + '</b></span></p>';
     }
     function tabs(r){
       var c = r ? r.counts : null;
@@ -2834,7 +2841,7 @@
       tabs(res); tools();
       if (noGate()){ $("memTbl").className = "tbl"; $("memTbl").innerHTML = NOLOGIN; meta(null); return; }
       var my = ++seq;
-      if (!keepSel){ sel = null; $("memDet").hidden = true; $("memDet").parentNode.classList.remove("has-det"); }
+      if (!keepSel){ sel = null; $("memDet").hidden = true; placeDet(); }
       var qq = { tab:q.tab, q:q.q, sort:q.sort, filter: q.filter === "all" ? "" : q.filter, page:q.page }, ck = JSON.stringify(qq), hit = memCache[ck];
       /* 11-12 속도: 한 번 본 조건(탭 · 쪽 · 검색 · 정렬)은 바로 그리고, 최신은 뒤에서 */
       if (hit){ res = hit.r; paint(); if (Date.now() - hit.at < 30000) return; }
@@ -2849,13 +2856,27 @@
     var memCache = {};
     function sessionGone(e){ if (e && /nosession|expired/.test(e.message)){ toast("로그인 시간이 지났어요. 다시 로그인해 주세요"); } }
     function show(){ if (!res || res.tab !== q.tab) fetch1(true); else { paint(); fetch1(true); } }
+    /* #71 상세 칸 860px: 1600px 이상은 표 옆, 그보다 좁으면 오른쪽에서 덮어 나오는 서랍(뒤 검정 30%) */
+    var dim = null;
+    function placeDet(){
+      var det = $("memDet"), sp = det.parentNode, on = !det.hidden, wide = window.innerWidth >= 1600;
+      if (!dim){ dim = document.createElement("div"); dim.className = "det-dim"; dim.hidden = true; sp.appendChild(dim); dim.addEventListener("click", closeDet); }
+      sp.classList.toggle("has-det", on && wide); det.classList.toggle("drw", on && !wide); dim.hidden = !(on && !wide);
+      if (on && !wide){ det.setAttribute("role", "dialog"); det.setAttribute("aria-modal", "true"); } else { det.removeAttribute("role"); det.removeAttribute("aria-modal"); }
+    }
+    function closeDet(){
+      var was = sel; sel = null; $("memDet").hidden = true; placeDet();
+      document.querySelectorAll("#memTbl .tr.on").forEach(function(el){ el.classList.remove("on"); });
+      var row = was && document.querySelector('#memTbl [data-sb="' + CSS.escape(was) + '"]'); if (row && window.innerWidth < 1600) try { row.focus({ preventScroll:true }); } catch (er) {}
+    }
+    window.addEventListener("resize", function(){ if (!$("memDet").hidden) placeDet(); });
+    document.addEventListener("keydown", function(e){ if (e.key === "Escape" && $("memDet").classList.contains("drw") && !$("memDet").hidden && !document.querySelector(".mdl:not([hidden]), .k-modal:not([hidden])")) closeDet(); });
     function detail(sb){
       sel = sb; var det = $("memDet"), my = ++dseq;
       document.querySelectorAll("#memTbl [data-sb]").forEach(function(el){ el.classList.toggle("on", el.dataset.sb === sb); });
-      det.hidden = false; det.parentNode.classList.add("has-det");
+      det.hidden = false; placeDet();
       det.innerHTML = '<div class="det-h"><span class="k-av">·</span><span class="k-col"><span class="sk" style="width:120px;height:18px"></span><span class="sk" style="width:200px"></span></span><button type="button" class="x" data-detx aria-label="회원 상세 닫기">' + PI.x + '</button></div>' +
         '<div class="tiles"><div class="tile"><span class="sk"></span></div><div class="tile"><span class="sk"></span></div><div class="tile"><span class="sk"></span></div></div>';
-      if (window.innerWidth <= 1279) det.scrollIntoView({ block:"start", behavior:"smooth" });
       gateFetch({ action:"memberDetail", sid: adminSes.sid, sabun: sb }).then(function(r){
         if (my !== dseq) return;
         if (!r.ok) throw new Error(r.error);
@@ -2865,7 +2886,8 @@
           return '<div class="sec"><div class="sec-h">' + ic + label + ' <b>' + nf(arr.length) + '개</b></div>' +
             (arr.length ? arr.map(function(x, i){
               var f = isFile ? Look.file(x.id) : null;
-              return '<div class="li"' + (i >= 5 ? ' data-more hidden' : '') + '>' + (f ? ftHtml(f.type) : '') + '<span class="tt">' + esc(f ? f.name : Look.title(x.id)) + (f && f.tag ? '<span class="tag' + (f.tag === "상품연구" ? " rs" : "") + '">' + f.tag + '</span>' : '') + '</span><span class="sb"><b>' + nf(x.n) + '번</b><br>' + esc(relAt(x.last)) + '</span></div>';
+              var full = f ? f.name : Look.title(x.id), tt = f ? full : String(full || "").replace(/^\[[^\]]*\]\s*/, "");
+              return '<div class="li li1"' + (i >= 5 ? ' data-more hidden' : '') + '>' + (f ? ftHtml(f.type) : '') + '<span class="tt" title="' + esc(full) + '">' + esc(tt) + '</span>' + (f && f.tag ? '<span class="tag' + (f.tag === "상품연구" ? " rs" : "") + '">' + f.tag + '</span>' : '') + '<b class="n">' + nf(x.n) + '번</b><span class="w">' + esc(relAt(x.last)) + '</span></div>';
             }).join("") + (more ? '<button type="button" class="lnk" data-detmore>' + (arr.length - 5) + '개 더 보기</button>' : '') :
             '<p class="k-note">' + (r.logStart ? "아직 없어요." : "기록을 세기 시작하면 여기에 보여요.") + '</p>') + '</div>';
         }
@@ -2920,7 +2942,7 @@
     });
     $("memTbl").addEventListener("input", function(e){ if (e.target.matches("[data-ns]")){ var u = e.target.getAttribute("data-ns"); nsState[u] = { s:"", v:e.target.value }; e.target.removeAttribute("aria-invalid"); var m = e.target.parentNode.querySelector(".ns-st"); if (m) m.remove(); } });
     $("memDet").addEventListener("click", function(e){
-      if (e.target.closest("[data-detx]")){ sel = null; $("memDet").hidden = true; $("memDet").parentNode.classList.remove("has-det"); document.querySelectorAll("#memTbl .tr.on").forEach(function(el){ el.classList.remove("on"); }); return; }
+      if (e.target.closest("[data-detx]")){ closeDet(); return; }
       var m = e.target.closest("[data-detmore]"); if (m){ m.parentNode.querySelectorAll("[data-more]").forEach(function(el){ el.hidden = false; }); m.remove(); }
     });
     return { show: show, open: open, reset: function(){ res = null; sel = null; nsState = {}; } };
@@ -2958,11 +2980,11 @@
       var out = [];
       if (kind === "v"){
         var order = {}; SC.CATS.forEach(function(c, i){ order[c.id] = i; });
-        (data.videos || []).forEach(function(v){ if (!v.id) return; var c = SC.catOf(v); out.push({ key:"v:" + v.id, title: v.title || "(제목 없음)", gid: c, group: SC.catLabel(c), go: order[c] == null ? 99 : order[c], date: v.date || "", thumb: SC.thumb(v.id, false), files: v.files || [], sub: [v.date ? v.date.replace(/-/g, ".") + " 업로드" : "", v.duration || "", "자료 " + (v.files || []).length + "개"].filter(Boolean).join(" · "), link: "v/" + v.id + "/" }); });
+        (data.videos || []).forEach(function(v){ if (!v.id) return; var c = SC.catOf(v); out.push({ key:"v:" + v.id, title: v.title || "(제목 없음)", gid: c, group: SC.catLabel(c), go: order[c] == null ? 99 : order[c], date: v.date || "", thumb: SC.thumb(v.id, false), files: v.files || [], meta: [["업로드", v.date ? v.date.replace(/-/g, ".") : ""], ["길이", v.duration || ""], ["자료", (v.files || []).length + "개"]].filter(function(c){ return c[1]; }), link: "v/" + v.id + "/" }); });
       } else {
         (rdata.months || []).forEach(function(m){
           var code = ymCode(m.ym); if (!code) return;
-          m.ages.forEach(function(a, i){ out.push({ key:"r:" + code + "/" + a.id, title: ((m.title || m.ym) + " " + (a.title || "")).trim(), gid: m.ym, group: m.title || m.ym, go: -Number(m.ym.replace("-", "")), date: m.ym + "-" + (900 - i), thumb: a.thumb || m.thumb || "assets/research-default.png", rs: true, files: a.files || [], sub: "자료 " + (a.files || []).length + "개", link: "research/" + code + "/" + a.id + "/" }); });
+          m.ages.forEach(function(a, i){ out.push({ key:"r:" + code + "/" + a.id, title: ((m.title || m.ym) + " " + (a.title || "")).trim(), gid: m.ym, group: m.title || m.ym, go: -Number(m.ym.replace("-", "")), date: m.ym + "-" + (900 - i), thumb: a.thumb || m.thumb || "assets/research-default.png", rs: true, files: a.files || [], meta: [["자료", (a.files || []).length + "개"]], link: "research/" + code + "/" + a.id + "/" }); });
         });
       }
       return out;
@@ -2974,7 +2996,7 @@
       list.sort(function(a, b){ return a.go - b.go || (key ? st(b.key)[key] - st(a.key)[key] : 0) || (b.date > a.date ? 1 : b.date < a.date ? -1 : 0); });
       return list;
     }
-    function mm(x){ var s = st(x.key); return kind === "r" ? '다운로드 <b>' + nf(s.downs) + '</b> · 받은 사람 <b>' + nf(s.downers) + '</b>' : '조회 <b>' + nf(s.views) + '</b> · 본 사람 <b>' + nf(s.viewers) + '</b> · 받은 사람 <b>' + nf(s.downers) + '</b>'; }
+    function mm(x){ var s = st(x.key); return kind === "r" ? '다운로드 <b>' + nf(s.downs) + '</b>' : '조회 <b>' + nf(s.views) + '</b> · 시청자 수 <b>' + nf(s.viewers) + '</b> · 다운로드 <b>' + nf(s.downs) + '</b>'; }
     function thumbHtml(x, cl){ return x.thumb ? '<span class="' + cl + (x.rs ? " rs" : "") + '" style="background-image:url(\'' + esc(x.thumb) + '\')"></span>' : '<span class="' + cl + ' rs">상품연구</span>'; }
     function paintList(){
       var list = sorted(), g = null, html = "";
@@ -2987,7 +3009,7 @@
       $("anaPick").innerHTML = list.map(function(x){ return '<option value="' + esc(x.key) + '"' + (x.key === sel ? " selected" : "") + '>' + esc(x.group + " · " + x.title) + '</option>'; }).join("");
       document.querySelectorAll("#anaKind [data-kind]").forEach(function(b){ b.setAttribute("aria-selected", b.dataset.kind === kind ? "true" : "false"); });
       $("anaSort").options[1].textContent = kind === "r" ? "다운로드 많은순" : "조회 많은순";
-      $("anaSort").options[2].textContent = kind === "r" ? "받은 사람 많은순" : "본 사람 많은순";
+      $("anaSort").options[2].textContent = kind === "r" ? "받은 사람 많은순" : "시청자 수 많은순";
     }
     function range(){
       if (period === "today") return [kstDay(0), kstDay(0)];
@@ -3002,11 +3024,11 @@
       return rows.filter(function(p){ return (!o || String(p.org).replace(/\s+/g, "").toLowerCase().indexOf(o) >= 0) && (!w || (p.name + p.sabun).replace(/\s+/g, "").toLowerCase().indexOf(w) >= 0); });
     }
     function head(x){
-      return '<div class="ar-h">' + thumbHtml(x, "ar-th") + '<div class="k-col"><span class="k-row k-g8"><span class="k-pill ac s">' + esc(x.rs ? "상품연구 · " + x.group : x.group) + '</span><span>' + esc(x.sub) + '</span></span><h1 class="k-h1">' + esc(x.title) + '</h1>' +
+      return '<div class="ar-h">' + thumbHtml(x, "ar-th") + '<div class="k-col"><span class="k-row k-g8"><span class="k-pill ac s">' + esc(x.rs ? "상품연구 · " + x.group : x.group) + '</span><span class="am3">' + x.meta.map(function(c){ return '<span><i>' + esc(c[0]) + '</i><b>' + esc(c[1]) + '</b></span>'; }).join("") + '</span></span><h1 class="k-h1">' + esc(x.title) + '</h1>' +
         '<a class="lnk" href="' + esc(x.link) + '" target="_blank" rel="noopener">사이트에서 보기 ' + PI.ext + '</a></div></div>';
     }
     function tools(){
-      var P = [["all", "전체"], ["today", "오늘"], ["7", "최근 7일"], ["month", "이번 달"], ["pick", PI.cal + "직접 고르기"]];
+      var P = [["all", "전체"], ["today", "오늘"], ["7", "최근 7일"], ["month", "이번 달"], ["pick", PI.cal + "날짜 설정"]];
       return '<div class="tools2"><div class="chips" role="radiogroup" aria-label="기간">' + P.map(function(p){ return '<button type="button" class="chip" role="radio" data-per="' + p[0] + '" aria-checked="' + (period === p[0]) + '">' + p[1] + '</button>'; }).join("") + '</div>' +
         '<span class="dates"' + (period === "pick" ? "" : " hidden") + '><input type="date" class="k-in" id="anaFrom" value="' + esc(from) + '" aria-label="시작 날짜"><span class="t2">~</span><input type="date" class="k-in" id="anaTo" value="' + esc(to) + '" aria-label="끝 날짜"></span>' +
         '<label class="srch">' + PI.search + '<input class="k-in" id="anaOrg" type="search" placeholder="소속 검색" value="' + esc(fOrg) + '" aria-label="소속 검색"></label>' +
@@ -3014,21 +3036,21 @@
         '<button type="button" class="k-btn k-btn3 sm rp" id="anaXls">' + PI.dl + '엑셀로 받기</button></div>';
     }
     function sumHtml(x, d){
-      if (x.rs) return '<div class="sum"><div class="tile"><span class="k">총 다운로드</span><span class="v">' + nf(d.downs) + '</span><span class="d">같은 사람이 여러 번 받아도 그때마다</span></div>' +
+      if (x.rs) return '<div class="sum"><div class="tile"><span class="k">다운로드 수</span><span class="v">' + nf(d.downs) + '<small>번</small></span><span class="d">같은 사람이 여러 번 받아도 올라요</span></div>' +
         '<div class="tile hi"><span class="k">받은 사람</span><span class="v">' + nf(d.downers) + '<small>명</small></span><span class="d">중복 없이</span></div>' +
         '<div class="tile"><span class="k">자료</span><span class="v">' + nf(x.files.length) + '<small>개</small></span></div>' +
         '<div class="tile"><span class="k">기록 시작</span><span class="v s">' + esc(fmtAt(logStart, "full").slice(0, 10)) + '</span></div></div>';
-      return '<div class="sum"><div class="tile"><span class="k">총 조회</span><span class="v">' + nf(d.total) + '</span><span class="d">같은 사람이 여러 번 봐도 그때마다</span></div>' +
-        '<div class="tile hi"><span class="k">본 사람</span><span class="v">' + nf(d.viewers.length) + '<small>명</small></span><span class="d">중복 없이</span></div>' +
-        '<div class="tile hi"><span class="k">자료 받은 사람</span><span class="v">' + nf(d.downers) + '<small>명</small></span><span class="d">자료 ' + x.files.length + '개 중 하나라도</span></div>' +
-        '<div class="tile"><span class="k">처음 · 마지막 조회</span><span class="v s">' + (d.first ? esc(relAt(d.first)) + '<br>' + esc(relAt(d.last)) : '—') + '</span></div></div>';
+      return '<div class="sum"><div class="tile"><span class="k">총 조회</span><span class="v">' + nf(d.total) + '</span><span class="d">같은 사람이 여러 번 봐도 올라요</span></div>' +
+        '<div class="tile hi"><span class="k">시청자 수</span><span class="v">' + nf(d.viewers.length) + '<small>명</small></span><span class="d">이 영상을 본 회원 수</span></div>' +
+        '<div class="tile hi"><span class="k">다운로드 수</span><span class="v">' + nf(d.downs) + '<small>번</small></span><span class="d">이 영상의 모든 자료의 다운로드 수예요</span></div>' +
+        '<div class="tile fl"><span class="k"><span class="f1">첫 · </span>마지막 시청</span><span class="v s">' + (d.first ? '<span class="f1">' + esc(relAt(d.first)) + '<br></span>' + esc(relAt(d.last)) : '—') + '</span></div></div>';
     }
     function nameBtn(p){ return '<button type="button" class="nm" data-who="' + esc(p.sabun) + '">' + esc(p.name || "(이름 없음)") + '</button>'; }
     function viewTbl(d){
       var rows = filt(d.viewers).sort(function(a, b){ return a.last < b.last ? 1 : -1; }), size = 50, pg = Math.min(page, Math.max(1, Math.ceil(rows.length / size)));
-      if (!rows.length) return '<div class="tbl">' + emptyHtml("search", fOrg || fWho ? "조건에 맞는 사람이 없어요." : "이 기간에 본 사람이 없어요.", fOrg || fWho ? "소속이나 이름을 바꿔 보세요." : "기간을 바꿔 보세요.") + '</div>';
-      return '<div class="tbl cards"><div class="tr th g-view"><span>이름</span><span>사번</span><span>소속</span><span class="r">본 횟수</span><span>처음 본 때</span><span><span class="srt">마지막으로 본 때' + PI.sort + '</span></span></div>' +
-        rows.slice((pg - 1) * size, pg * size).map(function(p){ return '<div class="tr g-view">' + nameBtn(p) + '<span class="t2">' + esc(p.sabun) + '</span><span class="el t2" title="' + esc(p.org) + '">' + esc(org2(p.org) || "—") + '</span><span class="r" data-k="본 횟수">' + nf(p.n) + '</span><span class="t2" data-k="처음">' + esc(relAt(p.first)) + '</span><span data-k="마지막">' + esc(relAt(p.last)) + '</span></div>'; }).join("") +
+      if (!rows.length) return '<div class="tbl">' + emptyHtml("search", fOrg || fWho ? "조건에 맞는 사람이 없어요." : "이 기간에는 시청자가 없어요.", fOrg || fWho ? "소속이나 이름을 바꿔 보세요." : "기간을 바꿔 보세요.") + '</div>';
+      return '<div class="tbl cards"><div class="tr th g-view"><span>이름</span><span>사번</span><span>소속</span><span class="r">시청 수</span><span>첫 시청</span><span><span class="srt">마지막 시청' + PI.sort + '</span></span></div>' +
+        rows.slice((pg - 1) * size, pg * size).map(function(p){ return '<div class="tr g-view">' + nameBtn(p) + '<span class="t2">' + esc(p.sabun) + '</span><span class="el t2" title="' + esc(p.org) + '">' + esc(org2(p.org) || "—") + '</span><span class="r" data-k="시청 수">' + nf(p.n) + '</span><span class="t2" data-k="첫 시청">' + esc(relAt(p.first)) + '</span><span data-k="마지막 시청">' + esc(relAt(p.last)) + '</span></div>'; }).join("") +
         '<div class="tf"><span>' + nf((pg - 1) * size + 1) + '–' + nf(Math.min(pg * size, rows.length)) + ' / <b>' + nf(rows.length) + '</b>명 · 이름을 누르면 회원 상세</span>' + pager(pg, rows.length, size, "data-apg") + '</div></div>';
     }
     function downTbl(x, d){
@@ -3038,8 +3060,8 @@
       if (!keys.length) return '<div class="tbl">' + emptyHtml("files", "자료가 없어요.", "") + '</div>';
       return '<div class="fgs">' + keys.map(function(o){
         var ppl = filt((d.files || {})[o.k] || []).sort(function(a, b){ return a.first < b.first ? 1 : -1; }), op = !!openF[o.k];
-        return '<div class="fg' + (op ? " open" : "") + '"><button type="button" class="fg-h" data-fg="' + esc(o.k) + '" aria-expanded="' + op + '">' + ftHtml(o.f.type) + '<span class="nm">' + esc(o.f.name || "(이름 없음)") + '</span><span class="cnt">받은 사람 <b>' + nf(ppl.length) + '</b>명</span><span class="chev">' + PI.sort + '</span></button>' +
-          (op ? (ppl.length ? '<div class="tbl-x"><div class="tr th g-down"><span>이름</span><span>사번</span><span>소속</span><span class="r">받은 횟수</span><span>처음 받은 때</span></div>' +
+        return '<div class="fg' + (op ? " open" : "") + '"><button type="button" class="fg-h" data-fg="' + esc(o.k) + '" aria-expanded="' + op + '">' + ftHtml(o.f.type) + '<span class="nm">' + esc(o.f.name || "(이름 없음)") + '</span><span class="cnt">다운로드 <b>' + nf(ppl.reduce(function(n, p){ return n + (p.n || 0); }, 0)) + '</b>번 · 받은 사람 <b>' + nf(ppl.length) + '</b>명</span><span class="chev">' + PI.sort + '</span></button>' +
+          (op ? (ppl.length ? '<div class="tbl-x"><div class="tr th g-down"><span>이름</span><span>사번</span><span>소속</span><span class="r">다운로드 수</span><span>첫 다운로드</span></div>' +
             ppl.map(function(p){ return '<div class="tr g-down">' + nameBtn(p) + '<span class="t2">' + esc(p.sabun) + '</span><span class="el t2" title="' + esc(p.org) + '">' + esc(org2(p.org) || "—") + '</span><span class="r">' + nf(p.n) + '</span><span class="t2">' + esc(relAt(p.first)) + '</span></div>'; }).join("") + '</div>'
             : '<p class="k-note" style="padding:0 18px 16px 64px">' + (fOrg || fWho ? "조건에 맞는 사람이 없어요." : "이 기간에 받은 사람이 없어요.") + '</p>') : '') + '</div>';
       }).join("") + '</div>';
@@ -3055,10 +3077,10 @@
       if (!d){ box.innerHTML = top + '<div class="sum">' + [0, 1, 2, 3].map(function(){ return '<div class="tile"><span class="sk" style="width:60%"></span><span class="sk" style="height:26px;width:40%"></span></div>'; }).join("") + '</div><div class="tbl">' + skelRows("g-view", 6, 6) + ldHtml("숫자 세는 중…", "누가 봤는지 하나하나 세고 있어요") + '</div>'; return; }
       var none = !d.total && !d.downs && (period !== "all");
       box.innerHTML = top + sumHtml(x, d) +
-        (x.rs ? '' : '<div class="ut" role="tablist"><button type="button" role="tab" data-ut="view" aria-selected="' + (tab === "view") + '">' + PI.views + '본 사람<b>' + nf(d.viewers.length) + '</b></button><button type="button" role="tab" data-ut="down" aria-selected="' + (tab === "down") + '">' + PI.files + '자료 다운로드<b>' + nf(d.downers) + '</b></button></div>') +
+        (x.rs ? '' : '<div class="ut" role="tablist"><button type="button" role="tab" data-ut="view" aria-selected="' + (tab === "view") + '">' + PI.views + '시청자 수<b>' + nf(d.viewers.length) + '</b></button><button type="button" role="tab" data-ut="down" aria-selected="' + (tab === "down") + '">' + PI.files + '자료 다운로드<b>' + nf(d.downs) + '</b></button></div>') +
         (none ? '<div class="tbl">' + emptyHtml("cal", "이 기간에는 기록이 없어요.", "기간을 바꿔 보세요.") + '</div>' : tab === "view" ? viewTbl(d) : downTbl(x, d)) + note(x);
     }
-    function note(x){ return '<p class="k-note">' + (x.rs ? "'받은 것'은 자료 받기 페이지에서 [받기]를 누른 것 기준이에요." : "'본 것'은 강의 페이지를 연 것 기준이에요(영상을 끝까지 봤는지는 알 수 없어요).") + ' 관리자가 보거나 받은 것은 숫자에서 빠져요.</p>'; }
+    function note(x){ return '<p class="k-note">' + (x.rs ? "'받은 것'은 자료 받기 페이지에서 [받기]를 누른 것 기준이에요." : "'본 것'은 강의 페이지를 연 것 기준이에요(영상을 끝까지 봤는지는 알 수 없어요).") + ' 관리자는 카운트되지 않아요.</p>'; }
     var detCache = {};
     function loadDetail(){
       var x = cur(); if (!x || noGate() || !logStart) return paintMain();
@@ -3083,12 +3105,12 @@
     function exportCsv(){
       var x = cur(); if (!x || !det) return;
       var name = x.title.replace(/[\\/:*?"<>|]/g, "").slice(0, 40), rows;
-      if (tab === "view") rows = [["이름", "사번", "소속", "본 횟수", "처음 본 때", "마지막으로 본 때"]].concat(filt(det.viewers).map(function(p){ return [p.name, p.sabun, p.org, p.n, fmtAt(p.first, "full"), fmtAt(p.last, "full")]; }));
+      if (tab === "view") rows = [["이름", "사번", "소속", "시청 수", "첫 시청", "마지막 시청"]].concat(filt(det.viewers).map(function(p){ return [p.name, p.sabun, p.org, p.n, fmtAt(p.first, "full"), fmtAt(p.last, "full")]; }));
       else {
-        rows = [["자료", "이름", "사번", "소속", "받은 횟수", "처음 받은 때"]];
+        rows = [["자료", "이름", "사번", "소속", "다운로드 수", "첫 다운로드"]];
         Object.keys(det.files || {}).forEach(function(k){ var f = x.files.filter(function(f){ return fileKey(f) === k; })[0]; filt(det.files[k]).forEach(function(p){ rows.push([f ? f.name : "지금은 없는 자료", p.name, p.sabun, p.org, p.n, fmtAt(p.first, "full")]); }); });
       }
-      csvDownload("분석_" + name + "_" + (tab === "view" ? "본사람" : "자료다운로드") + ".csv", rows);
+      csvDownload("분석_" + name + "_" + (tab === "view" ? "시청자" : "자료다운로드") + ".csv", rows);
     }
     var tT = null;
     $("anaKind").addEventListener("click", function(e){ var b = e.target.closest("[data-kind]"); if (!b || b.dataset.kind === kind) return; kind = b.dataset.kind; LS.set("sc-ana-kind", kind); sel = ""; openF = {}; tab = kind === "r" ? "down" : "view"; paintList(); LS.set("sc-ana-key", sel); loadDetail(); });

@@ -329,8 +329,16 @@
       if (!b && f && f.tagName === "FORM") b = f.querySelector("button");
       return b && b.offsetParent ? b : el;
     }
+    /* iOS(카톡 인앱 포함): 키패드 위에 ▲▼✓ 줄이 화면 위로 떠서 덮음 → 그만큼 더 띄움.
+       화면 높이가 안 줄어드는 웹뷰면 키패드 높이를 어림(약 400px)으로 잡음 */
+    var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    function viewBottom() {
+      var vb = vv ? vv.offsetTop + vv.height : w.innerHeight;
+      if (IOS && kb() < 80 && w.innerHeight > (w.screen ? screen.height : 800) * 0.6) vb = w.innerHeight - Math.min(420, w.innerHeight * 0.5);
+      return vb - 16 - (IOS ? 60 : 0);
+    }
     function covered(t) {
-      var r = t.getBoundingClientRect(), top = vv ? vv.offsetTop : 0, bottom = (vv ? vv.offsetTop + vv.height : w.innerHeight) - 16;
+      var r = t.getBoundingClientRect(), top = vv ? vv.offsetTop : 0, bottom = viewBottom();
       return r.bottom > bottom ? r.bottom - bottom : (r.top < top + 8 ? r.top - top - 8 : 0);
     }
     function fit(el) {
@@ -338,27 +346,30 @@
       setKb();
       var t = goal(el), dy;
       if (t !== el) {                                                /* 칸 ~ 버튼이 한 화면에 다 못 들어오면 칸을 먼저 */
-        var h = vv ? vv.height : w.innerHeight;
-        if (t.getBoundingClientRect().bottom - el.getBoundingClientRect().top > h - 24) t = el;
+        var h = viewBottom() - (vv ? vv.offsetTop : 0);
+        if (t.getBoundingClientRect().bottom - el.getBoundingClientRect().top > h - 8) t = el;
       }
       dy = covered(t);
       if (!dy) return;
       var y0 = w.scrollY; w.scrollBy(0, dy);
       setTimeout(function () {                                       /* 화면이 안 움직였거나(편집 시트 안 등) 아직 가리면 */
         if (d.activeElement !== el) return;
-        if (covered(t) > 2 || w.scrollY === y0) t.scrollIntoView({ block: t === el ? "center" : "end" });
+        if (w.scrollY === y0 && covered(t) > 2) t.scrollIntoView({ block: "center" });   /* 창이 아니라 안쪽 칸이 스크롤되는 곳 */
       }, 80);
     }
     var cur = null, again = null;
     d.addEventListener("focusin", function (e) {
       var t = e.target; if (!t || !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || /^(checkbox|radio|button|submit|file|range|color)$/.test(t.type)) return;
       if (!(w.matchMedia && matchMedia("(pointer:coarse)").matches)) return;
-      cur = t;
+      cur = t; de.classList.add("kb-in");                          /* 칸을 누르는 순간부터 아래 여백을 줘서 내릴 자리를 만듦 */
       var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { fit(t); }, 60); };
       if (vv) vv.addEventListener("resize", go);
       setTimeout(go, 450);
     });
-    d.addEventListener("focusout", function () { cur = null; setTimeout(setKb, 300); });
+    d.addEventListener("focusout", function () {
+      cur = null;
+      setTimeout(function () { setKb(); var a = d.activeElement; if (!a || !/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) de.classList.remove("kb-in"); }, 300);
+    });
     /* 키패드 위 줄(자동 완성 · ▲▼✓)이 늦게 붙어 높이가 또 바뀌면 다시 맞춤 */
     if (vv) vv.addEventListener("resize", function () { if (!cur) return; clearTimeout(again); again = setTimeout(function () { if (cur) fit(cur); }, 120); });
   })();
