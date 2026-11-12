@@ -2379,6 +2379,16 @@
         }).join("") + '</ol>';
       }).catch(function(){ var box = $("logBody"); if (box) box.innerHTML = '<p class="lge">기록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; });
     }
+    /* #89 카드 누름 효과(0.12초) — 안의 스위치 · 버튼을 누를 때는 카드가 눌리지 않음 */
+    (function(){
+      var cur = null, off = function(){ if (cur){ cur.classList.remove("pressing"); cur = null; } };
+      document.addEventListener("pointerdown", function(e){
+        var row = e.target.closest && e.target.closest("#app .vitem.lrow > .vrow"); if (!row || e.button > 0) return;
+        if (e.target.closest("button, a, input, select, textarea, label")) return;
+        off(); cur = row.parentNode; cur.classList.add("pressing");
+      }, true);
+      ["pointerup", "pointercancel", "dragstart"].forEach(function(t){ document.addEventListener(t, function(){ setTimeout(off, 120); }, true); });
+    })();
     document.addEventListener("click", function(e){ var b = e.target.closest("[data-log]"); if (!b) return; openLog(b.dataset.log, !!b.dataset.merge, b.dataset.logt); });
     function lastSave(){ var sv = get("save"); return sv ? sv.last : null; }
     function reset(){ map = null; more = {}; }
@@ -2799,7 +2809,7 @@
       if (!document.body.classList.contains("authed")) return;
       if (r.view === "settings") menu(r.menu, changed);
       if (r.view === "analytics") Ana.show();
-      if (r.view === "members") Members.show();
+      if (r.view === "members") Members.show(); else if (Members) Members.leave();
     }
     function menu(m, first){
       var lock = MASTER[m] && !isMaster();
@@ -2902,16 +2912,31 @@
       if (!keepSel){ sel = null; $("memDet").hidden = true; placeDet(); }
       var qq = { tab:q.tab, q:q.q, sort:q.sort, filter: q.filter === "all" ? "" : q.filter, page:q.page }, ck = JSON.stringify(qq), hit = memCache[ck];
       /* 11-12 속도: 한 번 본 조건(탭 · 쪽 · 검색 · 정렬)은 바로 그리고, 최신은 뒤에서 */
-      if (hit){ res = hit.r; paint(); if (Date.now() - hit.at < 30000) return; }
+      /* 회원 관리 화면에 머무는 동안은 다시 부르지 않음 — 다른 화면에 다녀오면(stale) 바로 그리고 뒤에서 새로 */
+      if (hit){ res = hit.r; paint(); if (!hit.stale && Date.now() - hit.at < 600000){ prefetch(); return; } }
       else { $("memTbl").className = "tbl"; $("memTbl").innerHTML = head() + skelRows(cls(), 8, q.tab === "nosabun" ? 5 : q.tab === "abnormal" ? 4 : 6) + ldHtml("회원들 데려오는 중…", "1만 명이 넘어서 잠깐 걸려요"); }
       gateFetch({ action:"memberList", sid: adminSes.sid, q: qq }).then(function(r){
         if (my !== seq) return;
         if (!r.ok) throw new Error(r.error);
         memCache[ck] = { r: r, at: Date.now() };
-        res = r; q.page = r.page; paint();
+        res = r; q.page = r.page; paint(); prefetch();
       }).catch(function(e){ if (my !== seq || hit) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
     }
-    var memCache = {};
+    var memCache = {}, preBusy = {};
+    /* 지금 탭을 받은 뒤 다른 탭(전체 · 정상 · 비정상 · 사번 없음) 첫 쪽을 뒤에서 미리 받아 둠 → 탭을 누르면 바로 */
+    function prefetch(){
+      if (noGate() || q.q) return;                                   /* 검색 중에는 미리 받지 않음 */
+      ["all", "normal", "abnormal", "nosabun"].forEach(function(t){
+        if (t === q.tab) return;
+        var f = (t === "normal" || t === "all") ? q.filter : "all";
+        var qq = { tab:t, q:q.q, sort:q.sort, filter: f === "all" ? "" : f, page:1 }, ck = JSON.stringify(qq), h = memCache[ck];
+        if ((h && !h.stale && Date.now() - h.at < 600000) || preBusy[ck]) return;
+        preBusy[ck] = 1;
+        gateFetch({ action:"memberList", sid: adminSes.sid, q: qq }).then(function(r){ if (r && r.ok) memCache[ck] = { r: r, at: Date.now() }; })
+          .catch(function(){}).then(function(){ delete preBusy[ck]; });
+      });
+    }
+    function leave(){ Object.keys(memCache).forEach(function(k){ memCache[k].stale = true; }); }
     function sessionGone(e){ if (e && /nosession|expired/.test(e.message)){ toast("로그인 시간이 지났어요. 다시 로그인해 주세요"); } }
     function show(){ if (!res || res.tab !== q.tab) fetch1(true); else { paint(); fetch1(true); } }
     /* #71 상세 칸 860px: 1600px 이상은 표 옆, 그보다 좁으면 오른쪽에서 덮어 나오는 서랍(뒤 검정 30%) */
@@ -3003,7 +3028,7 @@
       if (e.target.closest("[data-detx]")){ closeDet(); return; }
       var m = e.target.closest("[data-detmore]"); if (m){ m.parentNode.querySelectorAll("[data-more]").forEach(function(el){ el.hidden = false; }); m.remove(); }
     });
-    return { show: show, open: open, reset: function(){ res = null; sel = null; nsState = {}; } };
+    return { show: show, open: open, leave: leave, reset: function(){ res = null; sel = null; nsState = {}; memCache = {}; } };
   })();
 
   /* ---------- 🔒 갱신 기록 ---------- */
