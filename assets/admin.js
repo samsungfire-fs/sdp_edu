@@ -266,6 +266,7 @@
     var nt = SC.noticeText(data.site.notice);
     if (nt !== (data.site.notice || "")){ data.site.notice = nt; renamed = true; }
     document.querySelectorAll("[data-site]").forEach(function(el){ el.value = data.site[el.dataset.site] || ""; });
+    paintNtp();
     /* #51 저장 바가 없으니: 이름 바꾸기 같은 자동 정리는 다음 저장 때 함께 올라감(처음부터 '바뀜'으로 보이지 않게) */
     baseline = snap();
     openV = null; dirty = false; if (!quiet) render();
@@ -1055,6 +1056,15 @@
     $("noticeRow").hidden = !(nd || (saving && document.body.dataset.view === "settings"));
     $("noticeSave").disabled = saving; $("noticeUndo").disabled = saving;
     var nt = $("noticeSaveT"); if (nt) nt.textContent = saving ? "저장 중…" : "저장";
+    paintNtp();
+  }
+  /* #76 사이트 문구 미리보기: 첫 줄 = 강조 · 둘째 줄부터 = 설명 (사이트와 같은 규칙, 비우면 기본 문구) */
+  function paintNtp(){
+    var ta = $("sNotice"); if (!ta) return;
+    var lines = SC.noticeText(ta.value).split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
+    var l1 = lines.shift() || "", l2 = lines.join("\n");
+    document.querySelectorAll('[data-ntp="1"]').forEach(function(el){ el.textContent = l1; });
+    document.querySelectorAll('[data-ntp="2"]').forEach(function(el){ el.textContent = l2; el.parentNode.hidden = !l2; });
   }
 
   function cleanData(){
@@ -1443,7 +1453,7 @@
     var el = $("v0url"); if (el) el.focus();
   });
   document.querySelectorAll("[data-site]").forEach(function(el){
-    el.addEventListener("input", function(){ data.site[el.dataset.site] = el.value; markDirty(); });
+    el.addEventListener("input", function(){ data.site[el.dataset.site] = el.value; markDirty(); if (el.dataset.site === "notice") paintNtp(); });
   });
   /* #51 편집 칸 맨 아래 줄 · 사이트 문구 칸 */
   $("efSave").addEventListener("click", function(){ save(); });
@@ -1673,11 +1683,43 @@
     }
     function hm(iso){ var d = new Date(iso), z = function(n){ return (n < 10 ? "0" : "") + n; }; return isNaN(d) ? "" : z(d.getHours()) + ":" + z(d.getMinutes()); }
     /* #51 맨 위 바 칸: 사이트 반영 상태만 (이름 · 시각 없음) */
-    var TXT = { ok: "사이트 반영 완료", run: '사이트에 반영 중<span class="t2"> · 1~2분</span>', bad: "사이트 반영 실패 · 눌러서 확인" };
+    var TXT = { ok: "사이트 반영 완료", run: '사이트에 반영 중<span class="t2"> · 1~2분</span>', bad: "사이트 반영 실패" };
+    /* #80 말풍선(모든 관리자) · 누르면 반영 기록 새 탭은 마스터만 — 마스터가 아니면 링크 아님(누르면 말풍선만) */
+    var TIP = { ok: ["사이트에 모두 반영됐어요"], run: ["저장한 내용을 사이트에 올리는 중이에요", "1~2분 걸려요", "다른 일 하셔도 돼요"], bad: ["사이트 반영이 실패했어요", "저장한 내용은 안전해요", "소희수 프로에게 알려 주세요"] };
+    var lastAt = "", tipT = null;
+    function isM(){ return !!(adminSes && adminSes.master); }
+    function role(){
+      if (isM()){ el.href = "https://github.com/" + owner + "/" + repo + "/actions"; el.target = "_blank"; el.removeAttribute("role"); el.removeAttribute("tabindex"); }
+      else { el.removeAttribute("href"); el.removeAttribute("target"); el.setAttribute("role", "button"); el.setAttribute("tabindex", "0"); }
+      el.classList.toggle("is-m", isM());
+    }
+    function ko(iso){ var d = new Date(iso), z = function(n){ return (n < 10 ? "0" : "") + n; }; return isNaN(d) ? "" : (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + z(d.getHours()) + ":" + z(d.getMinutes()); }
+    function tip(show){
+      var t = $("svsTip"), st = el.dataset.st; clearTimeout(tipT);
+      if (!show || !TIP[st]){ t.hidden = true; return; }
+      /* 줄마다 따로(·로 잇지 않음) */
+      var lines = st === "ok" ? (lastAt ? ["마지막 반영 " + ko(lastAt)] : []) : TIP[st].slice(1);
+      $("svsTip1").textContent = TIP[st][0];
+      $("svsTip2").innerHTML = lines.map(function(l){ return "<span>" + esc(l) + "</span>"; }).join("");
+      $("svsTip2").hidden = !lines.length;
+      t.hidden = false;
+      var r = el.getBoundingClientRect(), w = t.offsetWidth, left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+      t.style.left = left + "px"; t.style.top = (r.bottom + 8) + "px"; t.style.setProperty("--tx", (r.left + r.width / 2 - left) + "px");
+      if (show === "tap") tipT = setTimeout(function(){ t.hidden = true; }, 3000);
+    }
+    el.addEventListener("mouseenter", function(){ tip(true); });
+    el.addEventListener("mouseleave", function(){ tip(false); });
+    el.addEventListener("focus", function(){ tip(true); });
+    el.addEventListener("blur", function(){ tip(false); });
+    el.addEventListener("click", function(e){ role(); if (!isM()){ e.preventDefault(); tip("tap"); } });
+    el.addEventListener("keydown", function(e){ if (!isM() && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); tip("tap"); } });
+    document.addEventListener("pointerdown", function(e){ if (!$("svsTip").hidden && !el.contains(e.target)) tip(false); }, true);
+    window.addEventListener("scroll", function(){ if (!$("svsTip").hidden) tip(false); }, { passive:true });
     function set(st, text){
       el.dataset.st = st; $("svsT").innerHTML = TXT[st] || "";
       el.querySelector(".d").className = "d " + ({ ok:"ok", run:"run", bad:"er" }[st] || "");
-      el.title = st === "none" ? "" : (text || "") + " · 눌러서 반영 기록 보기"; el.setAttribute("aria-label", st === "none" ? "사이트 반영 상태" : $("svsT").textContent);
+      el.setAttribute("aria-label", st === "none" ? "사이트 반영 상태" : $("svsT").textContent);
+      role(); if (!$("svsTip").hidden) tip(true);
     }
     function tick(){
       clearTimeout(timer);
@@ -1690,6 +1732,7 @@
         else if (r.status !== "completed"){ set("run", "사이트에 반영하는 중"); busy = true; }
         else {
           want = ""; busy = false;
+          lastAt = r.updated_at || "";
           if (r.conclusion === "success") set("ok", "반영 완료 · " + hm(r.updated_at));
           else set("bad", "반영 실패 · 눌러서 깃헙 액션 확인");
         }
@@ -1698,7 +1741,7 @@
     }
     return {
       start: function(){
-        el.href = "https://github.com/" + owner + "/" + repo + "/actions";
+        role();
         if (!started){ started = true; document.addEventListener("visibilitychange", function(){ if (!document.hidden) tick(); }); }
         tick();
       },
@@ -2043,16 +2086,16 @@
     /* ---- ⚙ 내 계정 ---- */
     function paintMe(){
       var s = adminSes;
-      $("meKeepRow").hidden = !s; $("changeBtn").hidden = !s; $("meMaster").hidden = !(s && s.master);
+      /* #77 이름표 목록 한 모양 · 칸 머리 이름 · 마스터 배지 없앰 */
+      $("meKeepRow").hidden = !s; $("changeBtn").hidden = !s; $("meSabRow").hidden = !s; $("meSum").textContent = "";
       if (!s){
         $("meSum").textContent = canSave ? "토큰 로그인" : "";
-        $("meAv").textContent = "?"; $("meName").textContent = "예전 방식으로 로그인"; $("meSub").textContent = "저장소 " + owner + "/" + repo;
+        $("meName").textContent = "예전 방식으로 로그인"; $("meOrgK").textContent = "저장소"; $("meOrg").textContent = owner + "/" + repo;
         return;
       }
-      $("meSum").innerHTML = '<span>' + esc(s.name) + '</span>' + (s.master ? '<span class="k-pill ac s">마스터</span>' : '');
-      $("meAv").textContent = (s.name || "?").charAt(0); $("meName").textContent = s.name;
-      $("meSub").textContent = "사번 " + s.sabun + (orgShort(s.org) ? " · " + orgShort(s.org) : "");
-      $("meKeepT").textContent = s.keep ? fmtAt(s.exp) + "까지" : "창을 닫으면 끝나요";
+      $("meName").textContent = s.name; $("meSab").textContent = s.sabun;
+      $("meOrgK").textContent = "소속"; $("meOrg").textContent = orgShort(s.org) || "—"; $("meOrg").title = s.org || "";
+      $("meKeepT").textContent = s.keep ? fmtAt(s.exp) + "까지" : "브라우저를 닫으면 로그아웃돼요";
       var kp = $("meKeep"); kp.className = "k-pill s " + (s.keep ? "ok" : "mu"); kp.textContent = s.keep ? "켜짐" : "꺼짐";
     }
     function meForm(open){
@@ -2594,7 +2637,7 @@
         } else kmsg("syncMsg", "er", K.alert + "<span>" + esc(j.msg || "명단을 받지 못했어요.") + (dry ? "" : " 시트는 어제 명단 그대로예요.") + " — '자세히 보기'를 복사해 개발팀에 알려 주세요.</span>");
         showSyncDiag(info, !j.ok || dry);
         if (!dry) Audit.load();
-      }).catch(function(){ kmsg("syncMsg", "er", K.alert + "<span>사번 목록 응답을 받지 못했어요. 잠시 뒤 [사번 명단]을 다시 열어 결과를 확인해 주세요.</span>"); })
+      }).catch(function(){ kmsg("syncMsg", "er", K.alert + "<span>사번 목록 응답을 받지 못했어요. 잠시 뒤 [사번 명단 · 갱신]을 다시 열어 결과를 확인해 주세요.</span>"); })
         .then(function(){ syncBusy = false; btn.innerHTML = label; paint(); });
     }
     function syncAutoToggle(){
@@ -2710,7 +2753,7 @@
 
   var Route = (function(){
     /* #48: 회원 관리는 맨 위 바 칸으로, 설정 = 계정 · 사이트 · 🔒 마스터 설정(사번 명단 · 사이트 업데이트 포함) */
-    var MENUS = ["me", "notice", "roster", "update", "admins", "log", "siteacc", "sheet", "keys"], MASTER = { roster:1, update:1, admins:1, log:1, siteacc:1, sheet:1, keys:1 };
+    var MENUS = ["me", "notice", "update", "admins", "roster", "log", "sheet", "siteacc", "keys"], MASTER = { roster:1, update:1, admins:1, log:1, siteacc:1, sheet:1, keys:1 };
     var cur = "", curView = "";
     function isMaster(){ return adminSes ? !!adminSes.master : !!token; }
     function parse(h){
@@ -2775,7 +2818,7 @@
       $("memMeta").className = "meta mbx";
       $("memMeta").innerHTML =
         '<div class="mb"><span class="ic">' + PI.refresh + '</span><span class="k-col"><span class="l1"><i>사번 갱신</i><b>' + (ls ? esc(fmtAt(ls)) : "아직 없음") + '</b></span>' +
-          '<span class="l2">' + (ls ? "세일즈온 사번 목록을 매일 새벽 5시에 가져와요" : "설정 → 사번 명단에서 [지금 갱신]") + '</span></span></div>' +
+          '<span class="l2">' + (ls ? "세일즈온 사번 목록을 매일 새벽 5시에 가져와요" : "설정 → 사번 명단 · 갱신에서 [지금 갱신]") + '</span></span></div>' +
         '<div class="mb hi"><span class="ic">' + PI.cal + '</span><span class="k-col"><span class="l1"><i>통계 기록 시작</i><b>' + (m ? m[1] + "년 " + (+m[2]) + "월 " + (+m[3]) + "일부터" : "아직 없음") + '</b></span>' +
           '<span class="l2">' + (m ? "모든 분석 자료를 카운트하기 시작한 날이에요" : "사이트에 사번 로그인이 붙으면 이날부터 세요") + '</span></span></div>' +
         '<p class="mb-s"><span>사번 갱신 <b>' + (ls ? esc(fmtAt(ls, "dot")) : "아직 없음") + '</b></span><span class="sep" aria-hidden="true"></span><span>통계 기록 시작 <b>' + (m ? m[2] + "." + m[3] : "아직 없음") + '</b></span></p>';
@@ -2835,7 +2878,7 @@
       tbl.innerHTML = r.rows.length ? head() + r.rows.map(rowHtml).join("") + foot
         : (q.q ? emptyHtml("search", "‘" + esc(q.q) + "’에 맞는 회원이 없어요.", "사번 · 이름 · 소속의 일부로 검색해 보세요.") :
            q.filter === "seen" ? emptyHtml("log", "접속한 적 있는 회원이 아직 없어요.", r.logStart ? "" : "사이트에 사번 로그인이 붙으면 쌓여요.") :
-           emptyHtml("log", q.tab === "nosabun" ? "사번 없는 회원이 없어요." : "명단이 비어 있어요.", q.tab === "nosabun" ? "" : "사번 명단에서 [지금 갱신]을 눌러 주세요."));
+           emptyHtml("log", q.tab === "nosabun" ? "사번 없는 회원이 없어요." : "명단이 비어 있어요.", q.tab === "nosabun" ? "" : "설정 → 사번 명단 · 갱신에서 [지금 갱신]을 눌러 주세요."));
     }
     function fetch1(keepSel){
       tabs(res); tools();
@@ -2959,7 +3002,7 @@
       var my = ++seq; t.innerHTML = HEAD + skelRows("g-log", 6, 8) + ldHtml("기록 넘겨 보는 중…");
       gateFetch({ action:"syncLogList", sid: adminSes.sid, page: page }).then(function(r){
         if (my !== seq) return; if (!r.ok) throw new Error(r.error);
-        if (!r.rows.length){ t.innerHTML = emptyHtml("log", "아직 갱신 기록이 없어요.", "사번 명단에서 [지금 갱신]을 누르거나 자동 갱신을 켜면 여기에 쌓여요."); return; }
+        if (!r.rows.length){ t.innerHTML = emptyHtml("log", "아직 사번 갱신 기록이 없어요.", "사번 명단 · 갱신에서 [지금 갱신]을 누르거나 자동 갱신을 켜면 여기에 쌓여요."); return; }
         t.innerHTML = HEAD + r.rows.map(function(x){
           return '<div class="tr g-log' + (x.ok ? '' : ' bad') + '" role="row"><span class="t2">' + esc(fmtAt(x.at, "dot")) + '</span><span class="t2" data-k="방식">' + esc(x.how) + '</span>' +
             '<span>' + (x.ok ? '<span class="k-pill ok s">성공</span>' : '<span class="k-pill er s">실패</span>') + '</span>' +
@@ -3010,7 +3053,56 @@
       document.querySelectorAll("#anaKind [data-kind]").forEach(function(b){ b.setAttribute("aria-selected", b.dataset.kind === kind ? "true" : "false"); });
       $("anaSort").options[1].textContent = kind === "r" ? "다운로드 많은순" : "조회 많은순";
       $("anaSort").options[2].textContent = kind === "r" ? "받은 사람 많은순" : "시청자 수 많은순";
+      paintMob();
     }
+    /* ---- #78 휴대폰(980px 이하): 메뉴 칩 · ‹ 고른 강의 › · 고르기 시트 ---- */
+    var chip = "", shQ = "", shSort = "new", CHIPC = { signature:"#003CDC", newbie:"#14A06A", partner:"#E07A2F" };
+    function colorOf(x){ return kind === "r" ? "#7C5CE6" : (CHIPC[x.gid] || "#003CDC"); }
+    function byNew(arr){ return arr.slice().sort(function(a, b){ return a.go - b.go || (b.date > a.date ? 1 : b.date < a.date ? -1 : 0); }); }
+    function groupsOf(all){ var seen = {}, out = []; byNew(all).forEach(function(x){ if (!seen[x.gid]){ seen[x.gid] = 1; out.push(x); } }); return out; }
+    function short(t){ return String(t || "").replace(/^\[[^\]]*\]\s*/, ""); }
+    function paintMob(){
+      var all = items(), gs = groupsOf(all), c = cur();
+      if (chip && !gs.some(function(g){ return g.gid === chip; })) chip = "";
+      $("anaChips").innerHTML = '<button type="button" role="radio" class="am-chip" data-chip="" aria-checked="' + !chip + '">전체</button>' +
+        gs.map(function(g){ return '<button type="button" role="radio" class="am-chip" data-chip="' + esc(g.gid) + '" aria-checked="' + (chip === g.gid) + '"><i style="background:' + colorOf(g) + '"></i>' + esc(g.group) + '</button>'; }).join("");
+      if (!c){ $("anaCur").innerHTML = ""; return; }
+      var peers = byNew(all.filter(function(x){ return x.gid === c.gid; })), i = peers.map(function(x){ return x.key; }).indexOf(c.key);
+      var L = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>';
+      $("anaCur").innerHTML =
+        '<button type="button" class="am-nav rp" data-amgo="' + (i > 0 ? esc(peers[i - 1].key) : "") + '"' + (i > 0 ? "" : " disabled") + ' aria-label="이전 ' + (kind === "r" ? "자료" : "강의") + '">' + L + '</button>' +
+        '<button type="button" class="am-card rp" data-amopen aria-haspopup="dialog" aria-label="' + esc((kind === "r" ? "자료 고르기 — 지금 " : "강의 고르기 — 지금 ") + c.title) + '">' + thumbHtml(c, "am-th") +
+          '<span class="k-col"><span class="tt">' + esc(kind === "r" ? c.title : short(c.title)) + '</span><span class="sb"><i style="background:' + colorOf(c) + '"></i>' + esc(c.group) + ' · ' + (i + 1) + ' / ' + peers.length + '</span></span>' +
+          '<svg class="dn" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>' +
+        '<button type="button" class="am-nav rp" data-amgo="' + (i < peers.length - 1 ? esc(peers[i + 1].key) : "") + '"' + (i < peers.length - 1 ? "" : " disabled") + ' aria-label="다음 ' + (kind === "r" ? "자료" : "강의") + '">' + L.replace('M15 6l-6 6 6 6', 'M9 6l6 6-6 6') + '</button>';
+      if (!$("anaSheet").hidden) paintSheet();
+    }
+    function paintSheet(){
+      var t = shQ.replace(/\s+/g, "").toLowerCase(), key = kind === "r" ? "downs" : "views";
+      var list = items().filter(function(x){ return (!chip || x.gid === chip) && (!t || x.title.replace(/\s+/g, "").toLowerCase().indexOf(t) >= 0); });
+      list = shSort === "views" ? list.sort(function(a, b){ return a.go - b.go || st(b.key)[key] - st(a.key)[key] || (b.date > a.date ? 1 : -1); }) : byNew(list);
+      $("anaShT").textContent = kind === "r" ? "자료 고르기" : "강의 고르기";
+      $("anaShQ").placeholder = kind === "r" ? "자료 제목 찾기" : "강의 제목 찾기";
+      var sb = document.querySelectorAll("#anaShSort [data-ss]"); sb[1].textContent = kind === "r" ? "다운로드 많은순" : "조회 많은순";
+      sb.forEach(function(b){ b.setAttribute("aria-checked", b.dataset.ss === shSort ? "true" : "false"); });
+      var g = null, html = "";
+      list.forEach(function(x){
+        if (x.gid !== g){ g = x.gid; html += '<div class="am-g"><i style="background:' + colorOf(x) + '"></i>' + esc(x.group) + ' <span>' + list.filter(function(y){ return y.gid === g; }).length + '</span></div>'; }
+        var s1 = st(x.key), on = x.key === sel;
+        html += '<button type="button" class="am-row" data-ak="' + esc(x.key) + '"' + (on ? ' aria-current="true"' : '') + '>' + thumbHtml(x, "am-th") +
+          '<span class="k-col"><span class="tt">' + esc(kind === "r" ? x.title : short(x.title)) + '</span><span class="mm">' +
+          (kind === "r" ? '다운로드 ' + nf(s1.downs) : '조회 ' + nf(s1.views) + ' · 시청자 ' + nf(s1.viewers) + ' · 다운로드 ' + nf(s1.downs)) + '</span></span>' +
+          (on ? '<svg class="ck" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '') + '</button>';
+      });
+      $("anaShList").innerHTML = html || '<p class="k-note" style="padding:16px 4px">' + (shQ ? "‘" + esc(shQ) + "’에 맞는 " + (kind === "r" ? "자료가" : "강의가") + " 없어요." : "아직 없어요.") + '</p>';
+    }
+    var shOpener = null;
+    function openSheet(){
+      shOpener = document.activeElement; $("anaSheet").hidden = false; document.body.classList.add("sheet-open"); paintSheet();
+      var on = $("anaShList").querySelector('[aria-current="true"]'); if (on) on.scrollIntoView({ block:"center" });
+      setTimeout(function(){ var x = $("anaSheet").querySelector(".am-h .x"); if (x) x.focus({ preventScroll:true }); }, 30);
+    }
+    function closeSheet(){ if ($("anaSheet").hidden) return; $("anaSheet").hidden = true; document.body.classList.remove("sheet-open"); if (shOpener && shOpener.focus) try { shOpener.focus({ preventScroll:true }); } catch (er) {} }
     function range(){
       if (period === "today") return [kstDay(0), kstDay(0)];
       if (period === "7") return [kstDay(6), kstDay(0)];
@@ -3113,11 +3205,30 @@
       csvDownload("분석_" + name + "_" + (tab === "view" ? "시청자" : "자료다운로드") + ".csv", rows);
     }
     var tT = null;
-    $("anaKind").addEventListener("click", function(e){ var b = e.target.closest("[data-kind]"); if (!b || b.dataset.kind === kind) return; kind = b.dataset.kind; LS.set("sc-ana-kind", kind); sel = ""; openF = {}; tab = kind === "r" ? "down" : "view"; paintList(); LS.set("sc-ana-key", sel); loadDetail(); });
+    $("anaKind").addEventListener("click", function(e){ var b = e.target.closest("[data-kind]"); if (!b || b.dataset.kind === kind) return; kind = b.dataset.kind; LS.set("sc-ana-kind", kind); sel = ""; chip = ""; shQ = ""; $("anaShQ").value = ""; openF = {}; tab = kind === "r" ? "down" : "view"; paintList(); LS.set("sc-ana-key", sel); loadDetail(); });
     $("anaQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(tT); tT = setTimeout(function(){ qs = v; paintList(); }, 150); });
     $("anaSort").addEventListener("change", function(){ sort = this.value; paintList(); });
     $("anaList").addEventListener("click", function(e){ var b = e.target.closest("[data-ak]"); if (b) pick(b.dataset.ak); });
     $("anaPick").addEventListener("change", function(){ pick(this.value); });
+    $("anaChips").addEventListener("click", function(e){
+      var b = e.target.closest("[data-chip]"); if (!b) return; chip = b.dataset.chip;
+      var c = cur(); if (chip && (!c || c.gid !== chip)){ var f = byNew(items().filter(function(x){ return x.gid === chip; }))[0]; if (f){ pick(f.key); return; } }
+      paintMob();
+    });
+    $("anaCur").addEventListener("click", function(e){
+      var g = e.target.closest("[data-amgo]"); if (g){ if (g.dataset.amgo) pick(g.dataset.amgo); return; }
+      if (e.target.closest("[data-amopen]")) openSheet();
+    });
+    $("anaSheet").addEventListener("click", function(e){
+      if (e.target.closest("[data-amx]")){ closeSheet(); return; }
+      var r = e.target.closest("[data-ak]"); if (r){ closeSheet(); pick(r.dataset.ak); return; }
+      var ss = e.target.closest("[data-ss]"); if (ss){ shSort = ss.dataset.ss; paintSheet(); }
+    });
+    var shT = null;
+    $("anaShQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(shT); shT = setTimeout(function(){ shQ = v; paintSheet(); }, 120); });
+    document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !$("anaSheet").hidden) closeSheet(); });
+    window.addEventListener("resize", function(){ if (window.innerWidth > 980) closeSheet(); });
+    window.addEventListener("hashchange", closeSheet);
     var mT = null;
     $("anaMain").addEventListener("click", function(e){
       var c = e.target.closest("[data-per]"); if (c){ period = c.dataset.per; if (period === "pick" && !from){ from = kstDay(29); to = kstDay(0); } loadDetail(); return; }

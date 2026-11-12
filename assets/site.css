@@ -1035,7 +1035,7 @@ body .lg-logo{font-weight:800 !important; font-size:36px; line-height:1.2; lette
 }
 .lg > .lg-tm{position:absolute}
 /* #59 키패드가 올라오면 아래 붙는 것들도 키패드 위로 (iOS: visualViewport로 잰 --kb) */
-.toast, .fab{margin-bottom:var(--kb, 0px)}
+.toast{margin-bottom:var(--kb, 0px)}
 .lg{min-height:100svh; min-height:100dvh}
 
 /* ================= 디자인팀 #60 이름 칸: 버튼을 밖으로 꺼내 나란히 (2026-11-12) ================= */
@@ -1209,3 +1209,15 @@ body .lg-logo{font-weight:800 !important; font-size:36px; line-height:1.2; lette
 
 /* 사용자 요청: 키패드가 올라와 있을 때 아래로 더 내릴 수 있게 키패드 높이만큼 여백 (iOS · 카톡 인앱 포함) */
 html.kb-in body{padding-bottom:max(var(--kb, 0px), 60vh)}
+
+/* 사용자 요청(11-12): 휴대폰에서 입력칸을 누르면 화면이 확대되고 좌우로 흔들리던 것 · 아래 탭 바가 키패드 위로 따라 올라오던 것
+   - iOS는 글자가 16px보다 작은 입력칸을 누르면 화면을 확대함 → 터치 기기에서는 입력칸 글자를 16px 이상으로
+   - 키패드가 올라와 있는 동안(html.kb-in)은 아래 탭 바 · 맨 위로/맨 아래로 버튼을 숨김 */
+@media (pointer:coarse){
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(.lg-in input), select, textarea{font-size:16px !important}
+  body{overflow-x:clip}
+}
+html.kb-in .fab{display:none !important}
+
+/* #82 공유 창 카카오톡 칸 */
+.sopt .k.kk{background:#FEE500; color:#191919}

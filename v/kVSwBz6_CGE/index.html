@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261112h">
+<link rel="stylesheet" href="assets/site.css?v=20261112j">
 </head>
 <body>
 
@@ -72,7 +72,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261112d"></script>
+<script src="assets/common.js?v=20261112e"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -87,6 +87,7 @@
     spin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 1-9 9"/></svg>',
     check: '<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
     share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>',
+    kakao: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 4C7 4 3 7.2 3 11.1c0 2.5 1.6 4.7 4.1 5.9l-.9 3.3c-.1.3.3.6.6.4l3.9-2.6c.4 0 .8.1 1.3.1 5 0 9-3.2 9-7.1S17 4 12 4z"/></svg>',
     qr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h2.5v2.5H14zM18.5 18.5h2M14 20.5h2.5M20.5 14v2.5"/></svg>',
     x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
     copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></svg>',
@@ -609,10 +610,10 @@
       var v = cur.v, url = cur.url;
       pop.innerHTML = '<h3 id="shpT">강의 공유하기<button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
         '<div class="shpv"><span class="shth">' + SC.thumbImg(v.id) + '</span><b>' + esc(v.title || "제목 없음") + '</b></div>' +
-        '<div class="urlr"><span title="' + esc(url) + '">' + esc(url.replace(/^https?:\/\//, "")) + '</span><button type="button" class="rp" data-copy>' + IC.copy + '복사</button></div>' +
-        '<div class="sopt"><button type="button" class="rp" data-qr><span class="k qr">' + IC.qr + '</span>QR 코드</button><button type="button" class="rp" data-copy><span class="k ln">' + IC.link + '</span>링크 복사</button></div>' +
+        /* #82 PC 공유 창 = 카카오톡 · QR 코드 두 칸(링크는 페이지의 [링크 복사]). 카카오톡은 앱 키 없이 링크 복사 + 안내 */
+        '<div class="sopt"><button type="button" class="rp" data-kakao title="링크를 복사해요. 카톡 대화창에 붙여 넣으세요"><span class="k kk">' + IC.kakao + '</span>카카오톡</button><button type="button" class="rp" data-qr><span class="k qr">' + IC.qr + '</span>QR 코드</button></div>' +
         '<p class="shnote">받는 사람도 사번으로 로그인해야 볼 수 있어요.</p>';
-      var f = pop.querySelector("[data-copy]"); if (f) f.focus({ preventScroll:true });
+      var f = pop.querySelector("[data-kakao]"); if (f) f.focus({ preventScroll:true });
     }
     function qrView(){
       pop.innerHTML = '<h3 id="shpT"><button type="button" class="shback rp" data-main aria-label="공유하기로 돌아가기">' + IC.back + 'QR 코드</button><button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
@@ -622,13 +623,35 @@
       pop.querySelector("[data-main]").focus({ preventScroll:true });
       loadQR().then(function(){
         if (!pop) return;
-        var q = qrcode(0, "M"); q.addData(cur.url); q.make();
-        var n = q.getModuleCount(), cv = pop.querySelector("canvas"), m = 4, px = Math.floor(720 / (n + m * 2));
-        cv.width = cv.height = px * (n + m * 2);
-        var g = cv.getContext("2d"); g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = "#0B1030";
-        for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect((c + m) * px, (r + m) * px, px, px);
-        pop.querySelector(".qrmsg").remove(); pop.querySelector("[data-save]").disabled = false;
+        return drawQR(cur.url, pop.querySelector("canvas")).then(function(){
+          if (!pop) return; var mm = pop.querySelector(".qrmsg"); if (mm) mm.remove(); pop.querySelector("[data-save]").disabled = false;
+        });
       }).catch(function(){ if (pop){ var mm = pop.querySelector(".qrmsg"); if (mm) mm.textContent = "QR 코드를 만들지 못했어요. 인터넷 연결을 확인해 주세요."; } });
+    }
+    /* #81 · #82 QR: 오류 정정 H(30%) + 가운데 삼성화재금융서비스 로고(블루). 로고에 딱 맞는 흰 바탕(위아래 3 · 좌우 4px, 화면 180px 기준),
+       그 자리 QR 칸은 비움. 저장 PNG도 같은 그림(가로 700px 안팎) */
+    var logoP = null;
+    function loadLogo(){
+      return logoP || (logoP = new Promise(function(res, rej){ var im = new Image(); im.onload = function(){ res(im); }; im.onerror = function(){ logoP = null; rej(); }; im.src = ROOT + "assets/samsungfs-logo-blue.png"; }));
+    }
+    function drawQR(text, cv){
+      var q = qrcode(0, "H"); q.addData(text); q.make();
+      var n = q.getModuleCount(), m = 4, px = Math.max(4, Math.floor(720 / (n + m * 2))), W = px * (n + m * 2), k = W / 180;
+      cv.width = cv.height = W;
+      var g = cv.getContext("2d"); g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, W, W);
+      var lw = Math.round(108 * k), lh = Math.round(lw * 167 / 1332), bw = lw + Math.round(8 * k), bh = lh + Math.round(6 * k), bx = Math.round((W - bw) / 2), by = Math.round((W - bh) / 2);
+      g.fillStyle = "#0B1030";
+      for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) {
+        if (!q.isDark(r, c)) continue;
+        var x = (c + m) * px, y = (r + m) * px;
+        if (x + px > bx && x < bx + bw && y + px > by && y < by + bh) continue;      /* 로고 자리는 비움 */
+        g.fillRect(x, y, px, px);
+      }
+      return loadLogo().then(function(im){
+        var rr = Math.round(3 * k); g.fillStyle = "#FFFFFF"; g.beginPath();
+        if (g.roundRect) g.roundRect(bx, by, bw, bh, rr); else g.rect(bx, by, bw, bh); g.fill();
+        g.drawImage(im, bx + Math.round(4 * k), by + Math.round(3 * k), lw, lh);
+      }, function(){ /* 로고를 못 받아도 QR은 그대로 읽힘(H) */ });
     }
     var qrP = null;
     function loadQR(){
@@ -656,7 +679,7 @@
       pop.addEventListener("click", function(e){
         var b = e.target.closest("button"); if (!b) return;
         if (b.hasAttribute("data-x")){ close(); return; }
-        if (b.hasAttribute("data-copy")){ copyLink(url); return; }
+        if (b.hasAttribute("data-copy") || b.hasAttribute("data-kakao")){ copyLink(url); return; }
         if (b.hasAttribute("data-qr")){ qrView(); return; }
         if (b.hasAttribute("data-main")){ main(); return; }
         if (b.hasAttribute("data-save")){

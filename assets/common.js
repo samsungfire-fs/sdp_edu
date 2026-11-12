@@ -357,10 +357,15 @@
         if (w.scrollY === y0 && covered(t) > 2) t.scrollIntoView({ block: "center" });   /* 창이 아니라 안쪽 칸이 스크롤되는 곳 */
       }, 80);
     }
-    var cur = null, again = null;
+    var cur = null, again = null, touchAt = 0;
+    /* 사용자가 직접 누른 때만(1.5초 안) — 화면이 열릴 때 코드가 칸에 커서를 두는 것(키패드 안 뜸)으로는 화면을 옮기지 않음
+       (11-12 아이폰 홈 화면 바로가기로 열면 로그인 카드가 위로 밀려 보이던 것) */
+    d.addEventListener("touchstart", function () { touchAt = Date.now(); }, { passive: true, capture: true });
+    d.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") touchAt = Date.now(); }, { passive: true, capture: true });
     d.addEventListener("focusin", function (e) {
       var t = e.target; if (!t || !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || /^(checkbox|radio|button|submit|file|range|color)$/.test(t.type)) return;
       if (!(w.matchMedia && matchMedia("(pointer:coarse)").matches)) return;
+      if (Date.now() - touchAt > 1500 && kb() < 80) return;
       cur = t; de.classList.add("kb-in");                          /* 칸을 누르는 순간부터 아래 여백을 줘서 내릴 자리를 만듦 */
       var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { fit(t); }, 60); };
       if (vv) vv.addEventListener("resize", go);
