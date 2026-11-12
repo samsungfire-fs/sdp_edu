@@ -606,6 +606,10 @@
     var all = isR ? rdata.months : V.filter(function(v){ return SC.catOf(v) === view.cat; }), on = all.filter(function(v){ return v.visible !== false; }).length;
     $("count").textContent = all.length;
     $("visCount").innerHTML = "<b>" + all.length + "</b>개" + (all.length ? " · 공개 " + on + " · 비공개 " + (all.length - on) : "");
+    /* #88 개수는 [전체 · 공개 · 비공개] 칸 안에 — 메뉴 · 검색 기준(공개 고르기와 상관없이) */
+    var qn = isR ? "" : norm(view.q), base = all.filter(function(v){ return !qn || norm(v.title).indexOf(qn) > -1; }), bOn = base.filter(function(v){ return v.visible !== false; }).length;
+    $("vfnAll").textContent = base.length; $("vfnPub").textContent = bOn; $("vfnPriv").textContent = base.length - bOn;
+    placeAdd();
     if (isR){
       $("aresult").hidden = true;
       var ms = rShown();
@@ -653,7 +657,7 @@
       var finish = function(){
         closing = null;
         var f = motionOk() ? flipFirst() : null;
-        wrap.hidden = true; wrap.classList.remove("is-out", "go"); lay.classList.remove("is-edit"); document.body.classList.remove("sheet-open");
+        wrap.hidden = true; wrap.classList.remove("is-out", "go"); lay.classList.remove("is-edit"); document.body.classList.remove("sheet-open"); placeAdd();
         if (f) flipPlay(f);
       };
       if (!motionOk()){ finish(); return; }
@@ -664,7 +668,7 @@
     }
     if (closing){ clearTimeout(closing); closing = null; wrap.classList.remove("is-out"); edKey = null; }
     var opening = wrap.hidden, swap = !opening && edKey !== obj;
-    wrap.hidden = false; lay.classList.add("is-edit"); document.body.classList.toggle("sheet-open", !wide.matches);
+    wrap.hidden = false; lay.classList.add("is-edit"); document.body.classList.toggle("sheet-open", !wide.matches); placeAdd();
     var cid = isR ? RID : SC.catOf(openV), isNew = isR ? !!openM._new : !openV._oid, pub = obj.visible !== false;
     $("edPill").innerHTML = '<span class="mk" aria-hidden="true" style="--c:' + catColor(cid) + '"></span>' + esc(isR ? SC.RESEARCH.label : SC.catLabel(cid));
     $("edSwBox").innerHTML = lsw(pub, 'data-act="edvis"', isR ? "이 달을 사이트에 공개" : "이 강의를 사이트에 공개");
@@ -705,6 +709,17 @@
   });
   $("aq").addEventListener("input", function(){ view.q = this.value.trim(); render(); });
   $("asort").addEventListener("change", function(){ view.sort = this.value; render(true); });
+  /* #88 [+ 강의 추가] 자리: 넓을 때(편집 칸 닫힘 · 981px 이상) = 메뉴 탭 줄 오른쪽 끝, 좁을 때 = 공개 고르기 줄 오른쪽 */
+  function placeAdd(){
+    var btn = $("addVideo"), wideL = window.innerWidth > 980 && !$("app").classList.contains("is-edit");
+    var to = wideL ? $("mrow") : document.querySelector("#app .tools");
+    if (to && btn.parentNode !== to) to.appendChild(btn);
+    $("app").classList.toggle("wide-l", wideL);
+    /* 휴대폰 정렬 칸(120px): 짧은 이름 */
+    var sm = window.innerWidth <= 640, L = sm ? ["최신순", "오래된순", "제목순", "자료 많은순"] : ["최신 업로드순", "오래된 업로드순", "제목 가나다순", "자료 많은순"];
+    Array.prototype.forEach.call($("asort").options, function(o, i){ if (L[i] && o.textContent !== L[i]) o.textContent = L[i]; });
+  }
+  window.addEventListener("resize", function(){ placeAdd(); });
   function syncVf(){ $("vfilter").querySelectorAll("[data-vf]").forEach(function(b){ b.setAttribute("aria-checked", b.dataset.vf === view.vf); }); }
   $("vfilter").addEventListener("click", function(e){ var b = e.target.closest("[data-vf]"); if (!b || b.dataset.vf === view.vf) return; view.vf = b.dataset.vf; syncVf(); render(true); });
   function onMove(e){
@@ -2349,8 +2364,7 @@
       var o = t ? (merge ? merged(t) : get(t)) : null, n = o ? o.count : 0;
       var head = '<div class="lgh"><h3 id="modalT">수정 기록' + (n ? ' <b>' + n + '</b>' : '') + '</h3><button type="button" class="xx rp" data-close aria-label="닫기">' + IC_X + '</button></div>' +
         (title ? '<p class="lgs" title="' + esc(title) + '">' + esc(title) + '</p>' : '');
-      var foot = '<p class="lgf">공개 스위치 · 메뉴 옮기기 · 삭제 되돌리기도 여기에 남아요. 기록은 지울 수 없어요.</p>';
-      Modal.show(head + '<div class="lgl" id="logBody">' + (o ? '<p class="lge">불러오는 중…</p>' : '<p class="lge">아직 기록이 없어요.</p>') + '</div>' + foot, "logm");
+      Modal.show(head + '<div class="lgl" id="logBody">' + (o ? '<p class="lge">불러오는 중…</p>' : '<p class="lge">아직 기록이 없어요.</p>') + '</div>', "logm");
       if (!o || !on()) return;
       gateFetch({ action:"auditList", sid: adminSes.sid, target: t }).then(function(r){
         var box = $("logBody"); if (!box) return;
@@ -2758,7 +2772,7 @@
     function isMaster(){ return adminSes ? !!adminSes.master : !!token; }
     function parse(h){
       var p = String(h || "").replace(/^#\/?/, "").split("/");
-      if (p[0] === "analytics") return { view:"analytics" };
+      if (p[0] === "analytics") return { view:"analytics", key: p.length > 1 ? decodeURIComponent(p.slice(1).join("/")) : "" };   /* #87 사이트 [분석 보기] */
       if (p[0] === "members" || (p[0] === "settings" && p[1] === "members")) return { view:"members" };
       if (p[0] === "settings"){
         var m = p[1]; if (MENUS.indexOf(m) < 0) m = "me";      /* 11-12 사용자 요청: 메뉴 없이 들어오면 늘 첫 메뉴(내 계정) */
@@ -2781,6 +2795,7 @@
       document.querySelectorAll("#barNav [data-view], #bnav [data-view]").forEach(function(a){ if (a.dataset.view === r.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
       if (r.view !== "courses"){ if (!$("edWrap").hidden) closeEditor(); document.body.classList.remove("sheet-open"); }
       if (changed) window.scrollTo(0, 0);
+      if (r.view === "analytics" && r.key) Ana.want(r.key);               /* 로그인 전이면 기억해 뒀다가 로그인 뒤 그 콘텐츠로 */
       if (!document.body.classList.contains("authed")) return;
       if (r.view === "settings") menu(r.menu, changed);
       if (r.view === "analytics") Ana.show();
@@ -3043,7 +3058,8 @@
     function thumbHtml(x, cl){ return x.thumb ? '<span class="' + cl + (x.rs ? " rs" : "") + '" style="background-image:url(\'' + esc(x.thumb) + '\')"></span>' : '<span class="' + cl + ' rs">상품연구</span>'; }
     function paintList(){
       var list = sorted(), g = null, html = "";
-      if (!list.some(function(x){ return x.key === sel; })) sel = list.length ? list[0].key : "";
+      if (wantKey && list.some(function(x){ return x.key === wantKey; })){ sel = wantKey; wantKey = ""; LS.set("sc-ana-key", sel); }   /* #87 사이트 [분석 보기] */
+      if (list.length && !list.some(function(x){ return x.key === sel; })) sel = list[0].key;
       list.forEach(function(x){
         if (x.gid !== g){ g = x.gid; html += '<div class="al-g">' + esc(x.group) + ' <span>' + list.filter(function(y){ return y.gid === g; }).length + '</span></div>'; }
         html += '<button type="button" class="al-i" data-ak="' + esc(x.key) + '"' + (x.key === sel ? ' aria-current="true"' : '') + '>' + thumbHtml(x, "al-th") + '<span class="k-col"><span class="tt">' + esc(x.title) + '</span><span class="mm">' + mm(x) + '</span></span></button>';
@@ -3244,7 +3260,9 @@
       var id = e.target.id, pos = e.target.selectionStart; clearTimeout(mT);
       mT = setTimeout(function(){ fOrg = $("anaOrg").value; fWho = $("anaWho").value; page = 1; paintMain(); var el = $(id); if (el){ el.focus(); try { el.setSelectionRange(pos, pos); } catch(er){} } }, 200);
     });
-    return { show: show, reset: function(){ stats = null; det = null; logStart = ""; } };
+    var wantKey = "";
+    function want(k){ kind = /^r:/.test(k) ? "r" : "v"; LS.set("sc-ana-kind", kind); sel = k; wantKey = k; LS.set("sc-ana-key", k); chip = ""; openF = {}; tab = kind === "r" ? "down" : "view"; }
+    return { show: show, want: want, reset: function(){ stats = null; det = null; logStart = ""; } };
   })();
 
   SC.ripple(); SC.fab();

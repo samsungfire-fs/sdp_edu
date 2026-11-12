@@ -16,8 +16,8 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261112j">
-<link rel="stylesheet" href="assets/admin.css?v=20261112m">
+<link rel="stylesheet" href="assets/site.css?v=20261112p">
+<link rel="stylesheet" href="assets/admin.css?v=20261112o">
 </head>
 <body>
 <script>/* 11-12: 저장된 관리자 로그인이 있으면 처음부터 관리자 화면으로 그림('확인 중' 화면 없이). 확인은 admin.js가 뒤에서 */(function(){try{var k="sdp-admin-sid",o=JSON.parse(localStorage.getItem(k)||sessionStorage.getItem(k)||"null"),n=new Date(Date.now()+324e5).toISOString().slice(0,19);if(o&&o.sid&&o.p&&localStorage.getItem("sdp-gate-url")&&!(o.exp&&String(o.exp).slice(0,19)<=n))document.body.classList.add("authed")}catch(e){}})();</script>
@@ -139,7 +139,7 @@
         <button type="button" class="btn-soft rp press" id="makePwBtn">비밀번호 만들기</button>
       </div>
 
-      <div class="mtabs" data-flip="tabs" id="mtabs" role="tablist" aria-label="메뉴"></div>
+      <div class="mrow" id="mrow"><div class="mtabs" data-flip="tabs" id="mtabs" role="tablist" aria-label="메뉴"></div></div>
 
       <section aria-labelledby="listH">
         <div class="list-row" data-flip="row">
@@ -155,7 +155,7 @@
             <option value="new">최신 업로드순</option><option value="old">오래된 업로드순</option><option value="title">제목 가나다순</option><option value="files">자료 많은순</option>
           </select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></label>
           <div class="vfilter" id="vfilter" role="radiogroup" aria-label="공개 상태">
-            <button type="button" role="radio" aria-checked="true" data-vf="all">모두</button><button type="button" role="radio" aria-checked="false" data-vf="pub">공개</button><button type="button" role="radio" aria-checked="false" data-vf="priv">비공개</button>
+            <button type="button" role="radio" aria-checked="true" data-vf="all">전체<span class="vn" id="vfnAll"></span></button><button type="button" role="radio" aria-checked="false" data-vf="pub">공개<span class="vn" id="vfnPub"></span></button><button type="button" role="radio" aria-checked="false" data-vf="priv">비공개<span class="vn" id="vfnPriv"></span></button>
           </div>
           <span class="rnote" id="rnote" hidden>월은 연월 최신순으로 자동 정렬돼요.</span>
         </div>
@@ -357,7 +357,7 @@
 <div class="dimm" id="modal" hidden><div class="modal" id="modalBox" role="alertdialog" aria-modal="true" aria-labelledby="modalT"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261112e"></script>
-<script src="assets/admin.js?v=20261112q"></script>
+<script src="assets/common.js?v=20261112h"></script>
+<script src="assets/admin.js?v=20261112t"></script>
 </body>
 </html>

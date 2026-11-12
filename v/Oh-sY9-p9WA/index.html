@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261112j">
+<link rel="stylesheet" href="assets/site.css?v=20261112p">
 </head>
 <body>
 
@@ -38,6 +38,8 @@
 <span class="ban-sweep" aria-hidden="true"></span>
 </a>
 
+<!-- #83 PC · 태블릿: 위 = 내 정보 줄(관리자 페이지 · 이름 · 로그아웃 · 라이트/다크), 아래 = 메뉴 줄(스크롤하면 메뉴 줄만 붙음) -->
+<div class="ubar" id="ubar" hidden><div class="wrap ubar-in" id="ubarIn"></div></div>
 <header class="bar">
   <div class="wrap">
     <a class="bar-back rp" id="barBack" href="all/" data-go>
@@ -72,7 +74,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261112e"></script>
+<script src="assets/common.js?v=20261112h"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -113,6 +115,7 @@
     bars: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
     user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4.1-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg>',
     shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/></svg>',
+    chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M7 16v-5M12 16V7M17 16v-8"/></svg>',
     ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>',
     clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
     cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>',
@@ -194,7 +197,8 @@
     var mn = $("menu"), ul = mn.querySelector(".menu-ul"), act = mn.querySelector("[aria-current]");
     if (!ul) return;
     if (!act || !act.offsetWidth){ ul.hidden = true; delete ul.dataset.x; return; }
-    var x = act.offsetLeft, w = act.offsetWidth;
+    var cs = getComputedStyle(act), pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+    var x = act.offsetLeft + pl, w = act.offsetWidth - pl - pr;                 /* #86 밑줄은 글자 폭만큼 */
     ul.hidden = false; ul.dataset.x = x; ul.dataset.w = w;
     if (!anim) ul.classList.remove("go");
     ul.style.transform = "translateX(" + x + "px)"; ul.style.width = w + "px";
@@ -550,11 +554,11 @@
             '<div class="rget-info"><span class="r-pill">상품연구 전략자료</span>' +
               '<h1>' + esc(mo.title + " " + (a.title || "")) + '</h1>' +
               '<p class="rget-count">교육자료 <span class="nowrap">' + files.length + '개</span></p>' +
-              '<button type="button" class="copy-btn r-copy rp press" id="share">' + IC.link + '자료 링크 복사</button></div>' +
+              '<button type="button" class="copy-btn r-copy rp press" id="share">' + IC.link + '자료 링크 복사</button>' + anBtn("r:" + code + "/" + a.id, "자료") + '</div>' +
           '</aside>' +
           '<section class="files-card r-files" aria-labelledby="filesH">' +
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
-            '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
+            '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml(true) + '</p></div>' +
             lrBox(files.length
               ? '<ul class="files lr-c">' + files.map(function(f){ return fileRow(f, "rf:" + code + "/" + a.id + ":" + SC.fileKey(f)); }).join("") + '</ul>'
               : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 연령은 아직 받을 자료가 없어요.<br>곧 올라올 예정이에요.</p></div>', 265) +
@@ -594,6 +598,32 @@
 
   /* ---------- #53 강의 공유하기: 휴대폰·태블릿 = 기기 공유 창, PC = 공유 창(QR 코드 · 링크 복사) ----------
      카카오톡 칸은 카카오 앱 키가 없어 뺌(디자인 0-29: 앱 키를 못 쓰면 링크 복사 + 토스트) */
+  /* 카카오톡 공유 (JavaScript 키는 원래 공개용 — 카카오 개발자 콘솔에 등록한 도메인에서만 동작) */
+  var KAKAO = { key: "e5503492f5092a789be288da47bc840f", src: "https://t1.kakaocdn.net/kakao_js_sdk/2.8.4/kakao.min.js",
+    sri: "sha384-BGX7Wb16GmRFagri4bLJV2DgipVZaU2AI812GZtHtHzzDQJnfHasDXN5houxv45w" };
+  var kakaoP = null;
+  function loadKakao(){
+    if (window.Kakao && Kakao.isInitialized && Kakao.isInitialized()) return Promise.resolve();
+    return kakaoP || (kakaoP = new Promise(function(res, rej){
+      var sc = document.createElement("script"); sc.src = KAKAO.src; sc.integrity = KAKAO.sri; sc.crossOrigin = "anonymous";
+      sc.onload = function(){ try { if (!Kakao.isInitialized()) Kakao.init(KAKAO.key); res(); } catch (er) { kakaoP = null; rej(er); } };
+      sc.onerror = function(){ kakaoP = null; rej(); }; document.head.appendChild(sc);
+    }));
+  }
+  function kakaoReady(){ return !!(window.Kakao && Kakao.isInitialized && Kakao.isInitialized() && Kakao.Share); }
+  /* 카톡 카드: 썸네일 · 제목 · 교육자료 N개 · [강의 보기]. 준비 안 됐거나 실패하면 링크 복사 */
+  function kakaoShare(v, url){
+    if (!kakaoReady()){ copyLink(url); loadKakao().catch(function(){}); return; }
+    try {
+      var n = (v.files || []).length;
+      Kakao.Share.sendDefault({
+        objectType: "feed",
+        content: { title: String(v.title || "강의").slice(0, 200), description: (n ? "교육자료 " + n + "개 · " : "") + "영개파 교육 자료",
+          imageUrl: SC.thumb(v.id, false), imageWidth: 480, imageHeight: 360, link: { mobileWebUrl: url, webUrl: url } },
+        buttons: [{ title: "강의 보기", link: { mobileWebUrl: url, webUrl: url } }]
+      });
+    } catch (er) { copyLink(url); }
+  }
   function copyLink(url){ SC.copy(url).then(function(){ toast("링크를 복사했어요. 카톡에 붙여 넣으세요", IC.link); }, function(){ toast(url, IC.link); }); }
   var Share = (function(){
     var pop = null, dim = null, back = null, cur = null;
@@ -610,21 +640,24 @@
       var v = cur.v, url = cur.url;
       pop.innerHTML = '<h3 id="shpT">강의 공유하기<button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
         '<div class="shpv"><span class="shth">' + SC.thumbImg(v.id) + '</span><b>' + esc(v.title || "제목 없음") + '</b></div>' +
-        /* #82 PC 공유 창 = 카카오톡 · QR 코드 두 칸(링크는 페이지의 [링크 복사]). 카카오톡은 앱 키 없이 링크 복사 + 안내 */
-        '<div class="sopt"><button type="button" class="rp" data-kakao title="링크를 복사해요. 카톡 대화창에 붙여 넣으세요"><span class="k kk">' + IC.kakao + '</span>카카오톡</button><button type="button" class="rp" data-qr><span class="k qr">' + IC.qr + '</span>QR 코드</button></div>' +
+        /* #82 PC 공유 창 = 카카오톡 · QR 코드 두 칸(링크는 페이지의 [링크 복사]) */
+        '<div class="sopt"><button type="button" class="rp" data-kakao title="카카오톡으로 강의 카드를 보내요"><span class="k kk">' + IC.kakao + '</span>카카오톡</button><button type="button" class="rp" data-qr><span class="k qr">' + IC.qr + '</span>QR 코드</button></div>' +
         '<p class="shnote">받는 사람도 사번으로 로그인해야 볼 수 있어요.</p>';
       var f = pop.querySelector("[data-kakao]"); if (f) f.focus({ preventScroll:true });
+      loadKakao().catch(function(){});                              /* 창이 열릴 때 미리 받아 둠(누를 때 팝업이 막히지 않게) */
     }
     function qrView(){
       pop.innerHTML = '<h3 id="shpT"><button type="button" class="shback rp" data-main aria-label="공유하기로 돌아가기">' + IC.back + 'QR 코드</button><button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
         '<div class="qrbox"><canvas width="180" height="180" aria-label="강의 주소 QR 코드" role="img"></canvas><span class="qrmsg">QR 코드를 만드는 중…</span></div>' +
         '<p class="qrtx">휴대폰 카메라로 비추면<br>이 강의가 바로 열려요.</p>' +
-        '<button type="button" class="ab g rp qrsave" data-save disabled>' + IC.save + 'QR 이미지 저장</button>';
+        '<div class="qrbtns"><button type="button" class="ab g rp qrsave" data-save disabled>' + IC.save + '이미지 저장</button>' +
+        '<button type="button" class="ab g rp qrsave" data-qcopy disabled>' + IC.copy + '이미지 복사</button></div>';
       pop.querySelector("[data-main]").focus({ preventScroll:true });
       loadQR().then(function(){
         if (!pop) return;
         return drawQR(cur.url, pop.querySelector("canvas")).then(function(){
           if (!pop) return; var mm = pop.querySelector(".qrmsg"); if (mm) mm.remove(); pop.querySelector("[data-save]").disabled = false;
+          var qc = pop.querySelector("[data-qcopy]"); if (qc) qc.disabled = false;
         });
       }).catch(function(){ if (pop){ var mm = pop.querySelector(".qrmsg"); if (mm) mm.textContent = "QR 코드를 만들지 못했어요. 인터넷 연결을 확인해 주세요."; } });
     }
@@ -653,6 +686,16 @@
         g.drawImage(im, bx + Math.round(4 * k), by + Math.round(3 * k), lw, lh);
       }, function(){ /* 로고를 못 받아도 QR은 그대로 읽힘(H) */ });
     }
+    /* QR 이미지 복사: 클립보드에 그림(PNG)으로. 안 되는 브라우저면 저장 안내 */
+    function copyQR(cv){
+      var fail = function(){ toast("이 브라우저는 그림 복사가 안 돼요. [이미지 저장]을 써 주세요", IC.copy); };
+      if (!cv || !navigator.clipboard || !window.ClipboardItem){ fail(); return; }
+      try {
+        var blobP = new Promise(function(res, rej){ cv.toBlob(function(b){ b ? res(b) : rej(); }, "image/png"); });
+        navigator.clipboard.write([new ClipboardItem({ "image/png": blobP })])
+          .then(function(){ toast("QR 이미지를 복사했어요. 카톡 · 문서에 붙여 넣으세요", IC.copy); }, fail);
+      } catch (er) { fail(); }
+    }
     var qrP = null;
     function loadQR(){
       if (window.qrcode) return Promise.resolve();
@@ -679,9 +722,11 @@
       pop.addEventListener("click", function(e){
         var b = e.target.closest("button"); if (!b) return;
         if (b.hasAttribute("data-x")){ close(); return; }
-        if (b.hasAttribute("data-copy") || b.hasAttribute("data-kakao")){ copyLink(url); return; }
+        if (b.hasAttribute("data-kakao")){ kakaoShare(v, url); return; }
+        if (b.hasAttribute("data-copy")){ copyLink(url); return; }
         if (b.hasAttribute("data-qr")){ qrView(); return; }
         if (b.hasAttribute("data-main")){ main(); return; }
+        if (b.hasAttribute("data-qcopy")){ copyQR(pop.querySelector("canvas")); return; }
         if (b.hasAttribute("data-save")){
           var a = document.createElement("a"); a.href = pop.querySelector("canvas").toDataURL("image/png");
           a.download = "강의QR_" + String(v.title || v.id).replace(/[\\/:*?"<>|]/g, "").slice(0, 40) + ".png"; document.body.appendChild(a); a.click(); a.remove();
@@ -724,10 +769,12 @@
               'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>' +
             '</div></div>' +
             '<section class="lec-info">' +
-              '<div class="lec-meta">' + (SC.isPublic(v) ? '' : '<span class="priv-pill">' + IC.lock + '비공개 · 관리자에게만 보여요</span>') + (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') + '<span>' + metaText(v, true) + '</span>' + (LOCKED ? '<span class="sep">·</span>' + vwHtml(v.id) : '') + '</div>' +
+              /* #85 휴대폰: 1줄 = [NEW] [메뉴] 배지 · 2줄 = 날짜 · 길이 · 조회(한 줄 고정). PC · 태블릿은 한 줄 그대로 */
+              '<div class="lec-meta"><span class="lm-b">' + (SC.isPublic(v) ? '' : '<span class="priv-pill">' + IC.lock + '비공개 · 관리자에게만 보여요</span>') + (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') + '<span class="lm-cat">' + esc(SC.catLabel(c)) + '</span></span>' +
+              '<span class="lm-t"><span>' + metaText(v, true) + '</span>' + (LOCKED ? '<span class="sep">·</span>' + vwHtml(v.id) : '') + '</span></div>' +
               '<h1>' + esc(v.title || "제목 없음") + '</h1>' +
               '<div class="lec-act"><button type="button" class="ab p rp press" id="shareOpen" aria-haspopup="dialog">' + IC.share + '공유하기</button>' +
-              '<button type="button" class="ab g rp press" id="share">' + IC.link + '링크 복사</button></div>' +
+              '<button type="button" class="ab g rp press" id="share">' + IC.link + '링크 복사</button>' + anBtn("v:" + v.id, "강의") + '</div>' +
             '</section>' +
             '<section class="comments" aria-labelledby="cmH"><h2 id="cmH">댓글</h2>' +
               '<a class="cm-link rp" href="' + yt + '" target="_blank" rel="noopener" aria-label="유튜브에서 댓글 남기기">' +
@@ -740,7 +787,7 @@
           '</div>' +
           '<aside class="files-card" aria-labelledby="filesH">' +
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
-            '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml() + '</p></div>' +
+            '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml(true) + '</p></div>' +
             lrBox(files.length
               ? '<ul class="files lr-c">' + files.map(function(f){ return fileRow(f, "f:" + v.id + ":" + SC.fileKey(f)); }).join("") + '</ul>'
               : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>', 265) +
@@ -819,10 +866,12 @@
 
   /* 고지 문구: 첫 줄은 노란 강조, 둘째 줄은 쉼표 기준으로 두 덩어리(줄바꿈이 깔끔하게) */
   var NOTICE_SRC = "";
-  function noticeHtml(){
+  function noticeHtml(each){
     var lines = SC.noticeText(NOTICE_SRC).split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
     var html = '<strong>' + esc(lines.shift() || "") + '</strong>';
     lines.forEach(function(l){
+      /* #84 강의 · 자료 페이지: 쉼표마다 묶음(안 끊김) — '고객 / 대상 설명,'처럼 끊기지 않게 */
+      if (each){ html += '<br>' + l.split(", ").map(function(c, i, all){ return '<span class="chunk">' + esc(c + (i < all.length - 1 ? "," : "")) + '</span>'; }).join(" "); return; }
       var cut = -1, best = 1e9;
       l.replace(/, /g, function(m, i){ var d = Math.abs(i - l.length / 2); if (d < best){ best = d; cut = i; } return m; });
       html += '<br>' + (cut > 0
@@ -870,6 +919,11 @@
     if (n >= 10000){ var x = Math.round(n / 1000) / 10; return (x % 1 ? x.toFixed(1) : String(x)) + "만"; }
     return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
+  /* #87 관리자 · 마스터만: [📊 분석 보기 ↗] → 관리자 페이지 [분석]에서 이 콘텐츠를 고른 화면(새 탭). 일반 회원은 자리도 없음 */
+  function anBtn(key, what){
+    if (!(SES && (SES.a || SES.m))) return "";
+    return '<span class="act-sep" aria-hidden="true"></span><a class="ab an rp press" href="' + ROOT + 'admin.html#/analytics/' + encodeURIComponent(key) + '" target="_blank" rel="noopener" title="관리자 페이지 분석에서 이 ' + what + '를 새 탭으로 열어요" aria-label="분석 보기 (관리자 페이지 새 탭)">' + IC.chart + '분석 보기<span class="ext">' + IC.ext + '</span></a>';
+  }
   function vwHtml(id){
     if (!LOCKED) return "";
     var k = "v:" + id, n = STATS ? (STATS.views[k] || 0) : 0;
@@ -914,7 +968,7 @@
      [🛡 관리자 페이지 ↗](마스터 · 관리자만) │ 홍길동님 20231234 [마스터/관리자] [↪ 로그아웃] │ 라이트/다크 */
   function paintWho(){
     var on = live() && !document.body.classList.contains("login-mode");
-    $("who").hidden = !on; $("whoSep").hidden = !on; if (!on){ $("who").innerHTML = ""; MM.hide(); return; }
+    $("who").hidden = !on; $("whoSep").hidden = !on; placeUser(); if (!on){ $("who").innerHTML = ""; MM.hide(); return; }
     var nm = SES.n || "회원", role = SES.m ? "m" : SES.a ? "a" : "";
     $("who").innerHTML =
       (SES.a ? '<a class="ub adm-lk" href="' + ROOT + 'admin.html" target="_blank" rel="noopener" aria-label="관리자 페이지 (새 탭)">' + IC.shield + '<span class="ubt">관리자 페이지</span><span class="ext">' + IC.ext + '</span></a><span class="usep" aria-hidden="true"></span>' : '') +
@@ -924,6 +978,14 @@
     $("logout").addEventListener("click", doLogout);
     $("mmBtn").hidden = false; MM.paint(nm, role);
   }
+  /* #83 641px 이상: 이름 칸 · 라이트/다크를 위 '내 정보 줄'로, 휴대폰은 메뉴 바 안(#63 ☰) */
+  var UBQ = window.matchMedia ? matchMedia("(min-width:641px)") : null;
+  function placeUser(){
+    var wide = !!(UBQ && UBQ.matches) && !document.body.classList.contains("login-mode"), box = $("ubarIn"), bar = $("mmBtn").parentNode;
+    ["who", "whoSep", "tm", "tmIc"].forEach(function(id){ var el = $(id); if (!el) return; if (wide){ if (el.parentNode !== box) box.appendChild(el); } else if (el.parentNode !== bar) bar.insertBefore(el, $("mmBtn")); });
+    $("ubar").hidden = !wide;
+  }
+  if (UBQ){ if (UBQ.addEventListener) UBQ.addEventListener("change", placeUser); else if (UBQ.addListener) UBQ.addListener(placeUser); }
   function doLogout(){ MM.close(true); sesSet(null); SES = null; STATS = null; showLogin(""); }
 
   /* #63 휴대폰: 이름 칸 → [☰ 메뉴] 안으로. 바 바로 아래로 판이 내려오고, 판 밖은 검정 45% 덮개.

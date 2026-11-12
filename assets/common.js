@@ -357,26 +357,45 @@
         if (w.scrollY === y0 && covered(t) > 2) t.scrollIntoView({ block: "center" });   /* 창이 아니라 안쪽 칸이 스크롤되는 곳 */
       }, 80);
     }
+    /* 사파리가 키패드를 올리면서 스크롤을 되돌리는 때가 있어 조금 뒤 두 번 더 맞춤 */
+    function fitLater(el) { [350, 900].forEach(function (ms) { setTimeout(function () { if (cur === el) fit(el); }, ms); }); }
     var cur = null, again = null, touchAt = 0;
-    /* 사용자가 직접 누른 때만(1.5초 안) — 화면이 열릴 때 코드가 칸에 커서를 두는 것(키패드 안 뜸)으로는 화면을 옮기지 않음
-       (11-12 아이폰 홈 화면 바로가기로 열면 로그인 카드가 위로 밀려 보이던 것) */
-    d.addEventListener("touchstart", function () { touchAt = Date.now(); }, { passive: true, capture: true });
-    d.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") touchAt = Date.now(); }, { passive: true, capture: true });
-    d.addEventListener("focusin", function (e) {
-      var t = e.target; if (!t || !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || /^(checkbox|radio|button|submit|file|range|color)$/.test(t.type)) return;
-      if (!(w.matchMedia && matchMedia("(pointer:coarse)").matches)) return;
-      if (Date.now() - touchAt > 1500 && kb() < 80) return;
-      cur = t; de.classList.add("kb-in");                          /* 칸을 누르는 순간부터 아래 여백을 줘서 내릴 자리를 만듦 */
-      var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { fit(t); }, 60); };
+    function isField(t) { return t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !/^(checkbox|radio|button|submit|file|range|color)$/.test(t.type); }
+    function coarse() { return w.matchMedia && matchMedia("(pointer:coarse)").matches; }
+    /* 키패드가 올라올 때 맞추기 시작: 아래 여백 · 브랜드 칸 접기(kb-in) → 키패드가 다 올라오면 맞춤, 조금 뒤 두 번 더 */
+    function activate(t) {
+      cur = t; de.classList.add("kb-in");
+      var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { fit(t); fitLater(t); }, 60); };
       if (vv) vv.addEventListener("resize", go);
       setTimeout(go, 450);
+    }
+    /* 사용자가 직접 누른 때만(1.5초 안) — 화면이 열릴 때 코드가 칸에 커서를 두는 것(키패드 안 뜸)으로는 화면을 옮기지 않음 */
+    function onTouch(e) {
+      if (e.type === "pointerdown" && e.pointerType === "mouse") return;
+      touchAt = Date.now();
+      /* 이미 커서가 있는 칸을 누르면 focusin이 다시 안 생김(사이트 로그인은 사번 칸에 커서를 먼저 둠) → 여기서 시작 */
+      var t = e.target && e.target.closest ? e.target.closest("input, textarea, select") : null;
+      /* 누르는 도중에 화면이 바뀌면 손가락 밑 칸이 달라져 커서가 빠짐 → 손을 뗀 뒤(0.4초) 아직 그 칸이면 시작 */
+      if (isField(t) && d.activeElement === t && coarse() && !de.classList.contains("kb-in"))
+        setTimeout(function () { if (d.activeElement === t && !de.classList.contains("kb-in")) activate(t); }, 400);
+    }
+    d.addEventListener("touchstart", onTouch, { passive: true, capture: true });
+    d.addEventListener("pointerdown", onTouch, { passive: true, capture: true });
+    d.addEventListener("focusin", function (e) {
+      var t = e.target; if (!isField(t) || !coarse()) return;
+      cur = t;
+      if (Date.now() - touchAt > 1500 && kb() < 80) return;           /* 코드가 둔 커서: 키패드가 실제로 올라오면(아래 resize) 그때 맞춤 */
+      activate(t);
     });
     d.addEventListener("focusout", function () {
-      cur = null;
-      setTimeout(function () { setKb(); var a = d.activeElement; if (!a || !/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) de.classList.remove("kb-in"); }, 300);
+      setTimeout(function () { var a = d.activeElement; if (!isField(a)) { cur = null; de.classList.remove("kb-in"); } setKb(); }, 300);
     });
-    /* 키패드 위 줄(자동 완성 · ▲▼✓)이 늦게 붙어 높이가 또 바뀌면 다시 맞춤 */
-    if (vv) vv.addEventListener("resize", function () { if (!cur) return; clearTimeout(again); again = setTimeout(function () { if (cur) fit(cur); }, 120); });
+    /* 키패드 위 줄(자동 완성 · ▲▼✓)이 늦게 붙어 높이가 또 바뀌거나, 커서만 있던 칸에서 키패드가 올라오면 다시 맞춤 */
+    if (vv) vv.addEventListener("resize", function () {
+      if (!cur || d.activeElement !== cur) return;
+      if (kb() > 80 && !de.classList.contains("kb-in")) { activate(cur); return; }
+      clearTimeout(again); again = setTimeout(function () { if (cur) fit(cur); }, 120);
+    });
   })();
 
   w.SC = SC;

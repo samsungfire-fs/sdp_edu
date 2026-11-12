@@ -948,6 +948,8 @@ body button.vs, body button.vs *, body [role=tab] b, body [role=tab] .n, body [r
 .qrmsg{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:14px; background:#FFFFFF; font-size:13px; color:#4B567E}
 .qrtx{margin:0; text-align:center; font-size:14.5px; line-height:1.6; color:var(--ink-2)}
 .qrsave{width:100%; height:48px}
+.qrbtns{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px}
+.qrbtns .qrsave{padding:0 10px; gap:6px}
 .shdim{position:fixed; inset:0; z-index:69; background:rgba(7,8,12,.5); animation:sh-fade 160ms ease}
 .shp.sheet{position:fixed; left:0 !important; right:0; bottom:0; top:auto !important; width:auto; max-width:none; border-radius:24px 24px 0 0; padding-bottom:calc(20px + env(safe-area-inset-bottom, 0px)); animation:sh-up 260ms var(--ease)}
 @keyframes sh-in{from{opacity:0; transform:translateY(-6px) scale(.97)}}
@@ -1221,3 +1223,73 @@ html.kb-in .fab{display:none !important}
 
 /* #82 공유 창 카카오톡 칸 */
 .sopt .k.kk{background:#FEE500; color:#191919}
+
+/* 사용자 요청(11-12 15:38): 아이폰 사파리(카메라로 QR → 바로 열기)에서 사번 칸을 누르면 [로그인]이 주소 알약 · ▲▼✓ 줄에 가림
+   → 휴대폰 · 태블릿에서 키패드가 올라와 있는 동안은 위 브랜드 칸을 접어 폼을 화면 맨 위로(스크롤에 기대지 않음) */
+@media (max-width:980px) and (pointer:coarse){
+  html.kb-in .lg{grid-template-rows:0 auto 1fr}
+  html.kb-in .lg > .lg-brand, html.kb-in .lg > .lg-copy, html.kb-in .lg > .lg-tm{display:none}
+  html.kb-in .lg > .lg-mid{margin-top:0; padding-top:calc(12px + env(safe-area-inset-top, 0px))}
+  html.kb-in .lg-mid .lg-form.ulog-card{border-radius:0 0 24px 24px}
+}
+
+/* ===== #84 강의 페이지 글자 얇게 ===== */
+.lec-info h1{font-family:var(--head) !important; font-weight:400 !important; font-size:30px; line-height:1.4; letter-spacing:-.01em; color:var(--ink)}
+@media (max-width:980px){ .lec-info h1{font-size:26px} }
+@media (max-width:560px){ .lec-info h1{font-size:22px} }
+.lec-note strong{font-family:var(--head) !important; font-weight:400 !important; font-size:16.5px !important; line-height:1.5}
+.lec-note .chunk{display:inline-block; white-space:nowrap}
+body .lec-act .ab, body .lec-act .ab *{font-weight:400 !important}
+
+/* ===== #83 PC · 태블릿 맨 위 두 줄: 내 정보 줄 + 메뉴 줄 ===== */
+.ubar{background:#E4E8F2; border-bottom:1px solid #DCE1EE}
+.ubar[hidden]{display:none}
+[data-theme="dark"] .ubar{background:#000000; border-bottom-color:#232B4D}
+.ubar-in{height:44px; display:flex; align-items:center; justify-content:flex-end; gap:8px}
+.ubar .who{gap:6px}
+.ubar .ub{height:30px; font-size:13.5px; padding:0 8px}
+.ubar .who .nm{font-size:13.5px}
+.ubar .who .sb{font-size:13px}
+.ubar .usep{height:16px}
+.ubar .tm{padding:3px; border-radius:9px}
+.ubar .tm button{height:24px; padding:0 10px; font-size:13px; border-radius:7px}
+.ubar .tm button svg{width:14px; height:14px}
+.ubar .tm-ic{width:34px; height:34px; border-radius:9px}
+.ubar .tm-ic svg{width:18px; height:18px}
+@media (hover:hover) and (pointer:fine){ .ubar .ub:hover{background:rgba(11,16,48,.06)} [data-theme="dark"] .ubar .ub:hover{background:#18204A} }
+/* 메뉴 줄: 메뉴만 왼쪽부터, 넘치면 메뉴 줄만 가로 스크롤 */
+@media (min-width:641px){ .menu{margin-right:0} }
+@media (min-width:641px) and (max-width:980px){ .bar .wrap{height:58px} }
+
+/* ===== #85 강의 페이지 정보 줄: 휴대폰은 두 줄(배지 / 날짜 · 길이 · 조회) ===== */
+.lec-meta .lm-b, .lec-meta .lm-t{display:contents}
+.lec-meta .lm-cat{display:none}
+@media (max-width:560px){
+  .lec-meta{flex-direction:column; align-items:flex-start; gap:8px}
+  .lec-meta .lm-b{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+  .lec-meta .lm-cat{display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:6px; background:var(--blue-soft); color:var(--link); font-size:12.5px; line-height:1}
+  .lec-meta .lm-t{display:flex; align-items:center; gap:8px; white-space:nowrap; font-variant-numeric:tabular-nums}
+  .lec-meta .lm-t .ch{display:none}
+  .lec-meta .lm-t .vw{display:inline-flex; align-items:center; gap:4px}
+}
+
+/* ===== #86 메뉴끼리 구분: 메뉴마다 좌우 20px + 사이 세로선(1.5 × 22), 밑줄은 글자 폭만 ===== */
+.menu{gap:0 !important}
+.menu a{position:relative; padding-left:20px; padding-right:20px}
+.menu a:first-of-type{padding-left:0}
+.menu a + a::before{content:""; position:absolute; left:-.75px; top:50%; width:1.5px; height:22px; margin-top:-11px; border-radius:1px; background:#B4BDD6; pointer-events:none}
+[data-theme="dark"] .menu a + a::before{background:rgba(255,255,255,.34)}
+.menu-ul{border-radius:2px 2px 0 0}
+
+/* ===== #87 관리자 · 마스터만 [분석 보기 ↗] — 바탕 없음 + 1.5px 하늘색 점선 ===== */
+.act-sep{width:1px; height:28px; background:var(--u-ln, #DCE1EE); align-self:center; flex:none}
+.ab.an{background:transparent; color:var(--ink); border:1.5px dashed #5BC2E7; text-decoration:none; font-weight:400 !important}
+.ab.an *{font-weight:400 !important}
+.ab.an > svg:first-child{color:#0E7FA8}
+[data-theme="dark"] .ab.an > svg:first-child{color:#5BC2E7}
+.ab.an .ext{display:flex; color:#8A93B4}
+.ab.an .ext svg{width:14px; height:14px}
+@media (hover:hover) and (pointer:fine){ .ab.an:hover{background:rgba(91,194,231,.08)} }
+@media (max-width:560px){ .lec-act .act-sep{display:none} .lec-act .ab.an{grid-column:1 / -1; height:46px} }
+.rget-info .act-sep{display:none}
+.rget-info .ab.an{width:100%; margin-top:8px}

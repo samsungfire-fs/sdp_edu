@@ -1927,3 +1927,32 @@ html.kb-in .fab, html.kb-in body.authed .bnav{display:none !important}
 .svs-tip b, .svs-tip #svsTip2 > span{white-space:nowrap}
 .svs-tip #svsTip2{display:flex; flex-direction:column; gap:1px; font-size:13px; color:rgba(255,255,255,.72)}
 .svs-tip #svsTip2[hidden]{display:none}
+
+/* ===== #88 강의 관리 목록 위: 메뉴 이름 한 번만 · 개수는 [전체 · 공개 · 비공개] 안 · [+ 강의 추가] 자리 ===== */
+#app .list-row{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); margin:0}
+#app .mrow{display:flex; align-items:center; gap:16px; box-shadow:inset 0 -1px 0 var(--k-ln); margin-bottom:16px}
+#app .mrow .mtabs{flex:1 1 auto; min-width:0; box-shadow:none}
+#app .mrow .btn-add{flex:none}
+.vfilter button .vn{margin-left:6px; font-size:12.5px; font-weight:400 !important; color:var(--k-t3, #8A93B4); font-variant-numeric:tabular-nums}
+.vfilter button[aria-checked="true"] .vn{color:currentColor; opacity:.75}
+/* 넓음(편집 칸 닫힘 · PC): 한 줄 [검색 420][정렬][전체|공개|비공개] */
+#app.wide-l .tools{flex-wrap:nowrap}
+/* 좁음(편집 칸 열림 · 태블릿 · 휴대폰): 1줄 [전체|공개|비공개] …… [+ 강의 추가] / 2줄 [검색][정렬] */
+#app:not(.wide-l) .tools{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
+#app:not(.wide-l) .tools .vfilter{order:1}
+#app:not(.wide-l) .tools .btn-add{order:2; margin-left:auto; flex:none}
+#app:not(.wide-l) .tools::after{content:""; order:3; flex-basis:100%; height:0}
+#app:not(.wide-l) .tools .asearch{order:4; flex:1 1 220px; max-width:none}
+#app:not(.wide-l) .tools .asort{order:5}
+#app:not(.wide-l) .tools .rnote{order:6}
+@media (max-width:640px){
+  #app:not(.wide-l) .tools .vfilter{flex:1 1 auto; min-width:0}
+  #app:not(.wide-l) .tools .vfilter button{flex:1 1 0; padding:0 8px}
+  #app:not(.wide-l) .tools .btn-add{margin-left:0}
+  #app:not(.wide-l) .tools .asort{flex:none; width:120px}
+  #app:not(.wide-l) .tools .asort select{width:100%}
+}
+
+/* #68 (16:09) 수정 기록 창 맨 아래 안내 글 없앰 — 목록 아래 여백만 */
+.logm .lgl{padding-bottom:22px}
+@media (max-width:560px){ .logm .lgl{padding-bottom:calc(22px + env(safe-area-inset-bottom, 0px))} }
