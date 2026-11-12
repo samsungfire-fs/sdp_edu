@@ -2488,7 +2488,7 @@
      - 세일즈온 어드민 아이디·비밀번호는 사번 목록의 비밀 칸(스크립트 속성)에만. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
     var SCRIPT_ID = "1gq8_W7tE25FrOxcws0xbun4pj72lIY3eJywh-XkulrjDFzvSQvLKtbuc";   /* 11-12 사용자가 알려 준 세일즈온 사번 목록 Apps Script (코드 v19부터는 서버가 알려 준 값을 먼저 씀) */
-    var GATE_V = 21; /* 사번 목록 코드(Code.gs) 최신 버전 */
+    var GATE_V = 22; /* 사번 목록 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null, lastRun = null, syncBusy = false, testBusy = false;
     function call(action, extra){
@@ -2910,6 +2910,12 @@
       if (noGate()){ $("memTbl").className = "tbl"; $("memTbl").innerHTML = NOLOGIN; meta(null); return; }
       var my = ++seq;
       if (!keepSel){ sel = null; $("memDet").hidden = true; placeDet(); }
+      /* 11-12 사용자: 처음 한 번 전체 명단을 받아 정상 · 비정상 · 사번 없음으로 나눠 두고, 탭 · 검색 · 정렬 · 쪽은 화면에서 바로(코드 v22~) */
+      if (full){ res = local(); q.page = res.page; paint(); if (full.stale) loadAll(); return; }
+      if (fullOk !== false){
+        $("memTbl").className = "tbl"; $("memTbl").innerHTML = head() + skelRows(cls(), 8, q.tab === "nosabun" ? 5 : q.tab === "abnormal" ? 4 : 6) + ldHtml("회원들 데려오는 중…", "1만 명이 넘어서 잠깐 걸려요");
+        loadAll(my); return;
+      }
       var qq = { tab:q.tab, q:q.q, sort:q.sort, filter: q.filter === "all" ? "" : q.filter, page:q.page }, ck = JSON.stringify(qq), hit = memCache[ck];
       /* 11-12 속도: 한 번 본 조건(탭 · 쪽 · 검색 · 정렬)은 바로 그리고, 최신은 뒤에서 */
       /* 회원 관리 화면에 머무는 동안은 다시 부르지 않음 — 다른 화면에 다녀오면(stale) 바로 그리고 뒤에서 새로 */
@@ -2922,7 +2928,44 @@
         res = r; q.page = r.page; paint(); prefetch();
       }).catch(function(e){ if (my !== seq || hit) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
     }
-    var memCache = {}, preBusy = {};
+    var memCache = {}, preBusy = {}, full = null, fullOk = null, fullBusy = false, COLL = window.Intl && Intl.Collator ? new Intl.Collator("ko") : null;
+    function cmpName(a, b){ return COLL ? COLL.compare(a.name, b.name) : a.name.localeCompare(b.name, "ko"); }
+    function loadAll(my){
+      if (fullBusy) return; fullBusy = true;
+      gateFetch({ action:"memberAll", sid: adminSes.sid }).then(function(r){
+        fullBusy = false;
+        if (!r.ok){ if (r.error === "unknown"){ fullOk = false; if (!full) fetch1(true); return; } throw new Error(r.error); }
+        fullOk = true;
+        var key = function(x){ return (String(x.sabun || x.uid || "") + x.name + x.org + (x.manual || "")).replace(/\s+/g, "").toLowerCase(); };
+        var mem = r.m.map(function(a){ var o = { sabun:a[0], name:a[1], org:a[2], state: a[3] ? "정상 회원" : "비정상 회원", n: !!a[3], last:a[4], views:a[5], downs:a[6] }; o.k = key(o); return o; });
+        var ns = r.ns.map(function(x){ x.k = key(x); return x; });
+        var nsAll = ns.map(function(x){ return { sabun:"", uid:x.uid, name:x.name, org:x.org, state:x.state, last:"", views:0, downs:0, k:x.k }; });
+        full = { mem: mem, ns: ns, nsAll: nsAll, counts: r.counts, lastSync: r.lastSync, logStart: r.logStart, manualCount: r.manualCount, noSabunNormal: r.noSabunNormal, sorted: {} };
+        if (/^#\/members/.test(location.hash)){ res = local(); q.page = res.page; paint(); }
+      }).catch(function(e){ fullBusy = false; if (full) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
+    }
+    function local(){
+      var F = full, tab = q.tab, rows, sk = tab + "|" + q.sort;
+      if (tab === "nosabun") rows = F.ns;
+      else {
+        if (!F.sorted[sk]){
+          var by = { name: cmpName,
+            views: function(a, b){ return (b.views || 0) - (a.views || 0) || cmpName(a, b); },
+            downs: function(a, b){ return (b.downs || 0) - (a.downs || 0) || cmpName(a, b); },
+            last: function(a, b){ return (b.last || "") < (a.last || "") ? -1 : (b.last || "") > (a.last || "") ? 1 : cmpName(a, b); } };
+          var base = tab === "all" ? F.mem.concat(F.nsAll) : F.mem.filter(function(x){ return x.n === (tab === "normal"); });
+          F.sorted[sk] = base.sort(by[q.sort] || by.last);
+        }
+        rows = F.sorted[sk];
+      }
+      var term = String(q.q || "").replace(/\s+/g, "").toLowerCase();
+      if (term) rows = rows.filter(function(x){ return x.k.indexOf(term) >= 0; });
+      if (tab !== "nosabun" && q.filter === "seen") rows = rows.filter(function(x){ return x.last; });
+      if (tab !== "nosabun" && q.filter === "never") rows = rows.filter(function(x){ return !x.last; });
+      var size = 50, total = rows.length, pg = Math.max(1, Math.min(Number(q.page) || 1, Math.ceil(total / size) || 1));
+      return { ok:true, tab: tab, counts: F.counts, total: total, page: pg, size: size, rows: rows.slice((pg - 1) * size, pg * size),
+        lastSync: F.lastSync, logStart: F.logStart, manualCount: F.manualCount, noSabunNormal: F.noSabunNormal };
+    }
     /* 지금 탭을 받은 뒤 다른 탭(전체 · 정상 · 비정상 · 사번 없음) 첫 쪽을 뒤에서 미리 받아 둠 → 탭을 누르면 바로 */
     function prefetch(){
       if (noGate() || q.q) return;                                   /* 검색 중에는 미리 받지 않음 */
@@ -2936,7 +2979,7 @@
           .catch(function(){}).then(function(){ delete preBusy[ck]; });
       });
     }
-    function leave(){ Object.keys(memCache).forEach(function(k){ memCache[k].stale = true; }); }
+    function leave(){ Object.keys(memCache).forEach(function(k){ memCache[k].stale = true; }); if (full) full.stale = true; }
     function sessionGone(e){ if (e && /nosession|expired/.test(e.message)){ toast("로그인 시간이 지났어요. 다시 로그인해 주세요"); } }
     function show(){ if (!res || res.tab !== q.tab) fetch1(true); else { paint(); fetch1(true); } }
     /* #71 상세 칸 860px: 1600px 이상은 표 옆, 그보다 좁으면 오른쪽에서 덮어 나오는 서랍(뒤 검정 30%) */
@@ -3028,7 +3071,7 @@
       if (e.target.closest("[data-detx]")){ closeDet(); return; }
       var m = e.target.closest("[data-detmore]"); if (m){ m.parentNode.querySelectorAll("[data-more]").forEach(function(el){ el.hidden = false; }); m.remove(); }
     });
-    return { show: show, open: open, leave: leave, reset: function(){ res = null; sel = null; nsState = {}; memCache = {}; } };
+    return { show: show, open: open, leave: leave, reset: function(){ res = null; sel = null; nsState = {}; memCache = {}; full = null; fullOk = null; } };
   })();
 
   /* ---------- 🔒 갱신 기록 ---------- */

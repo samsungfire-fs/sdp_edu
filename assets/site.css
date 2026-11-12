@@ -1293,3 +1293,6 @@ body .lec-act .ab, body .lec-act .ab *{font-weight:400 !important}
 @media (max-width:560px){ .lec-act .act-sep{display:none} .lec-act .ab.an{grid-column:1 / -1; height:46px} }
 .rget-info .act-sep{display:none}
 .rget-info .ab.an{width:100%; margin-top:8px}
+
+/* ===== #90 메뉴 줄 아래 가로선 없앰(붙을 때도 바탕색만) — 고른 메뉴 밑줄 · 내 정보 줄 아래 선은 그대로 ===== */
+.bar, [data-theme="dark"] .bar{border-bottom:0}
