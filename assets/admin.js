@@ -35,7 +35,7 @@
     LS.set("sc-gh-token", remember ? token : ""); LS.set("sc-api-key", remember ? apiKey : "");
     SS.set("sc-gh-token", token); SS.set("sc-api-key", apiKey);
   }
-  function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); setDKey(""); try { localStorage.removeItem("sc-admin-cache"); } catch(e){} }
+  function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); setDKey(""); try { localStorage.removeItem("sc-admin-cache"); } catch(e){} SS.set("sc-audit", ""); SS.set("sc-gate-st", ""); }
   /* 기획 P2 (11-11): 강의 · 상품연구 목록을 잠그는 열쇠 — 사번 목록이 로그인한 관리자에게만 줌, 이 탭에만 보관 */
   var DKEY = SS.get("sc-data-key") || "";
   function setDKey(k){ DKEY = k || ""; SS.set("sc-data-key", DKEY); }
@@ -164,6 +164,7 @@
         }
         /* 강의별 공유 페이지·메뉴 주소가 빠져 있으면 조용히 만들어 둠 (저장 버튼은 건드리지 않음) */
         if (needLock) setTimeout(lockNow, 1500); else autoPages();
+        setTimeout(function(){ data.videos.forEach(function(v){ if (v.id && !thumbCache[v.id]) bestThumb(v.id); }); }, 2500);   /* 첫 저장이 썸네일 확인을 기다리지 않게 */
         Auth.afterLoad();
         updateSaveBar();
       })
@@ -304,10 +305,16 @@
     "application/vnd.google-apps.document":"pdf", "application/vnd.google-apps.spreadsheet":"xlsx", "application/vnd.google-apps.presentation":"pptx" };
   function fmtSize(b){ b = +b; if (!b) return ""; return b >= 1048576 ? (b / 1048576).toFixed(b >= 10485760 ? 0 : 1) + "MB" : Math.max(1, Math.round(b / 1024)) + "KB"; }
   /* 드라이브 파일 정보(이름·종류·용량)를 가져와 자료 이름을 채움. silent: 불러올 때 조용히 맞춤 */
+  var fileMemo = null;
+  function fileMemoGet(){ if (!fileMemo){ try { fileMemo = JSON.parse(LS.get("sc-file-info") || "{}"); } catch(e){ fileMemo = {}; } } return fileMemo; }
+  function fileMemoPut(id, o){ var m = fileMemoGet(), now = Date.now(); m[id] = o; o.at = now; Object.keys(m).forEach(function(k){ if (now - m[k].at > 864e5) delete m[k]; }); LS.set("sc-file-info", JSON.stringify(m)); }
   function fetchFile(f, silent){
     var id = SC.driveId(f.link);
     if (!id){ f._st = ""; render(); return; }
     if (!apiKey){ f._st = "nokey"; render(); return; }
+    /* 11-12 속도: 처음 불러올 때(silent)는 하루 안에 확인한 파일이면 다시 묻지 않음. 링크를 새로 넣으면 바로 확인 */
+    var mm = silent && fileMemoGet()[id];
+    if (mm && Date.now() - mm.at < 864e5 && mm.st === "ok" && mm.size === f.size){ f._st = "ok"; return; }
     f._st = "loading"; if (!silent) render();
     fetch("https://www.googleapis.com/drive/v3/files/" + id + "?fields=name,size,mimeType&supportsAllDrives=true&key=" + encodeURIComponent(apiKey))
       .then(function(r){
@@ -326,7 +333,7 @@
         if (j.name){ var sn = SC.splitName(j.name); f.name = sn.name; f.type = sn.type || MIME[j.mimeType] || f.type; }
         else if (MIME[j.mimeType]) f.type = MIME[j.mimeType];
         f.size = fmtSize(j.size);
-        f._st = "ok";
+        f._st = "ok"; fileMemoPut(id, { st: "ok", size: f.size });
         if (before !== f.name + "|" + f.type + "|" + f.size) markDirty();
         render();
       })
@@ -981,14 +988,15 @@
     all.set(h, 0); all.set(b, h.length);
     return crypto.subtle.digest("SHA-1", all).then(function(d){ return Array.prototype.map.call(new Uint8Array(d), function(x){ return (x < 16 ? "0" : "") + x.toString(16); }).join(""); });
   }
-  var thumbCache = {};
+  /* 11-12 속도: 영상마다 큰 썸네일이 있는지 이 브라우저에 기억(저장할 때마다 모든 영상 썸네일을 다시 받아 보지 않게) */
+  var thumbCache = (function(){ try { return JSON.parse(LS.get("sc-thumb-best") || "{}"); } catch(e){ return {}; } })();
   function bestThumb(id){
     if (thumbCache[id]) return Promise.resolve(thumbCache[id]);
     return new Promise(function(res){
       var img = new Image(), done = false;
-      function fin(u){ if (done) return; done = true; thumbCache[id] = u; res(u); }
-      img.onload = function(){ fin(img.naturalWidth > 200 ? SC.thumb(id, true) : SC.thumb(id, false)); };
-      img.onerror = function(){ fin(SC.thumb(id, false)); };
+      function fin(u, sure){ if (done) return; done = true; thumbCache[id] = u; if (sure) LS.set("sc-thumb-best", JSON.stringify(thumbCache)); res(u); }
+      img.onload = function(){ fin(img.naturalWidth > 200 ? SC.thumb(id, true) : SC.thumb(id, false), true); };
+      img.onerror = function(){ fin(SC.thumb(id, false), true); };
       setTimeout(function(){ fin(SC.thumb(id, false)); }, 5000);
       img.src = SC.thumb(id, true);
     });
@@ -2050,7 +2058,9 @@
     function on(){ return !!(GATE_URL && adminSes && adminSes.sid); }
     function load(){
       if (!on()) return Promise.resolve();
-      return gateFetch({ action:"auditGet", sid: adminSes.sid }).then(function(r){ if (r.ok){ map = r.map || {}; more = {}; paint(); if (baseline) render(); } }).catch(function(){});
+      /* 11-12 속도: 이 탭에 보관한 마지막 기록으로 먼저 그리고, 최신은 뒤에서 */
+      if (!map){ try { var c = JSON.parse(SS.get("sc-audit") || "null"); if (c){ map = c; paint(); } } catch(e){} }
+      return gateFetch({ action:"auditGet", sid: adminSes.sid }).then(function(r){ if (r.ok){ map = r.map || {}; more = {}; SS.set("sc-audit", JSON.stringify(map)); paint(); if (baseline) render(); } }).catch(function(){});
     }
     function add(items){
       items = (items || []).filter(Boolean);
@@ -2213,6 +2223,7 @@
      - 관리 기능은 GitHub 토큰(저장소 쓰기 권한)으로 확인 + 사번 로그인(sid)이면 누가 했는지 '변경 기록'에 남김
      - 세일즈온 어드민 아이디·비밀번호는 사번 목록의 비밀 칸(스크립트 속성)에만. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
+    var SCRIPT_ID = "1gq8_W7tE25FrOxcws0xbun4pj72lIY3eJywh-XkulrjDFzvSQvLKtbuc";   /* 11-12 사용자가 알려 준 세일즈온 사번 목록 Apps Script (코드 v19부터는 서버가 알려 준 값을 먼저 씀) */
     var GATE_V = 17; /* 사번 목록 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null, lastRun = null, syncBusy = false, testBusy = false;
@@ -2246,7 +2257,10 @@
       $("gateVer").textContent = on ? "· 코드 v" + (st.v || 1) : "";
       if (document.activeElement !== $("gateUrl")) $("gateUrl").value = url;
       $("gateConnect").textContent = on ? "다시 연결" : "연결";
-      $("gateSheet").hidden = !(on && st.sheet && st.sheet.url); if (on && st.sheet) $("gateSheet").href = st.sheet.url;
+      /* 11-12 사용자 요청: [구글 시트 열기] [Apps Script 열기] — Apps Script는 코드 v19부터 바로 그 프로젝트로, 예전 코드면 내 프로젝트 목록으로 */
+      $("gateOpen").hidden = !(on && st.sheet && st.sheet.url);
+      if (on && st.sheet) $("gateSheet").href = st.sheet.url;
+      $("gateScript").href = "https://script.google.com/u/0/home/projects/" + encodeURIComponent(on && st.script || SCRIPT_ID) + "/edit";
       kmsg("gateOld", "wa", old ? K.warn + "<span><b>사번 목록 코드가 예전 버전(v" + (st.v || 1) + ")이에요.</b><br>개발팀 폴더의 새 Code.gs로 바꿔 주세요.</span>" : "");
       /* 세일즈온 어드민 계정 */
       var a = on && st.account || {}, t = on && st.lastTest, tt = t && (TEST[t.result] || TEST.unknown);
@@ -2287,7 +2301,9 @@
     }
     function load(){
       return repoJson(CFG).then(function(f){
-        cfg = f ? f.json : {}; csha = f ? f.sha : null; url = cfg.gate || ""; st = null; paint();
+        cfg = f ? f.json : {}; csha = f ? f.sha : null; url = cfg.gate || ""; st = null;
+        try { var c = JSON.parse(SS.get("sc-gate-st") || "null"); if (c && c.url === url) st = c.st; } catch(e){}   /* 11-12: 마지막 상태로 먼저 */
+        paint();
         if (url) return refresh();
       }).catch(function(){ paint(); });
     }
@@ -2295,7 +2311,7 @@
       sum("gateSum", "", "확인 중");
       return call("status").then(function(j){
         if (!j.ok){ st = null; paint(); kmsg("gateMsg", "er", j.error === "notadmin" ? "이 토큰으로는 사번 목록을 쓸 수 없어요. 저장소 쓰기 권한이 있는 토큰인지 확인해 주세요." : "사번 목록이 대답하지 못했어요. 잠시 뒤 다시 해 주세요."); return; }
-        st = j; kmsg("gateMsg"); paint();
+        st = j; kmsg("gateMsg"); paint(); SS.set("sc-gate-st", JSON.stringify({ url: url, st: j }));
       }).catch(function(){ st = null; paint(); kmsg("gateMsg", "er", "사번 목록에 연결하지 못했어요. 주소와 배포 설정(액세스: 모든 사용자)을 확인해 주세요."); });
     }
     function connect(){
@@ -2608,13 +2624,18 @@
       if (noGate()){ $("memTbl").className = "tbl"; $("memTbl").innerHTML = NOLOGIN; meta(null); return; }
       var my = ++seq;
       if (!keepSel){ sel = null; $("memDet").hidden = true; $("memDet").parentNode.classList.remove("has-det"); }
-      $("memTbl").className = "tbl"; $("memTbl").innerHTML = head() + skelRows(cls(), 8, q.tab === "nosabun" ? 5 : q.tab === "abnormal" ? 4 : 6);
-      gateFetch({ action:"memberList", sid: adminSes.sid, q: { tab:q.tab, q:q.q, sort:q.sort, filter: q.filter === "all" ? "" : q.filter, page:q.page } }).then(function(r){
+      var qq = { tab:q.tab, q:q.q, sort:q.sort, filter: q.filter === "all" ? "" : q.filter, page:q.page }, ck = JSON.stringify(qq), hit = memCache[ck];
+      /* 11-12 속도: 한 번 본 조건(탭 · 쪽 · 검색 · 정렬)은 바로 그리고, 최신은 뒤에서 */
+      if (hit){ res = hit.r; paint(); if (Date.now() - hit.at < 30000) return; }
+      else { $("memTbl").className = "tbl"; $("memTbl").innerHTML = head() + skelRows(cls(), 8, q.tab === "nosabun" ? 5 : q.tab === "abnormal" ? 4 : 6); }
+      gateFetch({ action:"memberList", sid: adminSes.sid, q: qq }).then(function(r){
         if (my !== seq) return;
         if (!r.ok) throw new Error(r.error);
+        memCache[ck] = { r: r, at: Date.now() };
         res = r; q.page = r.page; paint();
-      }).catch(function(e){ if (my !== seq) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
+      }).catch(function(e){ if (my !== seq || hit) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
     }
+    var memCache = {};
     function sessionGone(e){ if (e && /nosession|expired/.test(e.message)){ toast("로그인 시간이 지났어요. 다시 로그인해 주세요"); } }
     function show(){ if (!res || res.tab !== q.tab) fetch1(true); else { paint(); fetch1(true); } }
     function detail(sb){
@@ -2827,12 +2848,16 @@
         (none ? '<div class="tbl">' + emptyHtml("cal", "이 기간에는 기록이 없어요.", "기간을 바꿔 보세요.") + '</div>' : tab === "view" ? viewTbl(d) : downTbl(x, d)) + note(x);
     }
     function note(x){ return '<p class="k-note">' + (x.rs ? "'받은 것'은 자료 받기 페이지에서 [받기]를 누른 것 기준이에요." : "'본 것'은 강의 페이지를 연 것 기준이에요(영상을 끝까지 봤는지는 알 수 없어요).") + ' 관리자가 보거나 받은 것은 숫자에서 빠져요.</p>'; }
+    var detCache = {};
     function loadDetail(){
       var x = cur(); if (!x || noGate() || !logStart) return paintMain();
-      var my = ++seq, r = range(); det = null; paintMain();
+      var my = ++seq, r = range(), ck = x.key + "|" + r[0] + "|" + r[1], hit = detCache[ck];
+      /* 11-12 속도: 한 번 본 콘텐츠 · 기간은 바로 그리고, 1분 지났으면 뒤에서 새로 */
+      det = hit ? hit.d : null; page = 1; paintMain();
+      if (hit && Date.now() - hit.at < 60000) return;
       gateFetch({ action:"contentDetail", sid: adminSes.sid, key: x.key, from: r[0], to: r[1] }).then(function(d){
-        if (my !== seq) return; if (!d.ok) throw new Error(d.error); det = d; page = 1; paintMain();
-      }).catch(function(){ if (my !== seq) return; $("anaMain").innerHTML = head(x) + LOADERR; });
+        if (my !== seq) return; if (!d.ok) throw new Error(d.error); detCache[ck] = { d: d, at: Date.now() }; det = d; if (!hit) page = 1; paintMain();
+      }).catch(function(){ if (my !== seq || hit) return; $("anaMain").innerHTML = head(x) + LOADERR; });
     }
     function show(){
       paintList(); paintMain();

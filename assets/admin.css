@@ -1304,3 +1304,7 @@ body:has(.admin.is-edit) .toast{bottom:calc(112px + env(safe-area-inset-bottom, 
 .bdg.priv{position:static; inset:auto; z-index:auto; pointer-events:auto; justify-content:center}
 /* 편집 칸이 열려 있으면 맨 위로 · 맨 아래로 버튼도 저장 줄 위로 */
 @media (min-width:981px){ body:has(.admin.is-edit) .fab{bottom:calc(112px + env(safe-area-inset-bottom, 0px))} }
+/* 11-12 세일즈온 사번 목록: [구글 시트 열기] [Apps Script 열기] — 좁으면 줄바꿈 */
+.gate-open{flex-wrap:wrap}
+.gate-open .k-btn{flex:1 1 170px; min-width:0}
+@media (max-width:560px){ .gate-open .k-btn{padding:0 12px; font-size:14.5px} }

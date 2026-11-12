@@ -766,8 +766,10 @@
   }
   function loadStats(){
     if (!live()) return;
+    /* 11-12 속도: 마지막으로 받은 조회수 · 받은 사람 수를 먼저 보여 주고, 최신은 뒤에서 */
+    if (!STATS){ try { var c = JSON.parse(lsGet("sdp-stats") || "null"); if (c && c.views){ STATS = c; paintStats(); } } catch(e){} }
     gate({ action:"siteStats", t: SES.t }).then(function(r){
-      if (r.ok){ STATS = { views: r.views || {}, downs: r.downs || {} }; paintStats(); }
+      if (r.ok){ STATS = { views: r.views || {}, downs: r.downs || {} }; paintStats(); lsSet("sdp-stats", JSON.stringify(STATS)); }
       else if (r.error === "nosession"){ sesSet(null); SES = null; showLogin(""); }
     }).catch(function(){});
   }

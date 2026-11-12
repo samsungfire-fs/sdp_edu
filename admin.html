@@ -17,7 +17,7 @@
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css?v=20261111f">
-<link rel="stylesheet" href="assets/admin.css?v=20261111k">
+<link rel="stylesheet" href="assets/admin.css?v=20261112a">
 </head>
 <body>
 <script>/* 11-12: 저장된 관리자 로그인이 있으면 처음부터 관리자 화면으로 그림('확인 중' 화면 없이). 확인은 admin.js가 뒤에서 */(function(){try{var k="sdp-admin-sid",o=JSON.parse(localStorage.getItem(k)||sessionStorage.getItem(k)||"null"),n=new Date(Date.now()+324e5).toISOString().slice(0,19);if(o&&o.sid&&o.p&&localStorage.getItem("sdp-gate-url")&&!(o.exp&&String(o.exp).slice(0,19)<=n))document.body.classList.add("authed")}catch(e){}})();</script>
@@ -270,7 +270,8 @@
           <div class="k-stamp" id="acctStamp" hidden></div>
         </div></div></section>
 <section class="pgcard" id="gateBox" data-page="sheet" hidden><div class="pgcard-h"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg></span><span class="tt">세일즈온 사번 목록</span><span class="sm" id="gateSum"></span><span class="lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>마스터만</span></div><div class="k-acc-b pg-b">
-        <div class="k-kv"><span class="k-row k-g8"><span class="k-dot" id="gateDot"></span><b id="gateStateT">연결 안 됨</b><span class="k-t3" id="gateVer"></span></span><a class="k-lnk k-ext" id="gateSheet" href="#" target="_blank" rel="noopener" hidden>시트 열기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a></div>
+        <div class="k-kv"><span class="k-row k-g8"><span class="k-dot" id="gateDot"></span><b id="gateStateT">연결 안 됨</b><span class="k-t3" id="gateVer"></span></span></div>
+        <div class="k-row k-g8 gate-open" id="gateOpen" hidden><a class="k-btn k-btn3 sm k-grow rp" id="gateSheet" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></svg>구글 시트 열기</a><a class="k-btn k-btn3 sm k-grow rp" id="gateScript" href="https://script.google.com/u/0/home/projects/1gq8_W7tE25FrOxcws0xbun4pj72lIY3eJywh-XkulrjDFzvSQvLKtbuc/edit" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/></svg>Apps Script 열기</a></div>
         <div class="k-fld"><label class="k-lab sm" for="gateUrl">웹 앱 주소</label><div class="k-row k-g8"><input id="gateUrl" class="k-in h48 f14 k-grow" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec"><button type="button" class="k-btn k-btn2 sm h48 rp" id="gateConnect">연결</button></div></div>
         <p class="k-note">코드를 고칠 땐 '배포 관리 → 편집 → 새 버전'으로 하면 주소가 그대로예요. 새 배포를 만들면 주소가 바뀌니 여기서 다시 연결해 주세요.</p>
         <div class="k-msg" id="gateMsg" role="status" hidden></div>
@@ -321,6 +322,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/common.js?v=20261111f"></script>
-<script src="assets/admin.js?v=20261112c"></script>
+<script src="assets/admin.js?v=20261112f"></script>
 </body>
 </html>
