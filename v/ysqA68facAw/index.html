@@ -25,7 +25,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261111f">
+<link rel="stylesheet" href="assets/site.css?v=20261112b">
 </head>
 <body>
 
@@ -72,7 +72,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261111e"></script>
+<script src="assets/common.js?v=20261112a"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -86,6 +86,11 @@
     dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>',
     spin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 1-9 9"/></svg>',
     check: '<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>',
+    qr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h2.5v2.5H14zM18.5 18.5h2M14 20.5h2.5M20.5 14v2.5"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></svg>',
+    save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/></svg>',
     link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
@@ -575,7 +580,89 @@
       '<div class="fname"><strong>' + esc(name) + '</strong><span class="fsub"><span class="nowrap">' + SC.typeLabel(t) + (d.url ? (f.size ? ' · ' + esc(f.size) : '') : ' · 링크 준비 중') + '</span>' + (d.url ? dnHtml(key) : '') + '</span></div>' + btn + '</li>';
   }
 
+  /* ---------- #53 강의 공유하기: 휴대폰·태블릿 = 기기 공유 창, PC = 공유 창(QR 코드 · 링크 복사) ----------
+     카카오톡 칸은 카카오 앱 키가 없어 뺌(디자인 0-29: 앱 키를 못 쓰면 링크 복사 + 토스트) */
+  function copyLink(url){ SC.copy(url).then(function(){ toast("링크를 복사했어요. 카톡에 붙여 넣으세요", IC.link); }, function(){ toast(url, IC.link); }); }
+  var Share = (function(){
+    var pop = null, dim = null, back = null, cur = null;
+    function close(){
+      if (!pop) return;
+      pop.remove(); pop = null; if (dim){ dim.remove(); dim = null; }
+      document.removeEventListener("keydown", onKey, true); document.removeEventListener("pointerdown", onDown, true); window.removeEventListener("resize", close);
+      if (back && document.contains(back)) back.focus({ preventScroll:true });
+    }
+    function onKey(e){ if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); close(); } }
+    function onDown(e){ if (pop && !pop.contains(e.target) && e.target !== back && !(back && back.contains(e.target))) close(); }
+    function sheet(){ return matchMedia("(max-width:560px)").matches; }
+    function main(){
+      var v = cur.v, url = cur.url;
+      pop.innerHTML = '<h3 id="shpT">강의 공유하기<button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
+        '<div class="shpv"><span class="shth">' + SC.thumbImg(v.id) + '</span><b>' + esc(v.title || "제목 없음") + '</b></div>' +
+        '<div class="urlr"><span title="' + esc(url) + '">' + esc(url.replace(/^https?:\/\//, "")) + '</span><button type="button" class="rp" data-copy>' + IC.copy + '복사</button></div>' +
+        '<div class="sopt"><button type="button" class="rp" data-qr><span class="k qr">' + IC.qr + '</span>QR 코드</button><button type="button" class="rp" data-copy><span class="k ln">' + IC.link + '</span>링크 복사</button></div>' +
+        '<p class="shnote">받는 사람도 사번으로 로그인해야 볼 수 있어요.</p>';
+      var f = pop.querySelector("[data-copy]"); if (f) f.focus({ preventScroll:true });
+    }
+    function qrView(){
+      pop.innerHTML = '<h3 id="shpT"><button type="button" class="shback rp" data-main aria-label="공유하기로 돌아가기">' + IC.back + 'QR 코드</button><button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
+        '<div class="qrbox"><canvas width="180" height="180" aria-label="강의 주소 QR 코드" role="img"></canvas><span class="qrmsg">QR 코드를 만드는 중…</span></div>' +
+        '<p class="qrtx">휴대폰 카메라로 비추면<br>이 강의가 바로 열려요.</p>' +
+        '<button type="button" class="ab g rp qrsave" data-save disabled>' + IC.save + 'QR 이미지 저장</button>';
+      pop.querySelector("[data-main]").focus({ preventScroll:true });
+      loadQR().then(function(){
+        if (!pop) return;
+        var q = qrcode(0, "M"); q.addData(cur.url); q.make();
+        var n = q.getModuleCount(), cv = pop.querySelector("canvas"), m = 4, px = Math.floor(720 / (n + m * 2));
+        cv.width = cv.height = px * (n + m * 2);
+        var g = cv.getContext("2d"); g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = "#0B1030";
+        for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect((c + m) * px, (r + m) * px, px, px);
+        pop.querySelector(".qrmsg").remove(); pop.querySelector("[data-save]").disabled = false;
+      }).catch(function(){ if (pop){ var mm = pop.querySelector(".qrmsg"); if (mm) mm.textContent = "QR 코드를 만들지 못했어요. 인터넷 연결을 확인해 주세요."; } });
+    }
+    var qrP = null;
+    function loadQR(){
+      if (window.qrcode) return Promise.resolve();
+      return qrP || (qrP = new Promise(function(res, rej){
+        var sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
+        sc.onload = function(){ window.qrcode ? res() : rej(); }; sc.onerror = function(){ qrP = null; rej(); }; document.head.appendChild(sc);
+      }));
+    }
+    function place(){
+      if (!pop || sheet()) return;
+      var r = back.getBoundingClientRect(), w = pop.offsetWidth, left = Math.min(Math.max(16, r.left), innerWidth - w - 16);
+      pop.style.left = left + "px"; pop.style.top = (r.bottom + scrollY + 10) + "px";
+    }
+    function open(v, btn){
+      var url = videoUrl(v.id);
+      var touch = matchMedia("(hover:none), (pointer:coarse)").matches || matchMedia("(max-width:980px)").matches;
+      if (touch && navigator.share){ navigator.share({ title: v.title || "강의", text: "영개파 교육 자료", url: url }).catch(function(){}); return; }
+      if (pop){ close(); return; }
+      back = btn; cur = { v: v, url: url };
+      pop = document.createElement("div"); pop.className = "shp" + (sheet() ? " sheet" : ""); pop.setAttribute("role", "dialog"); pop.setAttribute("aria-labelledby", "shpT");
+      if (sheet()){ dim = document.createElement("div"); dim.className = "shdim"; document.body.appendChild(dim); }
+      document.body.appendChild(pop); main(); place();
+      btn.setAttribute("aria-expanded", "true");
+      pop.addEventListener("click", function(e){
+        var b = e.target.closest("button"); if (!b) return;
+        if (b.hasAttribute("data-x")){ close(); return; }
+        if (b.hasAttribute("data-copy")){ copyLink(url); return; }
+        if (b.hasAttribute("data-qr")){ qrView(); return; }
+        if (b.hasAttribute("data-main")){ main(); return; }
+        if (b.hasAttribute("data-save")){
+          var a = document.createElement("a"); a.href = pop.querySelector("canvas").toDataURL("image/png");
+          a.download = "강의QR_" + String(v.title || v.id).replace(/[\\/:*?"<>|]/g, "").slice(0, 40) + ".png"; document.body.appendChild(a); a.click(); a.remove();
+        }
+      });
+      setTimeout(function(){ document.addEventListener("pointerdown", onDown, true); }, 0);
+      document.addEventListener("keydown", onKey, true); window.addEventListener("resize", close);
+      var obs = function(){ if (back) back.setAttribute("aria-expanded", "false"); };
+      var oc = close; close = function(){ obs(); oc(); close = oc; };
+    }
+    return { open: function(v, b){ open(v, b); }, close: function(){ close(); } };
+  })();
+
   function renderVideo(id){
+    Share.close();
     var v = pub().filter(function(x){ return x.id === id; })[0];
     if (!v) return notFound();
     L = null;
@@ -605,7 +692,8 @@
             '<section class="lec-info">' +
               '<div class="lec-meta">' + (SC.isPublic(v) ? '' : '<span class="priv-pill">' + IC.lock + '비공개 · 관리자에게만 보여요</span>') + (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') + '<span>' + metaText(v, true) + '</span>' + (LOCKED ? '<span class="sep">·</span>' + vwHtml(v.id) : '') + '</div>' +
               '<h1>' + esc(v.title || "제목 없음") + '</h1>' +
-              '<button type="button" class="copy-btn rp press" id="share">' + IC.link + '강의 링크 복사</button>' +
+              '<div class="lec-act"><button type="button" class="ab p rp press" id="shareOpen" aria-haspopup="dialog">' + IC.share + '공유하기</button>' +
+              '<button type="button" class="ab g rp press" id="share">' + IC.link + '링크 복사</button></div>' +
             '</section>' +
             '<section class="comments" aria-labelledby="cmH"><h2 id="cmH">댓글</h2>' +
               '<a class="cm-link rp" href="' + yt + '" target="_blank" rel="noopener" aria-label="유튜브에서 댓글 남기기">' +
@@ -627,10 +715,8 @@
         (others.length ? '<section class="others" aria-labelledby="moreH"><h2 id="moreH">다른 강의</h2><ul class="grid vgrid">' + others.map(function(x){ return card(x, false); }).join("") + '</ul></section>' : '') +
       '</div>';
 
-    $("share").addEventListener("click", function(){
-      var url = videoUrl(v.id);
-      SC.copy(url).then(function(){ toast("링크를 복사했어요. 카톡에 붙여 넣으세요", IC.link); }, function(){ toast(url, IC.link); });
-    });
+    $("share").addEventListener("click", function(){ copyLink(videoUrl(v.id)); });
+    $("shareOpen").addEventListener("click", function(){ Share.open(v, this); });
     var body = $("descBody");
     if (body) requestAnimationFrame(function(){
       if (body.scrollHeight > body.clientHeight + 2){
@@ -649,6 +735,7 @@
 
   /* ---------- 화면 고르기 ---------- */
   function route(){
+    Share.close();
     var r = parse(), want;
     var view = r.v ? "video" : r.r ? "research" : "list";
     didRestore = false;
@@ -714,7 +801,7 @@
 
   /* ================= 사이트 사번 로그인 · 이름 · 조회수 · 다운로드 수 (기획 P2 · P4 · P5-2 · 디자인 #47) =================
      - 강의 · 자료 목록은 저장소에 잠가 둔 data/*.enc.json (관리자가 저장할 때 잠금). 잠긴 목록이 있으면 로그인해야 보임.
-     - 로그인하면 세일즈온 사번 목록이 그날 밤 12시까지 쓸 표 + 목록 열쇠를 줌 → 이 브라우저에 보관(그날은 다시 묻지 않음).
+     - 로그인하면 세일즈온 사번 목록이 다음 새벽 3시까지 쓸 표 + 목록 열쇠를 줌 → 이 브라우저에 보관(그날은 다시 묻지 않음).
      - 접속(10분에 한 번) · 강의 열기 · [받기]를 사번 목록에 기록. 숫자는 사번 목록이 1분마다 새로 셈(관리자는 뺌). */
   var S_KEY = "sdp-site", GATE = "", LOCKED = false, WRAP = null, SES = null, STATS = null, booted = false;
   function kstNow(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19); }
@@ -800,8 +887,7 @@
       '<div class="pop-h"><span class="av">' + esc(first) + '</span><span class="pop-id"><span class="pop-nm"><b>' + esc(nm) + '님</b>' + (SES.a ? '<span class="adm">관리자</span>' : '') + '</span>' +
         '<span class="s">사번 ' + esc(String(SES.s).slice(0, 4)) + '****</span></span></div>' +
       (SES.a ? '<a class="it" role="menuitem" href="' + ROOT + 'admin.html" target="_blank" rel="noopener">' + IC.shield + '<span>관리자 페이지</span><span class="it-r">' + IC.ext + '</span></a>' : '') +
-      '<button type="button" class="it" role="menuitem" id="logout">' + IC.out + '<span>로그아웃</span></button>' +
-      '<p class="nt">' + IC.clock + '<span>오늘 밤 12시까지 로그인돼요.</span></p>';
+      '<button type="button" class="it" role="menuitem" id="logout">' + IC.out + '<span>로그아웃</span></button>';
     $("logout").addEventListener("click", function(){ closePop(); sesSet(null); SES = null; STATS = null; showLogin(""); });
   }
   function closePop(){ $("mePop").hidden = true; $("meBtn").setAttribute("aria-expanded", "false"); $("meBtn").classList.remove("on"); }
@@ -818,18 +904,30 @@
     L = null; booted = true;
     document.body.classList.add("login-mode"); setBody("no-fab"); paintWho();
     document.title = TAB_TITLE;
-    $("app").innerHTML = '<div class="ulog"><form class="ulog-card" id="ulog" novalidate>' +
-      (kind === "expired" ? '<p class="umsg in2" role="status">' + IC.cal + '<span>날짜가 바뀌어 다시 로그인해 주세요.</span></p>' : '') +
-      '<div class="ulog-h"><h1>영개파 교육 자료</h1><p>사번을 입력해 주세요.</p></div>' +
-      '<div class="ulog-f"><label for="usb">사번</label>' +
-        '<input id="usb" class="uin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="username" placeholder="숫자 8자리" aria-describedby="umsg">' +
-        '<p class="umsg" id="umsg" role="alert" hidden></p></div>' +
-      '<button type="submit" class="ubtn rp" id="ubtn">로그인</button>' +
-      '<p class="unote">로그인하면 오늘 밤 12시까지 유지돼요.</p></form></div>';
+    /* #58 로그인 전용 화면: 메뉴 바 · 배너 · 맨 아래 검은 바 없이 — PC 왼쪽 56% 브랜드 칸 + 오른쪽 로그인 / 태블릿·휴대폰 위 브랜드 칸 + 아래 로그인 */
+    var CARD = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3.5M14.5 13.5h2.5"/></svg>';
+    var GO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    var NT = '<b>※ 본 자료는 교육용 자료입니다.</b><br>온라인(SNS 포함) 게시, 고객 대상 설명, 광고 용도로 사용할 수 없습니다.';
+    $("app").innerHTML = '<div class="lg">' +
+      '<div class="lg-brand"><div class="lg-glow" aria-hidden="true"></div>' +
+        '<div class="lg-copy"><span class="lg-logo" role="img" aria-label="삼성화재금융서비스">삼성화재금융서비스</span><h2 class="lg-h2">교육 자료실</h2>' +
+          '<div class="lg-tags" aria-hidden="true"><span>시그니처클래스</span><span>신입 교육</span><span>제휴사 상품 전략</span><span>상품연구 전략자료</span></div></div>' +
+        '<p class="lg-nt">' + NT + '</p></div>' +
+      '<button type="button" class="lg-tm rp" id="lgTm"></button>' +
+      '<div class="lg-side"><div class="lg-mid"><form class="lg-form ulog-card" id="ulog" novalidate>' +
+        (kind === "expired" ? '<p class="umsg in2" role="status">' + IC.clock + '<span>로그인 시간이 끝났어요. 다시 로그인해 주세요.</span></p>' : '') +
+        '<div class="lg-hd"><h1>사번 로그인</h1><p>사번 8자리를 입력해 주세요.</p></div>' +
+        '<div class="lg-fld"><label class="lg-lab" for="usb">사번</label><div class="lg-in" id="usbBox">' + CARD +
+          '<input id="usb" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="username" placeholder="숫자 8자리" aria-describedby="umsg"><span class="lg-cnt" id="usbCnt" aria-hidden="true">0/8</span></div>' +
+          '<p class="umsg" id="umsg" role="alert" hidden></p></div>' +
+        '<button type="submit" class="ubtn lg-go rp" id="ubtn">로그인' + GO + '</button>' +
+      '</form></div><p class="lg-nt dark">' + NT + '</p></div></div>';
+    var syncTm = function(){ var a = $("tmIc"), b = $("lgTm"); if (a && b){ b.innerHTML = a.innerHTML; b.setAttribute("aria-label", a.getAttribute("aria-label") || "화면 모드 바꾸기"); } };
+    syncTm(); $("lgTm").addEventListener("click", function(){ $("tmIc").click(); setTimeout(syncTm, 30); setTimeout(syncTm, 700); });
     var inp = $("usb");
     inp.addEventListener("input", function(){
       var v = this.value.replace(/\D/g, "").slice(0, 8); if (v !== this.value) this.value = v;
-      this.classList.remove("bad"); if (!waitT) $("umsg").hidden = true;
+      this.classList.remove("bad"); $("usbBox").classList.remove("bad"); $("usbCnt").textContent = v.length + "/8"; if (!waitT) $("umsg").hidden = true;
     });
     $("ulog").addEventListener("submit", function(e){ e.preventDefault(); doLogin(); });
     if (!SC.inApp || !SC.inApp()) setTimeout(function(){ try { inp.focus({ preventScroll:true }); } catch(er){} }, 60);
@@ -837,15 +935,15 @@
   function loginMsg(cls, html, bad){
     var m = $("umsg"), ic = cls === "er" ? IC.alert : (cls === "wa" && /잠시 후 다시 시도/.test(html) && !/할 수 없어요/.test(html)) ? IC.clock : IC.tri;
     m.className = "umsg " + cls; m.innerHTML = ic + '<span>' + html + '</span>'; m.hidden = false;
-    $("usb").classList.toggle("bad", !!bad); if (bad) $("usb").setAttribute("aria-invalid", "true"); else $("usb").removeAttribute("aria-invalid");
+    $("usb").classList.toggle("bad", !!bad); $("usbBox").classList.toggle("bad", !!bad); if (bad) $("usb").setAttribute("aria-invalid", "true"); else $("usb").removeAttribute("aria-invalid");
   }
   function doLogin(){
     var inp = $("usb"), btn = $("ubtn"), v = inp.value.replace(/\s+/g, "");
     if (waitT) return;
     if (!v){ loginMsg("er", "사번을 입력해 주세요.", true); inp.focus(); return; }
-    inp.disabled = true; btn.disabled = true; btn.classList.add("busy"); btn.setAttribute("aria-busy", "true");
-    btn.innerHTML = '<span class="spin">' + IC.spin + '</span>확인 중…';
-    function done(){ inp.disabled = false; btn.classList.remove("busy"); btn.removeAttribute("aria-busy"); btn.textContent = "로그인"; btn.disabled = !!waitT; }
+    inp.disabled = true; $("usbBox").classList.add("dim"); btn.disabled = true; btn.classList.add("busy"); btn.setAttribute("aria-busy", "true");
+    btn.innerHTML = '<span class="spin">' + IC.spin + '</span>사번 확인 중…';
+    function done(){ inp.disabled = false; $("usbBox").classList.remove("dim"); btn.classList.remove("busy"); btn.removeAttribute("aria-busy"); btn.innerHTML = '로그인<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'; btn.disabled = !!waitT; }
     gate({ action:"siteLogin", sabun: v, dev: devId() }).then(function(r){
       if (r.ok){
         SES = { t: r.t, s: r.sabun, n: r.name, a: r.admin ? 1 : 0, e: r.exp, k: r.key };
@@ -882,9 +980,9 @@
   }
   /* 링크 복사처럼 화면을 바꾸지 않는 동작 중에 로그인이 끝났으면: 토스트 후 로그인 화면 */
   document.addEventListener("click", function(e){
-    if (!e.target.closest("#share") || !expired()) return;
+    if (!e.target.closest("#share, #shareOpen") || !expired()) return;
     e.stopImmediatePropagation(); e.preventDefault();
-    toast("날짜가 바뀌어 다시 로그인해 주세요.", IC.cal);
+    toast("로그인 시간이 끝났어요. 다시 로그인해 주세요.", IC.clock);
     setTimeout(function(){ showLogin("expired"); window.scrollTo(0, 0); }, 1200);
   }, true);
 

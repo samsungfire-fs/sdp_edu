@@ -74,6 +74,57 @@
     t.classList.add("show", "act"); clearTimeout(toastT); toastT = setTimeout(hide, 5000);
     var b = t.querySelector(".t-undo"); if (b) b.addEventListener("click", function(){ clearTimeout(toastT); hide(); undo(); });
   }
+  /* #57 최신 목록 확인 중: 체크 대신 도는 하늘색 화살표, 버튼 없음, 3초 */
+  function toastSpin(msg){
+    var t = $("toast");
+    t.innerHTML = '<svg class="t-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg><span class="t-m">' + esc(msg) + '</span>';
+    t.classList.add("show", "act"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 3000);
+  }
+  /* #52 확인 창 · 설명 팝업: [취소] · Esc · 바깥 누르기 = 닫기. 휴대폰은 아래에서 올라오는 시트 */
+  var IC_OUT = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14M10 16l-4-4 4-4M6 12h10"/></svg>';
+  var IC_BIN = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
+  var IC_X = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  var Modal = (function(){
+    var wrap = $("modal"), box = $("modalBox"), back = null;
+    function close(){
+      if (wrap.hidden) return;
+      wrap.hidden = true; box.innerHTML = ""; document.body.classList.remove("modal-open");
+      if (back && back.focus && document.contains(back)) back.focus({ preventScroll:true });
+    }
+    function open(html, cls, label){
+      back = document.activeElement;
+      box.className = "modal" + (cls ? " " + cls : ""); box.innerHTML = html;
+      box.setAttribute("role", cls === "how" ? "dialog" : "alertdialog");
+      wrap.hidden = false; document.body.classList.add("modal-open");
+      var f = box.querySelector("[data-ok]") || box.querySelector("button"); if (f) f.focus({ preventScroll:true });
+    }
+    wrap.addEventListener("click", function(e){ if (e.target === wrap || e.target.closest("[data-close]")) close(); });
+    document.addEventListener("keydown", function(e){
+      if (wrap.hidden) return;
+      if (e.key === "Escape"){ e.preventDefault(); e.stopImmediatePropagation(); close(); return; }
+      if (e.key === "Tab"){
+        var bs = box.querySelectorAll("button, a[href]"); if (!bs.length) return;
+        var a = bs[0], z = bs[bs.length - 1];
+        if (e.shiftKey && document.activeElement === a){ e.preventDefault(); z.focus(); }
+        else if (!e.shiftKey && document.activeElement === z){ e.preventDefault(); a.focus(); }
+      }
+    }, true);
+    function ask(o){
+      open('<span class="mi">' + (o.icon || IC_BIN) + '</span><h3 id="modalT">' + esc(o.title) + '</h3>' + (o.body ? '<p>' + esc(o.body) + '</p>' : '') +
+        '<div class="bt"><button type="button" class="bb g rp" data-close>취소</button><button type="button" class="bb p rp" data-ok>' + esc(o.ok) + '</button></div>', "");
+      box.querySelector("[data-ok]").addEventListener("click", function(){ close(); o.onOk(); });
+    }
+    function howto(){
+      open('<h3 id="modalT">교육자료 올리는 방법<button type="button" class="xx rp" data-close aria-label="닫기">' + IC_X + '</button></h3>' +
+        '<ol><li><span><b>구글 드라이브에 파일을 올려요</b>PDF · PPT · 엑셀 등 받게 할 파일 그대로요.</span></li>' +
+        '<li><span><b>링크로 볼 수 있게 바꿔요</b>파일 오른쪽 클릭 → <span class="ui">공유</span> → 일반 액세스를 <span class="nowrap"><span class="ui">링크가 있는 모든 사용자</span>로.</span></span></li>' +
+        '<li><span><b>링크를 복사해요</b>같은 창에서 <span class="ui">링크 복사</span>.</span></li>' +
+        '<li><span><b>[자료 추가]를 누르고 붙여 넣어요</b>파일 이름 · 용량을 가져오고, 누르면 바로 받아지는 링크로 바꿔 줘요.</span></li></ol>' +
+        '<p class="tip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><span>‘제한됨’으로 두면 설계사가 받을 수 없어요. 사이트에서 받기가 안 되면 2번을 다시 확인해 주세요.</span></p>' +
+        '<button type="button" class="bb p rp" data-close data-ok>알겠어요</button>', "how");
+    }
+    return { ask: ask, howto: howto, close: close };
+  })();
 
   /* ---------- GitHub ---------- */
   function gh(path, opts){
@@ -343,7 +394,7 @@
   /* ---------- 화면 ---------- */
   function fileStatus(f){
     var sn = SC.splitName(f.name), d = SC.download(f.link, sn.type || f.type);
-    if (!f.link.trim()) return '<span class="pill idle">드라이브 링크를 넣어 주세요</span>';
+    if (!f.link.trim()) return '';
     if (d.kind === "folder") return '<span class="pill bad">폴더 링크예요. 파일 하나의 링크를 넣어 주세요</span>';
     if (d.kind === "bad") return '<span class="pill bad">링크 형식을 확인해 주세요</span>';
     var errs = {
@@ -354,7 +405,7 @@
       "error": "파일 정보를 가져오지 못했어요 · 잠시 뒤 링크를 다시 붙여 넣어 주세요"
     };
     if (errs[f._st]) return '<span class="pill bad">' + errs[f._st] + '</span>';
-    var s = d.kind === "other" ? '<span class="pill warn">드라이브 링크가 아니에요. 그대로 연결돼요</span>' : '<span class="pill ok">바로 받기 링크로 바뀌었어요</span>';
+    var s = d.kind === "other" ? '<span class="pill warn">드라이브 링크가 아니에요. 그대로 연결돼요</span>' : '<span class="pill ok">바로 다운로드 링크로 바뀌었어요</span>';
     if (f._st === "loading") s += '<span>파일 정보 확인 중…</span>';
     return s + '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">받아보기 ↗</a>';
   }
@@ -388,15 +439,22 @@
   }
   /* #31 목록 줄 제목: 앞의 [메뉴명📖] 머리말은 빼고(메뉴 칸에 이미 보임), 전체 제목은 마우스를 올리면 */
   function listTitle(t){ var s = String(t || "").replace(/^\[[^\]]*\]\s*/, ""); return s || t || "제목 없음"; }
+  /* #52 메뉴 색 표시 */
+  function catColor(id){ return { signature:"#003CDC", newbie:"#14A06A", partner:"#E07A2F", research:"#7C5CE6" }[id] || "#003CDC"; }
+  function lsw(on, attrs, label){
+    return '<button type="button" class="vs lsw' + (on ? " y" : "") + '" role="switch" aria-checked="' + on + '" ' + attrs + ' aria-label="' + (label || "사이트에 공개") + '"><i aria-hidden="true"></i><span class="vs-t">' + (on ? "공개" : "비공개") + '</span></button>';
+  }
   function itemHtml(v, i){
-    var ed = v === openV, pub = v.visible !== false;
-    return '<li class="vitem' + (ed ? " editing" : "") + '" data-v="' + i + '" data-vis="' + pub + '">' +
-      '<div class="vrow" data-act="toggle" data-i="' + i + '">' +
-      (v.id ? '<div class="vthumb dim">' + SC.thumbImg(v.id) + '</div>' : '<div class="vthumb blank dim">영상 없음</div>') +
-      '<div class="vtext"><h3 class="dim vtitle" title="' + esc(v.title || "") + '">' + esc(listTitle(v.title)) + '</h3><div class="badges">' + badges(v) + '</div></div>' +
-      '<button type="button" class="vs" role="switch" aria-checked="' + pub + '" data-act="vis" data-i="' + i + '" aria-label="사이트에 공개">' +
-        '<span class="vs-track"><span class="vs-knob"></span></span><span class="vs-t">' + (pub ? "공개" : "비공개") + '</span></button>' +
-      edBtn(ed, 'data-act="toggle" data-i="' + i + '"') +
+    var ed = v === openV, pub = v.visible !== false, n = v.files.length, miss = v.files.filter(function(f){ return !SC.download(f.link, f.type).url; }).length;
+    var th = v.id ? '<div class="vthumb dim">' + SC.thumbImg(v.id) + (v.duration ? '<span class="dur">' + esc(v.duration) + '</span>' : '') + '</div>' : '<div class="vthumb blank dim">영상 없음</div>';
+    var mm = !v.id ? '<span class="new">새 강의 · 유튜브 주소를 넣어 주세요</span>'
+      : (v.date ? '<span>' + IC.cal + SC.fmtDate(v.date) + '</span>' : '') + (v.duration ? '<span>' + esc(v.duration) + '</span>' : '') +
+        (n ? '<span class="fl">자료 ' + n + '개</span>' : '<span>자료 없음</span>') + (miss ? '<span class="miss">링크 없음 ' + miss + '</span>' : '');
+    return '<li class="vitem lrow' + (ed ? " editing" : "") + (pub ? "" : " off") + '" data-v="' + i + '" data-vis="' + pub + '">' +
+      '<div class="vrow" data-act="toggle" data-i="' + i + '">' + th +
+      '<div class="vtext"><h3 class="dim vtitle" title="' + esc(v.title || "") + '">' + esc(listTitle(v.title)) + '</h3><div class="mm">' + mm + '</div>' +
+        (v.id ? '<div class="wh">' + Audit.rowWho("v:" + v.id) + '</div>' : '') + '</div>' +
+      '<div class="lac">' + lsw(pub, 'data-act="vis" data-i="' + i + '"') + edBtn(ed, 'data-act="toggle" data-i="' + i + '"') + '</div>' +
       '</div></li>';
   }
   /* 교육자료 줄 (강의·연령 공통). attrs: 어느 강의/연령인지, idp: 입력칸 id 앞부분 */
@@ -411,20 +469,21 @@
     files.forEach(function(f){ out[fileKey(f)] = 1; });
     return out;
   }
+  /* #52 자료 카드: 종류 40 · 이름 + 용량 · 링크 칸 · 상태 · 업로드 누가·언제 · 오른쪽 🗑 */
   function filesHtml(files, attrs, idp, delAct, ft, saved){
     return files.map(function(f, j){
-      var t = f.type || SC.splitName(f.name).type || "pdf";
+      var t = f.type || SC.splitName(f.name).type || "", has = !!f.link.trim();
+      var cls = ({ pdf:"pdf", xlsx:"xls", xls:"xls", pptx:"ppt", ppt:"ppt", docx:"doc", hwp:"doc" }[t] || (has ? "etc" : "no"));
       return '<div class="frow">' +
-        '<div class="fmain">' +
-          '<div class="fhead">' +
-            '<span class="ftype ' + ({ pdf:"pdf", xlsx:"xlsx", pptx:"pptx", docx:"docx", hwp:"hwp" }[t] || "etc") + '">' + SC.typeLabel(t) + '</span>' +
-            '<div class="fname">' + (f.name ? '<strong>' + esc(f.name) + '</strong>' + (f.size ? '<span>' + esc(f.size) + '</span>' : '') : '<span class="ph">드라이브 링크를 넣으면 파일 이름이 자동으로 들어가요</span>') + '</div>' +
-          '</div>' +
-          '<input type="url" id="' + idp + 'f' + j + 'l" class="in mono" ' + attrs + ' data-f="' + j + '" data-fk="link" value="' + esc(f.link) + '" placeholder="구글드라이브 공유 링크" aria-label="자료 ' + (j+1) + ' 드라이브 링크" autocomplete="off">' +
+        '<span class="ftp ' + cls + '">' + (has || t ? SC.typeLabel(t || "pdf") : IC.upload) + '</span>' +
+        '<div class="fcol">' +
+          (f.name ? '<div class="fnm"><span class="nm">' + esc(f.name) + '</span>' + (f.size ? '<span class="sz">' + esc(f.size) + '</span>' : '') + '</div>'
+                  : '<div class="fnm"><span class="nm ph">' + (has ? "파일 이름을 가져오는 중…" : "새 자료") + '</span></div>') +
+          '<input type="url" id="' + idp + 'f' + j + 'l" class="ip mono" ' + attrs + ' data-f="' + j + '" data-fk="link" value="' + esc(f.link) + '" placeholder="드라이브 파일 링크를 붙여 넣어 주세요" aria-label="자료 ' + (j+1) + ' 드라이브 링크" autocomplete="off">' +
           '<div class="fstat" id="' + idp + 'f' + j + 's">' + fileStatus(f) + '</div>' +
-          (ft && f.link.trim() ? Audit.fileWho(ft + ":" + fileKey(f), !saved[fileKey({ link: f.link.trim() })]) : '') +
+          (ft && has ? Audit.fileWho(ft + ":" + fileKey(f), !saved[fileKey({ link: f.link.trim() })]) : '') +
         '</div>' +
-        '<button type="button" class="fdel rp" data-act="' + delAct + '" ' + attrs + ' data-f="' + j + '" aria-label="자료 ' + (j+1) + ' 빼기" title="자료 빼기">' + IC.del + '</button>' +
+        '<button type="button" class="icb fdel rp" data-act="' + delAct + '" ' + attrs + ' data-f="' + j + '" aria-label="자료 ' + (j+1) + ' 삭제" title="자료 삭제">' + IC.del + '</button>' +
       '</div>';
     }).join("");
   }
@@ -433,36 +492,40 @@
       ? '<span class="del-ask">' + q + '<button type="button" class="del-yes rp" ' + yes + '>정말 삭제</button><button type="button" class="del-no rp" ' + no + '>취소</button></span>'
       : '<button type="button" class="del-btn rp" ' + del + '>' + IC.del + label + '</button>';
   }
-  /* 강의 편집 칸 내용 */
+  /* #52 편집 칸 = 번호 구역 4개 (유튜브 영상 → 제목 → 강의 소개 → 교육자료) */
+  function fsec(n, name, help, inner, extra){
+    return '<section class="fs"><div class="flb"><span class="n"><em>' + n + '</em>' + name + '</span><span class="hp">' + help + (extra || '') + '</span></div><div class="fc">' + inner + '</div></section>';
+  }
+  function cnt(val, max){ return '<span class="cnt" data-cnt="' + max + '">' + nf2(String(val || "").length) + ' / ' + nf2(max) + '</span>'; }
+  function nf2(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  var HOWTO_BTN = '<button type="button" class="howto rp" data-act="howto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6M12 17v.4"/></svg>업로드하는 방법</button>';
+  var NEWWIN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>';
+  function ytCard(v, i){
+    if (!v.id) return videoStatus(v) ? '<div class="url-row">' + videoStatus(v) + '</div>' : '';
+    return '<div class="ytc"><span class="th">' + SC.thumbImg(v.id) + '</span><span class="i">' + videoStatus(v) +
+      (v.date ? '<span>유튜브에 올린 날짜 <b>' + longDate(v.publishedAt || v.date) + '</b></span>' : '') + (v.duration ? '<span>길이 <b>' + esc(v.duration) + '</b></span>' : '') + '</span></div>' +
+      '<button type="button" class="bb g rp" data-act="refetch" data-i="' + i + '">' + IC.refresh + '다시 가져오기</button>';
+  }
+  function edFoot(t, merge, siteHref, moveSel, delAttrs, delLabel){
+    return Audit.histLine(t, merge) +
+      '<div class="ftr">' + (siteHref ? '<a class="lk rp" href="' + siteHref + '" target="_blank" rel="noopener">' + NEWWIN + '사이트에서 보기</a>' : '') + (moveSel || '') +
+      '<button type="button" class="lk dg rp" ' + delAttrs + '>' + IC.del + delLabel + '</button></div>';
+  }
   function videoBody(v, i){
     var id = "v" + i, pub = v.visible !== false, cat = SC.catOf(v), n = v.files.length;
-    return '<div class="ed-sum">' +
-        (v.id ? '<div class="vthumb">' + SC.thumbImg(v.id) + '</div>' : '<div class="vthumb blank">영상 없음</div>') +
-        '<div class="ed-sum-t"><span>' + IC.cal + (v.date ? '<span class="nowrap">유튜브 ' + longDate(v.publishedAt || v.date) + '</span>' + (v.duration ? ' · <span class="nowrap">' + esc(v.duration) + '</span>' : '') + ' · <span class="nowrap">자료 ' + n + '개</span>' : '유튜브 주소를 넣어 주세요') + '</span>' +
-        (v._oid ? Audit.sumWho("v:" + v._oid) : '') + '</div></div>' +
-      '<div class="f"><span class="lbl" id="' + id + 'visL">공개 설정</span>' +
-        '<div class="segs" role="radiogroup" aria-labelledby="' + id + 'visL">' +
-          seg("visSet", i, "1", pub, "공개", IC.eye) + seg("visSet", i, "0", !pub, "비공개", IC.lock) + '</div>' +
-        '<span class="help">' + (pub ? "사이트 목록과 강의 주소에서 누구나 볼 수 있어요."
-          : "사이트 목록·검색·다른 강의에서 빠지고, 강의 주소로 들어와도 보이지 않아요.<br>저장해야 반영돼요.") + '</span></div>' +
-      '<div class="f"><label for="' + id + 'url">유튜브 영상 주소</label>' +
-        '<input type="url" id="' + id + 'url" class="in mono" data-i="' + i + '" data-k="_url" value="' + esc(v._url) + '" placeholder="https://youtu.be/… 또는 https://www.youtube.com/watch?v=…" autocomplete="off">' +
-        '<div class="url-row">' + videoStatus(v) + (v.id ? '<button type="button" class="btn-soft rp press" data-act="refetch" data-i="' + i + '">' + IC.refresh + '유튜브에서 다시 가져오기</button>' : '') + '</div></div>' +
-      '<div class="f"><span class="lbl">유튜브에 올린 날짜</span>' +
-        '<div class="ro">' + (v.date ? '<b>' + longDate(v.publishedAt || v.date) + '</b> · 유튜브에서 자동으로 가져와요' : '유튜브 주소를 넣으면 자동으로 들어가요') + '</div>' +
-        '<span class="help">목록과 사이트 순서는 이 날짜로 정해져요(최신이 위).</span></div>' +
-      '<div class="f"><label for="' + id + 'title">제목</label><input type="text" id="' + id + 'title" class="in" data-i="' + i + '" data-k="title" value="' + esc(v.title) + '"></div>' +
-      '<div class="f"><label for="' + id + 'desc">강의 소개</label><textarea id="' + id + 'desc" class="in" rows="5" data-i="' + i + '" data-k="description">' + esc(v.description) + '</textarea>' +
-        '<span class="help">유튜브 영상 설명이 자동으로 들어가요.<br>고쳐도 돼요.</span></div>' +
-      '<div class="fileset"><div class="fileset-h"><span class="lbl">교육자료 <span class="num">' + n + '</span>개</span>' +
-        '<span class="help">드라이브에서 파일 우클릭 → 공유 → ‘링크가 있는 모든 사용자’ → 링크 복사</span></div>' +
-        '<div class="fsort">' + filesHtml(v.files, 'data-i="' + i + '"', id, "fdel", "f:" + (v._oid || v.id), savedKeys("v", v._oid)) + '</div>' +
-        '<div><button type="button" class="btn-soft rp press" data-act="addFile" data-i="' + i + '">' + IC.plus + '자료 추가</button></div></div>' +
-      (v._oid ? Audit.histHtml("v:" + v._oid) : '') +
-      '<div class="vfoot">' + (v.id && pub ? '<a class="site-link rp" href="v/' + esc(v.id) + '/" target="_blank" rel="noopener">사이트에서 보기 ↗</a>' : '<span></span>') +
-        '<div class="vfoot-r"><label class="amove"><span>메뉴 옮기기</span><select data-move="' + i + '" aria-label="메뉴 옮기기">' +
-          SC.CATS.map(function(c){ return '<option value="' + c.id + '"' + (c.id === cat ? ' selected' : '') + '>' + esc(c.label) + '</option>'; }).join("") +
-        '</select></label>' + delAsk(armedDel === v, "정말 삭제할까요?", 'data-act="delYes" data-i="' + i + '"', 'data-act="delNo"', 'data-act="del" data-i="' + i + '"', "강의 삭제") + '</div></div>';
+    return fsec(1, "유튜브 영상", "영상 주소를 넣으면 제목·설명·날짜·길이를 가져와요.",
+        '<input type="url" id="' + id + 'url" class="ip mono" data-i="' + i + '" data-k="_url" value="' + esc(v._url) + '" placeholder="https://youtu.be/… 또는 https://www.youtube.com/watch?v=…" aria-label="유튜브 영상 주소" autocomplete="off">' + ytCard(v, i)) +
+      fsec(2, "제목", "유튜브 제목을 그대로 가져와요.",
+        '<input type="text" id="' + id + 'title" class="ip" data-i="' + i + '" data-k="title" value="' + esc(v.title) + '" aria-label="제목" maxlength="200">' + cnt(v.title, 80)) +
+      fsec(3, "강의 소개", "유튜브 설명을 그대로 가져와요.",
+        '<textarea id="' + id + 'desc" class="ta2" data-i="' + i + '" data-k="description" aria-label="강의 소개">' + esc(v.description) + '</textarea>' + cnt(v.description, 1000)) +
+      fsec(4, '교육자료 <b class="fn">' + n + '</b>', "드라이브 링크를 붙여 넣으면 이름·용량을 가져와요.",
+        filesHtml(v.files, 'data-i="' + i + '"', id, "fdel", "f:" + (v._oid || v.id), savedKeys("v", v._oid)) +
+        '<button type="button" class="add rp" data-act="addFile" data-i="' + i + '">' + IC.plus + '자료 추가</button>', HOWTO_BTN) +
+      '<div class="ed-end">' + edFoot(v._oid ? "v:" + v._oid : "", false, v.id && pub && v._oid ? 'v/' + esc(v.id) + '/' : '',
+        '<label class="lk amove">' + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M14 7l5 5-5 5"/></svg>' + '<span>메뉴 옮기기</span><select data-move="' + i + '" aria-label="메뉴 옮기기">' +
+          SC.CATS.map(function(c){ return '<option value="' + c.id + '"' + (c.id === cat ? ' selected' : '') + '>' + esc(c.label) + '</option>'; }).join("") + '</select></label>',
+        'data-act="del" data-i="' + i + '"', "강의 삭제") + '</div>';
   }
   /* ---------- 목록 보기: 메뉴 칸 · 검색 · 정렬 · 공개 필터 (보기만 바뀌고 저장되지 않음) ---------- */
   var RID = "research";
@@ -501,16 +564,16 @@
     /* #26 편집 칸이 새로 열리면: 바뀌기 전 자리를 재 두었다가 목록이 왼쪽 칸으로 스르륵 (FLIP) */
     var target = view.cat === RID ? openM : openV, first = ($("edWrap").hidden && target && motionOk()) ? flipFirst() : null;
     var V = data.videos, isR = view.cat === RID, label = isR ? SC.RESEARCH.label : SC.catLabel(view.cat);
+    /* #52 메뉴 칸 = 밑줄 탭: 색 표시 + 메뉴 이름만(숫자 없음, 휴대폰은 색 표시도 없음) */
     $("mtabs").innerHTML = SC.CATS.concat([SC.RESEARCH]).map(function(c){
-      var n = c.id === RID ? rdata.months.length : V.filter(function(v){ return SC.catOf(v) === c.id; }).length;
-      return '<button type="button" class="mtab rp" role="tab" aria-selected="' + (c.id === view.cat) + '" data-cat="' + c.id + '">' + esc(c.label) + '<span class="mtab-n">' + n + '</span></button>';
+      return '<button type="button" class="mtab" role="tab" aria-selected="' + (c.id === view.cat) + '" data-cat="' + c.id + '" style="--c:' + catColor(c.id) + '"><span class="mk" aria-hidden="true"></span>' + esc(c.label) + '</button>';
     }).join("");
     $("aqBox").hidden = isR; $("asortBox").hidden = isR; $("rnote").hidden = !isR;
-    $("addLabel").textContent = isR ? "월 추가" : label + "에 강의 추가";
+    $("addLabel").textContent = isR ? "월 추가" : "강의 추가";
     $("catName").textContent = label;
     var all = isR ? rdata.months : V.filter(function(v){ return SC.catOf(v) === view.cat; }), on = all.filter(function(v){ return v.visible !== false; }).length;
     $("count").textContent = all.length;
-    $("visCount").textContent = all.length ? "공개 " + on + " · 비공개 " + (all.length - on) : "";
+    $("visCount").innerHTML = "<b>" + all.length + "</b>개" + (all.length ? " · 공개 " + on + " · 비공개 " + (all.length - on) : "");
     if (isR){
       $("aresult").hidden = true;
       var ms = rShown();
@@ -531,7 +594,7 @@
   }
 
   /* ---------- 화면 3개 (#44 · 기획 P6): #/courses · #/analytics · #/settings/<메뉴> — 아래 Route 에서 ---------- */
-  var Theme = SC.themeUI({ sw: $("thSw"), bar: { light: "#003CDC", dark: "#0F1115" } });
+  var Theme = SC.themeUI({ sw: $("thSw"), ic: $("thIc"), bar: { light: "#003CDC", dark: "#0F1115" } });
 
   /* ---------- 편집 칸 (#20): 980px 넘으면 오른쪽, 이하는 화면 전체 시트 ---------- */
   var edKey = null;
@@ -570,14 +633,21 @@
     if (closing){ clearTimeout(closing); closing = null; wrap.classList.remove("is-out"); edKey = null; }
     var opening = wrap.hidden, swap = !opening && edKey !== obj;
     wrap.hidden = false; lay.classList.add("is-edit"); document.body.classList.toggle("sheet-open", !wide.matches);
+    var cid = isR ? RID : SC.catOf(openV), isNew = isR ? !!openM._new : !openV._oid, pub = obj.visible !== false;
+    $("edPill").innerHTML = '<span class="mk" aria-hidden="true" style="--c:' + catColor(cid) + '"></span>' + esc(isR ? SC.RESEARCH.label : SC.catLabel(cid));
+    $("edSwBox").innerHTML = lsw(pub, 'data-act="edvis"', isR ? "이 달을 사이트에 공개" : "이 강의를 사이트에 공개");
+    $("edSheetT").textContent = isR ? "월 편집" : "강의 편집";
     if (isR){
-      var mi = rdata.months.indexOf(openM);
-      $("edPill").textContent = "월 편집 · " + SC.RESEARCH.label;
-      $("edTitle").textContent = openM.title.trim() || "제목 없음";
+      var mi = rdata.months.indexOf(openM), mt = openM.title.trim();
+      $("edTitle").textContent = mt || (isNew ? "새 달" : "제목 없음");
+      $("edTitle").classList.toggle("ph", !mt);
+      $("edNewH").hidden = true;
     } else {
       var i = data.videos.indexOf(openV);
-      $("edPill").textContent = "강의 편집 · " + SC.catLabel(SC.catOf(openV));
       $("edTitle").textContent = openV.title || "새 강의";
+      $("edTitle").classList.toggle("ph", !openV.title);
+      $("edNewH").hidden = !(isNew && !openV.id);
+      $("edNewH").textContent = "유튜브 주소를 넣으면 제목을 가져오고 [저장]이 켜져요.";
     }
     var body = $("edBody"), st = body.scrollTop;
     body.innerHTML = isR ? monthBody(openM, mi) : videoBody(openV, i);
@@ -652,15 +722,15 @@
     var ed = m === openM, pub = m.visible !== false, at = 'data-m="' + i + '"';
     var nf = 0, miss = 0; m.ages.forEach(function(a){ nf += a.files.length; miss += missCount(a.files); });
     var t = m.title.trim();
-    return '<li class="vitem ritem' + (ed ? " editing" : "") + '" data-m="' + i + '" data-vis="' + pub + '">' +
+    return '<li class="vitem lrow ritem' + (ed ? " editing" : "") + (pub ? "" : " off") + '" data-m="' + i + '" data-vis="' + pub + '">' +
       '<div class="vrow" data-act="redit" ' + at + '>' +
         '<div class="vthumb rthumb dim">' + rImg(m.thumb) + '</div>' +
-        '<div class="vtext"><h3 class="dim' + (t ? "" : " untitled") + '">' + esc(t || "제목 없음") + '</h3><div class="badges">' +
-          '<span class="bdg priv">비공개</span>' + (m._new ? '<span class="bdg new">새 달</span>' : '') +
-          '<span class="bdg dim">연령 ' + m.ages.length + '개</span><span class="bdg files dim">자료 ' + nf + '개</span>' +
-          (miss ? '<span class="bdg miss dim">링크 없음 ' + miss + '</span>' : '') + (m._oym ? Audit.rowWho("r:" + ymCode(m._oym), true) : '') + '</div></div>' +
-        rSwitch(pub, 'data-act="rvis" ' + at, "사이트에 공개") +
-        edBtn(ed, 'data-act="redit" ' + at) +
+        '<div class="vtext"><h3 class="dim vtitle' + (t ? "" : " untitled") + '">' + esc(t || "제목 없음") + '</h3><div class="mm">' +
+          (m._new ? '<span class="new">새 달 · 아직 저장 전</span>' : '') +
+          '<span>연령 ' + m.ages.length + '개</span>' + (nf ? '<span class="fl">자료 ' + nf + '개</span>' : '<span>자료 없음</span>') +
+          (miss ? '<span class="miss">링크 없음 ' + miss + '</span>' : '') + '</div>' +
+          (m._oym ? '<div class="wh">' + Audit.rowWho("r:" + ymCode(m._oym), true) + '</div>' : '') + '</div>' +
+        '<div class="lac">' + lsw(pub, 'data-act="rvis" ' + at) + edBtn(ed, 'data-act="redit" ' + at) + '</div>' +
       '</div></li>';
   }
   function thumbField(o, attrs){
@@ -684,31 +754,20 @@
     var y = +(m.ym.split("-")[0]) || new Date().getFullYear(), mo = +(m.ym.split("-")[1]) || 1, y0 = new Date().getFullYear();
     var years = []; for (var k = Math.min(y, 2024); k <= Math.max(y, y0 + 1); k++) years.push(k);
     var prev = m._new ? prevMonth(m) : null, saved = !m._new && !dirtyMonth(m), wt = m._oym ? "r:" + ymCode(m._oym) : "";
-    var who = wt ? Audit.sumWho(wt, true, "만듦") : "";
-    return (who ? '<div class="ed-who">' + who + '</div>' : '') + '<div class="f"><span class="lbl" id="rm' + mi + 'visL">공개 설정</span>' +
-        '<div class="segs" role="radiogroup" aria-labelledby="rm' + mi + 'visL">' +
-          rSeg("rvisSet", at, "1", pub, "공개", IC.eye) + rSeg("rvisSet", at, "0", !pub, "비공개", IC.lock) + '</div>' +
-        '<span class="help">' + (pub ? "사이트 목록과 주소에서 누구나 볼 수 있어요." : "사이트 목록에서 빠지고, 주소로 들어와도 보이지 않아요.<br>저장해야 반영돼요.") + '</span></div>' +
-      '<div class="f"><label for="rm' + mi + 'title">제목 <span class="req" aria-label="필수">*</span></label>' +
-        '<input type="text" id="rm' + mi + 'title" class="in" ' + at + ' data-rk="title" value="' + esc(m.title) + '" placeholder="예) 26년 11월" autocomplete="off">' +
-        '<span class="help">사이트의 카드와 페이지 제목에 그대로 나와요.</span></div>' +
-      '<div class="f"><span class="lbl" id="rm' + mi + 'ymL">연월 <span class="req" aria-label="필수">*</span></span>' +
-        '<div class="ym' + (dup ? " dup" : "") + '" role="group" aria-labelledby="rm' + mi + 'ymL">' +
+    return fsec(1, "제목", "사이트의 카드와 페이지 제목에 그대로 나와요.",
+        '<input type="text" id="rm' + mi + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(m.title) + '" placeholder="예) 26년 11월" autocomplete="off" aria-label="제목">') +
+      fsec(2, "연월", "화면에는 안 나와요. 이 달이 최신일수록 사이트에서 위에 보여요.",
+        '<div class="ym' + (dup ? " dup" : "") + '" role="group" aria-label="연월">' +
           '<label class="asel"><select id="rm' + mi + 'y" ' + at + ' data-rym="y" aria-label="년">' + years.map(function(k){ return '<option value="' + k + '"' + (k === y ? " selected" : "") + '>' + k + '년</option>'; }).join("") + '</select>' + IC.down + '</label>' +
           '<label class="asel"><select id="rm' + mi + 'mo" ' + at + ' data-rym="m" aria-label="월">' + [1,2,3,4,5,6,7,8,9,10,11,12].map(function(k){ return '<option value="' + k + '"' + (k === mo ? " selected" : "") + '>' + k + '월</option>'; }).join("") + '</select>' + IC.down + '</label>' +
-        '</div>' +
-        (dup ? '<span class="pill bad ym-err" role="alert">이미 등록된 달이에요. 다른 달을 골라 주세요.</span>' : '') +
-        '<span class="help">화면에는 안 나와요. 사이트에서는 이 달이 최신일수록 위에 보여요.</span></div>' +
-      thumbField(m, at) +
-      '<div class="fileset"><div class="fileset-h"><span class="lbl">연령 <span class="num">' + m.ages.length + '</span>개</span>' +
-        '<span class="help">▲▼로 순서를 바꾸면 사이트 연령 목록 순서도 바뀌어요.</span></div>' +
+        '</div>' + (dup ? '<span class="pill bad ym-err" role="alert">이미 등록된 달이에요. 다른 달을 골라 주세요.</span>' : '')) +
+      fsec(3, "썸네일", "올리지 않으면 삼프스 로고가 보여요. 16:9(1280×720) 이미지가 가장 잘 맞아요.", thumbField(m, at)) +
+      fsec(4, '연령 <b class="fn">' + m.ages.length + '</b>', "▲▼로 순서를 바꾸면 사이트 연령 목록 순서도 바뀌어요.",
         (prev ? '<div class="rcopy">' + rSwitch(!!m._copied, 'data-act="rcopy" ' + at, "지난달 연령 그대로 가져오기") +
           '<div><b>지난달 연령 그대로 가져오기</b><span>' + esc(prev.title || "지난달") + '의 연령 ' + prev.ages.length + '개(제목·썸네일·순서)를 복사해요. 자료는 비워 둬요.</span></div></div>' : '') +
         '<ul class="ages">' + m.ages.map(function(a, ai){ return ageHtml(m, mi, a, ai); }).join("") + '</ul>' +
-        '<div><button type="button" class="btn-soft rp press" data-act="raddAge" ' + at + '>' + IC.plus + '연령 추가</button></div></div>' +
-      (wt ? Audit.histHtml(wt, true) : '') +
-      '<div class="vfoot">' + (pub && code && saved ? '<a class="site-link rp" href="research/' + code + '/" target="_blank" rel="noopener">사이트에서 보기 ↗</a>' : '<span></span>') +
-        '<div class="vfoot-r">' + delAsk(armedDel === m, "이 달의 연령과 자료가 모두 지워져요. 정말 삭제할까요?", 'data-act="rdelYes" ' + at, 'data-act="delNo"', 'data-act="rdel" ' + at, "월 삭제") + '</div></div>';
+        '<button type="button" class="add rp" data-act="raddAge" ' + at + '>' + IC.plus + '연령 추가</button>', HOWTO_BTN) +
+      '<div class="ed-end">' + edFoot(wt, true, pub && code && saved ? 'research/' + code + '/' : '', '', 'data-act="rdel" ' + at, "월 삭제") + '</div>';
   }
   /* 저장된 상태에도 있는 달인지(사이트에서 보기 링크용) */
   function dirtyMonth(m){
@@ -843,7 +902,12 @@
       else { m.ages = pv.ages.map(function(x){ return { id: newAgeId(m), title: x.title, thumb: x.thumb, visible: x.visible !== false, files: [] }; }); m._copied = true; }
       openA = null; markDirty(); render(); return;
     }
-    if (act === "rdel"){ armedDel = m; render(); return; }
+    if (act === "rdel"){
+      if (m._new){ revert(); toast("새 달을 지웠어요"); return; }
+      var mk2 = m._oym;
+      Modal.ask({ title: "이 달을 삭제할까요?", body: "연령과 자료가 모두 사이트에서 바로 사라지고 되돌릴 수 없어요.", ok: "삭제", onOk: function(){ quickDel(true, mk2); } });
+      return;
+    }
     if (act === "radel"){ armedDel = a; render(); return; }
     if (act === "rdelYes"){
       if (m._new){ revert(); toast("새 달을 지웠어요"); return; }
@@ -936,20 +1000,29 @@
     (B.r.months || []).forEach(function(o){ if (!usedM[o.ym]) n++; });
     return n || (dirty ? 1 : 0);
   }
+  /* #52 편집 칸 머리: 되돌리기 · [● 저장] — 바꾼 것 있음 / 없음(✓ 저장됨) / 저장 중 / 새 강의(취소) */
+  var IC_OK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var IC_SPIN = '<svg class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg>';
   function updateSaveBar(){
-    var f = $("edFoot"); if (!f) return;
     var isR = view.cat === RID, obj = isR ? openM : openV, isNew = !!obj && (isR ? !!obj._new : !obj._oid);
-    var show = canSave && !!obj && (dirty || isNew || saving);
-    f.hidden = !show; f.classList.toggle("is-new", isNew); f.classList.toggle("busy", saving);
-    if (show){
-      $("efText").textContent = saving ? "저장 중…" : isNew ? (isR ? "새 달 · 아직 저장 전" : "새 강의 · 아직 저장 전") : "저장하지 않은 변경 " + changeCount() + "개";
-      $("efUndo").textContent = isNew ? "취소" : "되돌리기"; $("efUndo").disabled = saving;
-      $("efSave").textContent = saving ? "저장 중" : "저장"; $("efSave").disabled = saving || (isNew && !isR && !obj.id);
+    var sv = $("efSave"), un = $("efUndo"), st = $("efSaveT"), dt = sv.querySelector(".dt");
+    if (obj){
+      var noUrl = isNew && !isR && !obj.id, has = dirty || isNew;
+      un.hidden = !(has || saving); un.textContent = isNew ? "취소" : "되돌리기"; un.disabled = saving;
+      sv.disabled = saving || !canSave || noUrl || !has;
+      dt.hidden = saving || !has || noUrl;
+      var ic = sv.querySelector("svg"); if (ic) ic.remove();
+      if (saving){ st.textContent = "저장 중…"; st.insertAdjacentHTML("beforebegin", IC_SPIN); sv.setAttribute("aria-label", "저장 중"); }
+      else if (!has){ st.textContent = "저장됨"; st.insertAdjacentHTML("beforebegin", IC_OK); sv.setAttribute("aria-label", "저장됨 · 바꾼 것 없음"); }
+      else if (noUrl){ st.textContent = "저장"; sv.setAttribute("aria-label", "저장 — 유튜브 주소를 넣으면 켜져요"); }
+      else { st.textContent = "저장"; sv.setAttribute("aria-label", isNew ? "저장 (새 " + (isR ? "달" : "강의") + ")" : "저장 (저장하지 않은 변경 " + changeCount() + "개)"); }
+      sv.classList.toggle("is-busy", saving);
     }
-    /* 설정 → 사이트 문구: 그 칸 안의 [저장] */
+    /* 설정 → 사이트 문구: 그 칸 안의 되돌리기 · [● 저장] */
     var B = base(), nd = !!B && canSave && ((B.v.site || {}).notice || "") !== (data.site.notice || "").trim();
     $("noticeRow").hidden = !(nd || (saving && document.body.dataset.view === "settings"));
-    $("noticeSave").disabled = saving; $("noticeUndo").disabled = saving; $("noticeSave").textContent = saving ? "저장 중" : "저장";
+    $("noticeSave").disabled = saving; $("noticeUndo").disabled = saving;
+    var nt = $("noticeSaveT"); if (nt) nt.textContent = saving ? "저장 중…" : "저장";
   }
 
   function cleanData(){
@@ -1224,7 +1297,7 @@
     var word = o.visible ? "공개로" : "비공개로";
     if (held){ toast(word + " 바꿨어요. 편집 칸 아래 [저장]을 누르면 함께 저장돼요"); return; }
     if (!dirty) return;
-    if (!canSave){ toast(verifying ? "최신 목록을 확인하는 중이에요. 잠시 뒤 다시 눌러 주세요" : "저장소에 연결되지 않아 바꿀 수 없어요"); revert(true); return; }
+    if (!canSave){ (verifying ? toastSpin("최신 목록을 확인하는 중이에요. 잠시 뒤 다시 눌러 주세요") : toast("저장소에 연결되지 않아 바꿀 수 없어요")); revert(true); return; }
     var key = isM ? o._oym : o._oid;
     toast(word + " 바꾸는 중…");
     save({ msg: again ? "되돌렸어요" : word + " 바꿨어요", undo: again ? null : function(){
@@ -1242,7 +1315,7 @@
     if (idx < 0){ render(); return; }
     var obj = list.splice(idx, 1)[0]; markDirty(); render();
     toast("삭제하는 중…");
-    save({ msg: isM ? "이 달을 삭제했어요" : "강의를 삭제했어요", undo: function(){
+    save({ msg: isM ? "달을 삭제했어요" : "강의를 삭제했어요", undo: function(){
       if (saving){ toast("저장하는 중이에요. 잠시 뒤 다시 눌러 주세요"); return; }
       list.splice(Math.min(idx, list.length), 0, obj); markDirty(); render(); toast("되돌리는 중…"); save({ msg: "되돌렸어요" });
     } });
@@ -1259,6 +1332,8 @@
     var i = +t.dataset.i, v = data.videos[i]; if (!v || t.dataset.i == null) return;
     if (t.dataset.k){
       v[t.dataset.k] = t.value; markDirty();
+      var cn = t.parentElement && t.parentElement.querySelector(".cnt[data-cnt]");
+      if (cn){ var mx = +cn.dataset.cnt; cn.textContent = nf2(t.value.length) + " / " + nf2(mx); cn.classList.toggle("over", t.value.length > mx); }
       if (t.dataset.k === "_url") later(v, function(){ fetchVideo(v); }, 450);
       if (t.dataset.k === "title"){
         var h = document.querySelector('.vitem[data-v="' + i + '"] h3'); if (h){ h.textContent = listTitle(t.value); h.title = t.value; }
@@ -1281,6 +1356,11 @@
     var act = b.dataset.act;
     if (act !== "toggle" && act !== "redit" && act !== "rage") e.stopPropagation();
     if (act === "delNo"){ armedDel = null; render(); return; }
+    if (act === "howto"){ Modal.howto(); return; }
+    if (act === "edvis"){
+      var eo = view.cat === RID ? openM : openV; if (!eo) return;
+      eo.visible = eo.visible === false; markDirty(); render(); var nb = document.querySelector('#edSwBox [data-act="edvis"]'); if (nb) nb.focus(); return;
+    }
     if (b.dataset.m != null){ rClick(b, e); return; }
     var i = +b.dataset.i, V = data.videos, v = V[i];
     if (!v) return;
@@ -1297,7 +1377,12 @@
     if (act === "refetch"){ fetchVideo(v, true); v.files.forEach(function(f){ if (f.link.trim()) fetchFile(f); }); return; }
     if (act === "addFile"){ v.files.push({ name:"", type:"", link:"", size:"", _st:"" }); markDirty(); render(); var el = $("v" + i + "f" + (v.files.length - 1) + "l"); if (el) el.focus(); return; }
     if (act === "fdel"){ v.files.splice(+b.dataset.f, 1); markDirty(); render(); return; }
-    if (act === "del"){ armedDel = v; render(); return; }
+    if (act === "del"){
+      if (!v._oid){ V.splice(i, 1); openV = null; markDirty(); render(); toast("새 강의를 지웠어요"); return; }
+      var dk = v._oid;
+      Modal.ask({ title: "이 강의를 삭제할까요?", body: "사이트와 공유 주소에서 바로 사라지고 되돌릴 수 없어요.", ok: "삭제", onOk: function(){ quickDel(false, dk); } });
+      return;
+    }
     if (act === "delYes"){
       if (!v._oid){ V.splice(i, 1); armedDel = null; openV = null; markDirty(); render(); toast("새 강의를 지웠어요"); return; }
       quickDel(false, v._oid); return;
@@ -1407,7 +1492,10 @@
       var btn = $("updRun");
       btn.disabled = b; btn.classList.toggle("busy", b);
       btn.innerHTML = b ? '<span class="spin" aria-hidden="true"></span>' + esc(label || "업데이트 중") : K.upload + "지금 업데이트";
+      /* #52 맨 위 바 [업데이트] (마스터만) — 같은 일, 같은 상태 */
+      var ub = $("barUpd"); ub.disabled = b; ub.setAttribute("aria-busy", b ? "true" : "false"); $("barUpdT").textContent = b ? "업데이트 중…" : "업데이트";
     }
+    var fromBar = false;
     function upload(items){
       $("updLog").innerHTML = "";
       if (!items.length){ log('<span class="pill bad">올릴 파일이 없어요. sdp_edu 폴더가 맞는지 확인해 주세요</span>'); return Promise.resolve(); }
@@ -1430,8 +1518,9 @@
         var drm = list.filter(function(x){ return x.drm; });
         if (drm.length) log('<span class="pill bad">' + drm.length + '개 건너뜀</span> 보안 프로그램으로 암호화된 파일이에요: ' + drm.map(function(x){ return esc(x.path); }).join(", "));
         var changed = list.filter(function(x){ return !x.drm && remote[x.path] !== x.sha; });
-        if (!changed.length){ log('<span class="pill ok">이미 최신이에요</span> 바뀐 파일이 없어요.'); return null; }
+        if (!changed.length){ log('<span class="pill ok">이미 최신이에요</span> 바뀐 파일이 없어요.'); if (fromBar) toast("이미 최신이에요 · 바뀐 파일이 없어요"); return null; }
         setBusy(true, "올리는 중");
+        if (fromBar) toast("사이트 업데이트를 시작했어요 · 1~2분 걸려요");
         /* 홈(index.html)이 바뀌면 강의별 공유 페이지·메뉴 페이지도 같은 커밋에서 새로 만듦 */
         var idx = changed.filter(function(x){ return x.path === "index.html"; })[0], pages = Promise.resolve([]);
         if (idx && canSave){
@@ -1463,6 +1552,7 @@
         if (!changed) return;
         return waitLive(changed);
       }).catch(function(e){
+        if (fromBar) toast("업데이트하지 못했어요 · 설정 → 사이트 업데이트에서 자세히 볼 수 있어요");
         log('<span class="pill bad">올리지 못했어요</span> ' + (e.status === 409 || e.status === 422 ? "다른 저장과 겹쳤어요. 잠시 뒤 다시 눌러 주세요." : e.status === 403 || e.status === 404 ? "토큰 권한을 확인해 주세요." : "인터넷 연결을 확인하고 다시 눌러 주세요."));
       }).then(function(){ setBusy(false); });
     }
@@ -1496,10 +1586,11 @@
       });
     }
 
-    function run(){
+    function run(e){
       if (busy) return;
-      $("updBox").open = true;
-      if (!canSave){ $("updLog").innerHTML = ""; log('<span class="pill bad">먼저 로그인해서 저장소에 연결해 주세요</span>'); return; }
+      fromBar = !!(e && e.currentTarget && e.currentTarget.id === "barUpd");
+      if (!fromBar) $("updBox").open = true;
+      if (!canSave){ $("updLog").innerHTML = ""; log('<span class="pill bad">먼저 로그인해서 저장소에 연결해 주세요</span>'); if (fromBar) toast(verifying ? "최신 목록을 확인하는 중이에요. 잠시 뒤 다시 눌러 주세요" : "저장소에 연결되지 않아 업데이트할 수 없어요"); return; }
       if (!canFS){ $("updPick").click(); return; }
       var h = dirHandle;
       (h ? Promise.resolve(h) : pickDir()).then(function(h2){
@@ -1511,6 +1602,7 @@
       }).catch(function(){ toast("폴더를 읽지 못했어요. ‘바꾸기’로 폴더를 다시 골라 주세요"); });
     }
     $("updRun").addEventListener("click", run);
+    $("barUpd").addEventListener("click", run);
     $("updPick").addEventListener("change", function(){
       var picked = Array.prototype.slice.call(this.files || []); this.value = "";
       var items = picked.map(function(f){ var rel = (f.webkitRelativePath || f.name).split("/"); rel.shift(); return { file:f, path:rel.join("/") }; })
@@ -1816,7 +1908,7 @@
       if (!/^\d{8}$/.test(sab)){ $("aSabun").setAttribute("aria-invalid", "true"); $("aSabunErr").hidden = false; $("aSabun").focus(); return; }
       if (!pw){ $("aPw").setAttribute("aria-invalid", "true"); sabunMsg("er", "비밀번호를 입력해 주세요."); $("aPw").focus(); return; }
       LS.set(PREF_KEEP, keep ? "1" : "0"); LS.set(PREF_REM, $("aRem").checked ? "1" : "0"); LS.set(SAB_KEY, $("aRem").checked ? sab : "");
-      btn.disabled = true; btn.innerHTML = SPIN + "확인 중…"; sabunMsg();
+      btn.disabled = true; btn.innerHTML = SPIN + "사번 확인 중…"; sabunMsg();
       gateFetch({ action:"adminLogin", sabun: sab, pw: pw, keep: keep }).then(function(r){
         if (!r.ok){
           if (r.error === "badpw"){ $("aPw").setAttribute("aria-invalid", "true"); sabunMsg("er", "비밀번호가 맞지 않아요. 다시 입력해 주세요."); $("aPw").select(); }
@@ -2039,16 +2131,23 @@
     return { show: show, boot: boot, quick: quick, logout: logout, afterLoad: afterLoad, paintMe: paintMe, listAdmins: listAdmins };
   })();
 
-  $("logoutBtn").addEventListener("click", function(){
-    if (dirty){ toast("저장하지 않은 변경이 있어요. 먼저 저장해 주세요"); return; }
+  $("logoutBtn").addEventListener("click", function(){ askLogout(); });
+  function doLogout(){
     clearSession(); canSave = false; data = { site:{}, videos:[] }; rdata = { months:[] }; openV = openM = openA = null; render();
     Audit.reset(); Members.reset(); Ana.reset(); location.hash = "#/courses";
     if (adminSes || (gateInfo && gateInfo.hasSecrets)){ Auth.logout(); showGate("sabun"); return; }
     if (authInfo) showGate("login"); else showGate("first");
-  });
+  }
   $("makePwBtn").addEventListener("click", function(){ showGate("first"); });
   /* #49 맨 위 바 [↪ 로그아웃] = 내 계정의 로그아웃과 같음 */
-  $("barOut").addEventListener("click", function(e){ e.preventDefault(); if (touched() && !dirty){ dropBlank(); openV = null; render(); } $("logoutBtn").click(); });
+  /* #52 로그아웃 확인 창 (맨 위 바 · 내 계정 공통) */
+  function askLogout(){
+    var t = touched();
+    Modal.ask({ icon: IC_OUT, title: "로그아웃하시겠습니까?", body: t ? "저장하지 않은 변경이 있으면 사라져요." : "", ok: "로그아웃", onOk: function(){
+      if (dirty) revert(true); dropBlank(); openV = openM = openA = null; render(); doLogout();
+    } });
+  }
+  $("barOut").addEventListener("click", function(e){ e.preventDefault(); askLogout(); });
 
   /* ================= 디자인 #42: 올린 사람 · 바꾼 사람 기록 =================
      저장·업데이트·연결이 끝난 뒤 바뀐 것을 사번 목록의 '변경 기록' 탭에 보내고(누가 = 로그인한 관리자, 언제 = 한국 시간),
@@ -2103,7 +2202,7 @@
     function rowWho(t, merge){
       var o = merge ? merged(t) : get(t); if (!o) return "";
       var up = o.count === 1 || /업로드했어요|만들었어요/.test(o.last.x);
-      return '<span class="bdg am-who">' + esc(o.last.n) + " " + (up ? "업로드" : "수정") + " " + esc(fmtAt(o.last.at, "md")) + '</span>';
+      return '<span class="am-who">' + esc(o.last.n) + " " + (up ? "업로드" : "수정") + " " + esc(fmtAt(o.last.at, "md")) + '</span>';
     }
     /* 편집 칸 요약 2줄: 업로드 · 마지막 수정 */
     function sumWho(t, merge, firstLabel){
@@ -2131,9 +2230,20 @@
       var t = b.dataset.hist; b.disabled = true; b.textContent = "불러오는 중…";
       gateFetch({ action:"auditList", sid: adminSes.sid, target: t }).then(function(r){ if (r.ok){ more[t] = r.list; render(); } }).catch(function(){ b.disabled = false; b.textContent = "다시 불러오기"; });
     });
+    var histOpen = {};
+    function histLine(t, merge){
+      if (!t) return "";
+      var o = merge ? merged(t) : get(t); if (!o) return "";
+      var open = !!histOpen[t];
+      return '<div class="hline"><span class="hist2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5v4h4M12 7.5V12l3 2"/></svg>' +
+        '<span class="nowrap">변경 기록 <b>' + o.count + '</b></span><span class="nowrap">· 마지막 ' + (o.count === 1 ? "업로드 " : "수정 ") + esc(o.last.n) + ' ' + esc(fmtAt(o.last.at, "md")) + '</span>' +
+        '<button type="button" class="lnk" data-histt="' + esc(t) + '" aria-expanded="' + open + '">' + (open ? "접기" : "보기") + '</button></span>' +
+        (open ? histHtml(t, merge) : '') + '</div>';
+    }
+    document.addEventListener("click", function(e){ var b = e.target.closest("[data-histt]"); if (!b) return; var t = b.dataset.histt; histOpen[t] = !histOpen[t]; render(); });
     function lastSave(){ var sv = get("save"); return sv ? sv.last : null; }
     function reset(){ map = null; more = {}; }
-    return { load: load, add: add, get: get, rowWho: rowWho, sumWho: sumWho, fileWho: fileWho, histHtml: histHtml, lastSave: lastSave, reset: reset, on: on, paint: paint };
+    return { load: load, add: add, get: get, rowWho: rowWho, sumWho: sumWho, fileWho: fileWho, histHtml: histHtml, histLine: histLine, lastSave: lastSave, reset: reset, on: on, paint: paint };
   })();
 
   /* 저장 전·후를 비교해 '변경 기록'에 남길 줄 만들기 (여러 칸을 한 번에 바꾸면 한 줄로 묶음) */
@@ -2224,7 +2334,7 @@
      - 세일즈온 어드민 아이디·비밀번호는 사번 목록의 비밀 칸(스크립트 속성)에만. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
     var SCRIPT_ID = "1gq8_W7tE25FrOxcws0xbun4pj72lIY3eJywh-XkulrjDFzvSQvLKtbuc";   /* 11-12 사용자가 알려 준 세일즈온 사번 목록 Apps Script (코드 v19부터는 서버가 알려 준 값을 먼저 씀) */
-    var GATE_V = 17; /* 사번 목록 코드(Code.gs) 최신 버전 */
+    var GATE_V = 20; /* 사번 목록 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null, lastRun = null, syncBusy = false, testBusy = false;
     function call(action, extra){
@@ -2251,17 +2361,22 @@
     function paint(){
       var on = !!(url && st), old = on && (st.v || 1) < GATE_V;
       /* 세일즈온 사번 목록 */
-      sum("gateSum", on ? (old ? "wa" : "ok") : (url ? "wa" : ""), on ? (old ? "코드 바꾸기 필요" : "연결됨") : url ? "확인 안 됨" : "연결 안 됨");
+      sum("gateSum", on ? (old ? "wa" : "ok") : (url ? "wa" : "er"), on ? (old ? "코드 바꾸기 필요" : "연결됨") : url ? "확인 안 됨" : "연결 안 됨");
       $("gateDot").className = "k-dot " + (on ? (old ? "wa" : "ok") : url ? "wa" : "");
       $("gateStateT").textContent = on ? "연결됨" : url ? "확인 안 됨" : "연결 안 됨";
       $("gateVer").textContent = on ? "· 코드 v" + (st.v || 1) : "";
       if (document.activeElement !== $("gateUrl")) $("gateUrl").value = url;
       $("gateConnect").textContent = on ? "다시 연결" : "연결";
       /* 11-12 사용자 요청: [구글 시트 열기] [Apps Script 열기] — Apps Script는 코드 v19부터 바로 그 프로젝트로, 예전 코드면 내 프로젝트 목록으로 */
-      $("gateOpen").hidden = !(on && st.sheet && st.sheet.url);
+      /* #57: 연결됨 = 두 버튼 같은 무게 · 연결 안 됨 = 버튼 없이 안내 한 줄 · 예전 코드 = 위엔 시트만, Apps Script는 노랑 상자 안 */
+      var sUrl = "https://script.google.com/u/0/home/projects/" + encodeURIComponent(on && st.script || SCRIPT_ID) + "/edit";
+      $("gateOpen").hidden = !(on && st.sheet && st.sheet.url); $("gateOpen").classList.toggle("old", !!old);
       if (on && st.sheet) $("gateSheet").href = st.sheet.url;
-      $("gateScript").href = "https://script.google.com/u/0/home/projects/" + encodeURIComponent(on && st.script || SCRIPT_ID) + "/edit";
-      kmsg("gateOld", "wa", old ? K.warn + "<span><b>사번 목록 코드가 예전 버전(v" + (st.v || 1) + ")이에요.</b><br>개발팀 폴더의 새 Code.gs로 바꿔 주세요.</span>" : "");
+      $("gateScript").href = sUrl; $("gateScript").hidden = !!old;
+      $("gateHint").hidden = !!on;
+      $("gateDot").className = "k-dot " + (on ? (old ? "wa" : "ok") : url ? "wa" : "er");
+      kmsg("gateOld", "wa", old ? K.warn + "<span><b>사번 목록 코드가 예전 버전(v" + (st.v || 1) + ")이에요.</b><br>Apps Script에서 '회원 명단' 프로젝트를 열고 개발팀 폴더의 새 Code.gs로 바꾼 뒤 '배포 관리 → 편집 → 새 버전'을 눌러 주세요." +
+        '<a class="k-btn k-btn3 sm rp gate-old-btn" href="' + esc(sUrl) + '" target="_blank" rel="noopener">' + $("gateScript").querySelector("svg").outerHTML + 'Apps Script 열기<span class="ext" aria-hidden="true">↗</span></a></span>' : "");
       /* 세일즈온 어드민 계정 */
       var a = on && st.account || {}, t = on && st.lastTest, tt = t && (TEST[t.result] || TEST.unknown);
       $("acctNote").hidden = on; $("acctMain").hidden = !on;
@@ -2458,6 +2573,10 @@
   function emptyHtml(ic, title, text, extra){ return '<div class="k-empty"><span class="ei">' + (PI[ic] || ic || "") + '</span><b>' + title + '</b>' + (text ? '<p>' + text + '</p>' : '') + (extra || '') + '</div>'; }
   var NOLOGIN = emptyHtml("log", "사번으로 로그인하면 볼 수 있어요.", "세일즈온 사번 목록이 연결되고 사번으로 로그인한 관리자에게만 보여요.");
   var LOADERR = emptyHtml("log", "불러오지 못했어요.", "잠시 뒤 다시 열어 주세요.");
+  /* #52 불러오는 중 문구: 0.8초 넘으면 보이고, 5초 넘으면 둘째 줄이 '거의 다 왔어요!' (CSS 시간차) */
+  function ldHtml(b, sub){
+    return '<div class="ld" role="status" aria-live="polite"><span class="ld-dots" aria-hidden="true"><i></i><i></i><i></i></span><b>' + b + '</b><span class="ldsub"><span class="s1">' + (sub || "조금만 기다려 주세요") + '</span><span class="s2">거의 다 왔어요!</span></span></div>';
+  }
   function skelRows(cls, n, cols){
     var s = ""; for (var i = 0; i < n; i++){ s += '<div class="tr ' + cls + '">'; for (var j = 0; j < cols; j++) s += '<span class="sk" style="width:' + (40 + ((i * 7 + j * 13) % 50)) + '%"></span>'; s += '</div>'; }
     return s;
@@ -2529,7 +2648,7 @@
       var changed = r.view !== curView; cur = h; curView = r.view;
       document.body.dataset.view = r.view;
       $("app").hidden = r.view !== "courses"; $("setView").hidden = r.view !== "settings"; $("anaView").hidden = r.view !== "analytics"; $("memView").hidden = r.view !== "members";
-      document.querySelectorAll("#barNav [data-view]").forEach(function(a){ if (a.dataset.view === r.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+      document.querySelectorAll("#barNav [data-view], #bnav [data-view]").forEach(function(a){ if (a.dataset.view === r.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
       if (r.view !== "courses"){ if (!$("edWrap").hidden) closeEditor(); document.body.classList.remove("sheet-open"); }
       if (changed) window.scrollTo(0, 0);
       if (!document.body.classList.contains("authed")) return;
@@ -2550,24 +2669,26 @@
       if (!first) window.scrollTo(0, 0);
     }
     var lastM = null;
-    function master(){ var m = isMaster(); $("navMaster").hidden = !m; $("memXls").hidden = !m; if (curView && lastM !== null && m !== lastM){ lastM = m; apply(); } lastM = m; }
+    function master(){ var m = isMaster(); $("navMaster").hidden = !m; $("memXls").hidden = !m; $("barUpd").hidden = !m; if (curView && lastM !== null && m !== lastM){ lastM = m; apply(); } lastM = m; }
     function go(h){ if (location.hash === h) apply(); else location.hash = h; }
     function count(id, n){ var e = $(id); if (e) e.textContent = n == null ? "" : nf(n); }
     window.addEventListener("hashchange", apply);
     /* #49 맨 위 바 [설정] 칸: 마지막에 본 설정 메뉴로 */
-    $("barSet").addEventListener("click", function(e){ e.preventDefault(); go("#/settings/me"); });   /* 11-12 사용자 요청: [설정]은 늘 첫 메뉴(내 계정)부터 */
+    $("barSet").addEventListener("click", function(e){ e.preventDefault(); go("#/settings/me"); });
+    $("bnavSet").addEventListener("click", function(e){ e.preventDefault(); go("#/settings/me"); });   /* 11-12 사용자 요청: [설정]은 늘 첫 메뉴(내 계정)부터 */
     return { apply: apply, go: go, master: master, count: count, rel: relAt, org: org2, isMaster: isMaster };
   })();
 
   /* ---------- 회원 관리 (P7) ---------- */
   var Members = (function(){
-    var q = { tab:"normal", q:"", sort:"last", filter:"all", page:1 }, seq = 0, res = null, sel = null, dseq = 0, typeT = null, nsState = {};
+    var q = { tab:"all", q:"", sort:"last", filter:"all", page:1 }, seq = 0, res = null, sel = null, dseq = 0, typeT = null, nsState = {};
     function meta(r){
       $("memMeta").innerHTML = '<span>' + PI.refresh + '마지막 갱신 <b>' + (r && r.lastSync ? esc(fmtAt(r.lastSync)) : "—") + '</b></span>' +
         '<span>' + PI.cal + '기록 시작 <b>' + (r && r.logStart ? esc(fmtAt(r.logStart).replace(/ \d\d:\d\d$/, "")) : "아직 안 함") + '</b> <small>(마지막 접속 · 조회 · 다운로드를 세기 시작한 날)</small></span>';
     }
     function tabs(r){
       var c = r ? r.counts : null;
+      $("mtAll").textContent = c ? nf(c.all != null ? c.all : c.normal + c.abnormal + c.nosabun) : "";
       $("mtN").textContent = c ? nf(c.normal) : ""; $("mtA").textContent = c ? nf(c.abnormal) : ""; $("mtS").textContent = c ? nf(c.nosabun) : "";
       document.querySelectorAll("#memTabs [data-tab]").forEach(function(b){ b.setAttribute("aria-selected", b.dataset.tab === q.tab ? "true" : "false"); });
       if (c) Route.count("navMem", c.normal + c.abnormal + c.nosabun);
@@ -2582,10 +2703,10 @@
     function cls(){ return q.tab === "nosabun" ? "g-ns" : q.tab === "abnormal" ? "g-mem2" : "g-mem"; }
     function head(){
       if (q.tab === "nosabun") return '<div class="tr th g-ns" role="row"><span>회원아이디</span><span>이름</span><span>소속</span><span>가입상태</span><span>사번(직접 입력)</span></div>';
-      if (q.tab === "abnormal") return '<div class="tr th g-mem2" role="row"><span>사번</span><span>이름</span><span>소속</span><span>가입상태</span></div>';
+      if (q.tab === "abnormal") return '<div class="tr th g-mem2" role="row"><span>사번</span><span>이름</span><span>가입상태</span><span>소속</span></div>';
       var lab = { last:"마지막 접속", views:"누적 조회", downs:"누적 다운로드" };
       function th(k, r){ return '<span class="' + (r ? "r" : "") + '">' + (q.sort === k ? '<span class="srt">' + lab[k] + PI.sort + '</span>' : lab[k]) + '</span>'; }
-      return '<div class="tr th g-mem" role="row"><span>사번</span><span>' + (q.sort === "name" ? '<span class="srt">이름' + PI.sort + '</span>' : '이름') + '</span><span>소속</span>' + th("last") + th("views", 1) + th("downs", 1) + '</div>';
+      return '<div class="tr th g-mem" role="row"><span>사번</span><span>' + (q.sort === "name" ? '<span class="srt">이름' + PI.sort + '</span>' : '이름') + '</span><span>가입상태</span><span>소속</span>' + th("last") + th("views", 1) + th("downs", 1) + '</div>';
     }
     function rowHtml(x){
       if (q.tab === "nosabun"){
@@ -2598,14 +2719,17 @@
           '<button type="button" class="k-btn k-btn2 xs rp" data-nssave="' + esc(x.uid) + '">저장</button>' + msg + '</span></div>';
       }
       var on = sel === x.sabun ? " on" : "";
-      if (q.tab === "abnormal") return '<div class="tr go g-mem2' + on + '" role="row" tabindex="0" data-sb="' + esc(x.sabun) + '"><span class="t2">' + esc(x.sabun) + '</span><span class="nm">' + esc(x.name) + '</span><span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span><span><span class="k-pill s">비정상 회원</span></span></div>';
-      return '<div class="tr go g-mem' + on + '" role="row" tabindex="0" data-sb="' + esc(x.sabun) + '"><span class="t2">' + esc(x.sabun) + '</span><span class="nm">' + esc(x.name) + '</span><span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span>' +
+      var stp = '<span class="stc">' + (x.state === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : '<span class="k-pill s">비정상 회원</span>') + '</span>';
+      if (q.tab === "abnormal") return '<div class="tr go g-mem2' + on + '" role="row" tabindex="0" data-sb="' + esc(x.sabun) + '"><span class="t2">' + esc(x.sabun) + '</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span></div>';
+      /* #52 [전체] 칸: 사번 없는 회원도 같은 표에 (사번 자리는 '사번 없음', 상세 없음) */
+      if (!x.sabun) return '<div class="tr g-mem nosb" role="row"><span class="mu">사번 없음</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span><span class="mu" data-k="마지막 접속">—</span><span class="r mu" data-k="조회">—</span><span class="r mu" data-k="다운로드">—</span></div>';
+      return '<div class="tr go g-mem' + on + '" role="row" tabindex="0" data-sb="' + esc(x.sabun) + '"><span class="t2">' + esc(x.sabun) + '</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span>' +
         (x.last ? '<span data-k="마지막 접속">' + esc(relAt(x.last)) + '</span>' : '<span class="mu" data-k="마지막 접속">접속 전</span>') +
         '<span class="r' + (x.views ? '' : ' mu') + '" data-k="조회">' + nf(x.views) + '</span><span class="r' + (x.downs ? '' : ' mu') + '" data-k="다운로드">' + nf(x.downs) + '</span></div>';
     }
     function paint(){
       var r = res; tabs(r); meta(r); tools();
-      $("memNoLog").hidden = !(r && !r.logStart && q.tab === "normal");
+      $("memNoLog").hidden = !(r && !r.logStart && (q.tab === "normal" || q.tab === "all"));
       if (r && !r.logStart) $("memNoLog").innerHTML = PI.info + '<span><b>아직 기록이 없어요.</b> 사이트에 사번 로그인이 붙으면 회원마다 마지막 접속 · 누적 조회 · 누적 다운로드가 여기에 쌓여요.</span>';
       $("memNsNote").hidden = q.tab !== "nosabun";
       if (q.tab === "nosabun") $("memNsNote").innerHTML = PI.info + '<span>세일즈온 어드민 아이디에 사번이 없는 회원이에요. 사번을 알면 직접 적어 주세요. 다음 갱신 때 회원 명단에 들어가고, 영업개발파트 정상 회원이면 관리자에도 들어가요.</span>';
@@ -2627,7 +2751,7 @@
       var qq = { tab:q.tab, q:q.q, sort:q.sort, filter: q.filter === "all" ? "" : q.filter, page:q.page }, ck = JSON.stringify(qq), hit = memCache[ck];
       /* 11-12 속도: 한 번 본 조건(탭 · 쪽 · 검색 · 정렬)은 바로 그리고, 최신은 뒤에서 */
       if (hit){ res = hit.r; paint(); if (Date.now() - hit.at < 30000) return; }
-      else { $("memTbl").className = "tbl"; $("memTbl").innerHTML = head() + skelRows(cls(), 8, q.tab === "nosabun" ? 5 : q.tab === "abnormal" ? 4 : 6); }
+      else { $("memTbl").className = "tbl"; $("memTbl").innerHTML = head() + skelRows(cls(), 8, q.tab === "nosabun" ? 5 : q.tab === "abnormal" ? 4 : 6) + ldHtml("회원들 데려오는 중…", "1만 명이 넘어서 잠깐 걸려요"); }
       gateFetch({ action:"memberList", sid: adminSes.sid, q: qq }).then(function(r){
         if (my !== seq) return;
         if (!r.ok) throw new Error(r.error);
@@ -2668,7 +2792,7 @@
           list(r.views, false, PI.views, "본 강의") + list(r.downs, true, PI.files, "받은 자료");
       }).catch(function(e){ if (my !== dseq) return; sessionGone(e); det.innerHTML = '<div class="det-h"><span class="k-col"><b>불러오지 못했어요.</b></span><button type="button" class="x" data-detx aria-label="회원 상세 닫기">' + PI.x + '</button></div>'; });
     }
-    function open(sb){ q.tab = "normal"; q.q = sb; q.page = 1; $("memQ").value = sb; Route.go("#/members"); fetch1(true); detail(sb); }
+    function open(sb){ q.tab = "all"; q.q = sb; q.page = 1; $("memQ").value = sb; Route.go("#/members"); fetch1(true); detail(sb); }
     function saveNs(uid){
       var inp = document.querySelector('#memTbl [data-ns="' + CSS.escape(uid) + '"]'), v = (inp ? inp.value : "").replace(/\s+/g, "");
       if (v && !/^\d{8}$/.test(v)){ nsState[uid] = { s:"bad", v:v }; paint(); return; }
@@ -2685,14 +2809,14 @@
       var b = $("memXls"), old = b.innerHTML; b.disabled = true; b.innerHTML = SPIN + "만드는 중…";
       gateFetch({ action:"memberList", sid: adminSes.sid, q: { tab:q.tab, q:q.q, sort:q.sort, filter: q.filter === "all" ? "" : q.filter, all:true } }).then(function(r){
         if (!r.ok) throw new Error(r.error);
-        var name = { normal:"정상회원", abnormal:"비정상회원", nosabun:"사번없음" }[q.tab], rows;
+        var name = { all:"전체", normal:"정상회원", abnormal:"비정상회원", nosabun:"사번없음" }[q.tab], rows;
         if (q.tab === "nosabun") rows = [["회원아이디", "이름", "소속", "가입상태", "사번(직접 입력)"]].concat(r.rows.map(function(x){ return [x.uid, x.name, x.org, x.state, x.manual]; }));
         else rows = [["사번", "이름", "소속", "가입상태", "마지막 접속", "누적 조회", "누적 다운로드"]].concat(r.rows.map(function(x){ return [x.sabun, x.name, x.org, x.state, fmtAt(x.last, "full"), x.views, x.downs]; }));
         csvDownload("회원명단_" + name + "_" + kstDay(0).replace(/-/g, "") + ".csv", rows);
         toast(nf(r.rows.length) + "명을 엑셀(CSV)로 받았어요");
       }).catch(function(){ toast("받지 못했어요. 잠시 뒤 다시 해 주세요"); }).then(function(){ b.disabled = false; b.innerHTML = old; });
     }
-    $("memTabs").addEventListener("click", function(e){ var b = e.target.closest("[data-tab]"); if (!b || b.dataset.tab === q.tab) return; q.tab = b.dataset.tab; q.page = 1; if (q.tab !== "normal"){ q.filter = "all"; } fetch1(); });
+    $("memTabs").addEventListener("click", function(e){ var b = e.target.closest("[data-tab]"); if (!b || b.dataset.tab === q.tab) return; q.tab = b.dataset.tab; q.page = 1; if (q.tab !== "normal" && q.tab !== "all"){ q.filter = "all"; } fetch1(); });
     $("memQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(typeT); typeT = setTimeout(function(){ if (v === q.q) return; q.q = v; q.page = 1; fetch1(); }, 300); });
     $("memSort").addEventListener("change", function(){ q.sort = this.value; q.page = 1; fetch1(true); });
     $("memFilter").addEventListener("click", function(e){ var b = e.target.closest("[data-f]"); if (!b || b.dataset.f === q.filter) return; q.filter = b.dataset.f; q.page = 1; fetch1(); });
@@ -2723,7 +2847,7 @@
     function show(){
       var t = $("logTbl");
       if (noGate()){ t.innerHTML = NOLOGIN; return; }
-      var my = ++seq; t.innerHTML = HEAD + skelRows("g-log", 6, 8);
+      var my = ++seq; t.innerHTML = HEAD + skelRows("g-log", 6, 8) + ldHtml("기록 넘겨 보는 중…");
       gateFetch({ action:"syncLogList", sid: adminSes.sid, page: page }).then(function(r){
         if (my !== seq) return; if (!r.ok) throw new Error(r.error);
         if (!r.rows.length){ t.innerHTML = emptyHtml("log", "아직 갱신 기록이 없어요.", "사번 명단에서 [지금 갱신]을 누르거나 자동 갱신을 켜면 여기에 쌓여요."); return; }
@@ -2841,7 +2965,7 @@
       if (x.rs) tab = "down";
       var d = det && det.key === x.key ? det : null;
       var top = head(x) + tools();
-      if (!d){ box.innerHTML = top + '<div class="sum">' + [0, 1, 2, 3].map(function(){ return '<div class="tile"><span class="sk" style="width:60%"></span><span class="sk" style="height:26px;width:40%"></span></div>'; }).join("") + '</div><div class="tbl">' + skelRows("g-view", 6, 6) + '</div>'; return; }
+      if (!d){ box.innerHTML = top + '<div class="sum">' + [0, 1, 2, 3].map(function(){ return '<div class="tile"><span class="sk" style="width:60%"></span><span class="sk" style="height:26px;width:40%"></span></div>'; }).join("") + '</div><div class="tbl">' + skelRows("g-view", 6, 6) + ldHtml("숫자 세는 중…", "누가 봤는지 하나하나 세고 있어요") + '</div>'; return; }
       var none = !d.total && !d.downs && (period !== "all");
       box.innerHTML = top + sumHtml(x, d) +
         (x.rs ? '' : '<div class="ut" role="tablist"><button type="button" role="tab" data-ut="view" aria-selected="' + (tab === "view") + '">' + PI.views + '본 사람<b>' + nf(d.viewers.length) + '</b></button><button type="button" role="tab" data-ut="down" aria-selected="' + (tab === "down") + '">' + PI.files + '자료 다운로드<b>' + nf(d.downers) + '</b></button></div>') +
