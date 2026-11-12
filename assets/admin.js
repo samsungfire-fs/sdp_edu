@@ -35,7 +35,7 @@
     LS.set("sc-gh-token", remember ? token : ""); LS.set("sc-api-key", remember ? apiKey : "");
     SS.set("sc-gh-token", token); SS.set("sc-api-key", apiKey);
   }
-  function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); setDKey(""); }
+  function clearSession(){ keepSession("", "", false); SS.set("sc-gh-token", ""); SS.set("sc-api-key", ""); setDKey(""); try { localStorage.removeItem("sc-admin-cache"); } catch(e){} }
   /* 기획 P2 (11-11): 강의 · 상품연구 목록을 잠그는 열쇠 — 사번 목록이 로그인한 관리자에게만 줌, 이 탭에만 보관 */
   var DKEY = SS.get("sc-data-key") || "";
   function setDKey(k){ DKEY = k || ""; SS.set("sc-data-key", DKEY); }
@@ -95,8 +95,29 @@
 
   function setConn(cls, text, note){ var n = $("meNote"); n.textContent = cls === "ok" ? "" : text + (note ? " · " + note : ""); n.hidden = cls === "ok" || !note; if (typeof Auth !== "undefined") Auth.paintMe(); }
 
+  /* 11-12 속도: 마지막으로 받은 강의 · 상품연구 목록을 이 브라우저에 '잠근 채로'(데이터 열쇠로 암호화) 보관 →
+     새로고침하면 그걸로 바로 그리고, 저장소의 최신본은 뒤에서 확인(같으면 그대로, 다르면 새로 그림) */
+  var CACHE_K = "sc-admin-cache", verifying = false;
+  function cacheSave(){
+    if (!DKEY || !SC.box.ok || !baseline || !sha) return;
+    var B = JSON.parse(baseline);
+    SC.box.lock({ v: B.v, r: B.r, sha: sha, rsha: rsha, vp: VPATH, rp: RPATH, br: branch, repo: owner + "/" + repo }, DKEY, "")
+      .then(function(t){ LS.set(CACHE_K, t); }).catch(function(){});
+  }
+  function cacheOpen(){
+    var t = LS.get(CACHE_K), w = null;
+    if (!t || !DKEY || !SC.box.ok) return Promise.resolve(null);
+    try { w = JSON.parse(t); } catch(e){ return Promise.resolve(null); }
+    return SC.box.open(w, DKEY).then(function(c){ return c && c.repo === owner + "/" + repo ? c : null; }).catch(function(){ return null; });
+  }
   function load(){
     canSave = false; updateSaveBar("불러오는 중…");
+    var cached = null, first = !baseline;
+    var pre = (token && first ? cacheOpen() : Promise.resolve(null)).then(function(c){
+      if (!c || baseline) return;
+      cached = c; verifying = true; branch = c.br || branch; sha = c.sha; rsha = c.rsha; VPATH = c.vp || VPATH; RPATH = c.rp || RPATH;
+      useData(c.v, c.r);
+    });
     if (!token){
       setConn("warn", "보기만", "토큰이 없어서 저장할 수 없어요.");
       Route.go("#/settings/me");
@@ -124,10 +145,17 @@
           return [o[0] || pv, er ? o[1] : pr];
         });
       })
+      .then(function(r){ return pre.then(function(){ return r; }); })
       .then(function(r){
         var file = r[0], rf = r[1];
-        sha = file ? file.sha : null; rsha = rf ? rf.sha : null;
-        useData(file ? file.json : { site:{ title:"교육 자료실" }, videos:[] }, rf ? rf.json : null);
+        var same = !!cached && !!file && cached.sha === file.sha && (rf ? rf.sha : null) === (cached.rsha || null) && cached.vp === VPATH && cached.rp === RPATH;
+        sha = file ? file.sha : null; rsha = rf ? rf.sha : null; verifying = false;
+        if (!same){
+          var lost = !!cached && touched();
+          useData(file ? file.json : { site:{ title:"교육 자료실" }, videos:[] }, rf ? rf.json : null);
+          if (lost) toast("다른 곳에서 바뀐 내용이 있어 최신 목록으로 다시 불러왔어요");
+          cacheSave();
+        }
         canSave = true; setConn("ok", "연결됨", (adminSes ? "로그인 " + adminSes.name + (adminSes.master ? "(마스터)" : "") + " · 사번 " + adminSes.sabun + " · 오늘 밤 12시까지\n" : "") + "저장소 " + owner + "/" + repo);
         lastUpdate(); Deploy.start();
         if (apiKey){
@@ -140,6 +168,7 @@
         updateSaveBar();
       })
       .catch(function(e){
+        verifying = false;
         if (e.status === "nokey"){ setConn("bad", "열쇠 없음", "강의 목록이 잠겨 있어요. 사번으로 로그인해야 열 수 있어요."); updateSaveBar(); return; }
         if (e.status !== 401) Route.go("#/settings/me");
         if (e.status === 401){ clearSession(); showGate(authInfo ? "change" : "first", "저장된 토큰이 만료됐거나 지워졌어요. 새 토큰을 넣어 주세요."); return; }
@@ -1108,7 +1137,7 @@
       .then(function(t){ return gh("/git/commits", { method:"POST", body: JSON.stringify({ message: "강의 · 자료 목록 잠금 (사번 로그인)", tree: t.sha, parents:[head] }) }); })
       .then(function(c){ return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) }).then(function(){ return c; }); })
       .then(function(c){
-        sha = pair.vsha; rsha = (B.r.months.length || rsha) ? pair.rsha : rsha; VPATH = ENC_V; RPATH = ENC_R; needLock = false;
+        sha = pair.vsha; rsha = (B.r.months.length || rsha) ? pair.rsha : rsha; VPATH = ENC_V; RPATH = ENC_R; needLock = false; cacheSave();
         showLast(c.committer && c.committer.date); Deploy.expect(c.sha);
         toast("강의 · 자료 목록을 잠갔어요. 이제 사이트는 사번으로 로그인해야 볼 수 있어요");
       })
@@ -1160,7 +1189,7 @@
       if (pair0.enc){ VPATH = ENC_V; RPATH = ENC_R; needLock = false; }
       rdata.months.forEach(function(m){ delete m._new; delete m._copied; });
       pendingImgs = {};
-      baseline = JSON.stringify({ v: out, r: rout });
+      baseline = JSON.stringify({ v: out, r: rout }); cacheSave();
       showLast(newCommit.committer && newCommit.committer.date); Deploy.expect(newCommit.sha);
       if (blank) data.videos = data.videos.filter(function(v){ return v.id; });
       var items = auditItems(before, out, rout);
@@ -1187,7 +1216,7 @@
     var word = o.visible ? "공개로" : "비공개로";
     if (held){ toast(word + " 바꿨어요. 편집 칸 아래 [저장]을 누르면 함께 저장돼요"); return; }
     if (!dirty) return;
-    if (!canSave){ toast("저장소에 연결되지 않아 바꿀 수 없어요"); revert(true); return; }
+    if (!canSave){ toast(verifying ? "최신 목록을 확인하는 중이에요. 잠시 뒤 다시 눌러 주세요" : "저장소에 연결되지 않아 바꿀 수 없어요"); revert(true); return; }
     var key = isM ? o._oym : o._oid;
     toast(word + " 바꾸는 중…");
     save({ msg: again ? "되돌렸어요" : word + " 바꿨어요", undo: again ? null : function(){
