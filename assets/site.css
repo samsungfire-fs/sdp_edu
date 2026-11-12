@@ -1034,3 +1034,6 @@ body .lg-logo{font-weight:800 !important; font-size:36px; line-height:1.2; lette
   .lg-nt.dark{font-size:12px}
 }
 .lg > .lg-tm{position:absolute}
+/* #59 키패드가 올라오면 아래 붙는 것들도 키패드 위로 (iOS: visualViewport로 잰 --kb) */
+.toast, .fab{margin-bottom:var(--kb, 0px)}
+.lg{min-height:100svh; min-height:100dvh}

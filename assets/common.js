@@ -307,5 +307,35 @@
     }
   };
 
+  /* #59 숫자만 넣는 칸: 숫자 키패드(inputmode=numeric · pattern) + 붙여 넣은 숫자 아닌 글자 지움
+     + 키패드가 올라오면 칸과 [로그인](폼 묶음)이 키패드 위 16px 이상에 보이게, 아래 붙는 탭 바 · 토스트도 키패드 위로(--kb) */
+  (function () {
+    var d = document, de = d.documentElement, vv = w.visualViewport;
+    function isNum(el) { return el && el.tagName === "INPUT" && el.getAttribute("inputmode") === "numeric"; }
+    d.addEventListener("input", function (e) {
+      var t = e.target; if (!isNum(t)) return;
+      var v = t.value.replace(/\D/g, ""), max = +t.getAttribute("maxlength") || 0;
+      if (max) v = v.slice(0, max);
+      if (v !== t.value) { var p = t.selectionStart, cut = t.value.length - v.length; t.value = v; try { t.setSelectionRange(Math.max(0, p - cut), Math.max(0, p - cut)); } catch (er) {} }
+    }, true);
+    function kb() { return vv ? Math.max(0, Math.round(w.innerHeight - vv.height - vv.offsetTop)) : 0; }
+    function setKb() { de.style.setProperty("--kb", kb() + "px"); de.classList.toggle("kb-up", kb() > 80); }
+    if (vv) { vv.addEventListener("resize", setKb); vv.addEventListener("scroll", setKb); }
+    function fit(el) {
+      if (!vv || !d.contains(el) || d.activeElement !== el) return;
+      var box = el.closest("form, .k-form, .ns-in, .lg-fld") || el, r = box.getBoundingClientRect(), top = vv.offsetTop, bottom = top + vv.height - 16;
+      if (r.height > vv.height - 32) { el.scrollIntoView({ block: "center" }); return; }
+      if (r.bottom > bottom) w.scrollBy(0, r.bottom - bottom);
+      else if (r.top < top + 8) w.scrollBy(0, r.top - top - 8);
+    }
+    d.addEventListener("focusin", function (e) {
+      var t = e.target; if (!t || !/^(INPUT|TEXTAREA)$/.test(t.tagName)) return;
+      if (!(w.matchMedia && matchMedia("(pointer:coarse)").matches)) return;
+      var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { setKb(); fit(t); }, 60); };
+      if (vv) vv.addEventListener("resize", go);
+      setTimeout(go, 450);
+    });
+  })();
+
   w.SC = SC;
 })(window);

@@ -1663,3 +1663,6 @@ body.modal-open{overflow:hidden}
 #app .lrow .ed-btn span{display:inline !important}
 @media (max-width:980px){ body.sheet-open .toast{bottom:calc(24px + env(safe-area-inset-bottom, 0px))} }
 @media (max-width:560px){ .ytc .th{max-width:320px} }
+/* #59 키패드가 올라오면 아래 탭 바 · 토스트 · 맨 위로 버튼도 키패드 위로 · 높이는 dvh */
+.toast, .fab, body.authed .bnav{margin-bottom:var(--kb, 0px)}
+.setv, .anav, .memview{min-height:calc(100dvh - 60px)}

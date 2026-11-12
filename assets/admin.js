@@ -2715,7 +2715,7 @@
         var msg = stt === "ok" ? '<span class="ns-st ok">✓ 저장됨</span>' : stt === "bad" ? '<span class="ns-st er">8자리 숫자로 적어 주세요</span>' : stt === "dup" ? '<span class="ns-st er">회원 탭에 이미 있는 사번이에요</span>' : stt === "busy" ? '<span class="ns-st">' + SPIN + '</span>' : stt === "err" ? '<span class="ns-st er">저장하지 못했어요</span>' : '';
         return '<div class="tr c g-ns" role="row"><span class="t2 el" title="' + esc(x.uid) + '">' + esc(x.uid) + '</span><span class="nm">' + esc(x.name) + '</span><span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span>' +
           '<span>' + (x.state === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : '<span class="k-pill s">비정상 회원</span>') + '</span>' +
-          '<span class="ns-in"><input class="k-in k-num" inputmode="numeric" maxlength="8" data-ns="' + esc(x.uid) + '" value="' + esc(val || "") + '" placeholder="8자리" aria-label="' + esc(x.name) + ' 사번 직접 입력"' + (stt === "bad" || stt === "dup" ? ' aria-invalid="true"' : '') + '>' +
+          '<span class="ns-in"><input class="k-in k-num" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" data-ns="' + esc(x.uid) + '" value="' + esc(val || "") + '" placeholder="8자리" aria-label="' + esc(x.name) + ' 사번 직접 입력"' + (stt === "bad" || stt === "dup" ? ' aria-invalid="true"' : '') + '>' +
           '<button type="button" class="k-btn k-btn2 xs rp" data-nssave="' + esc(x.uid) + '">저장</button>' + msg + '</span></div>';
       }
       var on = sel === x.sabun ? " on" : "";
