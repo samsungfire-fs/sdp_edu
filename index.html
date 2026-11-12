@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261112f">
+<link rel="stylesheet" href="assets/site.css?v=20261112g">
 </head>
 <body>
 
@@ -72,7 +72,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261112b"></script>
+<script src="assets/common.js?v=20261112c"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -646,7 +646,7 @@
     function open(v, btn){
       var url = videoUrl(v.id);
       var touch = matchMedia("(hover:none), (pointer:coarse)").matches || matchMedia("(max-width:980px)").matches;
-      if (touch && navigator.share){ navigator.share({ title: v.title || "강의", text: "영개파 교육 자료", url: url }).catch(function(){}); return; }
+      if (touch && navigator.share){ navigator.share({ url: url }).catch(function(){}); return; }
       if (pop){ close(); return; }
       back = btn; cur = { v: v, url: url };
       pop = document.createElement("div"); pop.className = "shp" + (sheet() ? " sheet" : ""); pop.setAttribute("role", "dialog"); pop.setAttribute("aria-labelledby", "shpT");

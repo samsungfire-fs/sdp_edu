@@ -1726,3 +1726,6 @@ body.modal-open{overflow:hidden}
 .modal.how .bt2 .bb.g{background:var(--k-s1); color:var(--k-t1); box-shadow:inset 0 0 0 1px var(--k-ln2)}
 .modal.how .bt2 .ext{color:var(--k-t3); font-size:14px; margin-left:-2px}
 @media (max-width:420px){ .modal.how .bt2{grid-template-columns:1fr} }
+
+/* 사용자 요청: 키패드가 올라와 있을 때 아래로 더 내릴 수 있게 키패드 높이만큼 여백 */
+html.kb-up body{padding-bottom:var(--kb, 0px)}

@@ -318,23 +318,49 @@
       if (max) v = v.slice(0, max);
       if (v !== t.value) { var p = t.selectionStart, cut = t.value.length - v.length; t.value = v; try { t.setSelectionRange(Math.max(0, p - cut), Math.max(0, p - cut)); } catch (er) {} }
     }, true);
-    function kb() { return vv ? Math.max(0, Math.round(w.innerHeight - vv.height - vv.offsetTop)) : 0; }
-    function setKb() { de.style.setProperty("--kb", kb() + "px"); de.classList.toggle("kb-up", kb() > 80); }
-    if (vv) { vv.addEventListener("resize", setKb); vv.addEventListener("scroll", setKb); }
-    function fit(el) {
-      if (!vv || !d.contains(el) || d.activeElement !== el) return;
-      var box = el.closest("form, .k-form, .ns-in, .lg-fld") || el, r = box.getBoundingClientRect(), top = vv.offsetTop, bottom = top + vv.height - 16;
-      if (r.height > vv.height - 32) { el.scrollIntoView({ block: "center" }); return; }
-      if (r.bottom > bottom) w.scrollBy(0, r.bottom - bottom);
-      else if (r.top < top + 8) w.scrollBy(0, r.top - top - 8);
+    /* 키패드 높이: 화면 높이 − 보이는 높이 (iOS는 화면이 줄지 않고 키패드가 덮음) */
+    function kb() { return vv ? Math.max(0, Math.round(w.innerHeight - vv.height)) : 0; }
+    function setKb() { var k = kb(); de.style.setProperty("--kb", k + "px"); de.classList.toggle("kb-up", k > 80); }
+    if (vv) { vv.addEventListener("resize", setKb); }
+    /* 칸이 든 묶음의 [로그인] · [저장] 같은 버튼까지 키패드 위 16px 안으로 */
+    function goal(el) {
+      var f = el.closest("form, .ns-in, .k-row");
+      var b = f && f.querySelector('button[type="submit"], .ubtn, .k-btn:not([hidden])');
+      if (!b && f && f.tagName === "FORM") b = f.querySelector("button");
+      return b && b.offsetParent ? b : el;
     }
+    function covered(t) {
+      var r = t.getBoundingClientRect(), top = vv ? vv.offsetTop : 0, bottom = (vv ? vv.offsetTop + vv.height : w.innerHeight) - 16;
+      return r.bottom > bottom ? r.bottom - bottom : (r.top < top + 8 ? r.top - top - 8 : 0);
+    }
+    function fit(el) {
+      if (!d.contains(el) || d.activeElement !== el) return;
+      setKb();
+      var t = goal(el), dy;
+      if (t !== el) {                                                /* 칸 ~ 버튼이 한 화면에 다 못 들어오면 칸을 먼저 */
+        var h = vv ? vv.height : w.innerHeight;
+        if (t.getBoundingClientRect().bottom - el.getBoundingClientRect().top > h - 24) t = el;
+      }
+      dy = covered(t);
+      if (!dy) return;
+      var y0 = w.scrollY; w.scrollBy(0, dy);
+      setTimeout(function () {                                       /* 화면이 안 움직였거나(편집 시트 안 등) 아직 가리면 */
+        if (d.activeElement !== el) return;
+        if (covered(t) > 2 || w.scrollY === y0) t.scrollIntoView({ block: t === el ? "center" : "end" });
+      }, 80);
+    }
+    var cur = null, again = null;
     d.addEventListener("focusin", function (e) {
-      var t = e.target; if (!t || !/^(INPUT|TEXTAREA)$/.test(t.tagName)) return;
+      var t = e.target; if (!t || !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || /^(checkbox|radio|button|submit|file|range|color)$/.test(t.type)) return;
       if (!(w.matchMedia && matchMedia("(pointer:coarse)").matches)) return;
-      var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { setKb(); fit(t); }, 60); };
+      cur = t;
+      var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { fit(t); }, 60); };
       if (vv) vv.addEventListener("resize", go);
       setTimeout(go, 450);
     });
+    d.addEventListener("focusout", function () { cur = null; setTimeout(setKb, 300); });
+    /* 키패드 위 줄(자동 완성 · ▲▼✓)이 늦게 붙어 높이가 또 바뀌면 다시 맞춤 */
+    if (vv) vv.addEventListener("resize", function () { if (!cur) return; clearTimeout(again); again = setTimeout(function () { if (cur) fit(cur); }, 120); });
   })();
 
   w.SC = SC;
