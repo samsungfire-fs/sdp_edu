@@ -1601,11 +1601,11 @@
       setTimeout(function(){ (token ? $("newPw") : $("ghToken")).focus(); }, 50);
     }
   }
-  function enterApp(){
+  function enterApp(noLoad){
     document.body.classList.add("authed");
     $("noAuth").hidden = !!authInfo || !!adminSes || !!GATE_URL;
     Route.master(); Route.apply();
-    load();
+    if (!noLoad) load();
   }
 
   $("loginForm").addEventListener("submit", function(e){
@@ -1820,13 +1820,16 @@
     function kstNow(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19); }
     function quick(){
       var saved = sidGet(), url = LS.get("sdp-gate-url") || "";
-      if (!saved || !saved.sid || !saved.p || !url || !token || !DKEY) return false;
+      if (!saved || !saved.sid || !saved.p || !url) return false;
       if (saved.exp && String(saved.exp).slice(0, 19) <= kstNow()) return false;
       GATE_URL = url; gateInfo = { ok:true, hasSecrets:true };
-      var p = saved.p;
+      var p = saved.p, ready = !!(token && DKEY);
       adminSes = { sid: saved.sid, sabun: p.sabun, name: p.name, master: !!p.master, exp: saved.exp, keep: !!saved.keep, org: p.org || "", keepRule: p.keepRule };
-      enterApp();
+      /* 11-12 새로고침 바로: 저장된 로그인이 있으면 '확인 중' 화면 없이 바로 들어가고, 확인은 뒤에서.
+         새 탭이라 열쇠(토큰 · 데이터 열쇠)가 아직 없으면 화면만 먼저 열고 확인이 끝나는 대로 목록을 불러옴 */
+      enterApp(!ready);
       gateFetch({ action:"adminSession", sid: saved.sid }).then(function(r){
+        if (r.ok && !r.must && !ready && r.secrets){ keepSession(r.secrets.ghToken, r.secrets.apiKey, false); setDKey(r.secrets.dataKey); ready = true; load(); }
         if (r.ok && !r.must){
           adminSes.master = !!r.master; adminSes.name = r.name; adminSes.org = r.org || ""; adminSes.exp = r.exp; adminSes.keepRule = r.keepRule;
           sidSet({ sid: saved.sid, exp: r.exp, keep: !!saved.keep, p: { sabun: r.sabun, name: r.name, master: !!r.master, org: r.org || "", keepRule: r.keepRule } }, !!saved.keep);
@@ -1996,7 +1999,7 @@
     }
     $("sGhSave").addEventListener("click", function(){ saveKey("gh"); });
     $("sKeySave").addEventListener("click", function(){ saveKey("api"); });
-    return { show: show, boot: boot, logout: logout, afterLoad: afterLoad, paintMe: paintMe, listAdmins: listAdmins };
+    return { show: show, boot: boot, quick: quick, logout: logout, afterLoad: afterLoad, paintMe: paintMe, listAdmins: listAdmins };
   })();
 
   $("logoutBtn").addEventListener("click", function(){
@@ -2464,7 +2467,7 @@
       if (p[0] === "analytics") return { view:"analytics" };
       if (p[0] === "members" || (p[0] === "settings" && p[1] === "members")) return { view:"members" };
       if (p[0] === "settings"){
-        var m = p[1]; if (MENUS.indexOf(m) < 0){ m = LS.get("sc-admin-set") || "me"; if (MENUS.indexOf(m) < 0) m = "me"; }
+        var m = p[1]; if (MENUS.indexOf(m) < 0) m = "me";      /* 11-12 사용자 요청: 메뉴 없이 들어오면 늘 첫 메뉴(내 계정) */
         return { view:"settings", menu:m };
       }
       return { view:"courses" };
@@ -2491,7 +2494,6 @@
     }
     function menu(m, first){
       var lock = MASTER[m] && !isMaster();
-      if (!lock) LS.set("sc-admin-set", m);
       document.querySelectorAll("#setNav [data-set]").forEach(function(a){ if (a.dataset.set === m) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
       document.querySelectorAll("#setMain [data-page]").forEach(function(el){ el.hidden = el.dataset.page !== (lock ? "nomaster" : m); });
       if (!lock){
@@ -2508,7 +2510,7 @@
     function count(id, n){ var e = $(id); if (e) e.textContent = n == null ? "" : nf(n); }
     window.addEventListener("hashchange", apply);
     /* #49 맨 위 바 [설정] 칸: 마지막에 본 설정 메뉴로 */
-    $("barSet").addEventListener("click", function(e){ e.preventDefault(); var m = LS.get("sc-admin-set"); go("#/settings/" + (MENUS.indexOf(m) > -1 ? m : "me")); });
+    $("barSet").addEventListener("click", function(e){ e.preventDefault(); go("#/settings/me"); });   /* 11-12 사용자 요청: [설정]은 늘 첫 메뉴(내 계정)부터 */
     return { apply: apply, go: go, master: master, count: count, rel: relAt, org: org2, isMaster: isMaster };
   })();
 
@@ -2849,8 +2851,9 @@
 
   SC.ripple(); SC.fab();
   function boot(){
-    fetchAuth().then(function(a){
-      authInfo = a;
+    var fa = fetchAuth().then(function(a){ authInfo = a; return a; });
+    if (Auth.quick()) return;                     /* 11-12: 저장된 로그인이면 아무것도 기다리지 않고 바로 */
+    fa.then(function(a){
       Auth.boot(function(){                       /* 창구가 없거나 아직 토큰을 옮기기 전: 예전 방식 */
         if (token) enterApp();
         else if (a) showGate("login");
