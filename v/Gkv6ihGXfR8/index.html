@@ -20,12 +20,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap"></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@900&text=%EA%B5%90%EC%9C%A1%20%EC%9E%90%EB%A3%8C%EC%8B%A4&display=swap" media="print" onload="this.media='all'">
 <link rel="icon" href="assets/favicon-48.png?v=3" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261112c">
+<link rel="stylesheet" href="assets/site.css?v=20261112e">
 </head>
 <body>
 
@@ -44,15 +45,14 @@
     </a>
     <div class="menu-box" id="menuBox"><nav class="menu" id="menu" aria-label="메뉴"></nav></div>
     <span class="bar-brand" id="barBrand">영개파 교육 자료</span>
-    <div class="who" id="who" hidden>
-      <button type="button" class="me" id="meBtn" aria-haspopup="menu" aria-expanded="false"><span class="adm" id="meAdmM" hidden>관리자</span><span class="av" id="meAv"></span><span class="nm" id="meNm"></span><span class="adm" id="meAdm" hidden>관리자</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-      <div class="me-pop" id="mePop" role="menu" hidden></div>
-    </div>
+    <div class="who" id="who" hidden></div>
+    <span class="usep who-sep" id="whoSep" aria-hidden="true" hidden></span>
     <div class="tm" id="tm" role="radiogroup" aria-label="화면 모드">
       <button type="button" role="radio" aria-checked="true" data-theme-set="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>라이트</button>
       <button type="button" role="radio" aria-checked="false" data-theme-set="dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>다크</button>
     </div>
     <button type="button" class="tm-ic" id="tmIc" aria-label="다크 모드로 바꾸기"></button>
+    <button type="button" class="mm-btn rp" id="mmBtn" aria-expanded="false" aria-controls="mmPanel" aria-label="메뉴 열기" hidden></button>
   </div>
 </header>
 
@@ -109,6 +109,8 @@
     dn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v13m0 0-5-5m5 5 5-5"/></svg>',
     lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>',
     out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>',
+    bars: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4.1-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg>',
     shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/></svg>',
     ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>',
     clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
@@ -274,9 +276,20 @@
         (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') +
         (v.duration ? '<span class="chip-dur">' + esc(v.duration) + '</span>' : '') +
         '<span class="play" aria-hidden="true">' + IC.play + '</span></div>' +
-      '<div class="card-body"><h3>' + esc(v.title || "제목 없음") + '</h3>' +
-        '<div class="card-meta"><span class="meta-l">' + (withMenu ? menuBadge(v) : '') + '<span class="date">' + metaText(v) + '</span>' + vwHtml(v.id) + '</span>' +
-          (n ? '<span class="chip-files">' + IC.dl + '자료&nbsp;' + n + '개</span>' : '') + '</div></div></a></li>';
+      cardBody(v.title, withMenu ? SC.catOf(v) : "", [vw2(v.id), SC.fmtDate(v.date), n ? "자료 " + n + "개" : ""]) + '</a></li>';
+  }
+  /* #61 카드 아래 = 글자 두 줄: 제목(말머리 뺌) · ('전체'에서만) ■ 메뉴 이름 · 조회 N회 · 날짜 · 자료 N개 */
+  function cleanTitle(t){ return String(t || "").replace(/^\[[^\]]*\]\s*/, "") || String(t || ""); }
+  function cardBody(title, cat, parts){
+    var full = title || "제목 없음", t = cleanTitle(full), seg = parts.filter(Boolean);
+    return '<div class="card-body yt-b"><h3 class="yt-t"' + (t !== full ? ' title="' + esc(full) + '"' : '') + '>' + esc(t) + '</h3>' +
+      (cat ? '<span class="ym" data-menu="' + esc(cat) + '">' + esc(SC.catLabel(cat)) + '</span>' : '') +
+      (seg.length ? '<span class="ys">' + seg.map(function(x, i){ var dot = i && seg[i - 1].indexOf('class="vw2"') < 0; return (dot ? '<i aria-hidden="true">·</i>' : '') + (x.charAt(0) === "<" ? x : '<span>' + esc(x) + '</span>'); }).join("") + '</span>' : '') + '</div>';
+  }
+  function vw2(id){
+    if (!LOCKED) return "";
+    var k = "v:" + id;
+    return '<span class="vw2" data-vw="' + esc(k) + '"' + (STATS ? '' : ' hidden') + '><span>조회 ' + fmtN(STATS ? (STATS.views[k] || 0) : 0) + '회</span><i aria-hidden="true">·</i></span>';
   }
   /* 상품연구 카드 (월 · 연령): 썸네일 없으면 흰 바탕 로고 기본 썸네일 */
   var RDEF = "assets/research-default.png";
@@ -286,11 +299,9 @@
   }
   function rCard(href, thumb, title, left, n, priv){
     return '<li><a class="card r-card rp" href="' + href + '" data-go>' + rThumb(thumb, priv ? "has-priv" : "").replace(/<\/div>$/, (priv ? privTag() : '') + '</div>') +
-      '<div class="card-body"><h3>' + esc(title || "제목 없음") + '</h3>' +
-        '<div class="card-meta">' + (left ? '<span class="r-sub">' + left + '</span>' : '') +
-          '<span class="chip-files">' + IC.dl + '자료&nbsp;' + n + '개</span></div></div></a></li>';
+      cardBody(title, "", [left, "자료 " + n + "개"]) + '</a></li>';
   }
-  function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령&nbsp;' + rAges(m).length + '개', rFileCount(m), !SC.isPublic(m)); }
+  function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령 ' + rAges(m).length + '개', rFileCount(m), !SC.isPublic(m)); }
   function ageCard(m, a){ return rCard(rUrl(ymCode(m.ym), a.id), a.thumb, a.title, "", (a.files || []).length, !SC.isPublic(a) || !SC.isPublic(m)); }
 
   /* ---------- 목록 화면 (전체 · 메뉴 · 상품연구 월/연령) ---------- */
@@ -735,7 +746,7 @@
 
   /* ---------- 화면 고르기 ---------- */
   function route(){
-    Share.close();
+    Share.close(); MM.close(true);
     var r = parse(), want;
     var view = r.v ? "video" : r.r ? "research" : "list";
     didRestore = false;
@@ -760,6 +771,7 @@
     route(); if (!didRestore) window.scrollTo(0, 0);
   });
   window.addEventListener("popstate", function(){
+    if (MM.onPop()) return;
     if (lastView === "list") feedSave();
     restoreNext = lastView === "video";
     route();
@@ -848,7 +860,7 @@
   function privTag(){ return '<span class="priv" aria-hidden="true"><span>' + IC.lock + '비공개 · 관리자에게만 보여요</span></span>'; }
   function paintStats(){
     if (!STATS) return;
-    document.querySelectorAll("[data-vw]").forEach(function(el){ el.hidden = false; el.lastChild.textContent = "조회 " + fmtN(STATS.views[el.dataset.vw] || 0); });
+    document.querySelectorAll("[data-vw]").forEach(function(el){ el.hidden = false; var n = fmtN(STATS.views[el.dataset.vw] || 0); if (el.classList.contains("vw2")) el.firstChild.textContent = "조회 " + n + "회"; else el.lastChild.textContent = "조회 " + n; });
     document.querySelectorAll("[data-dn]").forEach(function(el){ el.hidden = false; el.lastChild.textContent = fmtN(STATS.downs[el.dataset.dn] || 0) + "명"; });
   }
   function loadStats(){
@@ -875,28 +887,62 @@
     });
   }
 
-  /* ---------- 이름 칸 (메뉴 바 라이트/다크 왼쪽) ---------- */
+  /* ---------- 이름 칸 (#60: 동그라미 · ▾ · 작은 창 없이 나란히) ----------
+     [🛡 관리자 페이지 ↗](마스터 · 관리자만) │ 홍길동님 20231234 [마스터/관리자] [↪ 로그아웃] │ 라이트/다크 */
   function paintWho(){
     var on = live() && !document.body.classList.contains("login-mode");
-    $("who").hidden = !on; if (!on){ closePop(); return; }
-    var nm = SES.n || "회원", first = nm.charAt(0);
-    $("meAv").textContent = first; $("meNm").textContent = nm + "님"; $("meNm").title = nm + "님";
-    $("meAdm").hidden = !SES.a; $("meAdmM").hidden = !SES.a;
-    $("meBtn").setAttribute("aria-label", nm + "님 메뉴");
-    $("mePop").innerHTML =
-      '<div class="pop-h"><span class="av">' + esc(first) + '</span><span class="pop-id"><span class="pop-nm"><b>' + esc(nm) + '님</b>' + (SES.a ? '<span class="adm">관리자</span>' : '') + '</span>' +
-        '<span class="s">사번 ' + esc(String(SES.s).slice(0, 4)) + '****</span></span></div>' +
-      (SES.a ? '<a class="it" role="menuitem" href="' + ROOT + 'admin.html" target="_blank" rel="noopener">' + IC.shield + '<span>관리자 페이지</span><span class="it-r">' + IC.ext + '</span></a>' : '') +
-      '<button type="button" class="it" role="menuitem" id="logout">' + IC.out + '<span>로그아웃</span></button>';
-    $("logout").addEventListener("click", function(){ closePop(); sesSet(null); SES = null; STATS = null; showLogin(""); });
+    $("who").hidden = !on; $("whoSep").hidden = !on; if (!on){ $("who").innerHTML = ""; MM.hide(); return; }
+    var nm = SES.n || "회원", role = SES.m ? "m" : SES.a ? "a" : "";
+    $("who").innerHTML =
+      (SES.a ? '<a class="ub adm-lk" href="' + ROOT + 'admin.html" target="_blank" rel="noopener" aria-label="관리자 페이지 (새 탭)">' + IC.shield + '<span class="ubt">관리자 페이지</span><span class="ext">' + IC.ext + '</span></a><span class="usep" aria-hidden="true"></span>' : '') +
+      '<span class="nm" title="' + esc(nm) + '님">' + esc(nm) + '님</span><span class="sb" aria-label="사번 ' + esc(SES.s) + '">' + esc(SES.s) + '</span>' +
+      (role ? '<span class="rb ' + role + '">' + (role === "m" ? "마스터" : "관리자") + '</span>' : '') +
+      '<button type="button" class="ub" id="logout" aria-label="로그아웃">' + IC.out + '<span class="ubt">로그아웃</span></button>';
+    $("logout").addEventListener("click", doLogout);
+    $("mmBtn").hidden = false; MM.paint(nm, role);
   }
-  function closePop(){ $("mePop").hidden = true; $("meBtn").setAttribute("aria-expanded", "false"); $("meBtn").classList.remove("on"); }
-  $("meBtn").addEventListener("click", function(){
-    var open = $("mePop").hidden;
-    $("mePop").hidden = !open; this.setAttribute("aria-expanded", String(open)); this.classList.toggle("on", open);
-  });
-  document.addEventListener("pointerdown", function(e){ if (!$("mePop").hidden && !e.target.closest("#who")) closePop(); });
-  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !$("mePop").hidden){ closePop(); $("meBtn").focus(); } });
+  function doLogout(){ MM.close(true); sesSet(null); SES = null; STATS = null; showLogin(""); }
+
+  /* #63 휴대폰: 이름 칸 → [☰ 메뉴] 안으로. 바 바로 아래로 판이 내려오고, 판 밖은 검정 45% 덮개.
+     닫힘 = ✕ · 덮개 · 뒤로 가기 · Esc · 판 안 항목 */
+  var MM = (function(){
+    var btn = $("mmBtn"), panel = null, dim = null, pushed = false, skipPop = false;
+    btn.innerHTML = IC.bars;
+    function isOpen(){ return !!panel && !panel.hidden; }
+    function paint(nm, role){
+      if (!panel){
+        panel = document.createElement("div"); panel.className = "mm-panel"; panel.id = "mmPanel"; panel.hidden = true;
+        dim = document.createElement("div"); dim.className = "mm-dim"; dim.hidden = true; dim.addEventListener("click", function(){ close(); });
+        document.body.appendChild(dim); document.body.appendChild(panel);
+        panel.addEventListener("click", function(e){ var it = e.target.closest("a, button"); if (!it) return; if (it.id === "mmOut"){ doLogout(); return; } close(); });
+      }
+      panel.innerHTML = '<div class="mm-me"><span class="mm-av">' + IC.user + '</span><span class="mm-id"><span class="mm-nm"><b>' + esc(nm) + '님</b>' +
+          (role ? '<span class="rb ' + role + '">' + (role === "m" ? "마스터" : "관리자") + '</span>' : '') + '</span><span class="mm-sb">사번 ' + esc(SES.s) + '</span></span></div>' +
+        (SES.a ? '<a class="mm-it" href="' + ROOT + 'admin.html" target="_blank" rel="noopener">' + IC.shield + '<span>관리자 페이지</span><span class="ext">' + IC.ext + '</span></a>' : '') +
+        '<button type="button" class="mm-it" id="mmOut">' + IC.out + '<span>로그아웃</span></button>';
+    }
+    function place(){ var b = document.querySelector(".bar").getBoundingClientRect(); var t = Math.max(0, b.bottom) + "px"; panel.style.top = t; dim.style.top = t; }
+    function open(){
+      if (!panel || isOpen()) return;
+      place(); panel.hidden = false; dim.hidden = false; document.body.classList.add("mm-open");
+      btn.setAttribute("aria-expanded", "true"); btn.setAttribute("aria-label", "메뉴 닫기"); btn.innerHTML = IC.x; btn.classList.add("on");
+      try { history.pushState({ mm: 1 }, "", location.href); pushed = true; } catch (er) { pushed = false; }
+      var f = panel.querySelector("a, button"); if (f) f.focus({ preventScroll:true });
+    }
+    function close(fromPop){
+      if (!isOpen()) return;
+      panel.hidden = true; dim.hidden = true; document.body.classList.remove("mm-open");
+      btn.setAttribute("aria-expanded", "false"); btn.setAttribute("aria-label", "메뉴 열기"); btn.innerHTML = IC.bars; btn.classList.remove("on");
+      if (pushed && fromPop !== "pop"){ pushed = false; if (history.state && history.state.mm){ skipPop = true; history.back(); } } else pushed = false;
+      if (fromPop !== true && document.contains(btn) && !btn.hidden) btn.focus({ preventScroll:true });
+    }
+    btn.addEventListener("click", function(){ isOpen() ? close() : open(); });
+    document.addEventListener("keydown", function(e){ if (e.key === "Escape" && isOpen()){ e.preventDefault(); close(); } });
+    addEventListener("resize", function(){ if (isOpen()){ if (innerWidth > 640) close(); else place(); } });
+    function onPop(){ if (skipPop){ skipPop = false; return true; } if (isOpen()){ close("pop"); return true; } return false; }
+    function hide(){ close(true); btn.hidden = true; }
+    return { paint: paint, close: close, onPop: onPop, hide: hide };
+  })();
 
   /* ---------- 로그인 화면 ---------- */
   var waitT = null;
@@ -907,21 +953,23 @@
     /* #58 로그인 전용 화면: 메뉴 바 · 배너 · 맨 아래 검은 바 없이 — PC 왼쪽 56% 브랜드 칸 + 오른쪽 로그인 / 태블릿·휴대폰 위 브랜드 칸 + 아래 로그인 */
     var CARD = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3.5M14.5 13.5h2.5"/></svg>';
     var GO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-    var NT = '<b>※ 본 자료는 교육용 자료입니다.</b><br>온라인(SNS 포함) 게시, 고객 대상 설명, 광고 용도로 사용할 수 없습니다.';
+    /* #58 최종(11-12 11:08): 브랜드 칸 = '교육 자료실'(Noto Sans KR 900) · 하늘 선 · 메뉴 이름, 폼 맨 위 = 삼성화재금융서비스 로고(라이트 블루 / 다크 흰색),
+       아래 안내 2개(※ RC 전용 · 사번 업데이트) */
+    var MN = SC.MENUS.filter(function(c){ return c.id !== "all"; }).map(function(c){ return '<span>' + esc(c.label) + '</span>'; }).join('<i aria-hidden="true"></i>');
+    var NOTES = '<ul class="lg-notes"><li><span class="mk" aria-hidden="true">※</span><span><span class="t">본 페이지는 삼성화재금융서비스 RC 전용입니다.</span><br><span class="nw">RC가 아닌 사람에게</span> <span class="nw">링크나 내용을 공유하는 것을 금지합니다.</span></span></li>' +
+      '<li><span class="mk" aria-hidden="true">※</span><span><span class="t">사번 업데이트는 실시간이 아닙니다.</span><br><span class="nw">사번 부여 후 1~2일 소요될 수 있습니다.</span></span></li></ul>';
     $("app").innerHTML = '<div class="lg">' +
-      '<div class="lg-brand"><div class="lg-glow" aria-hidden="true"></div>' +
-        '<div class="lg-copy"><span class="lg-logo" role="img" aria-label="삼성화재금융서비스">삼성화재금융서비스</span><h2 class="lg-h2">교육 자료실</h2>' +
-          '<div class="lg-tags" aria-hidden="true"><span>시그니처클래스</span><span>신입 교육</span><span>제휴사 상품 전략</span><span>상품연구 전략자료</span></div></div>' +
-        '<p class="lg-nt">' + NT + '</p></div>' +
+      '<div class="lg-brand" aria-hidden="true"><div class="lg-glow"></div></div>' +
+      '<div class="lg-copy"><h2 class="lg-h2">교육 자료실</h2><span class="lg-bar" aria-hidden="true"></span><p class="lg-menus">' + MN + '</p></div>' +
       '<button type="button" class="lg-tm rp" id="lgTm"></button>' +
-      '<div class="lg-side"><div class="lg-mid"><form class="lg-form ulog-card" id="ulog" novalidate>' +
+      '<main class="lg-mid"><form class="lg-form ulog-card" id="ulog" novalidate>' +
         (kind === "expired" ? '<p class="umsg in2" role="status">' + IC.clock + '<span>로그인 시간이 끝났어요. 다시 로그인해 주세요.</span></p>' : '') +
-        '<div class="lg-hd"><h1>사번 로그인</h1><p>사번 8자리를 입력해 주세요.</p></div>' +
+        '<div class="lg-hd"><h1 class="lg-fh"><span class="lg-flogo" role="img" aria-label="삼성화재금융서비스"><img class="l" src="' + ROOT + 'assets/samsungfs-logo-blue.png" alt="" width="1332" height="167"><img class="d" src="' + ROOT + 'assets/samsungfs-logo-white.png" alt="" width="1332" height="167"></span><span class="sr">사번 로그인</span></h1><p>사번 8자리를 입력해 주세요.</p></div>' +
         '<div class="lg-fld"><label class="lg-lab" for="usb">사번</label><div class="lg-in" id="usbBox">' + CARD +
           '<input id="usb" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="username" placeholder="숫자 8자리" aria-describedby="umsg"><span class="lg-cnt" id="usbCnt" aria-hidden="true">0/8</span></div>' +
           '<p class="umsg" id="umsg" role="alert" hidden></p></div>' +
         '<button type="submit" class="ubtn lg-go rp" id="ubtn">로그인' + GO + '</button>' +
-      '</form></div><p class="lg-nt dark">' + NT + '</p></div></div>';
+      '</form></main><div class="lg-helpw">' + NOTES + '</div></div>';
     var syncTm = function(){ var a = $("tmIc"), b = $("lgTm"); if (a && b){ b.innerHTML = a.innerHTML; b.setAttribute("aria-label", a.getAttribute("aria-label") || "화면 모드 바꾸기"); } };
     syncTm(); $("lgTm").addEventListener("click", function(){ $("tmIc").click(); setTimeout(syncTm, 30); setTimeout(syncTm, 700); });
     var inp = $("usb");
@@ -946,7 +994,7 @@
     function done(){ inp.disabled = false; $("usbBox").classList.remove("dim"); btn.classList.remove("busy"); btn.removeAttribute("aria-busy"); btn.innerHTML = '로그인<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'; btn.disabled = !!waitT; }
     gate({ action:"siteLogin", sabun: v, dev: devId() }).then(function(r){
       if (r.ok){
-        SES = { t: r.t, s: r.sabun, n: r.name, a: r.admin ? 1 : 0, e: r.exp, k: r.key };
+        SES = { t: r.t, s: r.sabun, n: r.name, a: r.admin ? 1 : 0, m: r.master ? 1 : 0, e: r.exp, k: r.key };
         sesSet(SES); lsSet("sdp-seen-" + SES.s, String(Date.now()));   /* 로그인 자체가 접속 기록 */
         return enter();
       }
