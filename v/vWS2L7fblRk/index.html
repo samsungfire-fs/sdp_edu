@@ -13,7 +13,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex, nofollow">
-<title>영개파 교육 자료</title>
+<title>삼성화재금융서비스 교육 자료실</title>
 <meta name="description" content="교육자료 2개 · [시그니처클래스📖]  SPEC 1기 성지연 연구위원">
 <meta name="theme-color" content="#F1F3FA">
 <script>/* 라이트/다크: 저장된 값(없으면 기기 설정)을 CSS보다 먼저 붙여 깜빡임 방지 */(function(){var t;try{t=localStorage.getItem("sdp-theme")}catch(e){}if(t!=="dark"&&t!=="light")t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t)})();</script>
@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261116b">
+<link rel="stylesheet" href="assets/site.css?v=20261116c">
 </head>
 <body>
 
@@ -344,7 +344,45 @@
   function cols(){ return innerWidth > 980 ? 3 : innerWidth > 560 ? 2 : 1; }
   function batchSize(){ return cols() * 8; }
   var feeding = false;
+  /* #96 '전체' 탭(검색어 없을 때) = 유튜브 홈처럼 메뉴별 줄(선반) — 메뉴 순서대로 최신 10개씩 옆으로 넘김, 상품연구는 재생목록 모양 */
+  var IC_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>';
+  function plCard(m){
+    var n = rFileCount(m), priv = !SC.isPublic(m), title = (m.title || "") + " 상품연구 전략자료";
+    return '<li><a class="card pl-card rp" href="' + rUrl(ymCode(m.ym)) + '" data-go><div class="pl-stack">' +
+      rThumb(m.thumb, priv ? "has-priv" : "").replace(/<\/div>$/, (priv ? privTag() : '') + '<span class="pl-badge">' + IC_LIST + '자료 ' + n + '개</span></div>') + '</div>' +
+      '<div class="card-body yt-b"><h3 class="yt-t pl-t" title="' + esc(title) + '">' + esc(title) + '</h3><span class="ys"><span>연령 ' + rAges(m).length + '개</span></span></div></a></li>';
+  }
+  function drawShelves(){
+    var html = '<div class="shelves">', ARR = function(dir){ return '<button type="button" class="sh-nav ' + dir + ' rp" data-sh="' + dir + '" aria-label="' + (dir === "prev" ? "이전" : "다음") + ' 강의 보기"' + (dir === "prev" ? " hidden" : "") + '>' + (dir === "prev" ? IC.back : IC.next) + '</button>'; };
+    function shelf(id, label, href, n, items){
+      if (!n) return "";
+      return '<section class="shelf" aria-labelledby="sh-' + id + '"><div class="sh-h"><a class="sh-t" id="sh-' + id + '" href="' + href + '" data-go>' + esc(label) + '<span class="num">' + n + '</span></a>' +
+        '<a class="sh-all rp" href="' + href + '" data-go><span class="sh-l">전체 보기</span><span class="sh-s">전체</span>' + IC.next + '</a></div>' +
+        '<div class="sh-wrap"><ul class="sh-row grid vgrid">' + items + '</ul>' + ARR("prev") + ARR("next") + '</div></section>';
+    }
+    SC.CATS.forEach(function(c){
+      var list = listOf(c.id);
+      html += shelf(c.id, c.label, menuUrl(c.id), list.length, list.slice(0, 10).map(function(v){ return card(v, false); }).join(""));
+    });
+    var ms = rMonths();
+    html += shelf("research", SC.RESEARCH.label, rUrl(), ms.length, ms.slice(0, 10).map(plCard).join(""));
+    $("listBody").innerHTML = html + '</div>';
+    document.querySelectorAll("#listBody .sh-row").forEach(function(row){ row.addEventListener("scroll", function(){ shNav(row); }, { passive:true }); shNav(row); });
+  }
+  function shNav(row){
+    var w = row.parentNode, max = row.scrollWidth - row.clientWidth;
+    var p = w.querySelector('[data-sh="prev"]'), n = w.querySelector('[data-sh="next"]');
+    if (p) p.hidden = row.scrollLeft < 4; if (n) n.hidden = row.scrollLeft > max - 4 || max < 4;
+  }
+  document.addEventListener("click", function(e){
+    var b = e.target.closest("[data-sh]"); if (!b) return;
+    var row = b.parentNode.querySelector(".sh-row"), li = row.querySelector("li"), gap = parseFloat(getComputedStyle(row).columnGap) || 24;
+    var step = li ? (li.getBoundingClientRect().width + gap) * Math.max(1, Math.round((row.clientWidth + gap) / (li.getBoundingClientRect().width + gap))) : row.clientWidth;
+    row.scrollBy({ left: b.dataset.sh === "next" ? step : -step, behavior: REDUCE ? "auto" : "smooth" });
+  });
+  window.addEventListener("resize", function(){ document.querySelectorAll("#listBody .sh-row").forEach(shNav); });
   function drawFeed(){
+    if (L.m === "all" && !L.q) return drawShelves();
     var list = filtered(), box = $("listBody"), html = "";
     L.count = Math.min(Math.max(L.count || 0, batchSize()), list.length);
     if (L.q) html += '<p class="result">‘<span class="kw">' + esc(L.q) + '</span>’ 검색 결과 <span class="num">' + list.length + '</span>개</p>';
@@ -824,6 +862,7 @@
     var view = r.v ? "video" : r.r ? "research" : "list";
     didRestore = false;
     document.title = TAB_TITLE;
+    document.body.classList.toggle("r-page", !r.v && !!r.r);          /* #95 상품연구 화면 큰 제목 = 둥근바람 400 */
     if (r.v){ renderVideo(r.v); want = videoUrl(r.v); }
     else if (r.r) want = renderResearch(r);
     else want = renderList(r);

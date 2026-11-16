@@ -16,8 +16,8 @@
 <link rel="apple-touch-icon" href="assets/admin-touch-icon.png?v=1">
 <link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261116b">
-<link rel="stylesheet" href="assets/admin.css?v=20261116c">
+<link rel="stylesheet" href="assets/site.css?v=20261116c">
+<link rel="stylesheet" href="assets/admin.css?v=20261116d">
 </head>
 <body>
 <script>/* 11-12: 저장된 관리자 로그인이 있으면 처음부터 관리자 화면으로 그림('확인 중' 화면 없이). 확인은 admin.js가 뒤에서 */(function(){try{var k="sdp-admin-sid",o=JSON.parse(localStorage.getItem(k)||sessionStorage.getItem(k)||"null"),n=new Date(Date.now()+324e5).toISOString().slice(0,19);if(o&&o.sid&&o.p&&localStorage.getItem("sdp-gate-url")&&!(o.exp&&String(o.exp).slice(0,19)<=n))document.body.classList.add("authed")}catch(e){}})();</script>
@@ -309,7 +309,6 @@
         <div class="k-keyin" id="ghIn" hidden><input type="password" id="sGh" class="k-in h48 f14" placeholder="github_pat_로 시작" autocomplete="off" spellcheck="false" aria-label="새 GitHub 토큰"><button type="button" class="k-btn k-btn2 sm rp" id="sGhSave">저장</button></div>
         <div class="k-kv"><span>Google API 키 <span class="k-t3 k-tab" id="apiMask"></span></span><button type="button" class="k-btn k-btn3 xs rp" data-keyopen="api">바꾸기</button></div>
         <div class="k-keyin" id="apiIn" hidden><input type="password" id="sKey" class="k-in h48 f14" placeholder="AIza로 시작" autocomplete="off" spellcheck="false" aria-label="새 Google API 키"><button type="button" class="k-btn k-btn2 sm rp" id="sKeySave">저장</button></div><div class="k-msg" id="keyMsg" role="status" hidden></div><p class="k-note">[바꾸기]를 누르면 그 줄 아래에 입력칸이 열려요. 비밀번호를 바꾼 관리자에게만 내줘요.</p></div></section>
-      <p class="sdr-f" id="lastSave"></p>
     </div>
   </div>
 
@@ -358,6 +357,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/common.js?v=20261116a"></script>
-<script src="assets/admin.js?v=20261116c"></script>
+<script src="assets/admin.js?v=20261116e"></script>
 </body>
 </html>

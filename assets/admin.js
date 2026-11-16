@@ -2297,8 +2297,7 @@
       stamp("noticeStamp", "set:notice", "마지막 변경");
       stamp("updStamp", "set:update", "마지막 업데이트");
       $("syncStamps").innerHTML = ["set:sync", "set:auto"].map(function(t){ var o = get(t); return o ? '<div class="k-stamp">' + stampHtml(o.last.x, o.last.n, o.last.at) + '</div>' : ""; }).join("");
-      var sv = get("save");
-      $("lastSave").innerHTML = sv ? "마지막 저장 <b>" + esc(sv.last.n) + "</b> · " + esc(fmtAt(sv.last.at)) : "";
+      /* 11-16 사용자: 설정 페이지 맨 아래 '마지막 저장 이름 · 일시' 줄 없앰(강의마다 [수정 기록]에 있음) */
       updateSaveBar();
     }
     /* 목록 줄 끝: '박유진 수정 11.11' / '소희수 업로드 10.28' */
@@ -3071,6 +3070,13 @@
             (arr.length ? arr.map(function(x, i){
               var f = isFile ? Look.file(x.id) : null;
               var full = f ? f.name : Look.title(x.id), tt = f ? full : String(full || "").replace(/^\[[^\]]*\]\s*/, "");
+              /* #94 본 강의: 맨 앞 유튜브 썸네일 80×45(+ 영상 길이) · 썸네일 · 제목을 누르면 그 강의 분석으로 */
+              if (!isFile){
+                var vid = String(x.id).indexOf("v:") === 0 ? String(x.id).slice(2) : "", vv = vid ? Look.video(vid) : null, href = "#/analytics/" + encodeURIComponent(x.id);
+                return '<div class="li li1 lv"' + (i >= 5 ? ' data-more hidden' : '') + '><a class="dth" href="' + href + '" data-detana tabindex="-1" aria-hidden="true">' + (vid ? SC.thumbImg(vid, false, "80px") : '') +
+                  (vv && vv.duration ? '<span class="dur">' + esc(vv.duration) + '</span>' : '') + '</a><a class="tt" href="' + href + '" data-detana title="' + esc(full) + '">' + esc(tt) + '</a>' +
+                  '<b class="n">' + nf(x.n) + '번</b><span class="w">' + esc(relAt(x.last)) + '</span></div>';
+              }
               return '<div class="li li1"' + (i >= 5 ? ' data-more hidden' : '') + '>' + (f ? ftHtml(f.type) : '') + '<span class="tt" title="' + esc(full) + '">' + esc(tt) + '</span>' + (f && f.tag ? '<span class="tag' + (f.tag === "상품연구" ? " rs" : "") + '">' + f.tag + '</span>' : '') + '<b class="n">' + nf(x.n) + '번</b><span class="w">' + esc(relAt(x.last)) + '</span></div>';
             }).join("") + (more ? '<button type="button" class="lnk" data-detmore>' + (arr.length - 5) + '개 더 보기</button>' : '') :
             '<p class="k-note">' + (r.logStart ? "아직 없어요." : "기록을 세기 시작하면 여기에 보여요.") + '</p>') + '</div>';
@@ -3078,7 +3084,7 @@
         det.innerHTML = '<div class="det-h"><span class="k-av">' + esc((m.name || "?").charAt(0)) + '</span><span class="k-col"><span class="k-row k-g8"><b>' + esc(m.name) + '</b>' +
           (m.state === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : '<span class="k-pill s">비정상 회원</span>') + '</span><span>사번 ' + esc(m.sabun) + (m.from === "manual" ? " · 직접 입력" : "") + '</span><span>' + esc(m.org || "") + '</span></span>' +
           '<button type="button" class="x" data-detx aria-label="회원 상세 닫기">' + PI.x + '</button></div>' +
-          '<div class="tiles"><div class="tile"><span class="k">마지막 접속</span><span class="v s">' + (r.last ? esc(relAt(r.last)) : '<span class="mu">접속 전</span>') + '</span></div>' +
+          '<div class="tiles"><div class="tile"><span class="k">마지막 접속</span><span class="v s">' + (r.last && relAt(r.last) ? esc(relAt(r.last)) : '<span class="mu">기록 없음</span>') + '</span></div>' +
           '<div class="tile hi"><span class="k">누적 조회</span><span class="v">' + nf(r.viewCount) + '<small>번</small></span></div>' +
           '<div class="tile hi"><span class="k">누적 다운로드</span><span class="v">' + nf(r.downCount) + '<small>번</small></span></div></div>' +
           (r.logStart ? '' : '<div class="k-msg wa">' + PI.info + '<span><b>아직 기록이 없어요.</b> 사이트에 사번 로그인이 붙으면 쌓여요.</span></div>') +
@@ -3127,6 +3133,7 @@
     $("memTbl").addEventListener("input", function(e){ if (e.target.matches("[data-ns]")){ var u = e.target.getAttribute("data-ns"); nsState[u] = { s:"", v:e.target.value }; e.target.removeAttribute("aria-invalid"); var m = e.target.parentNode.querySelector(".ns-st"); if (m) m.remove(); } });
     $("memDet").addEventListener("click", function(e){
       if (e.target.closest("[data-detx]")){ closeDet(); return; }
+      if (e.target.closest("[data-detana]")){ closeDet(); return; }          /* #94 분석으로 가면서 상세 칸은 닫음 */
       var m = e.target.closest("[data-detmore]"); if (m){ m.parentNode.querySelectorAll("[data-more]").forEach(function(el){ el.hidden = false; }); m.remove(); }
     });
     return { show: show, open: open, leave: leave, reset: function(){ res = null; sel = null; nsState = {}; memCache = {}; full = null; fullOk = null; } };
