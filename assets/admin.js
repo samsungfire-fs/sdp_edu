@@ -706,6 +706,11 @@
     view.cat = b.dataset.cat; view.q = ""; view.vf = "all"; $("aq").value = ""; syncVf(); armedDel = null;
     openV = openM = openA = null;
     LS.set("sc-admin-cat", view.cat); render("lr");
+    /* 11-16: 메뉴 탭이 맨 위 바 밑으로 숨어 있으면 바로 밑에 보이게 */
+    requestAnimationFrame(function(){
+      var bar = document.querySelector(".abar"), top = bar ? bar.getBoundingClientRect().bottom : 0, r = $("mrow").getBoundingClientRect();
+      if (r.top < top + 4) { try { window.scrollBy({ top: r.top - top - 12, behavior: "smooth" }); } catch (er) { window.scrollBy(0, r.top - top - 12); } }
+    });
   });
   $("aq").addEventListener("input", function(){ view.q = this.value.trim(); render(); });
   $("asort").addEventListener("change", function(){ view.sort = this.value; render(true); });
@@ -1153,7 +1158,7 @@
       '<meta name="twitter:card" content="summary_large_image">\n';
     return tpl
       .replace(/<meta property="og:[^>]*>\n?/g, "").replace(/<meta name="twitter:[^>]*>\n?/g, "").replace(/<base [^>]*>\n?/g, "")
-      .replace(/<title>[\s\S]*?<\/title>/, function(){ return "<title>영개파 교육 자료</title>"; })
+      .replace(/<title>[\s\S]*?<\/title>/, function(){ return "<title>삼성화재금융서비스 교육 자료실</title>"; })
       .replace(/<meta name="description" content="[^"]*">/, function(){ return '<meta name="description" content="' + attr(desc) + '">'; })
       .replace(/<meta charset="utf-8">\n?/, function(){ return '<meta charset="utf-8">\n' + meta; });
   }
@@ -1897,7 +1902,15 @@
   var SPIN = '<span class="spin" aria-hidden="true"></span>';
   function z2(n){ return (n < 10 ? "0" : "") + n; }
   /* 창구 시각(한국 시간 'YYYY-MM-DDTHH:MM:SS') 보여 주기: ko = 11월 11일 14:50 · dot = 11.11 09:41 · full = 2026.10.30 14:02 · md = 11.11 */
+  /* 11-16: 시트가 오전 시각 앞 0을 빼서 보내던 것('2026-11-16 9:05') → 맞춰서 읽음(코드 v23부터는 맞춰서 옴) */
+  function atN(v){
+    var m = /(\d{4})\D+(\d{1,2})\D+(\d{1,2})\D+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/.exec(String(v || "")); if (!m) return String(v || "");
+    var h = +m[4], t = String(v); if (/오후|PM/i.test(t) && h < 12) h += 12; if (/오전|AM/i.test(t) && h === 12) h = 0;
+    var z = function(n){ return ("0" + n).slice(-2); };
+    return m[1] + "-" + z(m[2]) + "-" + z(m[3]) + "T" + z(h) + ":" + z(m[5]) + ":" + z(m[6] || 0);
+  }
   function fmtAt(s, style){
+    s = atN(s);
     var m = /^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)/.exec(s || ""); if (!m) return "";
     if (style === "dot") return m[2] + "." + m[3] + " " + m[4] + ":" + m[5];
     if (style === "full") return m[1] + "." + m[2] + "." + m[3] + " " + m[4] + ":" + m[5];
@@ -2488,7 +2501,7 @@
      - 세일즈온 어드민 아이디·비밀번호는 사번 목록의 비밀 칸(스크립트 속성)에만. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
     var SCRIPT_ID = "1gq8_W7tE25FrOxcws0xbun4pj72lIY3eJywh-XkulrjDFzvSQvLKtbuc";   /* 11-12 사용자가 알려 준 세일즈온 사번 목록 Apps Script (코드 v19부터는 서버가 알려 준 값을 먼저 씀) */
-    var GATE_V = 22; /* 사번 목록 코드(Code.gs) 최신 버전 */
+    var GATE_V = 23; /* 사번 목록 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null, lastRun = null, syncBusy = false, testBusy = false;
     function call(action, extra){
@@ -2718,16 +2731,61 @@
   var PI = {"prev": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 6l-6 6 6 6\"></path></svg>", "next": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"></path></svg>", "sort": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 9l6 6 6-6\"></path></svg>", "x": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6L6 18\"></path></svg>", "views": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 5.5v13l11-6.5z\"></path></svg>", "files": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4v11M7 10.5l5 5 5-5M5 20h14\"></path></svg>", "refresh": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 11a8 8 0 0 0-14.3-4.6L4 8\"></path><path d=\"M4 3.5V8h4.5\"></path><path d=\"M4 13a8 8 0 0 0 14.3 4.6L20 16\"></path><path d=\"M20 20.5V16h-4.5\"></path></svg>", "cal": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"4\" y=\"5\" width=\"16\" height=\"15\" rx=\"2.5\"></rect><path d=\"M8 3v4M16 3v4M4 10h16\"></path></svg>", "search": "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"></circle><path d=\"M20 20l-4.2-4.2\"></path></svg>", "dl": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4v11M7 10.5l5 5 5-5M5 20h14\"></path></svg>", "ext": "<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 17L17 7M9 7h8v8\"></path></svg>", "log": "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 12a8 8 0 1 0 2.4-5.7L4 8.5\"></path><path d=\"M4 4v4.5h4.5\"></path><path d=\"M12 8v4.5l3 2\"></path></svg>"}; PI.info = K.alert;
   function nf(n){ return String(n == null ? 0 : n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
   function kstDay(off){ var d = new Date(Date.now() + 9 * 3600 * 1000 - (off || 0) * 86400000); return d.toISOString().slice(0, 10); }
+  /* 11-16 사용자: 마지막 접속 · 시청 시각 — 오늘이면 시각만(14:05), 아니면 yy.mm.dd(요일) hh:mm(26.11.14(토) 15:31) */
   function relAt(at){
-    var m = /^(\d{4}-\d\d-\d\d)[T ](\d\d:\d\d)/.exec(at || ""); if (!m) return "";
-    return m[1] === kstDay(0) ? "오늘 " + m[2] : m[1] === kstDay(1) ? "어제 " + m[2] : fmtAt(at, "dot");
+    at = atN(at);
+    var m = /^(\d{4})-(\d\d)-(\d\d)[T ](\d\d:\d\d)/.exec(at || ""); if (!m) return "";
+    if (m[1] + "-" + m[2] + "-" + m[3] === kstDay(0)) return m[4];
+    var wd = "일월화수목금토".charAt(new Date(+m[1], +m[2] - 1, +m[3]).getDay());
+    return m[1].slice(2) + "." + m[2] + "." + m[3] + "(" + wd + ") " + m[4];
   }
+
   function org2(o){ var p = String(o || "").split(">").map(function(x){ return x.trim(); }).filter(Boolean); return p.slice(-2).join(" > "); }
   function noGate(){ return !(GATE_URL && adminSes && adminSes.sid); }
   function emptyHtml(ic, title, text, extra){ return '<div class="k-empty"><span class="ei">' + (PI[ic] || ic || "") + '</span><b>' + title + '</b>' + (text ? '<p>' + text + '</p>' : '') + (extra || '') + '</div>'; }
   var NOLOGIN = emptyHtml("log", "사번으로 로그인하면 볼 수 있어요.", "세일즈온 사번 목록이 연결되고 사번으로 로그인한 관리자에게만 보여요.");
   var LOADERR = emptyHtml("log", "불러오지 못했어요.", "잠시 뒤 다시 열어 주세요.");
   /* #52 불러오는 중 문구: 0.8초 넘으면 보이고, 5초 넘으면 둘째 줄이 '거의 다 왔어요!' (CSS 시간차) */
+  /* #93 불러오는 중이 첫 화면에서 보이게: ① 맨 위 바 바로 밑 3px 진행 막대(.ld가 화면에 있는 동안 + 뒤에서 다시 받을 때)
+     ② 휴대폰 · 태블릿(980px 이하)은 표 가운데 큰 로딩 대신 페이지 제목 바로 밑 한 줄 상자 ⑤ 다 받으면 목록이 차례로 등장 */
+  var PgBusy = (function(){
+    var bar = document.createElement("div"), n = 0, on = false, offT = null, lines = [], raf = 0, NARROW = matchMedia("(max-width:980px)");
+    bar.className = "pgbar"; bar.setAttribute("role", "progressbar"); bar.setAttribute("aria-label", "불러오는 중"); bar.hidden = true; bar.innerHTML = "<i></i>";
+    document.body.appendChild(bar);
+    function vis(el){ return !!(el && el.offsetParent); }
+    function topAt(){ var ab = document.querySelector(".abar"); bar.style.top = (ab && ab.offsetParent ? Math.max(0, ab.getBoundingClientRect().bottom) : 0) + "px"; }
+    function show(){ clearTimeout(offT); topAt(); bar.hidden = false; bar.classList.remove("done"); on = true; }
+    function hide(){ if (!on) return; on = false; bar.classList.add("done"); offT = setTimeout(function(){ bar.hidden = true; bar.classList.remove("done"); }, 420); }
+    function anchorFor(ld){
+      var root = ld.closest(".spage") || ld.closest("#app") || ld.closest(".ana, .pv2") || document.body;
+      var a = [].slice.call(root.querySelectorAll(".ph, .page-head")).filter(vis)[0];
+      return { root: root, after: a };
+    }
+    function check(){
+      raf = 0;
+      var lds = [].slice.call(document.querySelectorAll(".ld")).filter(function(x){ return vis(x) || vis(x.parentNode); });
+      if (lds.length || n > 0) show(); else hide();
+      /* 한 줄 상자: 로딩마다 하나, 로딩이 사라지면 같이 사라지고 그 목록이 차례로 등장 */
+      lines = lines.filter(function(L){
+        if (lds.indexOf(L.ld) >= 0) return true;
+        if (L.el.parentNode) L.el.remove();
+        if (L.box && document.contains(L.box)){ L.box.classList.remove("ld-arrive"); void L.box.offsetWidth; L.box.classList.add("ld-arrive"); setTimeout(function(){ L.box.classList.remove("ld-arrive"); }, 900); }
+        return false;
+      });
+      if (!NARROW.matches) return;
+      lds.forEach(function(ld){
+        if (lines.some(function(L){ return L.ld === ld; })) return;
+        var at = anchorFor(ld), el = document.createElement("div");
+        el.className = "ldline"; el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite");
+        el.innerHTML = ld.innerHTML;
+        if (at.after) at.after.parentNode.insertBefore(el, at.after.nextSibling); else at.root.insertBefore(el, at.root.firstChild);
+        lines.push({ ld: ld, el: el, box: ld.parentNode && ld.parentNode.closest ? ld.parentNode.closest(".tbl, .videos, .k-list") || ld.parentNode : null });
+      });
+    }
+    new MutationObserver(function(){ if (!raf) raf = requestAnimationFrame(check); }).observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:["hidden"] });
+    addEventListener("scroll", function(){ if (on) topAt(); }, { passive:true });
+    return { start: function(){ n++; check(); }, stop: function(){ n = Math.max(0, n - 1); check(); } };
+  })();
   function ldHtml(b, sub){
     return '<div class="ld" role="status" aria-live="polite"><span class="ld-dots" aria-hidden="true"><i></i><i></i><i></i></span><b>' + b + '</b><span class="ldsub"><span class="s1">' + (sub || "조금만 기다려 주세요") + '</span><span class="s2">거의 다 왔어요!</span></span></div>';
   }
@@ -2931,18 +2989,18 @@
     var memCache = {}, preBusy = {}, full = null, fullOk = null, fullBusy = false, COLL = window.Intl && Intl.Collator ? new Intl.Collator("ko") : null;
     function cmpName(a, b){ return COLL ? COLL.compare(a.name, b.name) : a.name.localeCompare(b.name, "ko"); }
     function loadAll(my){
-      if (fullBusy) return; fullBusy = true;
+      if (fullBusy) return; fullBusy = true; PgBusy.start();
       gateFetch({ action:"memberAll", sid: adminSes.sid }).then(function(r){
-        fullBusy = false;
+        fullBusy = false; PgBusy.stop();
         if (!r.ok){ if (r.error === "unknown"){ fullOk = false; if (!full) fetch1(true); return; } throw new Error(r.error); }
         fullOk = true;
         var key = function(x){ return (String(x.sabun || x.uid || "") + x.name + x.org + (x.manual || "")).replace(/\s+/g, "").toLowerCase(); };
-        var mem = r.m.map(function(a){ var o = { sabun:a[0], name:a[1], org:a[2], state: a[3] ? "정상 회원" : "비정상 회원", n: !!a[3], last:a[4], views:a[5], downs:a[6] }; o.k = key(o); return o; });
+        var mem = r.m.map(function(a){ var o = { sabun:a[0], name:a[1], org:a[2], state: a[3] ? "정상 회원" : "비정상 회원", n: !!a[3], last: a[4] ? atN(a[4]) : "", views:a[5], downs:a[6] }; o.k = key(o); return o; });
         var ns = r.ns.map(function(x){ x.k = key(x); return x; });
         var nsAll = ns.map(function(x){ return { sabun:"", uid:x.uid, name:x.name, org:x.org, state:x.state, last:"", views:0, downs:0, k:x.k }; });
         full = { mem: mem, ns: ns, nsAll: nsAll, counts: r.counts, lastSync: r.lastSync, logStart: r.logStart, manualCount: r.manualCount, noSabunNormal: r.noSabunNormal, sorted: {} };
         if (/^#\/members/.test(location.hash)){ res = local(); q.page = res.page; paint(); }
-      }).catch(function(e){ fullBusy = false; if (full) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
+      }).catch(function(e){ fullBusy = false; PgBusy.stop(); if (full) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
     }
     function local(){
       var F = full, tab = q.tab, rows, sk = tab + "|" + q.sort;

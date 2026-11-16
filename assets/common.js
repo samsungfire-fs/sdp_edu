@@ -341,6 +341,9 @@
       var r = t.getBoundingClientRect(), top = vv ? vv.offsetTop : 0, bottom = viewBottom();
       return r.bottom > bottom ? r.bottom - bottom : (r.top < top + 8 ? r.top - top - 8 : 0);
     }
+    /* 11-16: 화면 옮김은 부드럽게(동작 줄이기면 바로) */
+    var RM = w.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function glide(y) { y = Math.max(0, Math.round(y)); try { w.scrollTo({ top: y, behavior: RM ? "auto" : "smooth" }); } catch (er) { w.scrollTo(0, y); } }
     function fit(el) {
       if (!d.contains(el) || d.activeElement !== el) return;
       setKb();
@@ -351,11 +354,11 @@
       }
       dy = covered(t);
       if (!dy) return;
-      var y0 = w.scrollY; w.scrollBy(0, dy);
+      var ys = w.scrollY; glide(ys + dy);
       setTimeout(function () {                                       /* 화면이 안 움직였거나(편집 시트 안 등) 아직 가리면 */
         if (d.activeElement !== el) return;
-        if (w.scrollY === y0 && covered(t) > 2) t.scrollIntoView({ block: "center" });   /* 창이 아니라 안쪽 칸이 스크롤되는 곳 */
-      }, 80);
+        if (w.scrollY === ys && covered(t) > 2) t.scrollIntoView({ block: "center", behavior: RM ? "auto" : "smooth" });   /* 창이 아니라 안쪽 칸이 스크롤되는 곳 */
+      }, 200);
     }
     /* 사파리가 키패드를 올리면서 스크롤을 되돌리는 때가 있어 조금 뒤 두 번 더 맞춤 */
     function fitLater(el) { [350, 900].forEach(function (ms) { setTimeout(function () { if (cur === el) fit(el); }, ms); }); }
@@ -363,22 +366,34 @@
     function isField(t) { return t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !/^(checkbox|radio|button|submit|file|range|color)$/.test(t.type); }
     function coarse() { return w.matchMedia && matchMedia("(pointer:coarse)").matches; }
     /* 키패드가 올라올 때 맞추기 시작: 아래 여백 · 브랜드 칸 접기(kb-in) → 키패드가 다 올라오면 맞춤, 조금 뒤 두 번 더 */
+    /* 11-16 사용자: 키패드 때문에 화면을 올린 채로 다른 메뉴를 누르면 올라간 자리가 남아 점점 위로 → 키패드가 내려가면 올리기 전 자리로 */
+    var y0 = null, yTouch = 0, manual = false, actAt = 0, offT = null;
     function activate(t) {
-      cur = t; de.classList.add("kb-in");
-      var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { fit(t); fitLater(t); }, 60); };
+      if (!de.classList.contains("kb-in")) { y0 = Date.now() - touchAt < 1500 ? yTouch : w.scrollY; manual = false; }
+      clearTimeout(offT); de.classList.remove("kb-pad");
+      cur = t; de.classList.add("kb-in"); actAt = Date.now();
+      /* 로그인 화면은 브랜드 칸이 0.36초 동안 접히므로 다 접힌 뒤에 재서 맞춤(중간에 재면 한 번 더 튐) */
+      var lg = d.querySelector(".lg"), hold = lg && lg.offsetParent ? 400 : 60;
+      var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { fit(t); fitLater(t); }, Math.max(60, hold - (Date.now() - actAt))); };
       if (vv) vv.addEventListener("resize", go);
       setTimeout(go, 450);
     }
     /* 사용자가 직접 누른 때만(1.5초 안) — 화면이 열릴 때 코드가 칸에 커서를 두는 것(키패드 안 뜸)으로는 화면을 옮기지 않음 */
     function onTouch(e) {
       if (e.type === "pointerdown" && e.pointerType === "mouse") return;
-      touchAt = Date.now();
+      touchAt = Date.now(); if (!de.classList.contains("kb-in")) yTouch = w.scrollY;
       /* 이미 커서가 있는 칸을 누르면 focusin이 다시 안 생김(사이트 로그인은 사번 칸에 커서를 먼저 둠) → 여기서 시작 */
       var t = e.target && e.target.closest ? e.target.closest("input, textarea, select") : null;
       /* 누르는 도중에 화면이 바뀌면 손가락 밑 칸이 달라져 커서가 빠짐 → 손을 뗀 뒤(0.4초) 아직 그 칸이면 시작 */
-      if (isField(t) && d.activeElement === t && coarse() && !de.classList.contains("kb-in"))
-        setTimeout(function () { if (d.activeElement === t && !de.classList.contains("kb-in")) activate(t); }, 400);
+      if (isField(t) && d.activeElement === t && coarse() && !de.classList.contains("kb-in")) {
+        pend = t;                                                    /* 11-16: 손을 떼는 순간 바로(키패드와 함께 움직이게), 못 받으면 0.4초 뒤 */
+        setTimeout(function () { if (pend === t) { pend = null; if (d.activeElement === t && !de.classList.contains("kb-in")) activate(t); } }, 400);
+      }
     }
+    var pend = null;
+    function onLift() { var t = pend; if (!t) return; pend = null; setTimeout(function () { if (d.activeElement === t && !de.classList.contains("kb-in")) activate(t); }, 0); }
+    d.addEventListener("touchend", onLift, { passive: true, capture: true });
+    d.addEventListener("pointerup", function (e) { if (e.pointerType !== "mouse") onLift(); }, { passive: true, capture: true });
     d.addEventListener("touchstart", onTouch, { passive: true, capture: true });
     d.addEventListener("pointerdown", onTouch, { passive: true, capture: true });
     d.addEventListener("focusin", function (e) {
@@ -387,13 +402,28 @@
       if (Date.now() - touchAt > 1500 && kb() < 80) return;           /* 코드가 둔 커서: 키패드가 실제로 올라오면(아래 resize) 그때 맞춤 */
       activate(t);
     });
+    /* 키패드가 올라온 동안 사용자가 직접 화면을 끌어 내리면 그 자리를 존중(되돌리지 않음) */
+    d.addEventListener("touchmove", function (e) { if (de.classList.contains("kb-in") && !isField(e.target)) manual = true; }, { passive: true, capture: true });
     d.addEventListener("focusout", function () {
-      setTimeout(function () { var a = d.activeElement; if (!isField(a)) { cur = null; de.classList.remove("kb-in"); } setKb(); }, 300);
+      setTimeout(function () {
+        var a = d.activeElement;
+        if (!isField(a) && de.classList.contains("kb-in")) {
+          cur = null;
+          var y = y0; y0 = null;
+          if (y != null && !manual && w.scrollY > y + 2) {
+            /* 접힌 칸 펴기와 제자리로 돌아오기를 함께 스르륵 — 아래 여백(kb-pad)은 돌아온 뒤에 뺌(먼저 빼면 화면이 뚝 잘려 튐) */
+            de.classList.add("kb-pad"); de.classList.remove("kb-in"); glide(y);
+            offT = setTimeout(function () { de.classList.remove("kb-pad"); if (!de.classList.contains("kb-in") && w.scrollY > y + 2) w.scrollTo(0, y); setKb(); }, RM ? 0 : 420);
+          } else de.classList.remove("kb-in");
+        } else if (!isField(a)) cur = null;
+        setKb();
+      }, 160);
     });
     /* 키패드 위 줄(자동 완성 · ▲▼✓)이 늦게 붙어 높이가 또 바뀌거나, 커서만 있던 칸에서 키패드가 올라오면 다시 맞춤 */
     if (vv) vv.addEventListener("resize", function () {
       if (!cur || d.activeElement !== cur) return;
       if (kb() > 80 && !de.classList.contains("kb-in")) { activate(cur); return; }
+      if (Date.now() - actAt < 420) return;                          /* 처음 맞춤 전(접히는 중)에는 기다림 */
       clearTimeout(again); again = setTimeout(function () { if (cur) fit(cur); }, 120);
     });
   })();

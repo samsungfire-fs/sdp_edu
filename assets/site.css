@@ -1210,7 +1210,7 @@ body .lg-logo{font-weight:800 !important; font-size:36px; line-height:1.2; lette
 .card .thumb .priv span{padding:4px 10px 4px 8px}
 
 /* 사용자 요청: 키패드가 올라와 있을 때 아래로 더 내릴 수 있게 키패드 높이만큼 여백 (iOS · 카톡 인앱 포함) */
-html.kb-in body{padding-bottom:max(var(--kb, 0px), 60vh)}
+html.kb-in body, html.kb-pad body{padding-bottom:max(var(--kb, 0px), 60vh)}  /* kb-pad: 키패드가 내려가며 화면이 제자리로 스르륵 돌아오는 동안만 여백 유지 */
 
 /* 사용자 요청(11-12): 휴대폰에서 입력칸을 누르면 화면이 확대되고 좌우로 흔들리던 것 · 아래 탭 바가 키패드 위로 따라 올라오던 것
    - iOS는 글자가 16px보다 작은 입력칸을 누르면 화면을 확대함 → 터치 기기에서는 입력칸 글자를 16px 이상으로
@@ -1227,10 +1227,20 @@ html.kb-in .fab{display:none !important}
 /* 사용자 요청(11-12 15:38): 아이폰 사파리(카메라로 QR → 바로 열기)에서 사번 칸을 누르면 [로그인]이 주소 알약 · ▲▼✓ 줄에 가림
    → 휴대폰 · 태블릿에서 키패드가 올라와 있는 동안은 위 브랜드 칸을 접어 폼을 화면 맨 위로(스크롤에 기대지 않음) */
 @media (max-width:980px) and (pointer:coarse){
-  html.kb-in .lg{grid-template-rows:0 auto 1fr}
-  html.kb-in .lg > .lg-brand, html.kb-in .lg > .lg-copy, html.kb-in .lg > .lg-tm{display:none}
+  /* 11-16 사용자: 키패드가 오르내릴 때 화면이 뚝뚝 끊김 → 브랜드 칸이 키패드와 같은 곡선으로 스르륵 접히고 펴짐(0.36초) */
+  .lg{transition:grid-template-rows 360ms cubic-bezier(.32,.72,0,1)}
+  .lg > .lg-brand{overflow:hidden; min-height:0}
+  .lg > .lg-copy, .lg > .lg-tm{transition:opacity 240ms ease, translate 360ms cubic-bezier(.32,.72,0,1), visibility 0s}
+  .lg > .lg-mid{transition:margin-top 360ms cubic-bezier(.32,.72,0,1), padding-top 360ms cubic-bezier(.32,.72,0,1)}
+  .lg-mid .lg-form.ulog-card{transition:border-radius 360ms cubic-bezier(.32,.72,0,1)}
+  html.kb-in .lg{grid-template-rows:0px auto 1fr}
+  html.kb-in .lg > .lg-copy, html.kb-in .lg > .lg-tm{opacity:0; translate:0 -28px; visibility:hidden; pointer-events:none;
+    transition:opacity 180ms ease, translate 360ms cubic-bezier(.32,.72,0,1), visibility 0s linear 180ms}
   html.kb-in .lg > .lg-mid{margin-top:0; padding-top:calc(12px + env(safe-area-inset-top, 0px))}
   html.kb-in .lg-mid .lg-form.ulog-card{border-radius:0 0 24px 24px}
+}
+@media (max-width:980px) and (pointer:coarse) and (prefers-reduced-motion:reduce){
+  .lg, .lg > .lg-copy, .lg > .lg-tm, .lg > .lg-mid, .lg-mid .lg-form.ulog-card{transition:none !important}
 }
 
 /* ===== #84 강의 페이지 글자 얇게 ===== */
@@ -1296,3 +1306,46 @@ body .lec-act .ab, body .lec-act .ab *{font-weight:400 !important}
 
 /* ===== #90 메뉴 줄 아래 가로선 없앰(붙을 때도 바탕색만) — 고른 메뉴 밑줄 · 내 정보 줄 아래 선은 그대로 ===== */
 .bar, [data-theme="dark"] .bar{border-bottom:0}
+
+/* ===== #92 휴대폰(640px 이하): 위 = 내 정보 줄 [해/달][☰](48) · 아래 = 메뉴 줄(50, 메뉴 5개 가로) — 강의 · 자료 페이지 '‹' 한 줄 바는 그대로 ===== */
+.menu-box::after{content:""; position:absolute; right:0; top:0; bottom:0; width:56px; z-index:2; pointer-events:none; opacity:0; transition:opacity 160ms ease;
+  background:linear-gradient(90deg, rgba(241,243,250,0), var(--bg))}
+[data-theme="dark"] .menu-box::after{background:linear-gradient(90deg, rgba(7,8,12,0), var(--bg))}
+@media (max-width:640px){
+  .ubar.ub-mob .ubar-in{height:48px; gap:8px}
+  .ubar.ub-mob .tm-ic, .ubar.ub-mob .mm-btn{width:36px; height:36px; margin:0; border-radius:10px; background:#FFFFFF; box-shadow:inset 0 0 0 1px #DCE1EE; color:#0B1030}
+  [data-theme="dark"] .ubar.ub-mob .tm-ic, [data-theme="dark"] .ubar.ub-mob .mm-btn{background:rgba(255,255,255,.10); box-shadow:none; color:#FFFFFF}
+  .ubar.ub-mob .mm-btn.on{background:#003CDC; box-shadow:none; color:#FFFFFF}
+  [data-theme="dark"] .ubar.ub-mob .mm-btn.on{background:#3D63FF}
+  .ubar.ub-mob .tm-ic svg, .ubar.ub-mob .mm-btn svg{width:18px; height:18px}
+  body.mob2 .bar .wrap{height:50px; padding-right:0}
+  body.mob2 .menu-box{margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)))}
+  body.mob2 .menu{padding-right:40px}                                /* 마지막 메뉴 뒤 40px */
+  body.mob2 .menu-box.more::after{opacity:1}                         /* 오른쪽 끝 56px 흐림 = 더 있음 */
+}
+
+/* ===== #91 휴대폰 · 태블릿: 위로 당겨 새로고침 ===== */
+@media (max-width:980px), (pointer:coarse){ body{overscroll-behavior-y:contain} }
+html.ptr-on .banner-link, html.ptr-on .ubar, html.ptr-on .bar, html.ptr-on #app, html.ptr-on .foot{translate:0 var(--ptr, 0px)}
+html.ptr-anim .banner-link, html.ptr-anim .ubar, html.ptr-anim .bar, html.ptr-anim #app, html.ptr-anim .foot{transition:translate 300ms cubic-bezier(.23,1,.32,1)}
+.ptr{position:fixed; left:0; right:0; top:0; height:0; z-index:60; overflow:hidden; pointer-events:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px}
+html.ptr-anim .ptr{transition:height 300ms cubic-bezier(.23,1,.32,1)}
+.ptr-c{position:relative; width:36px; height:36px; flex:none; border-radius:50%; background:var(--card); box-shadow:inset 0 0 0 1px #DCE1EE, 0 4px 12px rgba(11,16,48,.14); color:#8A93B4; display:flex; align-items:center; justify-content:center; transition:background 160ms ease, color 160ms ease}
+[data-theme="dark"] .ptr-c{box-shadow:inset 0 0 0 1px #243066, 0 4px 12px rgba(0,0,0,.4)}
+.ptr-a{width:18px; height:18px; transition:transform 200ms ease}
+.ptr-s{display:none}
+.ptr-s svg{width:18px; height:18px; animation:u-sp 800ms linear infinite}
+.ptr-t{font-size:12px; line-height:1.2; color:#8A93B4; white-space:nowrap}
+.ptr.ready .ptr-c, .ptr.busy .ptr-c{background:#003CDC; color:#FFFFFF; box-shadow:0 4px 12px rgba(0,60,220,.3)}
+[data-theme="dark"] .ptr.ready .ptr-c, [data-theme="dark"] .ptr.busy .ptr-c{background:#3D63FF}
+.ptr.ready .ptr-a{transform:rotate(180deg)}
+.ptr.ready .ptr-t{color:var(--link)}
+.ptr.busy .ptr-a{display:none}
+.ptr.busy .ptr-s{display:flex}
+.ptr-msg{position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top, 0px)); z-index:61; translate:-50% -8px; opacity:0; pointer-events:none;
+  display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:10px; background:#0B1030; color:#FFFFFF; font-size:13px; line-height:1.3; white-space:nowrap;
+  box-shadow:0 8px 20px -8px rgba(7,8,12,.45); transition:opacity 200ms ease, translate 260ms cubic-bezier(.23,1,.32,1)}
+[data-theme="dark"] .ptr-msg{background:#2A2F4A}
+.ptr-msg svg{width:16px; height:16px; color:#6EE0A2; flex:none}
+.ptr-msg.on{opacity:1; translate:-50% 0}
+@media (prefers-reduced-motion:reduce){ .ptr-s svg{animation-duration:1600ms} .ptr-msg{transition:opacity 120ms ease} }
