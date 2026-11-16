@@ -2,6 +2,36 @@
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
   var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* 11-16 사용자: 표 머리 글자를 누르면 그 칸으로 정렬, 한 번 더 누르면 오름차순 ↔ 내림차순(회원 관리 · 분석 · 관리자 표) */
+  var TS = (function(){
+    var st = {}, on = {}, COL = window.Intl && Intl.Collator ? new Intl.Collator("ko", { numeric:true }) : null;
+    var SV = function(cl, d){ return '<svg class="' + cl + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>'; };
+    var ARW = SV("ud", "M8 10l4-4 4 4M8 14l4 4 4-4") + SV("up", "M12 18V6M7 11l5-5 5 5") + SV("dn", "M12 6v12M7 13l5 5 5-5");
+    function cmpS(a, b){ return COL ? COL.compare(a, b) : (a < b ? -1 : a > b ? 1 : 0); }
+    function blank(v){ return v == null || v === ""; }
+    function sortWith(rows, key, dir, get){
+      var g = get[key]; if (!g) return rows;
+      var m = dir === "asc" ? 1 : -1;
+      return rows.slice().sort(function(a, b){
+        var x = g(a), y = g(b);
+        if (blank(x) !== blank(y)) return blank(x) ? 1 : -1;           /* 빈 값(접속 전 등)은 어느 쪽이든 맨 아래 */
+        var c = typeof x === "number" && typeof y === "number" ? x - y : cmpS(String(x), String(y));
+        return c ? c * m : cmpS(String(a.name || ""), String(b.name || ""));
+      });
+    }
+    function th(id, key, label, opt){
+      opt = opt || {}; var s = st[id] || {}, act = s.k === key, d = act ? s.d : "";
+      return '<span class="' + (opt.r ? "r" : "") + '" role="columnheader" aria-sort="' + (act ? (d === "asc" ? "ascending" : "descending") : "none") + '">' +
+        '<button type="button" class="thb' + (act ? " on " + d : "") + '" data-ts="' + id + '" data-tk="' + key + '" data-td="' + (opt.d || "asc") + '" title="' + label + ' 기준으로 정렬">' + label + '<i class="sa" aria-hidden="true">' + ARW + '</i></button></span>';
+    }
+    function set(id, key, defD){ var s = st[id]; st[id] = s && s.k === key ? { k: key, d: s.d === "asc" ? "desc" : "asc" } : { k: key, d: defD || "asc" }; return st[id]; }
+    document.addEventListener("click", function(e){
+      var b = e.target.closest("[data-ts]"); if (!b) return;
+      e.preventDefault(); e.stopPropagation();
+      var id = b.dataset.ts; set(id, b.dataset.tk, b.dataset.td); if (on[id]) on[id](st[id]);
+    }, true);
+    return { st: st, on: on, th: th, set: set, sortWith: sortWith, sort: function(rows, id, get){ var s = st[id]; return s ? sortWith(rows, s.k, s.d, get) : rows; } };
+  })();
   var LS = {
     get: function(k){ try { return localStorage.getItem(k) || ""; } catch(e){ return ""; } },
     set: function(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch(e){} }
@@ -2167,12 +2197,16 @@
     }
     /* ---- 🔒 관리자 (#44 · 마스터만): 표 + 초기화(두 번 누르기) ---- */
     function relAt(at){ return Route.rel(at); }
+    TS.on.adm = function(){ drawAdmins(); };
     function drawAdmins(){
       var list = lastList || [], me = adminSes ? adminSes.sabun : "";
       Route.count("navAdm", list.length);
       var rows = list.slice().sort(function(a, b){ return (b.sabun === me) - (a.sabun === me) || (b.master - a.master) || String(b.lastAt || "").localeCompare(String(a.lastAt || "")); });
+      rows = TS.sort(rows, "adm", { name: function(a){ return a.name || ""; }, sabun: function(a){ return a.sabun || ""; }, org: function(a){ return a.org || ""; },
+        role: function(a){ return a.master ? "0" : "1"; }, add: function(a){ return a.auto ? "자동" : "직접"; }, pw: function(a){ return a.state === "init" ? "처음" : "바꿈"; }, last: function(a){ return atN(a.lastAt || ""); } });
       var vis = showAll ? rows : rows.slice(0, 20);
-      var head = '<div class="tr th g-adm" role="row"><span></span><span>이름</span><span>사번</span><span>소속</span><span>권한</span><span>추가</span><span>비밀번호</span><span>마지막 접속</span><span></span></div>';
+      var head = '<div class="tr th g-adm" role="row"><span></span>' + TS.th("adm", "name", "이름") + TS.th("adm", "sabun", "사번") + TS.th("adm", "org", "소속") + TS.th("adm", "role", "권한") +
+        TS.th("adm", "add", "추가") + TS.th("adm", "pw", "비밀번호") + TS.th("adm", "last", "마지막 접속", { d:"desc" }) + '<span></span></div>';
       var body = vis.map(function(a){
         var btn = a.sabun === me || a.state === "init" ? "" :
           '<button type="button" class="k-btn ' + (armed === a.sabun ? "k-btn-er" : "k-btn3") + ' xs rp" data-reset="' + esc(a.sabun) + '">' + (armed === a.sabun ? "한 번 더 누르면 0000으로" : "초기화") + '</button>';
@@ -2915,17 +2949,18 @@
     function tools(){
       var ns = q.tab === "nosabun", ab = q.tab === "abnormal";
       $("memSort").hidden = ns || ab; $("memFilter").hidden = ns || ab;
-      $("memSort").value = q.sort;
+      $("memSort").value = (!q.dir || q.dir === defDir(q.sort)) && [].some.call($("memSort").options, function(o){ return o.value === q.sort; }) ? q.sort : "";
       document.querySelectorAll("#memFilter [data-f]").forEach(function(b){ b.setAttribute("aria-checked", b.dataset.f === q.filter ? "true" : "false"); });
       $("memQ").placeholder = ns ? "회원아이디 · 이름 · 소속 검색" : "사번 · 이름 · 소속 검색";
     }
     function cls(){ return q.tab === "nosabun" ? "g-ns" : q.tab === "abnormal" ? "g-mem2" : "g-mem"; }
     function head(){
-      if (q.tab === "nosabun") return '<div class="tr th g-ns" role="row"><span>회원아이디</span><span>이름</span><span>소속</span><span>가입상태</span><span>사번(직접 입력)</span></div>';
-      if (q.tab === "abnormal") return '<div class="tr th g-mem2" role="row"><span>사번</span><span>이름</span><span>가입상태</span><span>소속</span></div>';
-      var lab = { last:"마지막 접속", views:"누적 조회", downs:"누적 다운로드" };
-      function th(k, r){ return '<span class="' + (r ? "r" : "") + '">' + (q.sort === k ? '<span class="srt">' + lab[k] + PI.sort + '</span>' : lab[k]) + '</span>'; }
-      return '<div class="tr th g-mem" role="row"><span>사번</span><span>' + (q.sort === "name" ? '<span class="srt">이름' + PI.sort + '</span>' : '이름') + '</span><span>가입상태</span><span>소속</span>' + th("last") + th("views", 1) + th("downs", 1) + '</div>';
+      /* 11-16 사용자: 머리 글자를 누르면 정렬, 다시 누르면 오름 ↔ 내림 */
+      TS.st.mem = { k: q.sort, d: q.dir || defDir(q.sort) };
+      var T = function(k, lab, r){ return TS.th("mem", k, lab, { r: r, d: defDir(k) }); };
+      if (q.tab === "nosabun") return '<div class="tr th g-ns" role="row">' + T("uid", "회원아이디") + T("name", "이름") + T("org", "소속") + T("state", "가입상태") + T("manual", "사번(직접 입력)") + '</div>';
+      if (q.tab === "abnormal") return '<div class="tr th g-mem2" role="row">' + T("sabun", "사번") + T("name", "이름") + T("state", "가입상태") + T("org", "소속") + '</div>';
+      return '<div class="tr th g-mem" role="row">' + T("sabun", "사번") + T("name", "이름") + T("state", "가입상태") + T("org", "소속") + T("last", "마지막 접속") + T("views", "누적 조회", 1) + T("downs", "누적 다운로드", 1) + '</div>';
     }
     function rowHtml(x){
       if (q.tab === "nosabun"){
@@ -3001,20 +3036,18 @@
         if (/^#\/members/.test(location.hash)){ res = local(); q.page = res.page; paint(); }
       }).catch(function(e){ fullBusy = false; PgBusy.stop(); if (full) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
     }
+    function defDir(k){ return k === "last" || k === "views" || k === "downs" ? "desc" : "asc"; }
+    var MGET = { last: function(x){ return x.last || ""; }, views: function(x){ return x.views || 0; }, downs: function(x){ return x.downs || 0; },
+      name: function(x){ return x.name || ""; }, sabun: function(x){ return x.sabun || ""; }, org: function(x){ return x.org || ""; }, state: function(x){ return x.state || ""; },
+      uid: function(x){ return x.uid || ""; }, manual: function(x){ return x.manual || ""; } };
+    var NSK = { uid:1, name:1, org:1, state:1, manual:1 };
     function local(){
-      var F = full, tab = q.tab, rows, sk = tab + "|" + q.sort;
-      if (tab === "nosabun") rows = F.ns;
-      else {
-        if (!F.sorted[sk]){
-          var by = { name: cmpName,
-            views: function(a, b){ return (b.views || 0) - (a.views || 0) || cmpName(a, b); },
-            downs: function(a, b){ return (b.downs || 0) - (a.downs || 0) || cmpName(a, b); },
-            last: function(a, b){ return (b.last || "") < (a.last || "") ? -1 : (b.last || "") > (a.last || "") ? 1 : cmpName(a, b); } };
-          var base = tab === "all" ? F.mem.concat(F.nsAll) : F.mem.filter(function(x){ return x.n === (tab === "normal"); });
-          F.sorted[sk] = base.sort(by[q.sort] || by.last);
-        }
-        rows = F.sorted[sk];
+      var F = full, tab = q.tab, rows, dir = q.dir || defDir(q.sort), sk = tab + "|" + q.sort + "|" + dir;
+      if (!F.sorted[sk]){
+        var base = tab === "nosabun" ? F.ns : tab === "all" ? F.mem.concat(F.nsAll) : F.mem.filter(function(x){ return x.n === (tab === "normal"); });
+        F.sorted[sk] = tab === "nosabun" && !NSK[q.sort] ? base.slice() : TS.sortWith(base, MGET[q.sort] ? q.sort : "last", dir, MGET);
       }
+      rows = F.sorted[sk];
       var term = String(q.q || "").replace(/\s+/g, "").toLowerCase();
       if (term) rows = rows.filter(function(x){ return x.k.indexOf(term) >= 0; });
       if (tab !== "nosabun" && q.filter === "seen") rows = rows.filter(function(x){ return x.last; });
@@ -3117,7 +3150,8 @@
     }
     $("memTabs").addEventListener("click", function(e){ var b = e.target.closest("[data-tab]"); if (!b || b.dataset.tab === q.tab) return; q.tab = b.dataset.tab; q.page = 1; if (q.tab !== "normal" && q.tab !== "all"){ q.filter = "all"; } fetch1(); });
     $("memQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(typeT); typeT = setTimeout(function(){ if (v === q.q) return; q.q = v; q.page = 1; fetch1(); }, 300); });
-    $("memSort").addEventListener("change", function(){ q.sort = this.value; q.page = 1; fetch1(true); });
+    $("memSort").addEventListener("change", function(){ q.sort = this.value; q.dir = defDir(q.sort); q.page = 1; fetch1(true); });
+    TS.on.mem = function(s){ q.sort = s.k; q.dir = s.d; q.page = 1; fetch1(true); };
     $("memFilter").addEventListener("click", function(e){ var b = e.target.closest("[data-f]"); if (!b || b.dataset.f === q.filter) return; q.filter = b.dataset.f; q.page = 1; fetch1(); });
     $("memXls").addEventListener("click", exportAll);
     $("memTbl").addEventListener("click", function(e){
@@ -3287,10 +3321,16 @@
         '<div class="tile fl"><span class="k"><span class="f1">첫 · </span>마지막 시청</span><span class="v s">' + (d.first ? '<span class="f1">' + esc(relAt(d.first)) + '<br></span>' + esc(relAt(d.last)) : '—') + '</span></div></div>';
     }
     function nameBtn(p){ return '<button type="button" class="nm" data-who="' + esc(p.sabun) + '">' + esc(p.name || "(이름 없음)") + '</button>'; }
+    var AGET = { name: function(p){ return p.name || ""; }, sabun: function(p){ return p.sabun || ""; }, org: function(p){ return p.org || ""; },
+      n: function(p){ return p.n || 0; }, first: function(p){ return atN(p.first || ""); }, last: function(p){ return atN(p.last || ""); } };
+    TS.on.av = function(){ page = 1; paintMain(); };
+    TS.on.ad = function(){ paintMain(); };
     function viewTbl(d){
-      var rows = filt(d.viewers).sort(function(a, b){ return a.last < b.last ? 1 : -1; }), size = 50, pg = Math.min(page, Math.max(1, Math.ceil(rows.length / size)));
+      if (!TS.st.av) TS.st.av = { k: "last", d: "desc" };
+      var rows = TS.sort(filt(d.viewers), "av", AGET), size = 50, pg = Math.min(page, Math.max(1, Math.ceil(rows.length / size)));
       if (!rows.length) return '<div class="tbl">' + emptyHtml("search", fOrg || fWho ? "조건에 맞는 사람이 없어요." : "이 기간에는 시청자가 없어요.", fOrg || fWho ? "소속이나 이름을 바꿔 보세요." : "기간을 바꿔 보세요.") + '</div>';
-      return '<div class="tbl cards"><div class="tr th g-view"><span>이름</span><span>사번</span><span>소속</span><span class="r">시청 수</span><span>첫 시청</span><span><span class="srt">마지막 시청' + PI.sort + '</span></span></div>' +
+      return '<div class="tbl cards"><div class="tr th g-view">' + TS.th("av", "name", "이름") + TS.th("av", "sabun", "사번") + TS.th("av", "org", "소속") + TS.th("av", "n", "시청 수", { r:1, d:"desc" }) +
+        TS.th("av", "first", "첫 시청", { d:"desc" }) + TS.th("av", "last", "마지막 시청", { d:"desc" }) + '</div>' +
         rows.slice((pg - 1) * size, pg * size).map(function(p){ return '<div class="tr g-view">' + nameBtn(p) + '<span class="t2">' + esc(p.sabun) + '</span><span class="el t2" title="' + esc(p.org) + '">' + esc(org2(p.org) || "—") + '</span><span class="r" data-k="시청 수">' + nf(p.n) + '</span><span class="t2" data-k="첫 시청">' + esc(relAt(p.first)) + '</span><span data-k="마지막 시청">' + esc(relAt(p.last)) + '</span></div>'; }).join("") +
         '<div class="tf"><span>' + nf((pg - 1) * size + 1) + '–' + nf(Math.min(pg * size, rows.length)) + ' / <b>' + nf(rows.length) + '</b>명 · 이름을 누르면 회원 상세</span>' + pager(pg, rows.length, size, "data-apg") + '</div></div>';
     }
@@ -3300,9 +3340,10 @@
       Object.keys(d.files || {}).forEach(function(k){ if (!seen[k]) keys.push({ k:k, f:{ name:"지금은 없는 자료", type:"" } }); });
       if (!keys.length) return '<div class="tbl">' + emptyHtml("files", "자료가 없어요.", "") + '</div>';
       return '<div class="fgs">' + keys.map(function(o){
-        var ppl = filt((d.files || {})[o.k] || []).sort(function(a, b){ return a.first < b.first ? 1 : -1; }), op = !!openF[o.k];
+        if (!TS.st.ad) TS.st.ad = { k: "first", d: "desc" };
+        var ppl = TS.sort(filt((d.files || {})[o.k] || []), "ad", AGET), op = !!openF[o.k];
         return '<div class="fg' + (op ? " open" : "") + '"><button type="button" class="fg-h" data-fg="' + esc(o.k) + '" aria-expanded="' + op + '">' + ftHtml(o.f.type) + '<span class="nm">' + esc(o.f.name || "(이름 없음)") + '</span><span class="cnt">다운로드 <b>' + nf(ppl.reduce(function(n, p){ return n + (p.n || 0); }, 0)) + '</b>번 · 받은 사람 <b>' + nf(ppl.length) + '</b>명</span><span class="chev">' + PI.sort + '</span></button>' +
-          (op ? (ppl.length ? '<div class="tbl-x"><div class="tr th g-down"><span>이름</span><span>사번</span><span>소속</span><span class="r">다운로드 수</span><span>첫 다운로드</span></div>' +
+          (op ? (ppl.length ? '<div class="tbl-x"><div class="tr th g-down">' + TS.th("ad", "name", "이름") + TS.th("ad", "sabun", "사번") + TS.th("ad", "org", "소속") + TS.th("ad", "n", "다운로드 수", { r:1, d:"desc" }) + TS.th("ad", "first", "첫 다운로드", { d:"desc" }) + '</div>' +
             ppl.map(function(p){ return '<div class="tr g-down">' + nameBtn(p) + '<span class="t2">' + esc(p.sabun) + '</span><span class="el t2" title="' + esc(p.org) + '">' + esc(org2(p.org) || "—") + '</span><span class="r">' + nf(p.n) + '</span><span class="t2">' + esc(relAt(p.first)) + '</span></div>'; }).join("") + '</div>'
             : '<p class="k-note" style="padding:0 18px 16px 64px">' + (fOrg || fWho ? "조건에 맞는 사람이 없어요." : "이 기간에 받은 사람이 없어요.") + '</p>') : '') + '</div>';
       }).join("") + '</div>';
