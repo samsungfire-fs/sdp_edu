@@ -746,6 +746,7 @@
     body.innerHTML = isR ? monthBody(openM, mi) : videoBody(openV, i);
     body.scrollTop = swap || opening ? 0 : st;
     /* 편집 칸 전체(테두리 포함)가 라인 리빌로: 처음 열 땐 목록이 자리 잡을 때까지 0.22초 기다림, 바꿀 땐 바로 */
+    SC.menuLr(wrap, view.cat);   /* #115 편집 칸 열기 · 바꾸기 · 닫기 라인 리빌도 고른 메뉴 색 */
     if ((opening || swap) && wide.matches){ wrap.style.setProperty("--lr-w", opening ? "145ms" : "0ms"); SC.lineReveal(wrap); }
     edKey = obj;
   }

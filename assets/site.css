@@ -1434,7 +1434,7 @@ input:autofill{-webkit-background-clip:text !important; background-clip:text !im
 /* #106 → #108 시안 B: 시그니처클래스 머리 = 가운데 정렬 — 로고 · 장식 줄 · 한 줄 소개 · 강의 수 · 검색창 */
 .list-head.sig-head{flex-direction:column; flex-wrap:nowrap; align-items:center; justify-content:flex-start; gap:12px; text-align:center}
 .list-head h1.sig-h{display:flex; flex-direction:column; align-items:center; gap:12px; margin:0; font-size:inherit; line-height:1}
-.sig-logo{display:block; position:relative; isolation:isolate; height:120px; aspect-ratio:474/270; max-width:100%; line-height:0; --sc:#9A3A94; --sg:rgba(154,58,148,.20)}
+.sig-logo{display:block; position:relative; isolation:isolate; flex:none; width:211px; height:120px; max-width:100%; line-height:0; --sc:#9A3A94; --sg:rgba(154,58,148,.20)}
 [data-theme="dark"] .sig-logo{--sc:#F29B3C; --sg:rgba(242,155,60,.26)}
 .sg-set{position:absolute; inset:0}
 .sg-set img{position:absolute; inset:0; width:100%; height:100%; display:block}
@@ -1458,8 +1458,8 @@ input:autofill{-webkit-background-clip:text !important; background-clip:text !im
 .sig-n{margin:0; font-family:var(--body)}
 .sig-n .num{font-weight:800 !important}
 .list-head.sig-head .search{flex:0 1 auto; width:520px; max-width:100%; margin:8px auto 0}
-@media (max-width:980px){ .sig-logo{height:104px} .list-head.sig-head{align-items:center} .list-head.sig-head .search{width:480px; flex:0 1 auto} }
-@media (max-width:560px){ .sig-logo{height:84px} .sig-orn i{width:64px} .sig-tag{font-size:17px} .list-head h1.sig-h{margin-left:0} .list-head.sig-head .search{width:100%} }
+@media (max-width:980px){ .sig-logo{width:183px; height:104px} .list-head.sig-head{align-items:center} .list-head.sig-head .search{width:480px; flex:0 1 auto} }
+@media (max-width:560px){ .sig-logo{width:148px; height:84px} .sig-orn i{width:64px} .sig-tag{font-size:17px} .list-head h1.sig-h{margin-left:0} .list-head.sig-head .search{width:100%} }
 
 /* #107 · #111 메뉴 글자: Jua → RoundWind, 고르지 않은 메뉴 400 · 지금 화면 800, 크기 PC 23 · 태블릿 21 · 휴대폰 17 */
 .menu a{font-family:var(--head) !important; letter-spacing:-.01em; font-size:23px}
@@ -1480,8 +1480,9 @@ body nav.menu a[aria-current=page]{font-weight:800 !important}
 @media (max-width:980px){ .others .vgrid .card-body h3.yt-t{min-height:0} }
 @media (max-width:560px){ .vgrid:not(.sh-row) .card-body h3.yt-t{min-height:0} }
 
+/* 11-17 15:25 사용자: 휴대폰에서 로고가 안 보임 → 로고 상자 폭을 aspect-ratio에 맡기지 않고 높이마다 직접 정함(474×270 비율: 120→211 · 104→183 · 84→148). 아이폰 사파리는 세로 flex 안에서 높이만 준 aspect-ratio 상자의 폭을 0으로 계산하는 경우가 있음 */
 /* #113 시그니처클래스 로고 등장(들어올 때 한 번, 약 1초) — .sig-head.sig-play 일 때만. 둥근 빛은 늘 남아 있음 */
-.sg-glow{position:absolute; left:50%; top:50%; width:220%; aspect-ratio:2/1; transform:translate(-50%,-50%); background:radial-gradient(closest-side, var(--sg), rgba(0,0,0,0)); z-index:-1; pointer-events:none}
+.sg-glow{position:absolute; left:50%; top:50%; width:220%; height:193%; transform:translate(-50%,-50%); background:radial-gradient(closest-side, var(--sg), rgba(0,0,0,0)); z-index:-1; pointer-events:none}
 .sg-shine{position:absolute; inset:0; opacity:0; pointer-events:none; background:linear-gradient(105deg, rgba(255,255,255,0) 38%, rgba(255,255,255,.95) 50%, rgba(255,255,255,0) 62%) no-repeat; background-size:250% 100%; background-position:100% 0;
   -webkit-mask:url(sig-logo-light.png) center / 100% 100% no-repeat; mask:url(sig-logo-light.png) center / 100% 100% no-repeat}
 .sg-set.d .sg-shine{-webkit-mask-image:url(sig-logo-dark.png); mask-image:url(sig-logo-dark.png)}
@@ -1519,3 +1520,7 @@ body nav.menu a[aria-current=page]{font-weight:800 !important}
 .lrm .lr-b::before{background:linear-gradient(to top, rgba(var(--lrc-rgb),.14), rgba(var(--lrc-rgb),0))}
 [data-theme="dark"] .lrm .lr-b::before{background:linear-gradient(to top, rgba(var(--lrc-rgb),.30), rgba(var(--lrc-rgb),0))}
 .lrm .lr-b::after, [data-theme="dark"] .lrm .lr-b::after{background:radial-gradient(closest-side, var(--lrc), rgba(var(--lrc-rgb),.7) 50%, rgba(var(--lrc-rgb),0))}
+/* 11-17 15:26 사용자: 휴대폰에서 메뉴를 오른쪽 끝까지 넘기면 글자가 위로 살짝 올라감
+   → 메뉴 줄은 옆으로만 넘어가게(세로 넘김 · 끝에서 튕김 막음). 아이폰은 글꼴 줄 높이 때문에 글자 칸이 1~2px 넘쳐 세로로도 밀리던 것 */
+.menu{overflow-y:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch}
+.menu a{line-height:1; overflow:visible}
