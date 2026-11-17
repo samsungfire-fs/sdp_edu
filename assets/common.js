@@ -115,10 +115,11 @@
   };
 
   /* 메뉴(강의 분류). 주소: signature/ newbie/ partner/ */
+  /* #110 메뉴 색(사이트 · 관리자 같은 표): color = 라이트, dark = 다크. dark가 없으면 같은 계열로 밝게(SC.menuDark) */
   SC.CATS = [
-    { id: "signature", label: "시그니처클래스" },
-    { id: "newbie", label: "신입 교육" },
-    { id: "partner", label: "제휴사 상품 전략" }
+    { id: "signature", label: "시그니처클래스", color: "#9A3A94", dark: "#F29B3C" },
+    { id: "newbie", label: "신입 교육", color: "#003CDC", dark: "#5B82FF" },
+    { id: "partner", label: "제휴사 상품 전략", color: "#14A06A", dark: "#3FCB92" }
   ];
   SC.catOf = function (v) {
     var c = v && v.category;
@@ -126,7 +127,35 @@
     return "signature";
   };
   /* 사이트 메뉴: 맨 앞 '전체' + 강의 분류 + 상품연구 전략자료(영상 없는 자료실, 강의 분류 아님) */
-  SC.RESEARCH = { id: "research", label: "상품연구 전략자료" };
+  SC.RESEARCH = { id: "research", label: "상품연구 전략자료", color: "#9A3A94", dark: "#F29B3C" };   /* 색은 시그니처클래스와 같음 */
+  SC.menuDark = function (hex) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || "")); if (!m) return hex;
+    var n = parseInt(m[1], 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+    function up(c){ return Math.round(c + (255 - c) * 0.36); }
+    return "#" + [up(r), up(g), up(b)].map(function (c) { return ("0" + c.toString(16)).slice(-2); }).join("");
+  };
+  /* 메뉴 색은 CSS 변수 --mc-<메뉴ID> 로 — 라이트/다크를 바꾸면 바로 따라감. 글자 칸에는 SC.menuVar(id) */
+  /* #114 라인 리빌(M10) 빛 줄 색 = 메뉴 색: 상자(또는 body)에 lrm + --lrc · --lrc-rgb */
+  SC.menuLr = function (el, id) {
+    if (!el) return;
+    if (!id){ el.classList.remove("lrm"); el.style.removeProperty("--lrc"); el.style.removeProperty("--lrc-rgb"); return; }
+    var k = String(id).replace(/[^\w-]/g, "");
+    el.classList.add("lrm"); el.style.setProperty("--lrc", "var(--mc-" + k + ", var(--mc-all))"); el.style.setProperty("--lrc-rgb", "var(--mcr-" + k + ", var(--mcr-all))");
+  };
+  SC.menuVar = function (id) { return "var(--mc-" + String(id || "").replace(/[^\w-]/g, "") + ", var(--mc-all))"; };
+  (function () {
+    function rgb(h){ var n = parseInt(String(h).replace("#", ""), 16); return (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255); }
+    var all = SC.CATS.concat([SC.RESEARCH]), L = ["--mc-all:#003CDC", "--mcr-all:0,60,220"], D = ["--mc-all:#5BC2E7", "--mcr-all:91,194,231"], A = [];
+    all.forEach(function (c) {
+      if (!c.color) return;
+      var dk = c.dark || SC.menuDark(c.color);
+      L.push("--mc-" + c.id + ":" + c.color, "--mcr-" + c.id + ":" + rgb(c.color)); D.push("--mc-" + c.id + ":" + dk, "--mcr-" + c.id + ":" + rgb(dk));
+      A.push('[data-menu="' + c.id + '"]{--mc:var(--mc-' + c.id + ')}');
+    });
+    var st = document.createElement("style"); st.id = "sc-menu-colors";
+    st.textContent = ":root{" + L.join(";") + '}\n:root[data-theme="dark"]{' + D.join(";") + "}\n" + A.join("\n");
+    (document.head || document.documentElement).appendChild(st);
+  })();
   SC.MENUS = [{ id: "all", label: "전체" }].concat(SC.CATS, [SC.RESEARCH]);
   SC.catLabel = function (id) {
     for (var i = 0; i < SC.MENUS.length; i++) if (SC.MENUS[i].id === id) return SC.MENUS[i].label;
@@ -332,6 +361,7 @@
     /* iOS(카톡 인앱 포함): 키패드 위에 ▲▼✓ 줄이 화면 위로 떠서 덮음 → 그만큼 더 띄움.
        화면 높이가 안 줄어드는 웹뷰면 키패드 높이를 어림(약 400px)으로 잡음 */
     var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    de.classList.toggle("ios", IOS);
     function viewBottom() {
       var vb = vv ? vv.offsetTop + vv.height : w.innerHeight;
       if (IOS && kb() < 80 && w.innerHeight > (w.screen ? screen.height : 800) * 0.6) vb = w.innerHeight - Math.min(420, w.innerHeight * 0.5);
@@ -344,7 +374,9 @@
     /* 11-16: 화면 옮김은 부드럽게(동작 줄이기면 바로) */
     var RM = w.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     function glide(y) { y = Math.max(0, Math.round(y)); try { w.scrollTo({ top: y, behavior: RM ? "auto" : "smooth" }); } catch (er) { w.scrollTo(0, y); } }
+    var lastK = -1;                                                  /* 11-17: 마지막으로 맞췄을 때 키패드 높이 — 거의 같으면 다시 맞추지 않음(위아래로 왔다 갔다 방지) */
     function fit(el) {
+      lastK = kb();
       if (!d.contains(el) || d.activeElement !== el) return;
       setKb();
       var t = goal(el), dy;
@@ -373,7 +405,7 @@
       clearTimeout(offT); de.classList.remove("kb-pad");
       cur = t; de.classList.add("kb-in"); actAt = Date.now();
       /* 로그인 화면은 브랜드 칸이 0.36초 동안 접히므로 다 접힌 뒤에 재서 맞춤(중간에 재면 한 번 더 튐) */
-      var lg = d.querySelector(".lg"), hold = lg && lg.offsetParent ? 400 : 60;
+      var lg = d.querySelector(".lg"), hold = lg && lg.offsetParent && !IOS ? 400 : 60;
       var done = false, go = function () { if (done) return; done = true; if (vv) vv.removeEventListener("resize", go); setTimeout(function () { fit(t); fitLater(t); }, Math.max(60, hold - (Date.now() - actAt))); };
       if (vv) vv.addEventListener("resize", go);
       setTimeout(go, 450);
@@ -424,6 +456,7 @@
       if (!cur || d.activeElement !== cur) return;
       if (kb() > 80 && !de.classList.contains("kb-in")) { activate(cur); return; }
       if (Date.now() - actAt < 420) return;                          /* 처음 맞춤 전(접히는 중)에는 기다림 */
+      if (lastK >= 0 && Math.abs(kb() - lastK) < 40) return;         /* 화면 높이가 거의 그대로면(사파리가 스스로 옮기는 중 등) 손대지 않음 */
       clearTimeout(again); again = setTimeout(function () { if (cur) fit(cur); }, 120);
     });
   })();

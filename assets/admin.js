@@ -194,7 +194,7 @@
     return SC.box.open(w, DKEY).then(function(c){ return c && c.repo === owner + "/" + repo ? c : null; }).catch(function(){ return null; });
   }
   function load(){
-    canSave = false; updateSaveBar("불러오는 중…");
+    canSave = false; updateSaveBar("강의 꺼내 오는 중…");
     var cached = null, first = !baseline;
     var pre = (token && first ? cacheOpen() : Promise.resolve(null)).then(function(c){
       if (!c || baseline) return;
@@ -299,7 +299,7 @@
     paintNtp();
     /* #51 저장 바가 없으니: 이름 바꾸기 같은 자동 정리는 다음 저장 때 함께 올라감(처음부터 '바뀜'으로 보이지 않게) */
     baseline = snap();
-    openV = null; dirty = false; if (!quiet) render();
+    openV = null; dirty = false; if (!quiet) render(!!document.querySelector("#videos .ld-li"));   /* #105 '강의 꺼내 오는 중…' 끝난 직후 첫 목록은 M10 */
   }
   /* #51 되돌리기: 마지막 저장 상태로 (보던 편집 칸은 keep 이면 그대로 다시 엶) */
   function revert(keep){
@@ -439,14 +439,14 @@
     };
     if (errs[f._st]) return '<span class="pill bad">' + errs[f._st] + '</span>';
     var s = d.kind === "other" ? '<span class="pill warn">드라이브 링크가 아니에요. 그대로 연결돼요</span>' : '<span class="pill ok">바로 다운로드 링크로 바뀌었어요</span>';
-    if (f._st === "loading") s += '<span>파일 정보 확인 중…</span>';
+    if (f._st === "loading") s += '<span>드라이브에서 파일 살펴보는 중…</span>';
     return s + '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">받아보기 ↗</a>';
   }
   function videoStatus(v){
     if (!v._url.trim()) return '<span class="pill idle">유튜브 주소를 넣어 주세요</span>';
     return {
       bad: '<span class="pill bad">유튜브 주소를 인식하지 못했어요</span>',
-      loading: '<span class="pill idle">영상 정보를 가져오는 중…</span>',
+      loading: '<span class="pill idle">유튜브에서 영상 정보 가져오는 중…</span>',
       ok: '<span class="pill ok">영상 정보를 가져왔어요</span>',
       partial: '<span class="pill warn">제목만 가져왔어요 · API 키를 넣으면 소개·길이도 채워져요</span>',
       fail: '<span class="pill bad">영상 정보를 못 가져왔어요 · 비공개 영상이면 ‘일부 공개’로 바꿔 주세요</span>'
@@ -473,7 +473,7 @@
   /* #31 목록 줄 제목: 앞의 [메뉴명📖] 머리말은 빼고(메뉴 칸에 이미 보임), 전체 제목은 마우스를 올리면 */
   function listTitle(t){ var s = String(t || "").replace(/^\[[^\]]*\]\s*/, ""); return s || t || "제목 없음"; }
   /* #52 메뉴 색 표시 */
-  function catColor(id){ return { signature:"#003CDC", newbie:"#14A06A", partner:"#E07A2F", research:"#7C5CE6" }[id] || "#003CDC"; }
+  function catColor(id){ return SC.menuVar(id); }   /* #110 사이트와 같은 메뉴 색(라이트/다크 따라감) */
   function lsw(on, attrs, label){
     return '<button type="button" class="vs lsw' + (on ? " y" : "") + '" role="switch" aria-checked="' + on + '" ' + attrs + ' aria-label="' + (label || "사이트에 공개") + '"><i aria-hidden="true"></i><span class="vs-t">' + (on ? "공개" : "비공개") + '</span></button>';
   }
@@ -498,6 +498,7 @@
   function fmtK(n){ n = n || 0; if (n >= 10000){ var x = Math.round(n / 1000) / 10; return (x % 1 ? x.toFixed(1) : String(x)) + "만"; } return nf(n); }
   var IC_DN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>';
   function statLine(st, noV){
+    if (!st && CST.busy) return '<div class="sl"><span class="sl-ld">세는 중…</span></div>';   /* #103 숫자 받는 동안 */
     var v = st ? st.views : null, d = st ? st.downs : null, t = function(x){ return x == null ? "—" : fmtK(x); };
     return '<div class="sl">' + (noV ? '' : '<span title="조회수" aria-label="조회 ' + t(v) + '회">' + IC.eye + t(v) + '</span>') +
       '<span title="다운로드 수(교육자료 받은 횟수 합)" aria-label="다운로드 ' + t(d) + '회">' + IC_DN + t(d) + '</span></div>';
@@ -539,7 +540,7 @@
         '<span class="ftp ' + cls + '">' + (has || t ? SC.typeLabel(t || "pdf") : IC.upload) + '</span>' +
         '<div class="fcol">' +
           (f.name ? '<div class="fnm"><span class="nm">' + esc(f.name) + '</span>' + (f.size ? '<span class="sz">' + esc(f.size) + '</span>' : '') + '</div>'
-                  : '<div class="fnm"><span class="nm ph">' + (has ? "파일 이름을 가져오는 중…" : "새 자료") + '</span></div>') +
+                  : '<div class="fnm"><span class="nm ph">' + (has ? "드라이브에서 파일 살펴보는 중…" : "새 자료") + '</span></div>') +
           '<input type="url" id="' + idp + 'f' + j + 'l" class="ip mono" ' + attrs + ' data-f="' + j + '" data-fk="link" value="' + esc(f.link) + '" placeholder="드라이브 파일 링크를 붙여 넣어 주세요" aria-label="자료 ' + (j+1) + ' 드라이브 링크" autocomplete="off">' +
           '<div class="fstat" id="' + idp + 'f' + j + 's">' + fileStatus(f) + '</div>' +
           (ft && has ? Audit.fileWho(ft + ":" + fileKey(f), !saved[fileKey({ link: f.link.trim() })]) : '') +
@@ -620,6 +621,31 @@
     el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
     clearTimeout(el["_t" + cls]); el["_t" + cls] = setTimeout(function(){ el.classList.remove(cls); }, ms || 900);
   }
+  /* #105 M10 빛 라인 리빌을 관리자 곳곳에 — 같은 덩어리를 0.6초 안에 또 그리면 다시 재생하지 않음 · 줄이기 설정이면 효과 없음
+     lrGo: 이미 .lr 구조인 상자(강의 목록) / LRX: 아무 상자 — 상자는 위에서부터 펼치고(clip), 빛 줄은 화면 위 덮개로 그려 배치를 건드리지 않음 */
+  var LR_RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+  function lrDup(el){ var t = Date.now(); if (el._lr0 && t - el._lr0 < 600) return true; el._lr0 = t; return false; }
+  function lrGo(box){ if (!box || lrDup(box)) return; SC.lineReveal(box); }
+  function LRX(el){
+    if (!el || (LR_RM && LR_RM.matches) || el.hidden || !el.getClientRects().length) return;
+    var r = el.getBoundingClientRect(); if (r.height < 12 || r.bottom < 0 || r.top > window.innerHeight) return;
+    if (lrDup(el)) return;
+    /* 화면에 보이는 만큼만 펼침(긴 표는 화면 아래 부분은 끝날 때 그냥 보임) — 빛 줄과 펼치는 끝이 같이 내려가게 */
+    var top = Math.max(r.top, -2), bot = Math.min(r.bottom, window.innerHeight), vis = bot - top;
+    var d = vis >= 900 ? 370 : vis >= 500 ? 335 : vis >= 220 ? 300 : 265;   /* #46 3배 빠르게: 0.37 / 0.335 / 0.3 / 0.265초 */
+    el.style.setProperty("--lr-d", d + "ms");
+    el.style.setProperty("--lr-top", Math.max(0, top - r.top) + "px");
+    el.style.setProperty("--lr-rest", Math.max(0, r.bottom - bot) + "px");
+    el.classList.remove("lrx"); void el.offsetWidth; el.classList.add("lrx");
+    var o = el._lrO;
+    if (o) o.remove();
+    o = el._lrO = document.createElement("div");
+    o.className = "lr go lrx-ov"; o.setAttribute("aria-hidden", "true");
+    o.style.cssText = "left:" + r.left + "px;top:" + top + "px;width:" + r.width + "px;height:" + vis + "px;--lr-d:" + d + "ms;--lr-w:0ms";
+    o.innerHTML = '<i class="lr-t"></i><i class="lr-b"></i>';
+    document.body.appendChild(o);
+    clearTimeout(el._lrT); el._lrT = setTimeout(function(){ el.classList.remove("lrx"); o.remove(); if (el._lrO === o) el._lrO = null; }, 80 + d + 160);
+  }
   function render(anim){
     if (document.body.dataset.view === "courses") cstLoad();
     var a = document.activeElement, fid = a && a.id, s0 = a && a.selectionStart, s1 = a && a.selectionEnd;
@@ -653,7 +679,8 @@
       $("videos").innerHTML = list.length ? list.map(function(x){ return itemHtml(x.v, x.i); }).join("")
         : (cond ? NORES : '<li class="empty-list">아직 ' + esc(label) + ' 강의가 없어요.<br>‘' + esc(label) + '에 강의 추가’를 눌러 첫 강의를 넣어 주세요.</li>');
     }
-    if (anim) SC.lineReveal($("listLr"));   /* 메뉴 칸·정렬·공개 필터 바꿀 때: M10 (#28 다른 등장 효과 없음) */
+    SC.menuLr($("listLr"), view.cat);   /* #114 강의 관리 메뉴 탭 라인 리빌 = 고른 메뉴 색 */
+    if (anim) lrGo($("listLr"));   /* 메뉴 칸·정렬·공개 필터 · #105 처음 목록 · 검색 결과 바뀔 때: M10 (#28 다른 등장 효과 없음) */
     renderEditor(); updateSaveBar();
     if (first) flipPlay(first);
     if (fid && $(fid)){ var el = $(fid); el.focus({ preventScroll:true }); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch(e){} }
@@ -742,7 +769,8 @@
       if (r.top < top + 4) { try { window.scrollBy({ top: r.top - top - 12, behavior: "smooth" }); } catch (er) { window.scrollBy(0, r.top - top - 12); } }
     });
   });
-  $("aq").addEventListener("input", function(){ view.q = this.value.trim(); render(); });
+  var aqSig = "";
+  $("aq").addEventListener("input", function(){ view.q = this.value.trim(); var sg = view.cat === RID ? "" : shown().map(function(x){ return x.i; }).join(","); render(sg !== aqSig); aqSig = sg; });   /* #105 검색 결과가 바뀔 때만 M10 */
   $("asort").addEventListener("change", function(){ view.sort = this.value; render(true); });
   /* #88 [+ 강의 추가] 자리: 넓을 때(편집 칸 닫힘 · 981px 이상) = 메뉴 탭 줄 오른쪽 끝, 좁을 때 = 공개 고르기 줄 오른쪽 */
   function placeAdd(){
@@ -1095,7 +1123,7 @@
       sv.disabled = saving || !canSave || noUrl || !has;
       dt.hidden = saving || !has || noUrl;
       var ic = sv.querySelector("svg"); if (ic) ic.remove();
-      if (saving){ st.textContent = "저장 중…"; st.insertAdjacentHTML("beforebegin", IC_SPIN); sv.setAttribute("aria-label", "저장 중"); }
+      if (saving){ st.textContent = "저장하는 중…"; st.insertAdjacentHTML("beforebegin", IC_SPIN); sv.setAttribute("aria-label", "저장하는 중"); }
       else if (!has){ st.textContent = "저장됨"; st.insertAdjacentHTML("beforebegin", IC_OK); sv.setAttribute("aria-label", "저장됨 · 바꾼 것 없음"); }
       else if (noUrl){ st.textContent = "저장"; sv.setAttribute("aria-label", "저장 — 유튜브 주소를 넣으면 켜져요"); }
       else { st.textContent = "저장"; sv.setAttribute("aria-label", isNew ? "저장 (새 " + (isR ? "달" : "강의") + ")" : "저장 (저장하지 않은 변경 " + changeCount() + "개)"); }
@@ -1105,7 +1133,7 @@
     var B = base(), nd = !!B && canSave && ((B.v.site || {}).notice || "") !== (data.site.notice || "").trim();
     $("noticeRow").hidden = !(nd || (saving && document.body.dataset.view === "settings"));
     $("noticeSave").disabled = saving; $("noticeUndo").disabled = saving;
-    var nt = $("noticeSaveT"); if (nt) nt.textContent = saving ? "저장 중…" : "저장";
+    var nt = $("noticeSaveT"); if (nt) nt.textContent = saving ? "저장하는 중…" : "저장";
     paintNtp();
   }
   /* #76 사이트 문구 미리보기: 첫 줄 = 강조 · 둘째 줄부터 = 설명 (사이트와 같은 규칙, 비우면 기본 문구) */
@@ -1866,7 +1894,7 @@
     e.preventDefault();
     var pw = $("pw").value, btn = $("loginBtn");
     if (!pw || !authInfo) return;
-    btn.disabled = true; btn.textContent = "확인 중…"; $("loginMsg").textContent = "";
+    btn.disabled = true; btn.textContent = "비밀번호 확인 중…"; $("loginMsg").textContent = "";
     unseal(pw, authInfo).then(function(sec){
       keepSession(sec.token, sec.apiKey, $("remember1").checked);
       enterApp();
@@ -2001,7 +2029,7 @@
         sabunMsg(cls || "er", msg); $("aPw").removeAttribute("aria-invalid");
         $("aPw").value = ""; $("aKeep").checked = LS.get(PREF_KEEP) !== "0"; $("aRem").checked = LS.get(PREF_REM) !== "0";
         if (!$("aSabun").value) $("aSabun").value = LS.get(SAB_KEY);
-        setTimeout(function(){ ($("aSabun").value ? $("aPw") : $("aSabun")).focus(); }, 50);
+        if (!(window.matchMedia && matchMedia("(pointer:coarse)").matches)) setTimeout(function(){ ($("aSabun").value ? $("aPw") : $("aSabun")).focus(); }, 50);   /* 11-17: 휴대폰은 처음 커서 안 둠(자동 완성 판 흔들림) */
       } else {
         var who = pending || {};
         $("gateTitle").textContent = "새 비밀번호 만들기";
@@ -2062,7 +2090,7 @@
       if (a === "0000"){ $("pwMsg").textContent = "초기 비밀번호인 0000으로는 변경할 수 없어요."; $("pwMsg").hidden = false; return; }
       if (!pwChecks("pwChk")) return;
       var sid = (pending && pending.sid) || (sidGet() || {}).sid, keep = pending ? pending.keep : !!(sidGet() || {}).keep;
-      btn.disabled = true; btn.innerHTML = SPIN + "바꾸는 중…";
+      btn.disabled = true; btn.innerHTML = SPIN + "새 비밀번호로 바꾸는 중…";
       gateFetch({ action:"adminChangePw", sid: sid, pw: a }).then(function(r){
         if (!r.ok){
           if (r.error === "nosession" || r.error === "expired"){ sidSet(null); pending = null; showGate("sabun", "로그인 시간이 지났어요. 다시 로그인해 주세요."); return; }
@@ -2171,7 +2199,7 @@
       if (!old){ $("meOld").setAttribute("aria-invalid", "true"); err("지금 비밀번호를 입력해 주세요."); return; }
       if (a === "0000"){ err("초기 비밀번호인 0000으로는 변경할 수 없어요."); return; }
       if (!pwChecks("meChk")) return;
-      btn.disabled = true; btn.innerHTML = SPIN + "바꾸는 중…";
+      btn.disabled = true; btn.innerHTML = SPIN + "새 비밀번호로 바꾸는 중…";
       gateFetch({ action:"adminChangePw", sid: adminSes.sid, pw: a, oldPw: old }).then(function(r){
         if (!r.ok){
           if (r.error === "badold"){ $("meOld").setAttribute("aria-invalid", "true"); err("지금 비밀번호가 맞지 않아요."); return; }
@@ -2223,6 +2251,8 @@
     }
     function listAdmins(){
       if (!adminSes) return;
+      if (!lastList.length) $("admList").innerHTML = '<div class="tr th g-adm" role="row"><span></span><span>이름</span><span>사번</span><span>소속</span><span>권한</span><span>추가</span><span>비밀번호</span><span>마지막 접속</span><span></span></div>' +
+        skelRows("g-adm", 5, 9) + ldHtml("관리자 모시는 중…", "조금만 기다려 주세요");   /* #103 */
       gateFetch({ action:"adminList", sid: adminSes.sid }).then(function(r){
         if (!r.ok){ kmsg("admMsg", "er", "목록을 불러오지 못했어요."); return; }
         lastList = r.admins; keys = r.keys || {}; drawAdmins();
@@ -2236,7 +2266,7 @@
       var who = b.getAttribute("data-reset");
       clearTimeout(armT);
       if (armed !== who){ armed = who; drawAdmins(); armT = setTimeout(function(){ armed = null; drawAdmins(); }, 3000); return; }
-      armed = null; b.disabled = true; b.innerHTML = SPIN + "초기화하는 중";
+      armed = null; b.disabled = true; b.innerHTML = SPIN + "처음 상태로 되돌리는 중…";
       gateFetch({ action:"adminReset", sid: adminSes.sid, target: who }).then(function(r){
         if (!r.ok) throw new Error(r.error);
         lastList = r.admins; drawAdmins(); kmsg("admMsg", "ok", "초기화했어요. 처음 비밀번호 0000을 그 사람에게 알려 주세요.");
@@ -2363,7 +2393,7 @@
     }
     document.addEventListener("click", function(e){
       var b = e.target.closest("[data-hist]"); if (!b || !on()) return;
-      var t = b.dataset.hist; b.disabled = true; b.textContent = "불러오는 중…";
+      var t = b.dataset.hist; b.disabled = true; b.textContent = "기록 넘겨 보는 중…";
       gateFetch({ action:"auditList", sid: adminSes.sid, target: t }).then(function(r){ if (r.ok){ more[t] = r.list; render(); } }).catch(function(){ b.disabled = false; b.textContent = "다시 불러오기"; });
     });
     var IC_CLOCK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5v4h4M12 7.5V12l3 2"/></svg>';
@@ -2410,7 +2440,7 @@
       var o = t ? (merge ? merged(t) : get(t)) : null, n = o ? o.count : 0;
       var head = '<div class="lgh"><h3 id="modalT">수정 기록' + (n ? ' <b>' + n + '</b>' : '') + '</h3><button type="button" class="xx rp" data-close aria-label="닫기">' + IC_X + '</button></div>' +
         (title ? '<p class="lgs" title="' + esc(title) + '">' + esc(title) + '</p>' : '');
-      Modal.show(head + '<div class="lgl" id="logBody">' + (o ? '<p class="lge">불러오는 중…</p>' : '<p class="lge">아직 기록이 없어요.</p>') + '</div>', "logm");
+      Modal.show(head + '<div class="lgl" id="logBody">' + (o ? ldHtml("수정 기록 넘겨 보는 중…", "누가 언제 고쳤는지 찾고 있어요") : '<p class="lge">아직 기록이 없어요.</p>') + '</div>', "logm");
       if (!o || !on()) return;
       gateFetch({ action:"auditList", sid: adminSes.sid, target: t }).then(function(r){
         var box = $("logBody"); if (!box) return;
@@ -2423,6 +2453,7 @@
           return '<li class="' + (i ? "" : "now") + '"><div class="lgw"><b>' + esc(g.n) + '</b><span>' + esc(fmtAt(g.at, "full")) + '</span></div>' +
             g.rows.map(function(r){ return '<div class="lgr">' + r[0] + '<span class="lgx">' + r[1] + '</span></div>'; }).join("") + '</li>';
         }).join("") + '</ol>';
+        LRX(box);   /* #105 수정 기록 창 */
       }).catch(function(){ var box = $("logBody"); if (box) box.innerHTML = '<p class="lge">기록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; });
     }
     /* #89 카드 누름 효과(0.12초) — 안의 스위치 · 버튼을 누를 때는 카드가 눌리지 않음 */
@@ -2633,7 +2664,7 @@
       var u = $("gateUrl").value.trim(), btn = $("gateConnect");
       if (!canSave){ kmsg("gateMsg", "er", "저장소에 연결된 뒤에 할 수 있어요."); return; }
       if (!RE.test(u)){ kmsg("gateMsg", "er", "주소를 확인해 주세요. https://script.google.com/macros/s/로 시작하고 /exec로 끝나요."); return; }
-      var prev = url; url = u; btn.disabled = true; btn.innerHTML = SPIN + "연결하는 중"; kmsg("gateMsg");
+      var prev = url; url = u; btn.disabled = true; btn.innerHTML = SPIN + "구글 시트와 손잡는 중…"; kmsg("gateMsg");
       call("status").then(function(j){
         if (!j.ok) throw Object.assign(new Error(j.error), { gate: j.error });
         st = j;
@@ -2659,7 +2690,7 @@
       e.preventDefault();
       var id = $("acctId").value.trim(), pw = $("acctPw").value, btn = $("acctSave");
       if (!id || !pw){ kmsg("acctMsg", "er", "아이디와 비밀번호를 모두 적어 주세요."); return; }
-      btn.disabled = true; btn.innerHTML = SPIN + "저장하는 중"; kmsg("acctMsg");
+      btn.disabled = true; btn.innerHTML = SPIN + "저장하는 중…"; kmsg("acctMsg");
       call("saveAccount", { id: id, pw: pw }).then(function(j){
         if (!j.ok) throw new Error(j.error);
         st = j; $("acctId").value = ""; $("acctPw").value = ""; paint();
@@ -2693,8 +2724,8 @@
       if (syncBusy) return;
       syncBusy = true; paint();
       var btn = $(dry ? "syncDry" : "syncGo"), label = btn.innerHTML;
-      btn.innerHTML = SPIN + "받는 중… (1~2분)";
-      kmsg("syncMsg", "wa", K.warn + "<span>세일즈온 어드민에서 명단을 받는 중이에요. 이 창을 닫지 마세요.</span>");
+      btn.innerHTML = SPIN + "명단 새로 받아 오는 중…";
+      kmsg("syncMsg", "wa", K.warn + "<span>1만 7천 명이라 1~2분 걸려요 · 이 창을 닫지 마세요</span>");
       call("syncNow", { dry: dry }).then(function(j){
         if (j.status) st = j.status;
         var info = j.info || {}; lastRun = info;
@@ -2734,7 +2765,7 @@
       $("acctTraceText").textContent = lines.join("\n"); btn.hidden = false;
     }
     function test(){
-      var btn = $("acctTest"); testBusy = true; btn.disabled = true; btn.innerHTML = SPIN + "확인하는 중"; kmsg("acctRes");
+      var btn = $("acctTest"); testBusy = true; btn.disabled = true; btn.innerHTML = SPIN + "세일즈온 어드민 문 두드리는 중…"; kmsg("acctRes");
       call("testLogin").then(function(j){
         if (!j.ok){ kmsg("acctRes", "er", K.alert + "<span>" + (j.error === "noaccount" ? "먼저 아이디와 비밀번호를 저장해 주세요." : "확인하지 못했어요. 잠시 뒤 다시 해 주세요.") + "</span>"); return; }
         st = j.status; Audit.load();
@@ -2807,7 +2838,7 @@
       });
       if (!NARROW.matches) return;
       lds.forEach(function(ld){
-        if (lines.some(function(L){ return L.ld === ld; })) return;
+        if (lines.some(function(L){ return L.ld === ld; }) || ld.closest(".modal, #memDet")) return;   /* 창 · 회원 상세 안 로딩은 그 자리에 */
         var at = anchorFor(ld), el = document.createElement("div");
         el.className = "ldline"; el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite");
         el.innerHTML = ld.innerHTML;
@@ -2839,6 +2870,81 @@
     var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([body], { type:"text/csv;charset=utf-8" })); a.download = name;
     document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
+  /* #104 진짜 .xlsx 만들기(라이브러리 없이) — 시트마다 [{name, cols:[폭], rows:[[...]]}], 첫 줄은 굵게 · 고정. 숫자는 숫자 칸 */
+  var Xlsx = (function(){
+    var CRC = null;
+    function crc32(u){ if (!CRC){ CRC = new Uint32Array(256); for (var n = 0; n < 256; n++){ var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; CRC[n] = c >>> 0; } }
+      var c = 0xFFFFFFFF; for (var i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+    function xe(v){ return String(v).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ""); }
+    function col(i){ var s = ""; i++; while (i){ var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = (i - m - 1) / 26; } return s; }
+    function sheetXml(sh){
+      var out = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="18"/>'];
+      if (sh.cols) out.push("<cols>" + sh.cols.map(function(w, i){ return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join("") + "</cols>");
+      out.push("<sheetData>");
+      sh.rows.forEach(function(r, ri){
+        var cs = ""; r.forEach(function(v, ci){
+          if (v == null || v === "") return;
+          var ref = col(ci) + (ri + 1), st = ri ? "" : ' s="1"';
+          cs += typeof v === "number" && isFinite(v) ? '<c r="' + ref + '"' + st + '><v>' + v + '</v></c>' : '<c r="' + ref + '"' + st + ' t="inlineStr"><is><t xml:space="preserve">' + xe(v) + '</t></is></c>';
+        });
+        out.push('<row r="' + (ri + 1) + '">' + cs + '</row>');
+      });
+      out.push("</sheetData>" + (sh.rows.length > 1 ? '<autoFilter ref="A1:' + col(Math.max(0, sh.rows[0].length - 1)) + sh.rows.length + '"/>' : "") + "</worksheet>");
+      return out.join("");
+    }
+    function files(sheets){
+      var NS = "http://schemas.openxmlformats.org/", H = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+      var f = [
+        ["[Content_Types].xml", H + '<Types xmlns="' + NS + 'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+          sheets.map(function(s, i){ return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join("") + '</Types>'],
+        ["_rels/.rels", H + '<Relationships xmlns="' + NS + 'package/2006/relationships"><Relationship Id="rId1" Type="' + NS + 'officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+        ["xl/workbook.xml", H + '<workbook xmlns="' + NS + 'spreadsheetml/2006/main" xmlns:r="' + NS + 'officeDocument/2006/relationships"><sheets>' +
+          sheets.map(function(s, i){ return '<sheet name="' + xe(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join("") + '</sheets>' +
+          sheets.map(function(s, i){ return s.rows.length > 1 ? '<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="' + i + '" hidden="1">\'' + xe(s.name) + '\'!$A$1:$' + col(s.rows[0].length - 1) + '$' + s.rows.length + '</definedName></definedNames>' : ""; }).filter(Boolean).slice(0, 1).join("") + '</workbook>'],
+        ["xl/_rels/workbook.xml.rels", H + '<Relationships xmlns="' + NS + 'package/2006/relationships">' +
+          sheets.map(function(s, i){ return '<Relationship Id="rId' + (i + 1) + '" Type="' + NS + 'officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>'; }).join("") +
+          '<Relationship Id="rId' + (sheets.length + 1) + '" Type="' + NS + 'officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+        ["xl/styles.xml", H + '<styleSheet xmlns="' + NS + 'spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="맑은 고딕"/><family val="3"/><charset val="129"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/><family val="3"/><charset val="129"/></font></fonts>' +
+          '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEEF2FB"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+          '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+          '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>']
+      ];
+      sheets.forEach(function(s, i){ f.push(["xl/worksheets/sheet" + (i + 1) + ".xml", sheetXml(s)]); });
+      return f;
+    }
+    /* 되는 브라우저는 압축(deflate-raw), 아니면 그대로 담기 */
+    function deflate(u){
+      if (!window.CompressionStream || !window.Response) return Promise.resolve(null);
+      try { var cs = new CompressionStream("deflate-raw"); } catch(e){ return Promise.resolve(null); }
+      return new Response(new Blob([u]).stream().pipeThrough(cs)).arrayBuffer().then(function(b){ return new Uint8Array(b); }).catch(function(){ return null; });
+    }
+    function build(sheets){
+      var enc = new TextEncoder(), list = files(sheets).map(function(x){ return { n: enc.encode(x[0]), d: enc.encode(x[1]) }; });
+      return Promise.all(list.map(function(x){ return deflate(x.d); })).then(function(zs){
+        var parts = [], cen = [], off = 0;
+        function u16(a, v){ a.push(v & 255, (v >>> 8) & 255); } function u32(a, v){ a.push(v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255); }
+        list.forEach(function(x, i){
+          var z = zs[i], m = z ? 8 : 0, body = z || x.d, c = crc32(x.d), h = [];
+          u32(h, 0x04034b50); u16(h, 20); u16(h, 0x0800); u16(h, m); u16(h, 0); u16(h, 0x21); u32(h, c); u32(h, body.length); u32(h, x.d.length); u16(h, x.n.length); u16(h, 0);
+          parts.push(new Uint8Array(h), x.n, body);
+          var e = []; u32(e, 0x02014b50); u16(e, 20); u16(e, 20); u16(e, 0x0800); u16(e, m); u16(e, 0); u16(e, 0x21); u32(e, c); u32(e, body.length); u32(e, x.d.length); u16(e, x.n.length); u16(e, 0); u16(e, 0); u16(e, 0); u16(e, 0); u32(e, 0); u32(e, off);
+          cen.push(new Uint8Array(e), x.n);
+          off += h.length + x.n.length + body.length;
+        });
+        var cl = 0; cen.forEach(function(a){ cl += a.length; });
+        var t = []; u32(t, 0x06054b50); u16(t, 0); u16(t, 0); u16(t, list.length); u16(t, list.length); u32(t, cl); u32(t, off); u16(t, 0);
+        return new Blob(parts.concat(cen, [new Uint8Array(t)]), { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      });
+    }
+    function download(name, sheets){
+      return build(sheets).then(function(blob){
+        var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+        return blob;
+      });
+    }
+    return { build: build, download: download };
+  })();
   /* 기록에 남은 키(v:ID · f:ID:파일키 · r:2611/연령ID · rf:2611/연령ID:파일키) → 제목 */
   var Look = {
     video: function(id){ return (data.videos || []).filter(function(v){ return v.id === id; })[0] || null; },
@@ -2868,13 +2974,14 @@
 
   var Route = (function(){
     /* #48: 회원 관리는 맨 위 바 칸으로, 설정 = 계정 · 사이트 · 🔒 마스터 설정(사번 명단 · 사이트 업데이트 포함) */
-    var MENUS = ["me", "notice", "update", "admins", "roster", "log", "sheet", "siteacc", "keys"], MASTER = { roster:1, update:1, admins:1, log:1, siteacc:1, sheet:1, keys:1 };
+    var MENUS = ["me", "notice", "update", "admins", "roster", "sheet", "siteacc", "keys"], MASTER = { roster:1, update:1, admins:1, siteacc:1, sheet:1, keys:1 };   /* #99 '사번 갱신 기록'은 회원 관리 창으로 */
     var cur = "", curView = "";
     function isMaster(){ return adminSes ? !!adminSes.master : !!token; }
     function parse(h){
       var p = String(h || "").replace(/^#\/?/, "").split("/");
       if (p[0] === "analytics") return { view:"analytics", key: p.length > 1 ? decodeURIComponent(p.slice(1).join("/")) : "" };   /* #87 사이트 [분석 보기] */
       if (p[0] === "members" || (p[0] === "settings" && p[1] === "members")) return { view:"members" };
+      if (p[0] === "settings" && p[1] === "log"){ setTimeout(function(){ if (typeof SyncLog !== "undefined") SyncLog.open(); }, 0); return { view:"members" }; }   /* #99 예전 주소 → 회원 관리 + 기록 창 */
       if (p[0] === "settings"){
         var m = p[1]; if (MENUS.indexOf(m) < 0) m = "me";      /* 11-12 사용자 요청: 메뉴 없이 들어오면 늘 첫 메뉴(내 계정) */
         return { view:"settings", menu:m };
@@ -2905,17 +3012,16 @@
     function menu(m, first){
       var lock = MASTER[m] && !isMaster();
       document.querySelectorAll("#setNav [data-set]").forEach(function(a){ if (a.dataset.set === m) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-      document.querySelectorAll("#setMain [data-page]").forEach(function(el){ el.hidden = el.dataset.page !== (lock ? "nomaster" : m); });
+      document.querySelectorAll("#setMain [data-page]").forEach(function(el){ el.hidden = el.dataset.page !== (lock ? "nomaster" : m); if (!el.hidden && !first) setTimeout(function(){ LRX(el); }, 0); });   /* #105 왼쪽 메뉴로 칸을 바꿀 때 */
       if (!lock){
         if (m === "admins" || m === "keys") Auth.listAdmins();
-        if (m === "log") SyncLog.show();
       }
       var act = document.querySelector('#setNav [aria-current="page"]');
       if (act && window.innerWidth <= 980 && act.scrollIntoView) act.scrollIntoView({ block:"nearest", inline:"center", behavior: first ? "auto" : "smooth" });
       if (!first) window.scrollTo(0, 0);
     }
     var lastM = null;
-    function master(){ var m = isMaster(); $("navMaster").hidden = !m; $("memXls").hidden = !m; $("barUpd").hidden = !m; if (curView && lastM !== null && m !== lastM){ lastM = m; apply(); } lastM = m; }
+    function master(){ var m = isMaster(); $("navMaster").hidden = !m; $("barUpd").hidden = !m; if (curView && lastM !== null && m !== lastM){ lastM = m; apply(); } lastM = m; }
     function go(h){ if (location.hash === h) apply(); else location.hash = h; }
     function count(id, n){ var e = $(id); if (e) e.textContent = n == null ? "" : nf(n); }
     window.addEventListener("hashchange", apply);
@@ -2934,10 +3040,11 @@
       $("memMeta").className = "meta mbx";
       $("memMeta").innerHTML =
         '<div class="mb"><span class="ic">' + PI.refresh + '</span><span class="k-col"><span class="l1"><i>사번 갱신</i><b>' + (ls ? esc(fmtAt(ls)) : "아직 없음") + '</b></span>' +
-          '<span class="l2">' + (ls ? "세일즈온 사번 목록을 매일 새벽 5시에 가져와요" : "설정 → 사번 명단 · 갱신에서 [지금 갱신]") + '</span></span></div>' +
+          '<span class="l2">' + (ls ? "세일즈온 사번 목록을 매일 새벽 5시에 가져와요" : "설정 → 사번 명단 · 갱신에서 [지금 갱신]") + '</span></span>' +
+          '<button type="button" class="slg-btn rp" data-synclog>' + PI.refresh + '갱신 기록' + PI.next + '</button></div>' +
         '<div class="mb hi"><span class="ic">' + PI.cal + '</span><span class="k-col"><span class="l1"><i>통계 기록 시작</i><b>' + (m ? m[1] + "년 " + (+m[2]) + "월 " + (+m[3]) + "일부터" : "아직 없음") + '</b></span>' +
           '<span class="l2">' + (m ? "모든 분석 자료를 카운트하기 시작한 날이에요" : "사이트에 사번 로그인이 붙으면 이날부터 세요") + '</span></span></div>' +
-        '<p class="mb-s"><span>사번 갱신 <b>' + (ls ? esc(fmtAt(ls, "dot")) : "아직 없음") + '</b></span><span class="sep" aria-hidden="true"></span><span>통계 기록 시작 <b>' + (m ? m[2] + "." + m[3] : "아직 없음") + '</b></span></p>';
+        '<p class="mb-s"><span>사번 갱신 <b>' + (ls ? esc(fmtAt(ls, "dot")) : "아직 없음") + '</b> <button type="button" class="slg-lnk" data-synclog>기록 ›</button></span><span class="sep" aria-hidden="true"></span><span>통계 기록 시작 <b>' + (m ? m[2] + "." + m[3] : "아직 없음") + '</b></span></p>';
     }
     function tabs(r){
       var c = r ? r.counts : null;
@@ -2949,7 +3056,7 @@
     function tools(){
       var ns = q.tab === "nosabun", ab = q.tab === "abnormal";
       $("memSort").hidden = ns || ab; $("memFilter").hidden = ns || ab;
-      $("memSort").value = (!q.dir || q.dir === defDir(q.sort)) && [].some.call($("memSort").options, function(o){ return o.value === q.sort; }) ? q.sort : "";
+      $("memSort").value = q.sort + ":" + (q.dir || defDir(q.sort));
       document.querySelectorAll("#memFilter [data-f]").forEach(function(b){ b.setAttribute("aria-checked", b.dataset.f === q.filter ? "true" : "false"); });
       $("memQ").placeholder = ns ? "회원아이디 · 이름 · 소속 검색" : "사번 · 이름 · 소속 검색";
     }
@@ -2987,7 +3094,7 @@
       if (r && !r.logStart) $("memNoLog").innerHTML = PI.info + '<span><b>아직 기록이 없어요.</b> 사이트에 사번 로그인이 붙으면 회원마다 마지막 접속 · 누적 조회 · 누적 다운로드가 여기에 쌓여요.</span>';
       $("memNsNote").hidden = q.tab !== "nosabun";
       if (q.tab === "nosabun") $("memNsNote").innerHTML = PI.info + '<span>세일즈온 어드민 아이디에 사번이 없는 회원이에요. 사번을 알면 직접 적어 주세요. 다음 갱신 때 회원 명단에 들어가고, 영업개발파트 정상 회원이면 관리자에도 들어가요.</span>';
-      var tbl = $("memTbl"); tbl.className = "tbl cards";
+      var tbl = $("memTbl"), wasSk = !!tbl.querySelector(".sk, .ld"); tbl.className = "tbl cards";
       if (!r) return;
       var from = (r.page - 1) * r.size;
       var foot = '<div class="tf"><span>' + (r.total ? nf(from + 1) + "–" + nf(Math.min(from + r.size, r.total)) + " / " : "") + '<b>' + nf(r.total) + '</b>명' +
@@ -2996,6 +3103,7 @@
         : (q.q ? emptyHtml("search", "‘" + esc(q.q) + "’에 맞는 회원이 없어요.", "사번 · 이름 · 소속의 일부로 검색해 보세요.") :
            q.filter === "seen" ? emptyHtml("log", "접속한 적 있는 회원이 아직 없어요.", r.logStart ? "" : "사이트에 사번 로그인이 붙으면 쌓여요.") :
            emptyHtml("log", q.tab === "nosabun" ? "사번 없는 회원이 없어요." : "명단이 비어 있어요.", q.tab === "nosabun" ? "" : "설정 → 사번 명단 · 갱신에서 [지금 갱신]을 눌러 주세요."));
+      if (wasSk || lrWant){ lrWant = false; LRX(tbl); }   /* #105 표 처음 나올 때 · 탭 · 정렬 · 접속 여부 바꿀 때 */
     }
     function fetch1(keepSel){
       tabs(res); tools();
@@ -3023,8 +3131,8 @@
     var memCache = {}, preBusy = {}, full = null, fullOk = null, fullBusy = false, COLL = window.Intl && Intl.Collator ? new Intl.Collator("ko") : null;
     function cmpName(a, b){ return COLL ? COLL.compare(a.name, b.name) : a.name.localeCompare(b.name, "ko"); }
     function loadAll(my){
-      if (fullBusy) return; fullBusy = true; PgBusy.start();
-      gateFetch({ action:"memberAll", sid: adminSes.sid }).then(function(r){
+      if (fullBusy) return Promise.resolve(); fullBusy = true; PgBusy.start();
+      return gateFetch({ action:"memberAll", sid: adminSes.sid }).then(function(r){
         fullBusy = false; PgBusy.stop();
         if (!r.ok){ if (r.error === "unknown"){ fullOk = false; if (!full) fetch1(true); return; } throw new Error(r.error); }
         fullOk = true;
@@ -3038,9 +3146,9 @@
     }
     function defDir(k){ return k === "last" || k === "views" || k === "downs" ? "desc" : "asc"; }
     var MGET = { last: function(x){ return x.last || ""; }, views: function(x){ return x.views || 0; }, downs: function(x){ return x.downs || 0; },
-      name: function(x){ return x.name || ""; }, sabun: function(x){ return x.sabun || ""; }, org: function(x){ return x.org || ""; }, state: function(x){ return x.state || ""; },
+      name: function(x){ return x.name || ""; }, sabun: function(x){ return x.sabun || ""; }, org: function(x){ return x.org || ""; }, state: function(x){ return x.state === "정상 회원" ? 0 : 1; },
       uid: function(x){ return x.uid || ""; }, manual: function(x){ return x.manual || ""; } };
-    var NSK = { uid:1, name:1, org:1, state:1, manual:1 };
+    var NSK = { uid:1, name:1, org:1, state:1, manual:1 }, lastAll = null, lrWant = false;   /* lastAll = 지금 탭 · 검색 · 접속 여부를 걸친 전체 줄(쪽 나누기 전) — #104 엑셀 */
     function local(){
       var F = full, tab = q.tab, rows, dir = q.dir || defDir(q.sort), sk = tab + "|" + q.sort + "|" + dir;
       if (!F.sorted[sk]){
@@ -3052,6 +3160,7 @@
       if (term) rows = rows.filter(function(x){ return x.k.indexOf(term) >= 0; });
       if (tab !== "nosabun" && q.filter === "seen") rows = rows.filter(function(x){ return x.last; });
       if (tab !== "nosabun" && q.filter === "never") rows = rows.filter(function(x){ return !x.last; });
+      lastAll = rows;
       var size = 50, total = rows.length, pg = Math.max(1, Math.min(Number(q.page) || 1, Math.ceil(total / size) || 1));
       return { ok:true, tab: tab, counts: F.counts, total: total, page: pg, size: size, rows: rows.slice((pg - 1) * size, pg * size),
         lastSync: F.lastSync, logStart: F.logStart, manualCount: F.manualCount, noSabunNormal: F.noSabunNormal };
@@ -3092,7 +3201,8 @@
       document.querySelectorAll("#memTbl [data-sb]").forEach(function(el){ el.classList.toggle("on", el.dataset.sb === sb); });
       det.hidden = false; placeDet();
       det.innerHTML = '<div class="det-h"><span class="k-av">·</span><span class="k-col"><span class="sk" style="width:120px;height:18px"></span><span class="sk" style="width:200px"></span></span><button type="button" class="x" data-detx aria-label="회원 상세 닫기">' + PI.x + '</button></div>' +
-        '<div class="tiles"><div class="tile"><span class="sk"></span></div><div class="tile"><span class="sk"></span></div><div class="tile"><span class="sk"></span></div></div>';
+        '<div class="tiles"><div class="tile"><span class="sk"></span></div><div class="tile"><span class="sk"></span></div><div class="tile"><span class="sk"></span></div></div>' +
+        ldHtml("회원 발자취 따라가는 중…", "본 강의와 받은 자료를 모으고 있어요");
       gateFetch({ action:"memberDetail", sid: adminSes.sid, sabun: sb }).then(function(r){
         if (my !== dseq) return;
         if (!r.ok) throw new Error(r.error);
@@ -3122,6 +3232,7 @@
           '<div class="tile hi"><span class="k">누적 다운로드</span><span class="v">' + nf(r.downCount) + '<small>번</small></span></div></div>' +
           (r.logStart ? '' : '<div class="k-msg wa">' + PI.info + '<span><b>아직 기록이 없어요.</b> 사이트에 사번 로그인이 붙으면 쌓여요.</span></div>') +
           list(r.views, false, PI.views, "본 강의") + list(r.downs, true, PI.files, "받은 자료");
+        LRX(det);   /* #105 회원 상세 칸 열릴 때 */
       }).catch(function(e){ if (my !== dseq) return; sessionGone(e); det.innerHTML = '<div class="det-h"><span class="k-col"><b>불러오지 못했어요.</b></span><button type="button" class="x" data-detx aria-label="회원 상세 닫기">' + PI.x + '</button></div>'; });
     }
     function open(sb){ q.tab = "all"; q.q = sb; q.page = 1; $("memQ").value = sb; Route.go("#/members"); fetch1(true); detail(sb); }
@@ -3136,23 +3247,81 @@
         paint(); if (v) toast("저장했어요. 다음 갱신 때 회원 명단에 들어가요");
       }).catch(function(){ nsState[uid] = { s:"err", v:v }; paint(); });
     }
-    function exportAll(){
-      if (noGate() || !Route.isMaster()) return;
-      var b = $("memXls"), old = b.innerHTML; b.disabled = true; b.innerHTML = SPIN + "만드는 중…";
-      gateFetch({ action:"memberList", sid: adminSes.sid, q: { tab:q.tab, q:q.q, sort:q.sort, filter: q.filter === "all" ? "" : q.filter, all:true } }).then(function(r){
-        if (!r.ok) throw new Error(r.error);
-        var name = { all:"전체", normal:"정상회원", abnormal:"비정상회원", nosabun:"사번없음" }[q.tab], rows;
-        if (q.tab === "nosabun") rows = [["회원아이디", "이름", "소속", "가입상태", "사번(직접 입력)"]].concat(r.rows.map(function(x){ return [x.uid, x.name, x.org, x.state, x.manual]; }));
-        else rows = [["사번", "이름", "소속", "가입상태", "마지막 접속", "누적 조회", "누적 다운로드"]].concat(r.rows.map(function(x){ return [x.sabun, x.name, x.org, x.state, fmtAt(x.last, "full"), x.views, x.downs]; }));
-        csvDownload("회원명단_" + name + "_" + kstDay(0).replace(/-/g, "") + ".csv", rows);
-        toast(nf(r.rows.length) + "명을 엑셀(CSV)로 받았어요");
-      }).catch(function(){ toast("받지 못했어요. 잠시 뒤 다시 해 주세요"); }).then(function(){ b.disabled = false; b.innerHTML = old; });
+    /* #104 [엑셀로 받기] 관리자 모두 — 넣을 데이터 고르기 창 → 진짜 .xlsx(시트 '회원' + 고른 것만 '본 강의' · '받은 자료') */
+    var TABK = { all:"전체", normal:"정상 회원", abnormal:"비정상 회원", nosabun:"사번 없음" };
+    function exportRows(){
+      if (full){ local(); return Promise.resolve(lastAll || []); }
+      return gateFetch({ action:"memberList", sid: adminSes.sid, q: { tab:q.tab, q:q.q, sort:q.sort, dir:q.dir, filter: q.filter === "all" ? "" : q.filter, all:true } })
+        .then(function(r){ if (!r.ok) throw new Error(r.error); return r.rows; });
     }
-    $("memTabs").addEventListener("click", function(e){ var b = e.target.closest("[data-tab]"); if (!b || b.dataset.tab === q.tab) return; q.tab = b.dataset.tab; q.page = 1; if (q.tab !== "normal" && q.tab !== "all"){ q.filter = "all"; } fetch1(); });
+    function exportAll(){
+      if (noGate()) return;
+      var ns = q.tab === "nosabun", cnt = full ? (local(), (lastAll || []).length) : (res ? res.total : 0);
+      var tags = ns ? ["회원 아이디", "이름", "소속", "가입상태", "사번(직접 입력)"] : ["사번", "이름", "가입상태", "소속", "마지막 접속", "누적 조회", "누적 다운로드"];
+      function card(k, t, d){ return '<button type="button" class="xcard rp" role="checkbox" aria-checked="false" data-xk="' + k + '"><span class="xbox" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="k-col"><b>' + t + '</b><span>' + d + '</span></span></button>'; }
+      Modal.show('<div class="xh"><div class="k-col"><h3 id="modalT">엑셀로 받기</h3><p>넣을 데이터를 골라 주세요</p></div><button type="button" class="xx rp" data-close aria-label="닫기">' + IC_X + '</button></div>' +
+        '<p class="xnow">지금 목록 그대로 · ' + TABK[q.tab] + ' <b>' + nf(cnt) + '</b>명 (고른 탭 · 검색 · 접속 여부 반영)</p>' +
+        '<div class="xsec"><span class="xlab">기본으로 들어가요</span><div class="xtags">' + tags.map(function(t){ return '<span class="xtag">' + t + '</span>'; }).join("") + '</div></div>' +
+        (ns ? '<p class="xnote">사번 없는 회원은 본 강의 · 받은 자료 기록이 없어요.</p>' :
+          '<div class="xsec"><span class="xlab">더 넣을 데이터</span><div class="xcards">' +
+          card("views", "회원별 본 강의", "회원마다 어떤 강의를 봤는지 — 강의 제목 · 시청 수 · 첫 시청 · 마지막 시청") +
+          card("downs", "회원별 받은 자료", "회원마다 어떤 자료를 받았는지 — 자료 이름 · 강의 · 다운로드 수 · 첫 다운로드") + '</div></div>' +
+          '<p class="xnote">관리자의 조회 · 다운로드 수는 제외예요</p>') +
+        '<p class="k-ferr xerr" hidden>파일을 만들지 못했어요. 잠시 뒤 다시 눌러 주세요</p>' +
+        '<div class="bt"><button type="button" class="bb g rp" data-close>취소</button><button type="button" class="bb p rp" data-xgo>' + PI.dl + '엑셀로 받기</button></div>', "xlsm");
+      var box = $("modalBox");
+      box.querySelectorAll("[data-xk]").forEach(function(c){ c.addEventListener("click", function(){ c.setAttribute("aria-checked", c.getAttribute("aria-checked") === "true" ? "false" : "true"); }); });
+      box.querySelector("[data-xgo]").addEventListener("click", function(){
+        var go = this; if (go.disabled) return;
+        var want = {}; box.querySelectorAll('[data-xk][aria-checked="true"]').forEach(function(c){ want[c.dataset.xk] = true; });
+        go.disabled = true; go.classList.add("is-busy"); go.innerHTML = SPIN + "엑셀로 옮겨 적는 중…"; box.querySelector(".xerr").hidden = true;
+        box.querySelectorAll("[data-xk], [data-close]").forEach(function(b){ if (b.classList.contains("bb")) b.disabled = true; });
+        makeXlsx(want).then(function(){
+          Modal.close(); toast("엑셀 파일을 받았어요");
+        }).catch(function(e){
+          sessionGone(e);
+          if (!document.contains(go)) return;
+          go.disabled = false; go.classList.remove("is-busy"); go.innerHTML = PI.dl + "엑셀로 받기"; box.querySelector(".xerr").hidden = false;
+          box.querySelectorAll(".bb[data-close]").forEach(function(b){ b.disabled = false; });
+        });
+      });
+    }
+    function at2(s){ return fmtAt(s, "full"); }
+    function menuOf(k){
+      if (k.indexOf("v:") === 0){ var v = Look.video(k.slice(2)); return v ? SC.catLabel(v.cat) : ""; }
+      if (k.indexOf("r:") === 0) return SC.RESEARCH.label;
+      return "";
+    }
+    function lectureOf(k){
+      var m = /^(f|rf):(.+):([^:]+)$/.exec(k); if (!m) return "";
+      return m[1] === "f" ? Look.title("v:" + m[2]) : (Look.ageTitle(Look.age(m[2])) || "지금은 없는 자료");
+    }
+    function makeXlsx(want){
+      var ns = q.tab === "nosabun", needX = !ns && (want.views || want.downs);
+      return Promise.all([exportRows(), needX ? gateFetch({ action:"memberExport", sid: adminSes.sid, want: want }) : Promise.resolve(null)]).then(function(a){
+        var rows = a[0], x = a[1];
+        if (x && !x.ok) throw new Error(x.error || "fail");
+        var sheets = [];
+        if (ns) sheets.push({ name:"회원", cols:[22, 12, 40, 12, 16], rows: [["회원 아이디", "이름", "소속", "가입상태", "사번(직접 입력)"]].concat(rows.map(function(m){ return [m.uid, m.name, m.org, m.state, m.manual || ""]; })) });
+        else sheets.push({ name:"회원", cols:[12, 12, 12, 40, 18, 11, 13], rows: [["사번", "이름", "가입상태", "소속", "마지막 접속", "누적 조회", "누적 다운로드"]].concat(rows.map(function(m){ return [m.sabun, m.name, m.state, m.org, at2(m.last), m.views || 0, m.downs || 0]; })) });
+        if (needX){
+          var idx = {}; rows.forEach(function(m, i){ if (m.sabun) idx[m.sabun] = i; });
+          var pick = function(list){ return (list || []).filter(function(e){ return idx[e[0]] != null; }).sort(function(p, r){ var t = (r[4] || r[3] || ""), u = (p[4] || p[3] || ""); return (idx[p[0]] - idx[r[0]]) || (t > u ? 1 : t < u ? -1 : 0); }); };   /* 회원은 목록 순서, 같은 회원 안에서는 최근 것이 위 */
+          var nm = function(sb){ return rows[idx[sb]].name; };
+          if (want.views) sheets.push({ name:"본 강의", cols:[12, 12, 48, 18, 9, 18, 18], rows: [["사번", "이름", "강의 제목", "메뉴", "시청 수", "첫 시청", "마지막 시청"]].concat(pick(x.views).map(function(e){ return [e[0], nm(e[0]), Look.title(e[1]), menuOf(e[1]), e[2], at2(e[3]), at2(e[4])]; })) });
+          if (want.downs) sheets.push({ name:"받은 자료", cols:[12, 12, 40, 48, 11, 18], rows: [["사번", "이름", "자료 이름", "강의", "다운로드 수", "첫 다운로드"]].concat(pick(x.downs).map(function(e){ return [e[0], nm(e[0]), Look.file(e[1]).name, lectureOf(e[1]), e[2], at2(e[3])]; })) });
+        }
+        var fn = "회원명단_" + (q.tab === "all" ? "" : TABK[q.tab].replace(/\s+/g, "") + "_") + kstDay(0) + ".xlsx";
+        return Xlsx.download(fn, sheets);
+      });
+    }
+    $("memTabs").addEventListener("click", function(e){ var b = e.target.closest("[data-tab]"); if (!b || b.dataset.tab === q.tab) return; q.tab = b.dataset.tab; q.page = 1; if (q.tab !== "normal" && q.tab !== "all"){ q.filter = "all"; } lrWant = true; fetch1(); });
     $("memQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(typeT); typeT = setTimeout(function(){ if (v === q.q) return; q.q = v; q.page = 1; fetch1(); }, 300); });
-    $("memSort").addEventListener("change", function(){ q.sort = this.value; q.dir = defDir(q.sort); q.page = 1; fetch1(true); });
-    TS.on.mem = function(s){ q.sort = s.k; q.dir = s.d; q.page = 1; fetch1(true); };
-    $("memFilter").addEventListener("click", function(e){ var b = e.target.closest("[data-f]"); if (!b || b.dataset.f === q.filter) return; q.filter = b.dataset.f; q.page = 1; fetch1(); });
+    /* #101 정렬 선택칸 = 표 머리와 1:1(칸 × 오름/내림) */
+    document.addEventListener("click", function(e){ if (e.target.closest("[data-synclog]")) SyncLog.open(); });
+    $("memSort").addEventListener("change", function(){ var v = this.value.split(":"); q.sort = v[0]; q.dir = v[1] || defDir(v[0]); q.page = 1; lrWant = true; fetch1(true); });
+    TS.on.mem = function(s){ q.sort = s.k; q.dir = s.d; q.page = 1; lrWant = true; fetch1(true); };
+    $("memFilter").addEventListener("click", function(e){ var b = e.target.closest("[data-f]"); if (!b || b.dataset.f === q.filter) return; q.filter = b.dataset.f; q.page = 1; lrWant = true; fetch1(); });
     $("memXls").addEventListener("click", exportAll);
     $("memTbl").addEventListener("click", function(e){
       var p = e.target.closest("[data-mpg]"); if (p && !p.disabled){ q.page = Number(p.getAttribute("data-mpg")); fetch1(true); $("memTabs").scrollIntoView({ block:"nearest" }); return; }
@@ -3170,35 +3339,67 @@
       if (e.target.closest("[data-detana]")){ closeDet(); return; }          /* #94 분석으로 가면서 상세 칸은 닫음 */
       var m = e.target.closest("[data-detmore]"); if (m){ m.parentNode.querySelectorAll("[data-more]").forEach(function(el){ el.hidden = false; }); m.remove(); }
     });
-    return { show: show, open: open, leave: leave, reset: function(){ res = null; sel = null; nsState = {}; memCache = {}; full = null; fullOk = null; } };
+    /* #102 당겨서 새로고침: 명단을 다시 받아 지금 탭 · 검색 · 정렬 · 쪽 그대로 다시 그림 */
+    function refresh(){ if (noGate()) return Promise.resolve(); memCache = {}; if (!full || fullOk === false){ fetch1(true); return Promise.resolve(); } full.stale = true; return loadAll(); }
+    return { show: show, open: open, leave: leave, refresh: refresh, reset: function(){ res = null; sel = null; nsState = {}; memCache = {}; full = null; fullOk = null; } };
   })();
 
-  /* ---------- 🔒 갱신 기록 ---------- */
+  /* ---------- 사번 갱신 기록 — #99 회원 관리 [⟲ 갱신 기록 ›] 창(관리자 모두) · 실패 사번 칸 ---------- */
   var SyncLog = (function(){
-    var page = 1, seq = 0;
-    var HEAD = '<div class="tr th g-log" role="row"><span>날짜시각</span><span>방식</span><span>결과</span><span class="r">정상 회원</span><span class="r">비정상 회원</span><span class="r">사번 없음</span><span class="r">새 사번</span><span>실패 이유</span></div>';
+    var page = 1, seq = 0, rows = [];
     function n(v, t2){ return '<span class="r' + (t2 ? " t2" : "") + '">' + (v == null ? "—" : nf(v)) + '</span>'; }
+    var HEAD = '<div class="tr th g-log" role="row"><span>날짜시각</span><span>방식</span><span>결과</span><span class="r">정상 회원</span><span class="r">비정상 회원</span><span class="r">사번 없음</span><span class="r">새 사번</span><span class="r">실패 사번</span><span>실패 이유</span></div>';
+    function open(){
+      Modal.show('<div class="lgh"><span class="slg-ic">' + PI.refresh + '</span><div class="k-col slg-t"><h3 id="modalT">사번 갱신 기록</h3><p class="lgs">세일즈온 사번 목록을 가져온 기록이에요 · 최근 것이 위</p></div>' +
+        '<button type="button" class="xx rp" data-close aria-label="닫기">' + IC_X + '</button></div><div class="slg-b"><div class="tbl cards scrollx" id="logTbl" style="--mw:1060px"></div></div>', "logm syncm pv2");
+      page = 1; show();
+    }
+    function fcell(x, i){
+      if (!x.ok || x.fails == null) return '<span class="r t2">—</span>';
+      var k = x.fails.length;
+      return '<span class="r">' + (k ? '<button type="button" class="fbtn rp" data-fails="' + i + '" aria-expanded="false">' + nf(k) + PI.next + '</button>' : '<span class="t2">0</span>') + '</span>';
+    }
     function show(){
-      var t = $("logTbl");
+      var t = $("logTbl"); if (!t) return;
       if (noGate()){ t.innerHTML = NOLOGIN; return; }
-      var my = ++seq; t.innerHTML = HEAD + skelRows("g-log", 6, 8) + ldHtml("기록 넘겨 보는 중…");
+      var my = ++seq; t.innerHTML = HEAD + skelRows("g-log", 6, 9) + ldHtml("기록 넘겨 보는 중…", "조금만 기다려 주세요");
       gateFetch({ action:"syncLogList", sid: adminSes.sid, page: page }).then(function(r){
-        if (my !== seq) return; if (!r.ok) throw new Error(r.error);
+        if (my !== seq || !$("logTbl")) return; if (!r.ok) throw new Error(r.error);
+        t = $("logTbl");
         if (!r.rows.length){ t.innerHTML = emptyHtml("log", "아직 사번 갱신 기록이 없어요.", "사번 명단 · 갱신에서 [지금 갱신]을 누르거나 자동 갱신을 켜면 여기에 쌓여요."); return; }
-        t.innerHTML = HEAD + r.rows.map(function(x){
+        rows = r.rows;
+        t.innerHTML = HEAD + r.rows.map(function(x, i){
           return '<div class="tr g-log' + (x.ok ? '' : ' bad') + '" role="row"><span class="t2">' + esc(fmtAt(x.at, "dot")) + '</span><span class="t2" data-k="방식">' + esc(x.how) + '</span>' +
             '<span>' + (x.ok ? '<span class="k-pill ok s">성공</span>' : '<span class="k-pill er s">실패</span>') + '</span>' +
             (x.ok ? n(x.normal) + n(x.abnormal, 1) + n(x.nosabun, 1) + '<span class="r">' + (x.added == null ? "—" : x.added ? "+" + nf(x.added) : "0") + '</span>' : n(null) + n(null, 1) + n(null, 1) + n(null)) +
-            '<span class="el" title="' + esc(x.why || "") + '">' + esc(x.why || "") + '</span></div>';
+            fcell(x, i) + '<span class="el" title="' + esc(x.why || "") + '">' + esc(x.why || "") + '</span></div>';
         }).join("") + '<div class="tf"><span>모두 <b>' + nf(r.total) + '</b>번</span>' + pager(r.page, r.total, r.size, "data-lpg") + '</div>';
-      }).catch(function(){ if (my !== seq) return; t.innerHTML = LOADERR; });
+        LRX(t);   /* #105 창 안 표 처음 나올 때 */
+      }).catch(function(){ if (my !== seq || !$("logTbl")) return; $("logTbl").innerHTML = LOADERR; });
     }
-    $("logTbl").addEventListener("click", function(e){ var p = e.target.closest("[data-lpg]"); if (p && !p.disabled){ page = Number(p.getAttribute("data-lpg")); show(); } });
-    return { show: show };
+    function closePop(){ var p = document.querySelector(".fpop"); if (p){ var b = document.querySelector('[data-fails][aria-expanded="true"]'); if (b) b.setAttribute("aria-expanded", "false"); p.remove(); } }
+    document.addEventListener("click", function(e){
+      var pg = e.target.closest("#logTbl [data-lpg]"); if (pg && !pg.disabled){ page = Number(pg.getAttribute("data-lpg")); closePop(); show(); return; }
+      var b = e.target.closest("#logTbl [data-fails]");
+      if (!b){ if (!e.target.closest(".fpop")) closePop(); return; }
+      var was = b.getAttribute("aria-expanded") === "true"; closePop(); if (was) return;
+      var x = rows[+b.dataset.fails]; if (!x) return;
+      var pop = document.createElement("div"); pop.className = "fpop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-label", "실패 사번");
+      pop.innerHTML = '<div class="fp-h"><b>실패 사번 ' + nf(x.fails.length) + '개</b><span>' + esc(fmtAt(x.at, "dot")) + ' · ' + esc(x.how) + '</span></div><ul class="fp-l">' +
+        x.fails.map(function(f){ return '<li><b>' + esc(f.s) + '</b><span>' + esc(f.why) + '</span></li>'; }).join("") + '</ul>' +
+        '<p class="fp-f">다음 갱신 때 다시 시도해요. 계속 실패하면 <span class="nowrap">소희수 프로에게</span> 알려 주세요.</p>';
+      document.body.appendChild(pop); b.setAttribute("aria-expanded", "true");
+      var r = b.getBoundingClientRect(), w = Math.min(330, innerWidth - 24);
+      pop.style.width = w + "px"; pop.style.left = Math.max(12, Math.min(innerWidth - w - 12, r.right - w)) + "px"; pop.style.top = (r.bottom + 6) + "px";
+    });
+    window.addEventListener("keydown", function(e){ if (e.key === "Escape" && document.querySelector(".fpop")){ e.stopImmediatePropagation(); e.preventDefault(); closePop(); } }, true);   /* 창보다 먼저: Esc 한 번 = 작은 창만 */
+    new MutationObserver(function(){ if ($("modal").hidden) closePop(); }).observe($("modal"), { attributes:true, attributeFilter:["hidden"] });
+    return { show: show, open: open };
   })();
 
   /* ---------- 분석 (P8 · 디자인 #45) ---------- */
   var Ana = (function(){
+    var lrL = false, lrM = false, lrT = false;   /* #105 M10: 왼쪽 목록 · 오른쪽 상세 · 상세 안 탭 */
     var kind = LS.get("sc-ana-kind") === "r" ? "r" : "v", qs = "", sort = "new", stats = null, logStart = "", sel = LS.get("sc-ana-key") || "";
     var period = "all", from = "", to = "", tab = "view", fOrg = "", fWho = "", det = null, seq = 0, sseq = 0, page = 1, openF = {}, statsAt = 0;
     function items(){
@@ -3228,10 +3429,11 @@
       if (wantKey && list.some(function(x){ return x.key === wantKey; })){ sel = wantKey; wantKey = ""; LS.set("sc-ana-key", sel); }   /* #87 사이트 [분석 보기] */
       if (list.length && !list.some(function(x){ return x.key === sel; })) sel = list[0].key;
       list.forEach(function(x){
-        if (x.gid !== g){ g = x.gid; html += '<div class="al-g">' + esc(x.group) + ' <span>' + list.filter(function(y){ return y.gid === g; }).length + '</span></div>'; }
+        if (x.gid !== g){ g = x.gid; html += '<div class="al-g"><i style="background:' + colorOf(x) + '"></i>' + esc(x.group) + ' <span>' + list.filter(function(y){ return y.gid === g; }).length + '</span></div>'; }
         html += '<button type="button" class="al-i" data-ak="' + esc(x.key) + '"' + (x.key === sel ? ' aria-current="true"' : '') + '>' + thumbHtml(x, "al-th") + '<span class="k-col"><span class="tt">' + esc(x.title) + '</span><span class="mm">' + mm(x) + '</span></span></button>';
       });
       $("anaList").innerHTML = html || '<p class="k-note" style="padding:16px">' + (qs ? "‘" + esc(qs) + "’에 맞는 " + (kind === "r" ? "자료가" : "강의가") + " 없어요." : kind === "r" ? "아직 상품연구 자료가 없어요." : "아직 강의가 없어요.") + '</p>';
+      if (lrL){ lrL = false; LRX($("anaList")); }
       $("anaPick").innerHTML = list.map(function(x){ return '<option value="' + esc(x.key) + '"' + (x.key === sel ? " selected" : "") + '>' + esc(x.group + " · " + x.title) + '</option>'; }).join("");
       document.querySelectorAll("#anaKind [data-kind]").forEach(function(b){ b.setAttribute("aria-selected", b.dataset.kind === kind ? "true" : "false"); });
       $("anaSort").options[1].textContent = kind === "r" ? "다운로드 많은순" : "조회 많은순";
@@ -3239,8 +3441,8 @@
       paintMob();
     }
     /* ---- #78 휴대폰(980px 이하): 메뉴 칩 · ‹ 고른 강의 › · 고르기 시트 ---- */
-    var chip = "", shQ = "", shSort = "new", CHIPC = { signature:"#003CDC", newbie:"#14A06A", partner:"#E07A2F" };
-    function colorOf(x){ return kind === "r" ? "#7C5CE6" : (CHIPC[x.gid] || "#003CDC"); }
+    var chip = "", shQ = "", shSort = "new";
+    function colorOf(x){ return SC.menuVar(kind === "r" ? "research" : x.gid); }   /* #110 */
     function byNew(arr){ return arr.slice().sort(function(a, b){ return a.go - b.go || (b.date > a.date ? 1 : b.date < a.date ? -1 : 0); }); }
     function groupsOf(all){ var seen = {}, out = []; byNew(all).forEach(function(x){ if (!seen[x.gid]){ seen[x.gid] = 1; out.push(x); } }); return out; }
     function short(t){ return String(t || "").replace(/^\[[^\]]*\]\s*/, ""); }
@@ -3274,7 +3476,7 @@
         var s1 = st(x.key), on = x.key === sel;
         html += '<button type="button" class="am-row" data-ak="' + esc(x.key) + '"' + (on ? ' aria-current="true"' : '') + '>' + thumbHtml(x, "am-th") +
           '<span class="k-col"><span class="tt">' + esc(kind === "r" ? x.title : short(x.title)) + '</span><span class="mm">' +
-          (kind === "r" ? '다운로드 ' + nf(s1.downs) : '조회 ' + nf(s1.views) + ' · 시청자 ' + nf(s1.viewers) + ' · 다운로드 ' + nf(s1.downs)) + '</span></span>' +
+          (!stats && !noGate() ? '<span class="sk" style="width:150px;height:10px;display:inline-block"></span>' : kind === "r" ? '다운로드 ' + nf(s1.downs) : '조회 ' + nf(s1.views) + ' · 시청자 ' + nf(s1.viewers) + ' · 다운로드 ' + nf(s1.downs)) + '</span></span>' +
           (on ? '<svg class="ck" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '') + '</button>';
       });
       $("anaShList").innerHTML = html || '<p class="k-note" style="padding:16px 4px">' + (shQ ? "‘" + esc(shQ) + "’에 맞는 " + (kind === "r" ? "자료가" : "강의가") + " 없어요." : "아직 없어요.") + '</p>';
@@ -3299,7 +3501,7 @@
       return rows.filter(function(p){ return (!o || String(p.org).replace(/\s+/g, "").toLowerCase().indexOf(o) >= 0) && (!w || (p.name + p.sabun).replace(/\s+/g, "").toLowerCase().indexOf(w) >= 0); });
     }
     function head(x){
-      return '<div class="ar-h">' + thumbHtml(x, "ar-th") + '<div class="k-col"><span class="k-row k-g8"><span class="k-pill ac s">' + esc(x.rs ? "상품연구 · " + x.group : x.group) + '</span><span class="am3">' + x.meta.map(function(c){ return '<span><i>' + esc(c[0]) + '</i><b>' + esc(c[1]) + '</b></span>'; }).join("") + '</span></span><h1 class="k-h1">' + esc(x.title) + '</h1>' +
+      return '<div class="ar-h">' + thumbHtml(x, "ar-th") + '<div class="k-col"><span class="k-row k-g8"><span class="k-pill ac s"><i class="mcd" style="background:' + colorOf(x) + '"></i>' + esc(x.rs ? "상품연구 · " + x.group : x.group) + '</span><span class="am3">' + x.meta.map(function(c){ return '<span><i>' + esc(c[0]) + '</i><b>' + esc(c[1]) + '</b></span>'; }).join("") + '</span></span><h1 class="k-h1">' + esc(x.title) + '</h1>' +
         '<a class="lnk" href="' + esc(x.link) + '" target="_blank" rel="noopener">사이트에서 보기 ' + PI.ext + '</a></div></div>';
     }
     function tools(){
@@ -3361,6 +3563,8 @@
       box.innerHTML = top + sumHtml(x, d) +
         (x.rs ? '' : '<div class="ut" role="tablist"><button type="button" role="tab" data-ut="view" aria-selected="' + (tab === "view") + '">' + PI.views + '시청자 수<b>' + nf(d.viewers.length) + '</b></button><button type="button" role="tab" data-ut="down" aria-selected="' + (tab === "down") + '">' + PI.files + '자료 다운로드<b>' + nf(d.downs) + '</b></button></div>') +
         (none ? '<div class="tbl">' + emptyHtml("cal", "이 기간에는 기록이 없어요.", "기간을 바꿔 보세요.") + '</div>' : tab === "view" ? viewTbl(d) : downTbl(x, d)) + note(x);
+      if (lrM){ lrM = false; lrT = false; LRX(box); }
+      else if (lrT){ lrT = false; var tb = box.querySelector(".ut"); LRX(tb && tb.nextElementSibling); }
     }
     function note(x){ return '<p class="k-note">' + (x.rs ? "'받은 것'은 자료 받기 페이지에서 [받기]를 누른 것 기준이에요." : "'본 것'은 강의 페이지를 연 것 기준이에요(영상을 끝까지 봤는지는 알 수 없어요).") + ' 관리자는 카운트되지 않아요.</p>'; }
     var detCache = {};
@@ -3375,6 +3579,7 @@
       }).catch(function(){ if (my !== seq || hit) return; $("anaMain").innerHTML = head(x) + LOADERR; });
     }
     function show(){
+      lrL = lrM = true;
       paintList(); paintMain();
       if (noGate()) return;
       if (stats && Date.now() - statsAt < 60000){ loadDetail(); return; }
@@ -3383,7 +3588,16 @@
         if (my !== sseq || !r.ok) return; stats = r.stats || {}; logStart = r.logStart || ""; statsAt = Date.now(); paintList(); loadDetail();
       }).catch(function(){ if (my !== sseq) return; $("anaMain").innerHTML = LOADERR; });
     }
-    function pick(k){ if (k === sel) return; sel = k; LS.set("sc-ana-key", k); openF = {}; tab = "view"; paintList(); loadDetail(); if (window.innerWidth > 980) window.scrollTo(0, 0); }
+    /* #102 당겨서 새로고침: 숫자 · 지금 고른 콘텐츠 상세만 다시 */
+    function refresh(){
+      if (noGate()) return Promise.resolve();
+      detCache = {}; var my = ++sseq;
+      return gateFetch({ action:"contentStats", sid: adminSes.sid }).then(function(r){
+        if (!r.ok) throw new Error(r.error); if (my !== sseq) return;
+        stats = r.stats || {}; logStart = r.logStart || ""; statsAt = Date.now(); paintList(); loadDetail();
+      });
+    }
+    function pick(k){ if (k === sel) return; lrM = true; sel = k; LS.set("sc-ana-key", k); openF = {}; tab = "view"; paintList(); loadDetail(); if (window.innerWidth > 980) window.scrollTo(0, 0); }
     function exportCsv(){
       var x = cur(); if (!x || !det) return;
       var name = x.title.replace(/[\\/:*?"<>|]/g, "").slice(0, 40), rows;
@@ -3395,7 +3609,7 @@
       csvDownload("분석_" + name + "_" + (tab === "view" ? "시청자" : "자료다운로드") + ".csv", rows);
     }
     var tT = null;
-    $("anaKind").addEventListener("click", function(e){ var b = e.target.closest("[data-kind]"); if (!b || b.dataset.kind === kind) return; kind = b.dataset.kind; LS.set("sc-ana-kind", kind); sel = ""; chip = ""; shQ = ""; $("anaShQ").value = ""; openF = {}; tab = kind === "r" ? "down" : "view"; paintList(); LS.set("sc-ana-key", sel); loadDetail(); });
+    $("anaKind").addEventListener("click", function(e){ var b = e.target.closest("[data-kind]"); if (!b || b.dataset.kind === kind) return; kind = b.dataset.kind; LS.set("sc-ana-kind", kind); sel = ""; chip = ""; shQ = ""; $("anaShQ").value = ""; openF = {}; tab = kind === "r" ? "down" : "view"; lrL = lrM = true; paintList(); LS.set("sc-ana-key", sel); loadDetail(); });
     $("anaQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(tT); tT = setTimeout(function(){ qs = v; paintList(); }, 150); });
     $("anaSort").addEventListener("change", function(){ sort = this.value; paintList(); });
     $("anaList").addEventListener("click", function(e){ var b = e.target.closest("[data-ak]"); if (b) pick(b.dataset.ak); });
@@ -3403,7 +3617,7 @@
     $("anaChips").addEventListener("click", function(e){
       var b = e.target.closest("[data-chip]"); if (!b) return; chip = b.dataset.chip;
       var c = cur(); if (chip && (!c || c.gid !== chip)){ var f = byNew(items().filter(function(x){ return x.gid === chip; }))[0]; if (f){ pick(f.key); return; } }
-      paintMob();
+      paintMob(); LRX($("anaCur"));   /* #105 메뉴 칩 바꿀 때 */
     });
     $("anaCur").addEventListener("click", function(e){
       var g = e.target.closest("[data-amgo]"); if (g){ if (g.dataset.amgo) pick(g.dataset.amgo); return; }
@@ -3422,7 +3636,7 @@
     var mT = null;
     $("anaMain").addEventListener("click", function(e){
       var c = e.target.closest("[data-per]"); if (c){ period = c.dataset.per; if (period === "pick" && !from){ from = kstDay(29); to = kstDay(0); } loadDetail(); return; }
-      var u = e.target.closest("[data-ut]"); if (u){ tab = u.dataset.ut; page = 1; paintMain(); return; }
+      var u = e.target.closest("[data-ut]"); if (u){ if (u.dataset.ut !== tab) lrT = true; tab = u.dataset.ut; page = 1; paintMain(); return; }
       var g = e.target.closest("[data-fg]"); if (g){ var k = g.getAttribute("data-fg"); openF[k] = !openF[k]; paintMain(); return; }
       var p = e.target.closest("[data-apg]"); if (p && !p.disabled){ page = Number(p.getAttribute("data-apg")); paintMain(); return; }
       var w = e.target.closest("[data-who]"); if (w){ Members.open(w.getAttribute("data-who")); return; }
@@ -3436,7 +3650,7 @@
     });
     var wantKey = "";
     function want(k){ kind = /^r:/.test(k) ? "r" : "v"; LS.set("sc-ana-kind", kind); sel = k; wantKey = k; LS.set("sc-ana-key", k); chip = ""; openF = {}; tab = kind === "r" ? "down" : "view"; }
-    return { show: show, want: want, reset: function(){ stats = null; det = null; logStart = ""; } };
+    return { refresh: refresh, show: show, want: want, reset: function(){ stats = null; det = null; logStart = ""; } };
   })();
 
   SC.ripple(); SC.fab();
@@ -3451,6 +3665,70 @@
       });
     });
   }
+  /* ---------- #102 휴대폰 · 태블릿: 맨 위에서 아래로 당겨 새로고침(지금 칸의 목록 · 숫자 · 반영 상태만 다시) ---------- */
+  (function(){
+    var MQ = window.matchMedia ? matchMedia("(max-width:980px), (pointer:coarse)") : null, B = document.body, H = document.documentElement;
+    var ind = document.createElement("div"), msg = document.createElement("div");
+    ind.className = "aptr"; ind.setAttribute("aria-hidden", "true");
+    ind.innerHTML = '<span class="aptr-c"><span class="aptr-r"></span><svg class="aptr-a" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>' + IC_SPIN.replace('class="spin"', 'class="aptr-s"') + '</span><span class="aptr-t">당겨서 새로고침</span>';
+    msg.className = "aptr-msg"; msg.setAttribute("role", "status"); msg.setAttribute("aria-live", "polite");
+    B.appendChild(ind); B.appendChild(msg);
+    var y0 = null, x0 = 0, on = false, pull = 0, busy = false, READY = 76, REST = 60, msgT = null;
+    function blocked(){
+      var v = B.dataset.view;
+      if (!B.classList.contains("authed") || !$("modal").hidden || B.classList.contains("sheet-open") || B.classList.contains("modal-open")) return true;
+      if (document.querySelector(".fpop, #anaSheet:not([hidden]), .mm-open")) return true;
+      if (v === "courses" && (touched() || saving || !$("edWrap").hidden)) return true;       /* 편집 칸이 열려 있거나 저장 안 한 변경 */
+      if (v === "members" && !$("memDet").hidden && $("memDet").classList.contains("drw")) return true;
+      return false;
+    }
+    function can(){ return !busy && (!MQ || MQ.matches) && (window.scrollY || H.scrollTop) <= 0 && !blocked(); }
+    function set(px, anim){
+      pull = px; H.classList.toggle("aptr-anim", !!anim);
+      H.style.setProperty("--aptr", (REDUCE ? 0 : px) + "px");
+      ind.style.height = Math.max(px, REDUCE && px ? REST : 0) + "px";
+      ind.style.setProperty("--p", Math.min(1, px / READY).toFixed(3));
+      H.classList.toggle("aptr-on", px > 0 || busy);
+    }
+    function state(st, txt){ ind.className = "aptr" + (st ? " " + st : ""); ind.querySelector(".aptr-t").textContent = txt; }
+    function say(t, ok){
+      clearTimeout(msgT); msg.innerHTML = (ok ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '') + '<span>' + t + '</span>';
+      msg.classList.toggle("bad", !ok); msg.classList.add("on"); msgT = setTimeout(function(){ msg.classList.remove("on"); }, ok ? 1600 : 2600);
+    }
+    function refresh(){
+      var v = B.dataset.view, jobs = [];
+      try { Deploy.start(); } catch(e){}
+      if (v === "courses"){ CST.at = 0; cstLoad(); jobs.push(Promise.resolve(load())); }
+      else if (v === "analytics") jobs.push(Ana.refresh());
+      else if (v === "members") jobs.push(Members.refresh());
+      else { jobs.push(Promise.resolve(Gate.load())); if (document.querySelector('#setMain [data-page="admins"]:not([hidden]), #setMain [data-page="keys"]:not([hidden])')) Auth.listAdmins(); }
+      return Promise.all(jobs);
+    }
+    document.addEventListener("touchstart", function(e){ y0 = null; if (e.touches.length !== 1 || !can()) return; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; on = false; }, { passive:true });
+    document.addEventListener("touchmove", function(e){
+      if (y0 == null) return;
+      var dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
+      if (!on){
+        if (dy < 8 && Math.abs(dx) < 8) return;
+        if (dy < 8 || Math.abs(dx) > dy || (window.scrollY || H.scrollTop) > 0 || e.target.closest(".scrollx, .tbl-x, .chips, input, textarea, select")){ y0 = null; return; }
+        on = true; y0 += 8; dy -= 8;
+      }
+      if (e.cancelable) e.preventDefault();
+      var px = Math.min(84, Math.max(0, dy * 0.5)); set(px, false);
+      if (px >= READY) state("ready", "놓으면 새로고침"); else state("", "당겨서 새로고침");
+    }, { passive:false });
+    function end(){
+      if (y0 == null) return; y0 = null; if (!on) return; on = false;
+      if (pull < READY){ set(0, true); return; }
+      busy = true; state("busy", "새로고침 중…"); set(REST, true);
+      var t0 = Date.now();
+      refresh().then(function(){ return true; }, function(){ return false; }).then(function(ok){
+        setTimeout(function(){ busy = false; set(0, true); setTimeout(function(){ state("", "당겨서 새로고침"); }, 320); say(ok ? "새로고침 완료" : "새로 고치지 못했어요 · 다시 당겨 주세요", ok); }, Math.max(0, 600 - (Date.now() - t0)));
+      });
+    }
+    document.addEventListener("touchend", end, { passive:true });
+    document.addEventListener("touchcancel", end, { passive:true });
+  })();
   Route.apply();
   boot();
 })();
