@@ -1689,23 +1689,184 @@ body.lgt-in .bar, body.lgt-in .hero .h-pp{animation:lg-up 560ms cubic-bezier(.2,
 @keyframes lg-up{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
 @keyframes lg-fade{from{opacity:0}to{opacity:1}}
 
-/* ===== #116 상품연구 자동 썸네일(올린 이미지가 없을 때) — 판 폭에 맞춰 같이 커짐(cqw) ===== */
+/* ===== #153 · #162 상품연구 자동 썸네일 v4 — 왼쪽 유리 타일 아이콘 + 오른쪽 글자, 월마다 · 연령대마다 색, 글꼴 삼성금융체 (cqw = 썸네일 폭의 1%) ===== */
 .thumb.r-th.auto{background:none}
 .thumb.r-th.auto::after{display:none}
-.ath{position:absolute; inset:0; container-type:inline-size; overflow:hidden; display:block; --fg:#FFFFFF; --sub:rgba(255,255,255,.78); --ln:rgba(255,255,255,.42); --dot:#5BC2E7; background:linear-gradient(135deg, #003CDC 0%, #0A2296 100%)}
-.ath.t1{background:linear-gradient(135deg, #0B1A4A 0%, #16256B 100%)}
-.ath.t2{background:linear-gradient(135deg, #6CCBEC 0%, #3FA9D6 100%); --fg:#06134A; --sub:rgba(6,19,74,.72); --ln:rgba(6,19,74,.30); --dot:#003CDC}
-.ath.t3{background:linear-gradient(135deg, #F2F6FF 0%, #DCE6FF 100%); --fg:#003CDC; --sub:rgba(0,40,150,.70); --ln:rgba(0,60,220,.30); --dot:#5BC2E7}
-.ath::before{content:""; position:absolute; inset:4cqw; border:max(1px, .55cqw) solid var(--ln); border-radius:3.4cqw; pointer-events:none}
-.ath::after{content:""; position:absolute; right:-18cqw; top:-30cqw; width:70cqw; height:70cqw; border-radius:50%; background:radial-gradient(closest-side, rgba(255,255,255,.16), transparent); pointer-events:none}
-.ath.t2::after, .ath.t3::after{background:radial-gradient(closest-side, rgba(255,255,255,.55), transparent)}
-.ath .lb{position:absolute; left:8.5cqw; top:8cqw; right:8.5cqw; font-size:3.7cqw; line-height:1.3; color:var(--sub); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.ath .tt{position:absolute; left:8.5cqw; right:8.5cqw; top:50%; transform:translateY(-58%); font-size:12cqw; line-height:1.12; color:var(--fg); letter-spacing:-.02em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:keep-all; overflow-wrap:normal}
-.ath .tt.l{font-size:8cqw; line-height:1.2}
-.ath .tt.xl{font-size:6.4cqw; line-height:1.24}
-.ath.nob .tt{transform:translateY(-45%)}
-.ath .by{position:absolute; left:8.5cqw; bottom:7.6cqw; display:flex; align-items:center; gap:1.6cqw; font-size:3.6cqw; line-height:1.2; color:var(--sub); white-space:nowrap}
-.ath .by i{width:1.7cqw; height:1.7cqw; border-radius:.5cqw; background:var(--dot); flex:none}
-.ath .by b{font-size:4.6cqw; color:var(--fg)}
-body .ath .tt, body .ath .lb, body .ath .by b{font-weight:800 !important}
+.ath{position:absolute; inset:0; container-type:inline-size; overflow:hidden; display:block;
+  background:radial-gradient(40% 71% at 22% 50%, color-mix(in srgb, var(--ath2) 22%, transparent), transparent 70%), linear-gradient(100deg, var(--athl) 0%, #FFFFFF 62%); box-shadow:inset 0 0 0 1px #E3E9F7}
+.ath.k-blue{--ath1:#7FB2FF; --ath2:#2F6BFF; --athd:#0F1D46; --athl:#DCE7FF; --athc:#1F57E6}
+.ath.k-green{--ath1:#7CF0B0; --ath2:#18B866; --athd:#0E2A1E; --athl:#D9F5E6; --athc:#0E8A4C}
+.ath.k-sky{--ath1:#9BE3FF; --ath2:#2AB4E8; --athd:#0C2836; --athl:#D8F1FB; --athc:#0B87B8}
+.ath.k-orange{--ath1:#FFC27A; --ath2:#FF8A1F; --athd:#33200C; --athl:#FFEBD6; --athc:#D2690A}
+.ath.k-pink{--ath1:#FF9CC4; --ath2:#FF3F86; --athd:#36122A; --athl:#FFE0EC; --athc:#D81F68}
+.ath.k-purple{--ath1:#C9A7FF; --ath2:#8B5CF6; --athd:#22143F; --athl:#ECE3FF; --athc:#6D3FD6}
+.ath .tile{position:absolute; left:5.5cqw; top:11.6cqw; width:31cqw; height:31cqw; border-radius:7cqw;
+  background:linear-gradient(150deg, #FFFFFF, color-mix(in srgb, var(--ath2) 14%, #FFFFFF) 60%, color-mix(in srgb, var(--ath2) 30%, #FFFFFF)); box-shadow:inset 0 0 0 .35cqw rgba(255,255,255,.9), 0 2cqw 5cqw color-mix(in srgb, var(--ath2) 30%, transparent)}
+.ath .tile img{position:absolute; left:4.5cqw; top:4.5cqw; width:22cqw; height:22cqw; display:block; filter:drop-shadow(0 0 2cqw color-mix(in srgb, var(--ath2) 45%, transparent))}
+.ath .a, .ath .b, .ath .by{position:absolute; left:42cqw; letter-spacing:-.03em; word-break:keep-all}
+.ath .a{right:3cqw; top:15.5cqw; font-size:9.4cqw; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0B1030}
+.ath .b{right:3cqw; top:28cqw; font-size:4.7cqw; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; color:var(--athc)}
+.ath .b.solo{top:20cqw; font-size:6cqw; line-height:1.22; color:#0B1030}
+.ath .by{bottom:6cqw; display:flex; align-items:baseline; gap:1.4cqw; font-size:3.5cqw; line-height:1; color:#6B7499; white-space:nowrap}
+.ath .by b{font-size:3.9cqw; color:#0B1030}
+[data-theme="dark"] .ath{background:radial-gradient(40% 71% at 22% 50%, color-mix(in srgb, var(--ath2) 34%, transparent), transparent 70%), linear-gradient(100deg, var(--athd) 0%, #0B0E16 65%); box-shadow:none}
+[data-theme="dark"] .ath .tile{background:linear-gradient(150deg, color-mix(in srgb, var(--ath1) 40%, transparent), color-mix(in srgb, var(--ath2) 12%, transparent) 60%, color-mix(in srgb, var(--ath2) 28%, transparent)); box-shadow:inset 0 0 0 .35cqw rgba(255,255,255,.28), inset 0 1.2cqw 2.4cqw rgba(255,255,255,.18), 0 0 5cqw color-mix(in srgb, var(--ath2) 45%, transparent)}
+[data-theme="dark"] .ath .tile img{filter:drop-shadow(0 0 2cqw color-mix(in srgb, var(--ath2) 55%, transparent))}
+[data-theme="dark"] .ath .a, [data-theme="dark"] .ath .b.solo{color:#FFFFFF}
+[data-theme="dark"] .ath .b{color:var(--ath1)}
+[data-theme="dark"] .ath .by{color:rgba(255,255,255,.6)}
+[data-theme="dark"] .ath .by b{color:#FFFFFF}
+body .ath .a, body .ath .b.solo{font-weight:700 !important}
+body .ath .b, body .ath .by b{font-weight:600 !important}
 body .ath .by{font-weight:400 !important}
+
+/* #148 ③ 상품연구 카드 = 강의 카드처럼(유튜브식): 상자 · 모서리 · 그림자 없이 썸네일만 모서리 14, 제목 17px 400, 아래 회색 한 줄 13px */
+.r-card, .r-others .r-card{background:none !important; border-radius:0 !important; box-shadow:none !important; overflow:visible}
+.r-card .thumb{border-radius:14px; overflow:hidden; transition:transform 320ms cubic-bezier(.23,1,.32,1), box-shadow 320ms cubic-bezier(.23,1,.32,1)}
+.r-card .card-body{padding:12px 2px 0 !important; background:none}
+.r-card .card-body h3, .r-others .r-card .card-body h3{font-size:17px !important; font-weight:400 !important; line-height:1.45; margin:0}
+.r-card .ys{font-size:13px; color:#8A93B4}
+[data-theme="dark"] .r-card .ys{color:#7480B0}
+@media (hover:hover) and (pointer:fine){
+  .r-card:hover .thumb{transform:translateY(-3px); box-shadow:0 14px 28px -16px rgba(11,16,48,.45)}
+  [data-theme="dark"] .r-card:hover .thumb{box-shadow:0 14px 28px -14px rgba(0,0,0,.8)}
+  .r-card:hover .thumb img:not(.ath img){transform:none}
+}
+@media (prefers-reduced-motion:reduce){ .r-card .thumb{transition:none} }
+
+/* ================= 11-18 #138 · #139~#163 배너 머리 · 메뉴 이동 전환 · SDP · 메뉴 줄 · 라이트/다크 ================= */
+/* #140 홈 배너 높이 = 숫자(메뉴 270 ↔ 홈 사이를 부드럽게 움직이게). --hw = 배너 실제 폭(JS) */
+.hero.h-home{aspect-ratio:auto; height:calc(var(--hw, 100vw) * 865 / 2880)}
+@media (max-width:640px){ .hero.h-home{aspect-ratio:auto; height:calc(var(--hw, 100vw) * 1234 / 2880)} }
+/* #146 · #150 시그니처 배경 영상(물결) — 홈 영상 위에 겹침 */
+.hero .hv2{opacity:0; visibility:hidden}
+.hero.h-sig .hv2, .hero.h-sigx .hv2{opacity:1; visibility:visible}
+.hero.h-sigx .hv2{opacity:0}
+.hero .hv2 .hv-v{object-position:50% 50%}
+/* 위 내 정보 줄이 왼쪽 위 작은 로고를 가리지 않게 */
+.hero .ubar{pointer-events:none} .hero .ubar-in > *{pointer-events:auto}
+/* #139 · #158 홈이 아닌 메뉴: 국문 로고 = 왼쪽 위 작은 로고(PC 20 · 태블릿 16 · 휴대폰 14), 영문 로고 숨김 */
+body:not(.login-mode) .hero.h-menu .h-brand{top:0; bottom:0; left:0; right:0; width:auto; margin:0; display:block; pointer-events:none}
+body:not(.login-mode) .hero.h-menu .h-kr{position:absolute; left:40px; top:20px; height:20px; pointer-events:auto; filter:drop-shadow(0 1px 6px rgba(0,0,0,.35))}
+body:not(.login-mode) .hero.h-menu .h-en{display:none}
+@media (max-width:980px){ body:not(.login-mode) .hero.h-menu .h-kr{left:24px; top:15px; height:16px} }
+@media (max-width:640px){ body:not(.login-mode) .hero.h-menu .h-kr{left:14px; top:14px; height:14px} }
+/* 전환 중: 로고 묶음 상자 = 배너 전체(로고는 JS가 자리에 고정) */
+.hero.h-tr .h-brand{top:0 !important; bottom:0 !important; left:0; right:0; width:auto !important; margin:0 !important; display:block !important}
+.hero .h-en.rv{-webkit-mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%; mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%}
+/* #159 주소로 바로 · 새로 고침: 홈 국문 흐림 10 · ×1.04 → 또렷(0~700), 영문 드러남(300~1,000) */
+.hero.h-load .h-kr{animation:hmKr 700ms cubic-bezier(.22,1,.36,1) both}
+.hero.h-load .h-en{-webkit-mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%; mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%; animation:hmEn 700ms cubic-bezier(.22,1,.36,1) 300ms both}
+@keyframes hmKr{from{opacity:0; filter:blur(10px); transform:scale(1.04)}to{opacity:1; filter:blur(0); transform:none}}
+@keyframes hmEn{from{-webkit-mask-position:100% 0; mask-position:100% 0; filter:blur(6px)}to{-webkit-mask-position:0 0; mask-position:0 0; filter:blur(0)}}
+/* SALES DEVELOPMENT PART = 로그인 화면 가운데에만(홈 · 메뉴는 오른쪽 아래 SVG) */
+body:not(.login-mode) .hero .h-kick, body.lgt-shrink .hero .h-kick{display:none}
+
+/* #160 SALES DEVELOPMENT PART = SVG 글자, 글자 가운데 = ⏸ 가운데. 모든 메뉴 배너 오른쪽 아래 */
+.hero .h-sdp{position:absolute; right:64px; bottom:23px; width:300px; height:9.36px; z-index:3; overflow:visible; pointer-events:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)) drop-shadow(0 0 10px rgba(0,0,0,.28))}
+.hero .h-sdp text{font-family:"SFN", sans-serif; font-weight:700; font-size:13px; letter-spacing:3.38px; fill:#FFFFFF}
+@media (max-width:980px){ .hero .h-sdp{right:54px; bottom:24.5px; width:200px; height:6.12px} .hero .h-sdp text{font-size:8.5px; letter-spacing:1.87px} }
+@media (max-width:640px){ .hero .h-sdp{right:44px; bottom:22px; width:120px; height:3.24px} .hero .h-sdp text{font-size:4.5px; letter-spacing:.9px} }
+body.login-mode:not(.lgt-shrink) .hero .h-sdp{display:none}
+
+/* 메뉴 머리(가운데) */
+.hero .h-head{position:absolute; inset:0; z-index:2; pointer-events:none}
+.hero:not(.h-menu) .h-head, body.login-mode .hero .h-head{display:none}
+.hh{position:absolute; left:0; right:0; display:flex; flex-direction:column; align-items:center; text-align:center; color:#FFFFFF}
+/* 글자 메뉴(신입 교육 · 제휴사 상품 전략 · 상품연구 전략자료) — 제목 + 영문 */
+.hh-t{top:96px; gap:12px}
+.hh-t .t{font-weight:700 !important; font-size:46px; line-height:1.1; letter-spacing:-.01em; color:#FFFFFF; text-shadow:0 6px 24px rgba(0,0,0,.35); white-space:nowrap}
+.hh-t .t i{display:inline-block; font-style:normal; font-weight:700 !important}
+.hh-t .e{font-size:13px; line-height:1.2; letter-spacing:.42em; padding-left:.42em; color:rgba(255,255,255,.62); white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.3)}
+@media (max-width:980px){ .hh-t{top:70px; gap:9px} .hh-t .t{font-size:34px} .hh-t .e{font-size:11px} }
+@media (max-width:640px){ .hh-t{top:50px; gap:6px} .hh-t .t{font-size:24px} .hh-t .e{font-size:8.5px; letter-spacing:.36em; padding-left:.36em} }
+/* #139 · #145 · #151 시그니처클래스 — Class 흰색 + 왕관 · Signature 금빛, 로고 뒤 옅은 어둠 */
+.hh-sig{top:50px; bottom:0; justify-content:center; gap:10px}
+.hh-sig::before{content:""; position:absolute; left:50%; top:50%; width:min(760px,96%); height:132%; transform:translate(-50%,-50%); background:radial-gradient(closest-side, rgba(2,8,28,.5), rgba(2,8,28,.22) 55%, rgba(2,8,28,0)); z-index:-1; pointer-events:none}
+.hh-sig .sgx{position:relative; display:block; height:120px; width:calc(120px * 474 / 270); flex:none; filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))}
+.hh-sig .sgx img{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hh-sig .sg-wr{position:absolute; left:45.36%; top:57.78%; width:54.64%; height:42.22%; background:url(sg-script.png) no-repeat 100% 100%/183.01% 236.84%; -webkit-mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%; mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%}
+.hh-sig .sg-sh{position:absolute; inset:0; -webkit-mask:url(class-sig-gold.png) no-repeat 0 0/100% 100%; mask:url(class-sig-gold.png) no-repeat 0 0/100% 100%; background:linear-gradient(100deg, rgba(242,165,80,0) 41%, rgba(242,165,80,.75) 47.5%, rgba(255,246,228,.95) 50%, rgba(242,165,80,.75) 52.5%, rgba(242,165,80,0) 59%) no-repeat 120% 0/260% 100%; opacity:0; pointer-events:none}
+.hh-sig .h-orn{display:flex; align-items:center; gap:12px}
+.hh-sig .h-orn i{width:80px; height:1px; background:linear-gradient(90deg, transparent, #F29B3C)}
+.hh-sig .h-orn i:first-child{transform-origin:100% 50%}
+.hh-sig .h-orn i:last-child{transform-origin:0 50%; background:linear-gradient(270deg, transparent, #F29B3C)}
+.hh-sig .h-orn span{width:7px; height:7px; transform:rotate(45deg); background:#F29B3C; border-radius:1.5px}
+.hh-sig .h-tag{font-size:17px; line-height:1.4; color:#FFFFFF; text-shadow:0 1px 2px rgba(0,0,0,.4), 0 0 10px rgba(0,0,0,.3); white-space:nowrap}
+@media (max-width:980px){ .hh-sig{top:40px; gap:6px} .hh-sig .sgx{height:80px; width:calc(80px * 474 / 270)} .hh-sig .h-orn i{width:56px} .hh-sig .h-tag{font-size:15px} }
+@media (max-width:640px){ .hh-sig{top:32px; bottom:20px; gap:5px} .hh-sig .sgx{height:54px; width:calc(54px * 474 / 270)} .hh-sig .h-orn i{width:34px} .hh-sig .h-tag{font-size:12px} }
+/* 등장(--hd = 당김/미룸): #151 시그니처 650~4,200 · #159 글자 250~1,100 · 영문 600~1,500 */
+.hh.hh-on{--hd:0ms}
+.hh-sig.hh-on::before{animation:hhIn 700ms ease calc(var(--hd) + 600ms) both}
+.hh-sig.hh-on .sg-cl{animation:sgCl 900ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 650ms) both}
+.hh-sig.hh-on .sg-cr{animation:sgCr 700ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 1050ms) both, sgGl 600ms ease-in-out calc(var(--hd) + 1750ms) both}
+.hh-sig.hh-on .sg-wr{animation:sgWr 1600ms cubic-bezier(.55,0,.25,1) calc(var(--hd) + 1250ms) both}
+.hh-sig.hh-on .h-orn span{animation:sgDm 500ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 2250ms) both}
+.hh-sig.hh-on .h-orn i{animation:sgLn 800ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 2400ms) both}
+.hh-sig.hh-on .h-tag{animation:sgTg 800ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 2600ms) both}
+.hh-sig.hh-on .sg-sh{animation:sgSh 1200ms cubic-bezier(.45,0,.3,1) calc(var(--hd) + 3000ms) both}
+.hh-t.hh-on .t i{animation:hhC 700ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 45ms) both}
+.hh-t.hh-on .e{animation:hhE 900ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 600ms) both}
+.hh.out{animation:hhOut 300ms cubic-bezier(.4,0,.2,1) both}
+.hh.fade{animation:hhIn 150ms ease both}
+@keyframes hhIn{from{opacity:0}to{opacity:1}}
+@keyframes hhOut{to{opacity:0; transform:translateY(-4px); filter:blur(4px)}}
+@keyframes hhC{from{opacity:0; transform:translateY(.4em); filter:blur(8px)}to{opacity:1; transform:none; filter:blur(0)}}
+@keyframes hhE{from{opacity:0; letter-spacing:.9em; padding-left:.9em}to{opacity:1; letter-spacing:.42em; padding-left:.42em}}
+@keyframes sgCl{0%{opacity:0; filter:blur(16px); transform:scale(1.08)}100%{opacity:1; filter:blur(0); transform:none}}
+@keyframes sgCr{0%{opacity:0; transform:translateY(-18px)}100%{opacity:1; transform:none}}
+@keyframes sgGl{0%,100%{filter:brightness(1) drop-shadow(0 0 0 rgba(255,196,120,0))}50%{filter:brightness(1.45) drop-shadow(0 0 10px rgba(255,196,120,.95))}}
+@keyframes sgWr{0%{-webkit-mask-position:100% 0; mask-position:100% 0}100%{-webkit-mask-position:0 0; mask-position:0 0}}
+@keyframes sgDm{0%{opacity:0; transform:rotate(-135deg) scale(0)}100%{opacity:1; transform:rotate(45deg) scale(1)}}
+@keyframes sgLn{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes sgTg{0%{opacity:0; filter:blur(6px); letter-spacing:.2em}100%{opacity:1; filter:blur(0); letter-spacing:0}}
+@keyframes sgSh{0%{background-position:120% 0; opacity:1}99.9%{background-position:-20% 0; opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){ .hh.hh-on, .hh.hh-on *, .hh.hh-on::before, .hero.h-load .h-kr, .hero.h-load .h-en{animation:none !important} .hh.out{animation:hhIn 150ms ease reverse both} }
+
+/* #143 메뉴 줄(배너 밑) 바탕 = 본문 바탕 */
+body.hero-nav .bar, [data-theme="dark"] body.hero-nav .bar{background:var(--bg) !important}
+/* #144 라이트/다크 두 칸 = 같은 폭 · 가운데 */
+.hero .tm button{flex:1 1 0; justify-content:center; align-items:center}
+.hero .ubar .tm button, .hero .h-lgtop .tm button{padding:0 12px}
+.tm button svg{flex:none}
+@media (max-width:980px){ .hero .ubar .tm button, .hero .h-lgtop .tm button{padding:0 9px} }
+@media (max-width:640px){ .hero .ubar .tm button{padding:0 7px} }
+/* #138 휴대폰 라이트/다크 = 아이콘 하나(라이트일 때 ☾ · 다크일 때 ☀), ☰와 같은 유리 버튼 */
+@media (max-width:640px){
+  .hero .ubar.ub-mob .tm, .hero .h-lgtop .tm{display:none !important}
+  .hero .ubar.ub-mob .tm-ic, .hero .h-lgtop .tm-ic, [data-theme="dark"] .hero .ubar.ub-mob .tm-ic, [data-theme="dark"] .hero .h-lgtop .tm-ic{display:flex !important; width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,.16); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); color:#FFFFFF}
+  .hero .h-lgtop .tm-ic, [data-theme="dark"] .hero .h-lgtop .tm-ic{width:34px; height:34px; border-radius:10px}
+  .hero .ubar.ub-mob .tm-ic svg{width:17px; height:17px} .hero .h-lgtop .tm-ic svg{width:18px; height:18px}
+}
+
+/* #152 로그인 → 홈: 메뉴 이름이 홈 메뉴 줄 자리로 이동(복제 글자), 구분선만 240~560 사라짐 */
+.lgt-mn{position:absolute; z-index:60; line-height:normal; white-space:nowrap; pointer-events:none; transform-origin:0 0}
+body.lgt-out .hero .h-menus{opacity:1 !important}
+body.lgt-out .hero .h-menus i{opacity:0; transition:opacity 320ms cubic-bezier(.2,.8,.2,1) 240ms}
+body.lgt-mn-on .bar .menu a{visibility:hidden}
+/* 메뉴 줄 바탕은 나타나고(640~1,200), '전체' + 밑줄은 왼쪽 14px에서 들어옴(1,040~1,600) — 메뉴 줄은 엔터 뒤 보이므로 그때부터 */
+body.lgt-in .bar{animation:lg-bar 380ms cubic-bezier(.2,.8,.2,1) both}
+body.lgt-in .bar .menu a:first-child{animation:lg-all 560ms cubic-bezier(.2,.8,.2,1) 220ms both}
+body.lgt-in .bar .menu .menu-ul{animation:lg-fade 560ms cubic-bezier(.2,.8,.2,1) 220ms both}
+@keyframes lg-bar{from{background-color:transparent; border-bottom-color:transparent}}
+@keyframes lg-all{from{opacity:0; transform:translateX(-14px)}to{opacity:1; transform:none}}
+
+/* ===== #154 교육자료 목록 v2 (강의 페이지 · 상품연구 자료 받기) ===== */
+.fl-wt{margin:2px 0 14px 4px; display:flex; flex-direction:column; gap:2px; font-size:15px; line-height:1.55; color:var(--ink); word-break:keep-all}
+.fl-wt b{font-size:17px; font-weight:700 !important; color:#C25E00}
+[data-theme="dark"] .fl-wt{color:#E6EAF7}
+[data-theme="dark"] .fl-wt b{color:#FFB547}
+.fl-box{display:flex; flex-direction:column; gap:12px}
+.files.fl-ul{gap:8px}
+.fl-ul > .file, .r-files .fl-ul > .file, .r-files .fl-ul > .file + .file{padding:12px 14px; border-radius:12px; background:#EEF2FA; box-shadow:none}
+[data-theme="dark"] .fl-ul > .file, [data-theme="dark"] .r-files .fl-ul > .file{background:rgba(255,255,255,.06)}
+.fl-ul .fi{flex:none; display:block}
+.fl-all{width:100%; height:50px; border:0; border-radius:12px; background:transparent; box-shadow:inset 0 0 0 1.5px var(--line, #DCE2F0); color:var(--ink); font:inherit; font-weight:700 !important; font-size:16px; cursor:pointer}
+[data-theme="dark"] .fl-all{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.16); color:#FFFFFF}
+.fl-all:disabled{opacity:.55; cursor:default}
+@media (hover:hover) and (pointer:fine){ .fl-all:not(:disabled):hover{background:rgba(0,60,220,.05)} [data-theme="dark"] .fl-all:not(:disabled):hover{background:rgba(255,255,255,.05)} }
+@media (max-width:560px){
+  .files-card:not(.r-files){background:var(--card); border-radius:22px; padding:20px 16px 16px; margin-top:12px}
+  .r-files .fl-ul > .file, .r-files .fl-ul > .file + .file{background:var(--card); border-radius:18px; padding:14px 12px 14px 14px}
+  [data-theme="dark"] .r-files .fl-ul > .file{background:var(--card)}
+}

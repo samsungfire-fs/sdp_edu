@@ -285,7 +285,7 @@
     }) };
     rdata = { months: ((rj && rj.months) || []).map(function(m){
       var mo = { ym: m.ym || "", _oym: m.ym || "", title: m.title || "", by: m.by || "", thumb: m.thumb || "", visible: m.visible !== false, ages: [] };
-      mo.ages = (m.ages || []).map(function(a){ return { id: a.id || newAgeId(mo), title: a.title || "", by: a.by || "", thumb: a.thumb || "", visible: a.visible !== false, files: (a.files || []).map(fileIn) }; });
+      mo.ages = (m.ages || []).map(function(a){ return { id: a.id || newAgeId(mo), band: a.band || "", title: a.title || "", by: a.by || "", thumb: a.thumb || "", visible: a.visible !== false, files: (a.files || []).map(fileIn) }; });
       return mo;
     }) };
     openM = openA = null; pendingImgs = {};
@@ -745,6 +745,11 @@
     var body = $("edBody"), st = body.scrollTop;
     body.innerHTML = isR ? monthBody(openM, mi) : videoBody(openV, i);
     body.scrollTop = swap || opening ? 0 : st;
+    /* 11-18: 넓은 화면은 편집 칸이 페이지와 함께 스크롤 → 열거나 바꿀 때 편집 칸 맨 위가 바 밑에 보이게 */
+    if ((swap || opening) && wide.matches) requestAnimationFrame(function(){
+      var bar = document.querySelector(".abar"), t = bar ? bar.getBoundingClientRect().bottom : 0, r = wrap.getBoundingClientRect();
+      if (r.top < t + 8) window.scrollBy(0, r.top - t - 24);
+    });
     /* 편집 칸 전체(테두리 포함)가 라인 리빌로: 처음 열 땐 목록이 자리 잡을 때까지 0.22초 기다림, 바꿀 땐 바로 */
     SC.menuLr(wrap, view.cat);   /* #115 편집 칸 열기 · 바꾸기 · 닫기 라인 리빌도 고른 메뉴 색 */
     if ((opening || swap) && wide.matches){ wrap.style.setProperty("--lr-w", opening ? "145ms" : "0ms"); SC.lineReveal(wrap); }
@@ -820,7 +825,7 @@
   function isDupYm(m){ return rdata.months.some(function(o){ return o !== m && o.ym === m.ym; }); }
   function missCount(files){ return files.filter(function(f){ return !SC.download(f.link, f.type).url; }).length; }
   function rImg(path, cls, at){
-    if (!path && at) return SC.autoThumb(at);   /* #116 이미지가 없으면 제목 · 책임위원 자동 썸네일 */
+    if (at) return SC.autoThumb(at);   /* #162 상품연구 썸네일 = 모두 자동 썸네일(v4) — 예전에 올린 그림도 쓰지 않음 */
     return '<img src="' + esc(pendingImgs[path] || path || "assets/research-default.png") + '" alt=""' + (path ? '' : ' class="dflt"') + (cls ? '' : ' loading="lazy"') + '>';
   }
   function rAt(o){ for (var i = 0; i < rdata.months.length; i++){ var m = rdata.months[i]; if (m === o) return SC.athMonth(m); if (m.ages.indexOf(o) >= 0) return SC.athAge(m, o); } return null; }
@@ -847,52 +852,81 @@
         '<div class="lac">' + lsw(pub, 'data-act="rvis" ' + at) + edBtn(ed, 'data-act="redit" ' + at) + '</div>' +
       '</div></li>';
   }
-  function thumbField(o, attrs){
-    var src = o.thumb ? (pendingImgs[o.thumb] || o.thumb) : "";
-    return '<div class="f"><span class="lbl">썸네일</span>' +
-      (src
-        ? '<div class="th-has th-drop-zone" ' + attrs + '><img class="th-prev" src="' + esc(src) + '" alt="썸네일 미리보기">' +
-            '<div class="th-btns"><button type="button" class="btn-soft rp press" data-act="rthPick" ' + attrs + '>' + IC.img + '다른 이미지로 바꾸기</button>' +
-            '<button type="button" class="btn-line rp press" data-act="rthDel" ' + attrs + '>썸네일 지우기</button></div></div>'
-        : '<div class="th-none"><button type="button" class="th-drop th-drop-zone rp" data-act="rthPick" ' + attrs + '>' + IC.upload + '<b>눌러서 올리기</b><span>또는 끌어다 놓기</span></button>' +
-            '<div class="th-now"><span>지금 보이는 모습</span><div class="th-auto" data-athn>' + (rAt(o) ? SC.autoThumb(rAt(o)) : '') + '</div></div></div>') +
-      '<span class="help">올리지 않으면 <b>제목 · 책임위원으로 썸네일을 자동으로 만들어요.</b><br>직접 올릴 땐 16:9(1280×720)가 가장 잘 맞아요.</span></div>';
+  /* #162 썸네일 칸 = 자동 썸네일 미리보기만(첫째 줄 연월 · 연령대 / 둘째 줄 제목 / 책임위원) */
+  function thumbField(o, attrs, ai){
+    return '<div class="th-now th-only"><span>지금 보이는 모습</span><div class="th-auto" data-athn' + (ai != null ? ' data-ai="' + ai + '"' : '') + '>' + (rAt(o) ? SC.autoThumb(rAt(o)) : '') + '</div></div>';
   }
   function prevMonth(m){
     var best = null;
     rdata.months.forEach(function(o){ if (o !== m && o.ym < m.ym && o.ages.length && (!best || o.ym > best.ym)) best = o; });
     return best;
   }
+  /* #149 월 편집 칸 = 1 연월 → 2 제목(+ 책임위원) → 3 썸네일 → 4 연령. 연령을 고치거나 더할 땐 같은 칸 안 '연령' 화면으로 넘어감 */
+  var stepDir = "", ageSnap = null, IC_BK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
   function monthBody(m, mi){
+    if (openA && m.ages.indexOf(openA) > -1) return ageStep(m, mi, openA);
     var at = 'data-m="' + mi + '"', pub = m.visible !== false, dup = isDupYm(m), code = ymCode(m.ym);
     var y = +(m.ym.split("-")[0]) || new Date().getFullYear(), mo = +(m.ym.split("-")[1]) || 1, y0 = new Date().getFullYear();
     var years = []; for (var k = Math.min(y, 2024); k <= Math.max(y, y0 + 1); k++) years.push(k);
-    var prev = m._new ? prevMonth(m) : null, saved = !m._new && !dirtyMonth(m), wt = m._oym ? "r:" + ymCode(m._oym) : "";
-    return fsec(1, "제목", "사이트의 카드와 페이지 제목에 그대로 나와요.",
-        '<input type="text" id="rm' + mi + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(m.title) + '" placeholder="예) 26년 11월" autocomplete="off" aria-label="제목">' +
-        '<div class="f rby"><label for="rm' + mi + 'by">책임위원 <span class="opt">(선택)</span></label>' +   /* #116 */
-          '<input type="text" id="rm' + mi + 'by" class="ip" ' + at + ' data-rk="by" value="' + esc(m.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20">' +
-          '<span class="help">썸네일 아래쪽과 사이트 카드에 나와요. 비우면 안 나와요. 이 달 연령들의 기본값이 돼요.</span></div>') +
-      fsec(2, "연월", "화면에는 안 나와요. 이 달이 최신일수록 사이트에서 위에 보여요.",
+    var saved = !m._new && !dirtyMonth(m), wt = m._oym ? "r:" + ymCode(m._oym) : "", back = stepDir === "back"; stepDir = "";
+    return '<div class="mstep' + (back ? " back" : "") + '">' +
+      fsec(1, "연월", "썸네일 첫째 줄에 크게 나와요. 이 달이 최신일수록 사이트에서 위에 보여요.",
         '<div class="ym' + (dup ? " dup" : "") + '" role="group" aria-label="연월">' +
           '<label class="asel"><select id="rm' + mi + 'y" ' + at + ' data-rym="y" aria-label="년">' + years.map(function(k){ return '<option value="' + k + '"' + (k === y ? " selected" : "") + '>' + k + '년</option>'; }).join("") + '</select>' + IC.down + '</label>' +
           '<label class="asel"><select id="rm' + mi + 'mo" ' + at + ' data-rym="m" aria-label="월">' + [1,2,3,4,5,6,7,8,9,10,11,12].map(function(k){ return '<option value="' + k + '"' + (k === mo ? " selected" : "") + '>' + k + '월</option>'; }).join("") + '</select>' + IC.down + '</label>' +
         '</div>' + (dup ? '<span class="pill bad ym-err" role="alert">이미 등록된 달이에요. 다른 달을 골라 주세요.</span>' : '')) +
-      fsec(3, "썸네일", "올리지 않으면 제목 · 책임위원으로 썸네일을 자동으로 만들어요. 직접 올릴 땐 16:9(1280×720)가 가장 잘 맞아요.", thumbField(m, at)) +
+      fsec(2, "제목", "썸네일 둘째 줄에 나와요. 사이트의 카드와 페이지 제목에도 그대로 나와요.",
+        '<input type="text" id="rm' + mi + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(m.title) + '" placeholder="예) 비급여통합치료비 상품연구 전략자료 모음" autocomplete="off" aria-label="제목">' +
+        '<div class="f rby"><label for="rm' + mi + 'by">책임위원 <span class="opt">(선택)</span></label>' +
+          '<input type="text" id="rm' + mi + 'by" class="ip" ' + at + ' data-rk="by" value="' + esc(m.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20">' +
+          '<span class="help">썸네일 아래쪽에 나와요. 비우면 안 나와요. 이 달 연령들의 기본값이 돼요.</span></div>') +
+      fsec(3, "썸네일", "연월 · 제목 · 책임위원으로 자동으로 만들어요. 색은 달마다 바뀌어요.", thumbField(m, at)) +
       fsec(4, '연령 <b class="fn">' + m.ages.length + '</b>', "▲▼로 순서를 바꾸면 사이트 연령 목록 순서도 바뀌어요.",
-        (prev ? '<div class="rcopy">' + rSwitch(!!m._copied, 'data-act="rcopy" ' + at, "지난달 연령 그대로 가져오기") +
-          '<div><b>지난달 연령 그대로 가져오기</b><span>' + esc(prev.title || "지난달") + '의 연령 ' + prev.ages.length + '개(제목·썸네일·순서)를 복사해요. 자료는 비워 둬요.</span></div></div>' : '') +
-        '<ul class="ages">' + m.ages.map(function(a, ai){ return ageHtml(m, mi, a, ai); }).join("") + '</ul>' +
+        (m.ages.length ? '<ul class="ages">' + m.ages.map(function(a, ai){ return ageHtml(m, mi, a, ai); }).join("") + '</ul>'
+          : '<p class="ages-empty"><b>아직 연령이 없어요</b><span>아래 [+ 연령 추가]로 이 달 연령을 하나씩 넣어 주세요.</span></p>') +
         '<button type="button" class="add rp" data-act="raddAge" ' + at + '>' + IC.plus + '연령 추가</button>', HOWTO_BTN) +
-      '<div class="ed-end">' + edFoot(wt, true, pub && code && saved ? 'research/' + code + '/' : '', '', 'data-act="rdel" ' + at, "월 삭제", m.title) + '</div>';
+      '<div class="ed-end">' + edFoot(wt, true, pub && code && saved ? 'research/' + code + '/' : '', '', 'data-act="rdel" ' + at, "월 삭제", m.title) + '</div></div>';
   }
+  function ageStep(m, mi, a){
+    var ai = m.ages.indexOf(a), at = 'data-m="' + mi + '" data-a="' + ai + '"', idp = "r" + mi + "a" + ai, pub = a.visible !== false, isN = !!a._new;
+    var lab = SC.ymLabel(m.ym) || m.title || "이 달", code = ymCode(m.ym), saved = !m._new && !dirtyMonth(m), cin = stepDir === "in"; stepDir = "";
+    return '<div class="astep' + (cin ? " as-in" : "") + '" data-ai="' + ai + '">' +
+      '<div class="as-top"><button type="button" class="as-back rp" data-act="rageBack" ' + at + '>' + IC_BK + '<span>' + esc(lab) + ' · 월 정보로</span></button>' +
+        '<h3 class="as-t"><span data-asname>' + (isN && !SC.ageName(a) ? "새 연령" : esc(SC.ageName(a) || "제목 없음")) + '</span> <em>· 연령 ' + (ai + 1) + '</em></h3>' +
+        '<ol class="as-steps" aria-label="단계"><li class="ok"><i aria-hidden="true">✓</i>월 정보 · ' + esc(lab) + '</li><li class="ln" aria-hidden="true"></li><li class="on" aria-current="step"><i aria-hidden="true">2</i>' + (isN ? "연령 추가" : "연령 고치기") + '</li></ol></div>' +
+      fsec(1, '연령대 <span class="req" aria-label="필수">*</span>', "직접 입력해요. 썸네일 첫째 줄에 크게 나와요.",
+        '<input type="text" id="' + idp + 'band" class="ip" ' + at + ' data-rk="band" value="' + esc(a.band || "") + '" placeholder="예) 40대 · 60세 이상 · 30~40대" autocomplete="off" maxlength="20" aria-label="연령대">') +
+      fsec(2, '제목 <span class="req" aria-label="필수">*</span>', '썸네일 둘째 줄에 나와요. 사이트 카드 · 페이지 제목은 <b>연령대 + 제목</b>(40대 비급여통합치료비)으로 나와요.',
+        '<input type="text" id="' + idp + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(a.title) + '" placeholder="예) 비급여통합치료비" autocomplete="off" aria-label="제목">') +
+      fsec(3, '책임위원 <span class="opt">(선택)</span>', '<span data-byhelp>' + byHelp(m) + '</span>',
+        '<input type="text" id="' + idp + 'by" class="ip" ' + at + ' data-rk="by" value="' + esc(a.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20" aria-label="책임위원">') +
+      fsec(4, "썸네일", "연령대 · 제목 · 책임위원으로 자동으로 만들어요. 색은 연령대마다 바뀌어요.", thumbField(a, at, ai)) +
+      fsec(5, '교육자료 <b class="fn">' + a.files.length + '</b>', "드라이브에서 파일 우클릭 → 공유 → ‘링크가 있는 모든 사용자’ → 링크 복사",
+        '<div class="fsort">' + filesHtml(a.files, at, idp, "rfdel", m._oym ? "rf:" + ymCode(m._oym) + "/" + a.id : "", savedKeys("r", m._oym, a.id)) + '</div>' +
+        '<div><button type="button" class="btn-soft rp press" data-act="raddFile" ' + at + '>' + IC.plus + '자료 추가</button></div>', HOWTO_BTN) +
+      fsec(6, "공개", pub ? "사이트 연령 목록과 주소에서 누구나 볼 수 있어요." : "사이트 연령 목록에서 빠지고, 주소로 들어와도 보이지 않아요.",
+        '<div class="segs" role="radiogroup" aria-label="공개 설정">' + rSeg("ravisSet", at, "1", pub, "공개", IC.eye) + rSeg("ravisSet", at, "0", !pub, "비공개", IC.lock) + '</div>' +
+        (isN ? '' : '<div class="as-del">' + (pub && saved && m.visible !== false ? '<a class="site-link rp" href="research/' + code + '/' + esc(a.id) + '/" target="_blank" rel="noopener">사이트에서 보기 ↗</a>' : '<span></span>') +
+          delAsk(armedDel === a, "이 연령과 자료가 지워져요. 정말 삭제할까요?", 'data-act="radelYes" ' + at, 'data-act="delNo"', 'data-act="radel" ' + at, "연령 삭제") + '</div>')) +
+      '<div class="as-foot"><button type="button" class="tb rp" data-act="rageBack" ' + at + '>' + IC_BK + '월 정보로</button><span class="sp"></span>' +
+        '<button type="button" class="bb g rp" data-act="rageCancel" ' + at + '>취소</button>' +
+        '<button type="button" class="bb p rp" data-act="rageSave" ' + at + '>연령 저장</button></div>' +
+    '</div>';
+  }
+  function ageEdited(a){ return ageSnap != null && JSON.stringify(a) !== ageSnap; }
+  function ageRestore(m, a){
+    if (a._new){ var k = m.ages.indexOf(a); if (k > -1) m.ages.splice(k, 1); }
+    else if (ageSnap){ var o = JSON.parse(ageSnap); Object.keys(a).forEach(function(k){ delete a[k]; }); Object.keys(o).forEach(function(k){ a[k] = o[k]; }); }
+  }
+  function ageLeave(){ ageSnap = null; openA = null; armedDel = null; stepDir = "back"; markDirty(); render(); var ed = $("edBody"); if (ed) ed.scrollTop = 0; }
+  function ageOpen(a){ ageSnap = JSON.stringify(a); openA = a; armedDel = null; stepDir = "in"; render(); var ed = $("edBody"); if (ed) ed.scrollTop = 0; var w = $("edWrap"); if (w && w.getBoundingClientRect().top < 0) w.scrollIntoView({ block:"start" }); }
   /* 저장된 상태에도 있는 달인지(사이트에서 보기 링크용) */
   function dirtyMonth(m){
     try { var S = JSON.parse(baseline).r.months; return !S.some(function(o){ return o.ym === m.ym && o.visible !== false; }); } catch(e){ return true; }
   }
   function ageHtml(m, mi, a, ai){
-    var open = a === openA, pub = a.visible !== false, at = 'data-m="' + mi + '" data-a="' + ai + '"', idp = "r" + mi + "a" + ai, miss = missCount(a.files), t = a.title.trim();
-    var row = '<div class="arow" data-act="rage" ' + at + '>' +
+    var pub = a.visible !== false, at = 'data-m="' + mi + '" data-a="' + ai + '"', miss = missCount(a.files), t = SC.ageName(a);
+    return '<li class="aitem" data-vis="' + pub + '"><div class="arow" data-act="rage" ' + at + '>' +
       '<span class="ord"><button type="button" class="ordb" data-act="rup" ' + at + ' aria-label="위로"' + (ai === 0 ? " disabled" : "") + '>' + IC.tri + '</button>' +
         '<button type="button" class="ordb dn" data-act="rdown" ' + at + ' aria-label="아래로"' + (ai === m.ages.length - 1 ? " disabled" : "") + '>' + IC.tri + '</button></span>' +
       '<div class="vthumb rthumb athumb dim" data-athp="' + mi + '-' + ai + '">' + rImg(a.thumb, "", SC.athAge(m, a)) + '</div>' +
@@ -900,28 +934,7 @@
         '<span class="bdg priv">비공개</span><span class="bdg files dim">자료 ' + a.files.length + '개</span>' +
         (miss ? '<span class="bdg miss dim">링크 없음 ' + miss + '</span>' : '') + (m._oym ? Audit.rowWho("r:" + ymCode(m._oym) + "/" + a.id) : '') + '</div></div>' +
       rSwitch(pub, 'data-act="ravis" ' + at, "사이트에 공개") +
-      '<button type="button" class="vexp" data-act="rage" ' + at + ' aria-expanded="' + open + '" aria-label="' + (open ? "접기" : "펼쳐서 고치기") + '">' + IC.down + '</button></div>';
-    if (!open) return '<li class="aitem" data-vis="' + pub + '">' + row + '</li>';
-    var code = ymCode(m.ym), saved = !m._new && !dirtyMonth(m);
-    var body = '<div class="abody">' +
-      '<div class="f"><span class="lbl" id="' + idp + 'visL">공개 설정</span>' +
-        '<div class="segs" role="radiogroup" aria-labelledby="' + idp + 'visL">' +
-          rSeg("ravisSet", at, "1", pub, "공개", IC.eye) + rSeg("ravisSet", at, "0", !pub, "비공개", IC.lock) + '</div>' +
-        '<span class="help">' + (pub ? "사이트 연령 목록과 주소에서 누구나 볼 수 있어요." : "사이트 연령 목록에서 빠지고, 주소로 들어와도 보이지 않아요.<br>저장해야 반영돼요.") + '</span></div>' +
-      '<div class="f"><label for="' + idp + 'title">제목 <span class="req" aria-label="필수">*</span></label>' +
-        '<input type="text" id="' + idp + 'title" class="in" ' + at + ' data-rk="title" value="' + esc(a.title) + '" placeholder="예) 50대" autocomplete="off"></div>' +
-      '<div class="f rby"><label for="' + idp + 'by">책임위원 <span class="opt">(선택)</span></label>' +   /* #116 */
-        '<input type="text" id="' + idp + 'by" class="in" ' + at + ' data-rk="by" value="' + esc(a.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20">' +
-        '<span class="help" data-byhelp>' + byHelp(m) + '</span></div>' +
-      thumbField(a, at) +
-      '<div class="fileset"><div class="fileset-h"><span class="lbl">교육자료 <span class="num">' + a.files.length + '</span>개</span>' +
-        '<span class="help">드라이브에서 파일 우클릭 → 공유 → ‘링크가 있는 모든 사용자’ → 링크 복사</span></div>' +
-        '<div class="fsort">' + filesHtml(a.files, at, idp, "rfdel", m._oym ? "rf:" + ymCode(m._oym) + "/" + a.id : "", savedKeys("r", m._oym, a.id)) + '</div>' +
-        '<div><button type="button" class="btn-soft rp press" data-act="raddFile" ' + at + '>' + IC.plus + '자료 추가</button></div></div>' +
-      '<div class="vfoot">' + (pub && saved && m.visible !== false ? '<a class="site-link rp" href="research/' + code + '/' + esc(a.id) + '/" target="_blank" rel="noopener">사이트에서 보기 ↗</a>' : '<span></span>') +
-        '<div class="vfoot-r">' + delAsk(armedDel === a, "이 연령과 자료가 지워져요. 정말 삭제할까요?", 'data-act="radelYes" ' + at, 'data-act="delNo"', 'data-act="radel" ' + at, "연령 삭제") + '</div></div>' +
-    '</div>';
-    return '<li class="aitem open" data-vis="' + pub + '">' + row + body + '</li>';
+      '<button type="button" class="vexp aged" data-act="rage" ' + at + ' aria-label="이 연령 고치기">' + IC.edit + '<span>편집</span></button></div></li>';
   }
   function rObj(el){
     var m = rdata.months[+el.dataset.m]; if (!m) return null;
@@ -991,8 +1004,7 @@
     }
     if (act === "rage"){
       if (b.classList.contains("arow") && (e.target.closest("button") || e.target.closest("a"))) return;
-      openA = openA === a ? null : a; armedDel = null; render();
-      if (openA && !REDUCE){ var ab = document.querySelector(".aitem.open .abody"); replay(ab, "unfold", 400); }
+      ageOpen(a);
       return;
     }
     if (act === "rvis"){ quickVis(m, true); return; }
@@ -1006,11 +1018,22 @@
       var nb = document.querySelector('.ordb[data-act="' + act + '"][data-m="' + b.dataset.m + '"][data-a="' + to + '"]');
       if (nb && !nb.disabled) nb.focus(); return;
     }
-    if (act === "raddAge"){
-      var na2 = { id: newAgeId(m), title: "", thumb: "", visible: true, files: [{ name:"", type:"", link:"", size:"", _st:"" }] };
-      m.ages.push(na2); openA = na2; markDirty(); render();
-      var el = $("r" + b.dataset.m + "a" + (m.ages.length - 1) + "title"); if (el){ el.focus(); el.scrollIntoView({ block:"center", behavior: REDUCE ? "auto" : "smooth" }); }
+    if (act === "raddAge"){   /* #149 같은 편집 칸 안 '연령 추가' 화면으로(오른쪽에서 밀려 들어옴) */
+      var na2 = { id: newAgeId(m), band: "", title: "", by: "", thumb: "", visible: true, files: [{ name:"", type:"", link:"", size:"", _st:"" }], _new: true };
+      m.ages.push(na2); ageOpen(na2);
+      var el = $("r" + b.dataset.m + "a" + (m.ages.length - 1) + "band"); if (el) el.focus({ preventScroll: true });
       return;
+    }
+    if (act === "rageBack"){
+      if (ageEdited(a)){ Modal.ask({ title: "저장하지 않은 연령이 있어요", body: "월 정보로 돌아가면 이 연령에서 고친 내용은 지워져요.", ok: "돌아가기", onOk: function(){ ageRestore(m, a); ageLeave(); } }); return; }
+      if (a._new) ageRestore(m, a);
+      ageLeave(); return;
+    }
+    if (act === "rageCancel"){ ageRestore(m, a); ageLeave(); return; }
+    if (act === "rageSave"){
+      var bd = String(a.band || "").trim(), tt = String(a.title || "").trim(), ai2 = m.ages.indexOf(a);
+      if (!bd || !tt){ toast(!bd ? "연령대를 입력해 주세요" : "제목을 입력해 주세요"); var fe = $("r" + b.dataset.m + "a" + ai2 + (!bd ? "band" : "title")); if (fe) fe.focus(); return; }
+      delete a._new; ageSnap = null; openA = null; armedDel = null; stepDir = "back"; markDirty(); render(); save(); return;
     }
     if (act === "raddFile"){ a.files.push({ name:"", type:"", link:"", size:"", _st:"" }); markDirty(); render(); var fl = $("r" + b.dataset.m + "a" + b.dataset.a + "f" + (a.files.length - 1) + "l"); if (fl) fl.focus(); return; }
     if (act === "rfdel"){ a.files.splice(+b.dataset.f, 1); markDirty(); render(); return; }
@@ -1033,26 +1056,27 @@
       if (m._new){ revert(); toast("새 달을 지웠어요"); return; }
       quickDel(true, m._oym); return;
     }
-    if (act === "radelYes"){ m.ages.splice(m.ages.indexOf(a), 1); openA = null; armedDel = null; markDirty(); render(); toast("연령을 뺐어요. 아래 [저장]을 눌러야 사이트에서도 빠져요"); return; }
+    if (act === "radelYes"){ m.ages.splice(m.ages.indexOf(a), 1); ageSnap = null; openA = null; armedDel = null; stepDir = "back"; markDirty(); render(); toast("연령을 뺐어요. 위 [저장]을 눌러야 사이트에서도 빠져요"); return; }
   }
   function byHelp(m){ var b = String(m.by || "").trim(); return b ? "비우면 월에 넣은 책임위원(" + esc(b) + ")이 나와요. 다른 사람이면 여기에 넣어 주세요." : "비우면 책임위원 줄이 안 나와요(월에도 비어 있어요). 넣으면 이 연령 썸네일에 나와요."; }
   /* #116 제목 · 책임위원을 고치면 자동 썸네일(목록 줄 · 지금 보이는 모습)이 바로 바뀜 */
   function athRefresh(mi){
     var m = rdata.months[mi]; if (!m) return;
     var put = function(sel, html){ document.querySelectorAll(sel).forEach(function(el){ el.innerHTML = html; }); };
-    if (!m.thumb) put('[data-athp="' + mi + '"]', SC.autoThumb(SC.athMonth(m)));
-    m.ages.forEach(function(a, ai){ if (!a.thumb) put('[data-athp="' + mi + '-' + ai + '"]', SC.autoThumb(SC.athAge(m, a))); });
+    put('[data-athp="' + mi + '"]', SC.autoThumb(SC.athMonth(m)));
+    m.ages.forEach(function(a, ai){ put('[data-athp="' + mi + '-' + ai + '"]', SC.autoThumb(SC.athAge(m, a))); });
     document.querySelectorAll("[data-athn]").forEach(function(el){
-      var f = el.closest(".aitem"), at = null;
-      if (f){ var ai = f.querySelector("[data-a]"); var a = ai ? m.ages[+ai.dataset.a] : null; if (a) at = SC.athAge(m, a); }
-      else at = SC.athMonth(m);
+      var a = el.dataset.ai != null ? m.ages[+el.dataset.ai] : null, at = a ? SC.athAge(m, a) : el.dataset.ai != null ? null : SC.athMonth(m);
       if (at) el.innerHTML = SC.autoThumb(at);
     });
     document.querySelectorAll("[data-byhelp]").forEach(function(el){ el.innerHTML = byHelp(m); });
+    var nm = document.querySelector("[data-asname]"), st = document.querySelector(".astep");
+    if (nm && st){ var ag = m.ages[+st.dataset.ai]; if (ag) nm.textContent = SC.ageName(ag) || (ag._new ? "새 연령" : "제목 없음"); }
   }
   function rInput(t){
     var o = rObj(t); if (!o) return;
     if (t.dataset.rk === "by"){ o.by = t.value; markDirty(); athRefresh(+t.dataset.m); return; }
+    if (t.dataset.rk === "band"){ o.band = t.value; markDirty(); athRefresh(+t.dataset.m); return; }   /* #149 연령대(직접 입력) */
     if (t.dataset.rk === "title"){
       o.title = t.value; markDirty(); setTimeout(function(){ athRefresh(+t.dataset.m); }, 0);
       var h = t.dataset.a != null ? null : document.querySelector('.ritem[data-m="' + t.dataset.m + '"] h3');
@@ -1128,7 +1152,7 @@
       if (ord0 !== ord1) n++;
       m.ages.forEach(function(a){
         var x2 = oa[a.id]; if (!x2){ n++; return; }
-        if (x2.title !== a.title.trim()) n++; if ((x2.thumb || "") !== (a.thumb || "")) n++; if ((x2.visible !== false) !== (a.visible !== false)) n++;
+        if (x2.title !== a.title.trim()) n++; if ((x2.band || "") !== String(a.band || "").trim()) n++; if ((x2.thumb || "") !== (a.thumb || "")) n++; if ((x2.visible !== false) !== (a.visible !== false)) n++;
         n += filesN(x2.files || [], cleanFiles(a.files));
       });
       o.ages.forEach(function(a){ if (!m.ages.some(function(b){ return b.id === a.id; })) n++; });
@@ -1197,7 +1221,7 @@
     return { months: rSorted().map(function(x){
       var m = x.m;
       return { ym: m.ym, title: m.title.trim(), by: String(m.by || "").trim(), thumb: m.thumb || "", visible: m.visible !== false,
-        ages: m.ages.map(function(a){ return { id: a.id, title: a.title.trim(), by: String(a.by || "").trim(), thumb: a.thumb || "", visible: a.visible !== false, files: cleanFiles(a.files) }; }) };
+        ages: m.ages.map(function(a){ return { id: a.id, band: String(a.band || "").trim(), title: a.title.trim(), by: String(a.by || "").trim(), thumb: a.thumb || "", visible: a.visible !== false, files: cleanFiles(a.files) }; }) };
     }) };
   }
   /* ---------- 강의별 공유 페이지(v/영상ID/) — 카톡·SNS 미리보기에 영상 썸네일·제목이 나오게 ---------- */
@@ -1278,7 +1302,7 @@
         title: m.title + " " + SC.RESEARCH.label, desc: "연령 " + ages.length + "개 · 자료 " + nf + "개", image: img(m.thumb), url: root + "research/" + code + "/", type:"website" }) });
       ages.forEach(function(a){
         list.push({ path:"research/" + code + "/" + a.id + "/index.html", mode:"100644", type:"blob", content: ogPage(tpl, { base:"../../../",
-          title: m.title + " " + a.title + " " + SC.RESEARCH.label, desc: "교육자료 " + a.files.length + "개", image: img(a.thumb || m.thumb), url: root + "research/" + code + "/" + a.id + "/", type:"website" }) });
+          title: m.title + " " + SC.ageName(a) + " " + SC.RESEARCH.label, desc: "교육자료 " + a.files.length + "개", image: img(a.thumb || m.thumb), url: root + "research/" + code + "/" + a.id + "/", type:"website" }) });
       });
     });
     return list;
@@ -1413,7 +1437,7 @@
     }).then(function(){
       sha = newSha; if (rout.months.length || rsha) rsha = newRsha; saving = false; dirty = false;
       if (pair0.enc){ VPATH = ENC_V; RPATH = ENC_R; needLock = false; }
-      rdata.months.forEach(function(m){ delete m._new; delete m._copied; });
+      rdata.months.forEach(function(m){ delete m._new; delete m._copied; m.ages.forEach(function(a){ delete a._new; }); });
       pendingImgs = {};
       baseline = JSON.stringify({ v: out, r: rout }); cacheSave();
       showLast(newCommit.committer && newCommit.committer.date); Deploy.expect(newCommit.sha);
@@ -2564,9 +2588,9 @@
       var na = {}; m.ages.forEach(function(a){ na[a.id] = a; });
       m.ages.forEach(function(a){
         var at = t + "/" + a.id, x = oa[a.id];
-        if (!x){ items.push({ t: t, x: "연령을 추가했어요 · " + a.title }); items.push({ t: at, x: "연령을 만들었어요" }); a.files.forEach(function(f){ items.push({ t: "rf:" + code + "/" + a.id + ":" + fileKey(f), x: "업로드" }); }); return; }
+        if (!x){ items.push({ t: t, x: "연령을 추가했어요 · " + SC.ageName(a) }); items.push({ t: at, x: "연령을 만들었어요" }); a.files.forEach(function(f){ items.push({ t: "rf:" + code + "/" + a.id + ":" + fileKey(f), x: "업로드" }); }); return; }
         var c2 = [];
-        if (x.title !== a.title) c2.push("제목"); if ((x.thumb || "") !== (a.thumb || "")) c2.push("썸네일");
+        if ((x.band || "") !== (a.band || "")) c2.push("연령대"); if (x.title !== a.title) c2.push("제목"); if ((x.thumb || "") !== (a.thumb || "")) c2.push("썸네일");
         if (c2.length) items.push({ t: at, x: changed(c2) });
         if ((x.visible !== false) !== (a.visible !== false)) items.push({ t: at, x: a.visible !== false ? "비공개 → 공개로 바꿨어요" : "공개 → 비공개로 바꿨어요" });
         filesDiff(x.files || [], a.files, "rf:" + code + "/" + a.id, items, at);
@@ -2978,7 +3002,7 @@
       (rdata.months || []).forEach(function(m){ if (ymCode(m.ym) === p[0]) m.ages.forEach(function(a){ if (a.id === p[1]) out = { m: m, a: a }; }); });
       return out;
     },
-    ageTitle: function(x){ return x ? ((x.m.title || x.m.ym) + " " + (x.a.title || "")).trim() + " 상품연구 전략자료" : ""; },
+    ageTitle: function(x){ return x ? ((x.m.title || x.m.ym) + " " + SC.ageName(x.a)).trim() + " 상품연구 전략자료" : ""; },
     title: function(k){
       if (k.indexOf("v:") === 0){ var v = Look.video(k.slice(2)); return v ? (v.title || "(제목 없음)") : "지금은 없는 강의"; }
       if (k.indexOf("r:") === 0){ return Look.ageTitle(Look.age(k.slice(2))) || "지금은 없는 자료"; }
@@ -3435,7 +3459,7 @@
       } else {
         (rdata.months || []).forEach(function(m){
           var code = ymCode(m.ym); if (!code) return;
-          m.ages.forEach(function(a, i){ out.push({ key:"r:" + code + "/" + a.id, title: ((m.title || m.ym) + " " + (a.title || "")).trim(), gid: m.ym, group: m.title || m.ym, go: -Number(m.ym.replace("-", "")), date: m.ym + "-" + (900 - i), thumb: a.thumb || m.thumb || "assets/research-default.png", rs: true, files: a.files || [], meta: [["자료", (a.files || []).length + "개"]], link: "research/" + code + "/" + a.id + "/" }); });
+          m.ages.forEach(function(a, i){ out.push({ key:"r:" + code + "/" + a.id, title: ((m.title || m.ym) + " " + SC.ageName(a)).trim(), gid: m.ym, group: m.title || m.ym, go: -Number(m.ym.replace("-", "")), date: m.ym + "-" + (900 - i), thumb: a.thumb || m.thumb || "assets/research-default.png", rs: true, files: a.files || [], meta: [["자료", (a.files || []).length + "개"]], link: "research/" + code + "/" + a.id + "/" }); });
         });
       }
       return out;

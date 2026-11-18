@@ -2151,3 +2151,45 @@ html.aptr-anim .aptr{transition:height 300ms cubic-bezier(.23,1,.32,1)}
 .f.rby{margin-top:14px}
 .f.rby .opt{font-weight:400 !important; color:var(--ink-2); font-size:.92em}
 .fc > .f.rby > .help{display:block}
+
+/* ================= 11-18 이중 스크롤 정리 =================
+   넓은 화면 편집 칸은 자기 스크롤 없이 페이지와 함께 내려감 → 스크롤은 페이지 하나만.
+   편집 칸 머리(제목 · 저장 버튼)는 맨 위 바 바로 밑에 붙어 있음 */
+@media (min-width:981px){
+  .admin.is-edit > .ed-wrap{position:relative; top:auto; align-self:flex-start}
+  .ed-wrap > .editor, .admin.is-edit > .editor{max-height:none; overflow:clip}
+  .ed-lr > .ed-body, #app .ed-body{flex:none; min-height:0; overflow:visible; overscroll-behavior:auto}
+  #app .ed-head{top:calc(60px + env(safe-area-inset-top, 0px))}
+}
+
+/* ================= 11-18 #149 관리자 상품연구 — 연월 먼저 · 연령대 직접 입력 · 연령 추가/고치기 = 같은 편집 칸 안 다음 화면 ================= */
+.astep.as-in{animation:asIn 280ms cubic-bezier(.2,.8,.2,1) both}
+.mstep.back{animation:asBack 280ms cubic-bezier(.2,.8,.2,1) both}
+@keyframes asIn{from{opacity:0; transform:translateX(28px)}to{opacity:1; transform:none}}
+@keyframes asBack{from{opacity:0; transform:translateX(-28px)}to{opacity:1; transform:none}}
+@media (prefers-reduced-motion:reduce){ .astep.as-in, .mstep.back{animation:none} }
+.as-top{display:flex; flex-direction:column; gap:8px; padding:18px 28px 0}
+.as-back{align-self:flex-start; height:32px; padding:0 10px 0 4px; border:0; border-radius:8px; background:none; color:var(--k-act, #003CDC); font:inherit; font-weight:800 !important; font-size:14px; display:inline-flex; align-items:center; gap:2px; cursor:pointer}
+@media (hover:hover) and (pointer:fine){ .as-back:hover{background:var(--k-acs, #E8EDFC)} }
+.as-t{margin:0; font-size:20px; font-weight:800 !important; line-height:1.4; color:var(--k-t1)}
+.as-t em{font-style:normal; font-weight:400 !important; font-size:15px; color:var(--k-t3)}
+.as-steps{list-style:none; margin:0; padding:6px 0 14px; display:flex; align-items:center; gap:10px; font-size:13px; flex-wrap:wrap}
+.as-steps li{display:inline-flex; align-items:center; gap:6px; font-weight:800 !important}
+.as-steps i{font-style:normal; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px}
+.as-steps .ok{color:#14A06A} .as-steps .ok i{background:#E3F6EC}
+.as-steps .on{color:var(--k-act, #003CDC)} .as-steps .on i{background:var(--k-ac, #003CDC); color:#FFFFFF}
+.as-steps .ln{width:28px; height:1px; background:#C9D2EA}
+[data-theme="dark"] .as-steps .ok{color:#3FCB92} [data-theme="dark"] .as-steps .ok i{background:rgba(63,203,146,.16)} [data-theme="dark"] .as-steps .ln{background:#343946}
+.as-del{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; flex-wrap:wrap}
+.as-foot{position:sticky; bottom:0; z-index:3; display:flex; align-items:center; gap:10px; padding:14px 20px 14px 24px; background:var(--k-s1); box-shadow:0 -1px 0 var(--k-ln); border-radius:0 0 22px 22px}
+.as-foot .sp{flex:1 1 auto}
+.as-foot .tb{display:inline-flex; align-items:center; gap:2px}
+.ages-empty{margin:0 0 12px; padding:18px; border-radius:14px; background:var(--k-s2); display:flex; flex-direction:column; gap:4px; font-size:14px; color:var(--k-t2)}
+.ages-empty b{color:var(--k-t1); font-size:15px}
+.th-now.th-only{display:flex; flex-direction:column; gap:8px; max-width:360px}
+.th-now.th-only > span{font-size:13px; color:var(--k-t3)}
+.th-now.th-only .th-auto{width:100%; max-width:360px}
+.vexp.aged{width:auto; padding:0 12px 0 10px; gap:5px; display:inline-flex; align-items:center; border-radius:10px; font-size:14px; font-weight:700 !important; color:var(--k-t2); box-shadow:inset 0 0 0 1px var(--k-ln2)}
+.vexp.aged svg{width:15px; height:15px; transform:none !important}
+@media (max-width:640px){ .as-top{padding:14px 16px 0} .as-foot{padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px)); border-radius:0} .vexp.aged span{display:none} .vexp.aged{padding:0; width:36px; justify-content:center} }
+body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !important}

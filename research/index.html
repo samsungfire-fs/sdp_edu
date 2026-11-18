@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261118c">
+<link rel="stylesheet" href="assets/site.css?v=20261118e">
 </head>
 <body>
 
@@ -40,12 +40,15 @@
     </video>
     <span class="hv-shade"></span>
   </div>
+  <div class="hv hv2" id="hv2" aria-hidden="true"><span class="hv-shade"></span></div>
   <a class="h-brand" href="./" data-go aria-label="홈으로">
     <img class="h-kr" src="assets/hero-kr-w.png?v=1" alt="삼성화재금융서비스" width="1332" height="167">
     <img class="h-en" src="assets/hero-en-w.png?v=1" alt="" width="2012" height="81">
     <span class="h-kick">SALES DEVELOPMENT PART</span>
     <span class="h-menus" id="heroMenus" aria-hidden="true"></span>
   </a>
+  <div class="h-head" id="heroHead"></div>
+  <svg class="h-sdp" id="heroSdp" aria-hidden="true" focusable="false"><text x="100%" y="100%" text-anchor="end">SALES DEVELOPMENT PART</text></svg>
   <div class="ubar" id="ubar" hidden><div class="wrap ubar-in" id="ubarIn"></div></div>
   <div class="h-lgtop" id="heroLgTop"></div>
   <button type="button" class="h-pp" id="heroPP" aria-label="배너 움직임 멈추기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
@@ -84,7 +87,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261118c"></script>
+<script src="assets/common.js?v=20261118e"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -310,7 +313,7 @@
   function cardBody(title, cat, parts){
     var full = title || "제목 없음", t = cleanTitle(full), seg = parts.filter(Boolean);
     return '<div class="card-body yt-b"><h3 class="yt-t"' + (t !== full ? ' title="' + esc(full) + '"' : '') + '>' + esc(t) + '</h3>' +
-      (cat ? '<span class="ym" data-menu="' + esc(cat) + '">' + esc(SC.catLabel(cat)) + '</span>' : '') +
+      /* #154 카드 썸네일 밑 메뉴 이름(색 점 + 이름) 뺌 */
       (seg.length ? '<span class="ys">' + seg.map(function(x, i){ var dot = i && seg[i - 1].indexOf('class="vw2"') < 0; return (dot ? '<i aria-hidden="true">·</i>' : '') + (x.charAt(0) === "<" ? x : '<span>' + esc(x) + '</span>'); }).join("") + '</span>' : '') + '</div>';
   }
   function vw2(id){
@@ -322,7 +325,8 @@
   var RDEF = "assets/research-default.png";
   /* #116 이미지가 없으면 제목 · 책임위원으로 그린 자동 썸네일(at) */
   function rThumb(src, cls, eager, at){
-    if (!src && at) return '<div class="thumb r-th auto' + (cls ? " " + cls : "") + '">' + SC.autoThumb(at) + '</div>';
+    /* #162 상품연구 썸네일 = 모두 자동 썸네일(v4)로 통일(예전에 올린 그림도 쓰지 않음) */
+    if (at) return '<div class="thumb r-th auto' + (cls ? " " + cls : "") + '">' + SC.autoThumb(at) + '</div>';
     return '<div class="thumb r-th' + (cls ? " " + cls : "") + (src ? "" : " dflt") + '">' +
       '<img src="' + esc(src || RDEF) + '" alt=""' + (src ? "" : ' data-default="true"') + (eager ? "" : ' loading="lazy"') + '></div>';
   }
@@ -331,7 +335,7 @@
       cardBody(title, "", [left, "자료 " + n + "개"]) + '</a></li>';
   }
   function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령 ' + rAges(m).length + '개', rFileCount(m), !SC.isPublic(m), SC.athMonth(m)); }
-  function ageCard(m, a){ return rCard(rUrl(ymCode(m.ym), a.id), a.thumb, a.title, "", (a.files || []).length, !SC.isPublic(a) || !SC.isPublic(m), SC.athAge(m, a)); }
+  function ageCard(m, a){ return rCard(rUrl(ymCode(m.ym), a.id), a.thumb, SC.ageName(a), "", (a.files || []).length, !SC.isPublic(a) || !SC.isPublic(m), SC.athAge(m, a)); }
 
   /* ---------- 목록 화면 (전체 · 메뉴 · 상품연구 월/연령) ---------- */
   var L = null;            /* 지금 목록 상태 { m, page, q, items, card, search, url } */
@@ -529,6 +533,16 @@
       '<img class="sg-script" src="' + ROOT + 'assets/sig-' + t + '-script.png" alt="" width="474" height="270"><img class="sg-crown" src="' + ROOT + 'assets/sig-' + t + '-crown.png" alt="" width="474" height="270"><span class="sg-shine"></span></span>';
   }
   var lastListMenu = "";
+  /* #128 로그인 직후 홈(1.44초) · #140 · #159 메뉴 이동(홈 ↔ 메뉴 1초 · 메뉴 → 메뉴 0.3초): 그 시각까지 목록을 접어 두었다가 라인 리빌 */
+  function holdList(){
+    var at = lgRevealAt || (revealIn ? Date.now() + revealIn : 0), whole = !!lgRevealAt, lb = $("listLr"), ap = $("app");
+    lgRevealAt = 0; revealIn = 0;
+    if (!at || !lb || !L) return;
+    var dl = Math.max(0, at - Date.now());
+    lb.classList.add("wait"); if (whole) ap.classList.add("lg-hold");
+    setTimeout(function(){ ap.classList.remove("lg-hold"); if (!lb.isConnected) return; lb.classList.remove("wait"); SC.lineReveal(lb); }, dl);
+    L.noLr = true;
+  }
   function renderList(r){
     setBody("");
     drawMenu(r.m);
@@ -542,34 +556,14 @@
     }
     var title = r.m === "all" ? "전체 강의" : SC.catLabel(r.m);
     $("app").innerHTML = '<section class="list-page" aria-labelledby="listH">' +
-      (r.m === "signature"   /* #106 시그니처클래스: 글자 제목 → Class Signature 로고 + 아래 '강의 수 N'(라이트/다크 그림 두 장, 하나만 보임) */
-        ? '<div class="list-head sig-head"><h1 id="listH" class="sig-h"><span class="sr">시그니처클래스</span><span class="sig-logo" role="img" aria-label="Class Signature 시그니처클래스"><span class="sg-glow"></span>' + sigSet("light", "l") + sigSet("dark", "d") +
-          '<i class="sg-star s1"></i><i class="sg-star s2"></i><i class="sg-star s3"></i></span></h1>' +
-          '<span class="sig-orn" aria-hidden="true"><i></i><b></b><i></i></span><p class="sig-tag">현장에서 검증된 영업 고수들의 노하우</p>' +   /* #108 시안 B */
-          '<p class="sig-n" id="sigN"><span class="sig-k">강의 수</span><span class="num" data-count="' + all.length + '">' + all.length + '</span></p>'
-        : '<div class="list-head"><h1 id="listH">' + esc(title) + ' <span class="num" data-count="' + all.length + '">' + all.length + '</span></h1>') +
+      /* #139 시그니처클래스 로고 묶음은 배너 안으로 — 본문 맨 위는 다른 메뉴처럼 제목 + 검색 */
+        '<div class="list-head"><h1 id="listH">' + esc(title) + ' <span class="num" data-count="' + all.length + '">' + all.length + '</span></h1>' +
         '<label class="search">' + IC.search + '<input id="q" type="search" placeholder="강의 제목으로 찾기" aria-label="강의 제목으로 찾기" autocomplete="off" enterkeyhint="search"></label>' +
       '</div>' + listBody(365) + '</section>';
     $("q").value = L.q;
     var saved = restoreNext ? feedLoad() : null, okSaved = saved && saved.url === L.url(1, L.q) ? saved : null;
-    /* #113 · #114 시그니처클래스에 들어올 때 한 번: 로고 등장(약 1초) → 0.95초에 강의 카드 라인 리빌
-       뒤로 돌아올 때 · 당겨서 새로고침 · 검색 중 · 같은 메뉴를 다시 그릴 때 · 줄이기 설정이면 없이 바로 */
-    var sigPlay = r.m === "signature" && lastListMenu !== "signature" && !restoreNext && !QUIET && !REDUCE && !L.q && !okSaved;
     lastListMenu = r.m;
-    if (lgRevealAt && !sigPlay){   /* #128 로그인 직후 홈: 1.44초에 본문 라인 리빌(그 전엔 자리만 잡고 안 보이게) */
-      var dl = Math.max(0, lgRevealAt - Date.now()), lb = $("listLr"), ap = $("app");
-      lgRevealAt = 0; lb.classList.add("wait"); ap.classList.add("lg-hold");
-      setTimeout(function(){ ap.classList.remove("lg-hold"); if (!lb.isConnected) return; lb.classList.remove("wait"); SC.lineReveal(lb); }, dl);
-      L.noLr = true;
-    }
-    lgRevealAt = 0;
-    if (sigPlay){
-      var hd = document.querySelector(".sig-head"), box = $("listLr");
-      hd.classList.add("sig-play"); box.classList.add("wait");
-      setTimeout(function(){ if (hd.isConnected) hd.classList.remove("sig-play"); }, 1700);
-      setTimeout(function(){ if (!box.isConnected) return; box.classList.remove("wait"); SC.lineReveal(box); }, 950);
-      L.noLr = true;
-    }
+    holdList();
     bindList(okSaved);
     L.noLr = false;
     $("q").addEventListener("input", function(){ L.q = this.value.trim(); L.page = 1; L.count = 0; drawGrid(); syncUrl(false); });
@@ -611,7 +605,7 @@
     $("app").innerHTML = '<section class="list-page" aria-labelledby="listH">' +
       '<div class="list-head"><h1 id="listH">상품연구 전략자료 <span class="num" data-count="' + months.length + '">' + months.length + '</span></h1></div>' +
       listBody(335) + '</section>';
-    bindList();
+    holdList(); bindList(); L.noLr = false;
     return rUrl("", "", L.page);
   }
   function renderRAges(code, page){
@@ -646,15 +640,15 @@
         '<div class="rget-grid">' +
           '<aside class="rget-side">' + rThumb(a.thumb, "rget-th", true, SC.athAge(mo, a)) +
             '<div class="rget-info"><span class="r-pill">상품연구 전략자료</span>' +
-              '<h1>' + esc(mo.title + " " + (a.title || "")) + '</h1>' +
+              '<h1>' + esc(mo.title + " " + SC.ageName(a)) + '</h1>' +
               '<p class="rget-count">교육자료 <span class="nowrap">' + files.length + '개</span></p>' +
               '<button type="button" class="copy-btn r-copy rp press" id="share">' + IC.link + '자료 링크 복사</button>' + anBtn("r:" + code + "/" + a.id, "자료") + '</div>' +
           '</aside>' +
           '<section class="files-card r-files" aria-labelledby="filesH">' +
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
-            '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml(true) + '</p></div>' +
+            flNote() +
             lrBox(files.length
-              ? '<ul class="files lr-c">' + files.map(function(f){ return fileRow(f, "rf:" + code + "/" + a.id + ":" + SC.fileKey(f)); }).join("") + '</ul>'
+              ? '<div class="lr-c fl-box"><ul class="files fl-ul">' + files.map(function(f){ return fileRow(f, "rf:" + code + "/" + a.id + ":" + SC.fileKey(f)); }).join("") + '</ul>' + flAll(files) + '</div>'
               : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 연령은 아직 받을 자료가 없어요.<br>곧 올라올 예정이에요.</p></div>', 265) +
           '</section>' +
         '</div>' +
@@ -679,6 +673,33 @@
       '<a class="btn-blue rp press" href="' + menuUrl("all") + '" data-go>전체 강의 보기</a></div>';
   }
 
+  /* #154 교육자료 목록 v2: 종이 모양 파일 아이콘(귀퉁이 접힘) · 유의 문구는 글자만 · 목록 끝 [모두 받기 (N개 · 합계)] */
+  var FCOL = { pdf: "#E2322B", xlsx: "#1F7A45", pptx: "#D35230", docx: "#2B579A", hwp: "#1A8BD8", zip: "#6B7280", mp4: "#7C3AED" };
+  function fileIcon(t){
+    var lb = SC.typeLabel(t), c = FCOL[t] || "#6B7499";
+    return '<svg class="fi" width="40" height="48" viewBox="0 0 40 48" role="img" aria-label="' + lb + ' 파일"><path d="M5 0h21l12 12v31a5 5 0 0 1-5 5H5a5 5 0 0 1-5-5V5a5 5 0 0 1 5-5z" fill="' + c + '"/>' +
+      '<path d="M26 0v8a4 4 0 0 0 4 4h8z" fill="#fff" fill-opacity=".42"/><text x="19" y="36" text-anchor="middle" font-family="SFN,sans-serif" font-weight="700" font-size="' + (lb.length > 3 ? 9.5 : 11) + '" fill="#fff">' + lb + '</text></svg>';
+  }
+  function flNote(){
+    var lines = SC.noticeText(NOTICE_SRC).split("\n").map(function(x){ return x.trim(); }).filter(Boolean), first = lines.shift() || "";
+    return '<p class="fl-wt" role="note"><b>' + esc(first) + '</b>' + (lines.length ? '<span>' + esc(lines.join(" ")) + '</span>' : '') + '</p>';
+  }
+  function sizeBytes(x){ var m = /([\d.]+)\s*(KB|MB|GB|B)/i.exec(String(x || "")); if (!m) return 0; return +m[1] * ({ b: 1, kb: 1024, mb: 1048576, gb: 1073741824 })[m[2].toLowerCase()]; }
+  function sizeFmt(b){ return b >= 1048576 ? (b / 1048576).toFixed(1).replace(/\.0$/, "") + "MB" : b >= 1024 ? Math.round(b / 1024) + "KB" : b ? b + "B" : ""; }
+  function flAll(files){
+    var ok = files.filter(function(f){ var sn = SC.splitName(f.name); return !!SC.download(f.link, f.type || sn.type || "pdf").url; });
+    if (ok.length < 2) return "";
+    var tot = ok.reduce(function(n, f){ return n + sizeBytes(f.size); }, 0);
+    return '<button type="button" class="fl-all rp press" data-all>모두 받기 (' + ok.length + '개' + (tot ? ' · ' + sizeFmt(tot) : '') + ')</button>';
+  }
+  /* [모두 받기] = 받을 수 있는 파일의 [받기]를 차례로(0.7초 간격 — 브라우저가 '여러 파일 받기 허용'을 물을 수 있음) */
+  document.addEventListener("click", function(e){
+    var b = e.target.closest("[data-all]"); if (!b || b.disabled) return;
+    var box = b.closest(".fl-box"), ls = box ? Array.prototype.slice.call(box.querySelectorAll("a.dl:not(.busy):not(.done)")) : [];
+    if (!ls.length) return;
+    b.disabled = true;
+    ls.forEach(function(a, i){ setTimeout(function(){ a.click(); if (i === ls.length - 1) setTimeout(function(){ b.disabled = false; }, 4000); }, i * 700); });
+  });
   function fileRow(f, key){
     var sn = SC.splitName(f.name), t = f.type || sn.type || "pdf", d = SC.download(f.link, t);
     var cls = { pdf:"pdf", xlsx:"xlsx", pptx:"pptx", docx:"docx", hwp:"hwp" }[t] || "etc";
@@ -686,7 +707,7 @@
     var btn = d.url
       ? '<a class="dl rp press" href="' + esc(d.url) + '" rel="noopener" data-k="' + esc(key || "") + '" aria-label="' + esc(name) + ' 받기">' + IC.dl + '<span>받기</span></a>'
       : '<span class="dl off">준비 중</span>';
-    return '<li class="file"><span class="ftype ' + cls + '" aria-hidden="true">' + SC.typeLabel(t) + '</span>' +
+    return '<li class="file">' + fileIcon(t) +
       '<div class="fname"><strong>' + esc(name) + '</strong><span class="fsub"><span class="nowrap">' + SC.typeLabel(t) + (d.url ? (f.size ? ' · ' + esc(f.size) : '') : ' · 링크 준비 중') + '</span>' + (d.url ? dnHtml(key) : '') + '</span></div>' + btn + '</li>';
   }
 
@@ -881,9 +902,9 @@
           '</div>' +
           '<aside class="files-card" aria-labelledby="filesH">' +
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
-            '<div class="lec-note" role="note">' + IC.warn + '<p>' + noticeHtml(true) + '</p></div>' +
+            flNote() +
             lrBox(files.length
-              ? '<ul class="files lr-c">' + files.map(function(f){ return fileRow(f, "f:" + v.id + ":" + SC.fileKey(f)); }).join("") + '</ul>'
+              ? '<div class="lr-c fl-box"><ul class="files fl-ul">' + files.map(function(f){ return fileRow(f, "f:" + v.id + ":" + SC.fileKey(f)); }).join("") + '</ul>' + flAll(files) + '</div>'
               : '<div class="files-empty lr-c"><span class="ftype">' + IC.doc + '</span><p>이 강의는 함께 받을 교육자료가 없어요.<br>영상으로 확인해 주세요.</p></div>', 265) +
           '</aside>' +
         '</div>' +
@@ -916,7 +937,7 @@
     didRestore = false;
     document.title = TAB_TITLE;
     document.body.classList.toggle("r-page", !r.v && !!r.r);
-    heroMode(r);          /* #95 상품연구 화면 큰 제목 = 둥근바람 400 */
+    heroGo(r, restoreNext ? "still" : "");   /* #140 · #159 배너 머리 · 메뉴 이동 전환 */
     if (r.v || r.r) lastListMenu = "";   /* #113 강의 · 상품연구에 다녀오면 '다른 메뉴에서 넘어온 것' */
     if (r.v){ renderVideo(r.v); want = videoUrl(r.v); }
     else if (r.r) want = renderResearch(r);
@@ -1084,9 +1105,9 @@
     var B = document.body, login = B.classList.contains("login-mode"), wide = !!(UBQ && UBQ.matches) && !login, box = $("ubarIn"), bar = document.querySelector(".bar .wrap");
     var mob2 = !wide && !login && !!SES && !(NARROW && NARROW.matches && (B.classList.contains("watch-page") || B.classList.contains("back-page")));
     var mb = $("mmBtn"), put = function(par, ids){ ids.forEach(function(id){ var el = $(id); if (el && (el.parentNode !== par || el.nextSibling)) par.appendChild(el); }); };
-    if (login){ put(bar, ["who", "whoSep", "tmIc", "mmBtn"]); put($("heroLgTop"), ["tm"]); }   /* #127 로그인: 라이트/다크 두 칸 = 배너 오른쪽 위 */
+    if (login){ put(bar, ["who", "whoSep", "mmBtn"]); put($("heroLgTop"), ["tm", "tmIc"]); }   /* #127 로그인: 라이트/다크 두 칸 = 배너 오른쪽 위(#138 휴대폰은 아이콘 하나) */
     else if (wide){ put(box, ["who", "whoSep", "tm", "tmIc"]); put(bar, ["mmBtn"]); }
-    else if (mob2){ put(bar, ["who", "whoSep", "tmIc"]); put(box, ["tm", "mmBtn"]); }   /* #118 휴대폰 배너도 [☀ 라이트 | ☾ 다크] 두 칸 + ☰ */
+    else if (mob2){ put(bar, ["who", "whoSep", "tm"]); put(box, ["tmIc", "mmBtn"]); }   /* #138 휴대폰 배너 = 라이트/다크 아이콘 하나 + ☰ */
     else put(bar, ["who", "whoSep", "tm", "tmIc", "mmBtn"]);
     $("ubar").hidden = !(wide || mob2);
     $("ubar").classList.toggle("ub-mob", mob2);
@@ -1095,19 +1116,141 @@
   }
   /* ---------- #117~#125 홈 배너 영상 ---------- */
   var HV = $("heroV"), HPP = $("heroPP"), heroUser = false;
-  function heroPaint(){ var pz = HV.paused; HPP.innerHTML = pz ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  function heroPaint(){ var pz = curV().paused; HPP.innerHTML = pz ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
     HPP.setAttribute("aria-label", pz ? "배너 움직임 다시 켜기" : "배너 움직임 멈추기"); }
-  HPP.addEventListener("click", function(){ heroUser = !HV.paused; if (HV.paused){ var pr = HV.play(); if (pr && pr.catch) pr.catch(function(){}); } else HV.pause(); });
+  HPP.addEventListener("click", function(){ var v = curV(); heroUser = !v.paused; if (v.paused){ var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); } else v.pause(); });
   ["play", "pause", "playing"].forEach(function(ev){ HV.addEventListener(ev, heroPaint); });
   if (REDUCE){ HV.removeAttribute("autoplay"); HV.pause(); heroUser = true; }   /* 동작 줄이기: 첫 장면에서 멈춘 채 */
   /* 화면 밖이거나 다른 탭이면 쉬었다가 돌아오면 이어서(사용자가 멈춘 건 그대로) */
   var heroVis = true;
-  function heroRun(){ if (heroUser) return; if (heroVis && !document.hidden){ if (HV.paused){ var pr = HV.play(); if (pr && pr.catch) pr.catch(function(){}); } } else if (!HV.paused) HV.pause(); }
+  function heroRun(){ if (heroUser) return; var v = curV(); if (heroVis && !document.hidden){ if (v.paused){ var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); } } else if (!v.paused) v.pause(); }
   if (window.IntersectionObserver) new IntersectionObserver(function(es){ heroVis = es[0].isIntersecting; heroRun(); }).observe($("hero"));
   document.addEventListener("visibilitychange", heroRun);
   heroPaint();
-  /* #131 · #132 홈(전체) 배너만 영상 비율 고정(가로 꽉), 다른 메뉴 · 강의 · 상품연구는 270 · 210 · 150 */
-  function heroMode(r){ $("hero").classList.toggle("h-home", !!r && !r.v && !r.r && r.m === "all"); }
+  /* ===== 11-18 #139 · #140 · #146~#151 · #158 · #159 배너 머리 · 메뉴 이동 전환 =====
+     홈(전체) = 가운데 국문 · 영문 로고, 높이 = 화면 폭 × 865 / 2880(휴대폰 1234 / 2880)
+     다른 메뉴 = 270 · 210 · 150, 국문 로고 한 장이 왼쪽 위 작은 자리로(FLIP) + 가운데 메뉴 머리(시그니처 = 로고 세 장, 그 밖 = 제목 + 영문)
+     강의 페이지 = 그 강의의 메뉴 머리, 상품연구 안쪽 화면 = 상품연구 머리 */
+  var HERO = $("hero"), HBR = HERO.querySelector(".h-brand"), HKR = HERO.querySelector(".h-kr"), HEN = HERO.querySelector(".h-en"), HHEAD = $("heroHead");
+  var HEAD_EN = { newbie: "ONBOARDING", partner: "PARTNER STRATEGY", research: "PRODUCT RESEARCH" };
+  var heroKey = "", heroBusy = 0, heroT = [];
+  var EZ = "cubic-bezier(.4,0,.2,1)", EB = "cubic-bezier(.22,1,.36,1)";
+  function heroW(){ HERO.style.setProperty("--hw", (HERO.clientWidth || innerWidth) + "px"); }
+  heroW(); window.addEventListener("resize", heroW);
+  function headKeyOf(r){
+    if (!r) return "all";
+    if (r.v){ var v = (DATA.videos || []).filter(function(x){ return x.id === r.v; })[0]; return v ? SC.catOf(v) : ""; }
+    if (r.r) return "research";
+    return r.m || "all";
+  }
+  function headHtml(k){
+    if (k === "signature")
+      return '<div class="hh hh-sig" role="img" aria-label="Class Signature 시그니처클래스 · 현장에서 검증된 영업 고수들의 노하우"><span class="sgx" aria-hidden="true">' +
+        '<img class="sg-cl" src="assets/sg-class.png" alt="" width="474" height="270"><img class="sg-cr" src="assets/sg-crown.png" alt="" width="474" height="270">' +
+        '<span class="sg-wr"></span><span class="sg-sh"></span></span><span class="h-orn" aria-hidden="true"><i></i><span></span><i></i></span>' +
+        '<span class="h-tag" aria-hidden="true">현장에서 검증된 영업 고수들의 노하우</span></div>';
+    var t = k === "research" ? SC.RESEARCH.label : SC.catLabel(k);
+    return '<div class="hh hh-t" role="img" aria-label="' + esc(t) + '"><span class="t" aria-hidden="true">' +
+      Array.from(t).map(function(c, i){ return '<i style="--i:' + i + '">' + (c === " " ? "&nbsp;" : esc(c)) + '</i>'; }).join("") + '</span>' +
+      (HEAD_EN[k] ? '<span class="e" aria-hidden="true">' + HEAD_EN[k] + '</span>' : '') + '</div>';
+  }
+  /* 시그니처 배경 영상(#150 물결)은 시그니처 머리를 처음 쓸 때 받음 */
+  var HV2 = null;
+  function sigVideo(){
+    if (HV2) return HV2;
+    var box = $("hv2"); HV2 = document.createElement("video");
+    HV2.className = "hv-v"; HV2.muted = true; HV2.loop = true; HV2.playsInline = true; HV2.setAttribute("playsinline", ""); HV2.setAttribute("muted", "");
+    HV2.setAttribute("disablepictureinpicture", ""); HV2.preload = "auto"; HV2.poster = "assets/sig-poster.jpg?v=1";
+    HV2.innerHTML = '<source src="assets/sig-1280.mp4?v=1" type="video/mp4" media="(max-width:980px)"><source src="assets/sig.webm?v=1" type="video/webm"><source src="assets/sig-1920.mp4?v=1" type="video/mp4">';
+    box.insertBefore(HV2, box.firstChild);
+    ["play", "pause", "playing"].forEach(function(ev){ HV2.addEventListener(ev, heroPaint); });
+    return HV2;
+  }
+  function curV(){ return HV2 && $("hero").classList.contains("h-sig") ? HV2 : HV; }
+  function vPlay(v){ if (!v || heroUser) return; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
+  /* 정적 상태(움직임 없이) */
+  function heroApply(k){
+    var home = k === "all", sig = k === "signature";
+    HERO.classList.toggle("h-home", home); HERO.classList.toggle("h-menu", !home);
+    HERO.classList.toggle("h-sig", sig);
+    HERO.dataset.head = k || "";
+    if (sig){ sigVideo(); vPlay(HV2); if (!HV.paused) HV.pause(); }
+    else { if (HV2 && !HV2.paused) HV2.pause(); heroRun(); }
+    heroPaint();
+  }
+  function heroClear(){ heroT.forEach(clearTimeout); heroT = []; HERO.getAnimations && HERO.getAnimations({ subtree: true }).forEach(function(a){ if (a.id === "hx") a.cancel(); });
+    [HKR, HEN].forEach(function(el){ el.removeAttribute("style"); }); HERO.style.height = ""; HERO.style.transition = ""; HERO.classList.remove("h-tr", "h-load"); heroBusy = 0; }
+  function later(fn, ms){ heroT.push(setTimeout(fn, ms)); }
+  function rectIn(el){ var a = el.getBoundingClientRect(), h = HERO.getBoundingClientRect(); return { x: a.left - h.left, y: a.top - h.top, w: a.width, h: a.height }; }
+  function pin(el, r){ el.style.cssText = "position:absolute;display:block;margin:0;left:" + r.x + "px;top:" + r.y + "px;height:" + r.h + "px;width:auto;transform-origin:0 0"; }
+  function anim(el, kf, o){ if (!el.animate) return null; o.id = "hx"; return el.animate(kf, o); }
+  /* 머리 바꾸기: shift = 등장 시간 당김/미룸(ms) — 홈 → 메뉴 0(시그니처 650~, 글자 750~), 메뉴 → 메뉴 시그니처 −400 · 글자 0(250~), 주소로 바로 시그니처 −450 · 글자 −250 */
+  function headIn(k, shift){
+    var old = HHEAD.querySelectorAll(".hh:not(.out)");
+    old.forEach(function(o){ o.classList.add("out"); setTimeout(function(){ if (o.parentNode) o.parentNode.removeChild(o); }, 320); });
+    if (!k || k === "all") return;
+    var w = document.createElement("div"); w.innerHTML = headHtml(k); var hh = w.firstChild;
+    if (shift != null && !REDUCE && !QUIET){ hh.style.setProperty("--hd", shift + "ms"); hh.classList.add("hh-on"); }
+    else if (shift != null && REDUCE) hh.classList.add("fade");
+    HHEAD.appendChild(hh);
+  }
+  /* 배경 영상 겹쳐 바꾸기(시그니처에 들어갈 때 · 나갈 때만) */
+  function sigFade(on, delay, dur){
+    var box = $("hv2");
+    if (on){ sigVideo(); vPlay(HV2); }
+    else { vPlay(HV); }
+    HERO.classList.add("h-sigx");
+    var a = anim(box, [{ opacity: on ? 0 : 1 }, { opacity: on ? 1 : 0 }], { duration: dur, delay: delay, easing: EZ, fill: "both" });
+    later(function(){ HERO.classList.remove("h-sigx"); if (a) a.cancel(); if (on){ if (!HV.paused) HV.pause(); } else if (HV2 && !HV2.paused) HV2.pause(); heroPaint(); }, delay + dur + 30);
+  }
+  /* 목록 라인 리빌 시각(ms 뒤) — renderList · 상품연구 목록이 이 시각까지 접어 둠 */
+  var revealIn = 0;
+  function heroGo(r, how){
+    var k = headKeyOf(r);
+    if (document.body.classList.contains("login-mode")){ heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login"; return; }
+    if (!k){ HERO.classList.remove("h-home", "h-sig"); HERO.classList.add("h-menu"); return; }   /* 강의 목록을 받기 전(어느 메뉴인지 모름): 작은 로고 자리만 */
+    var from = heroKey; heroKey = k;
+    if (from === k) return;
+    var first = !from || from === "login" || how === "still";
+    heroClear();
+    if (first || how === "quiet" || QUIET){
+      heroApply(k); HHEAD.innerHTML = "";
+      if (how === "still" || how === "quiet" || QUIET){ headIn(k, null); return; }
+      /* 주소로 바로 · 새로 고침: 홈 = 국문 흐림 → 또렷 · 영문 드러남, 시그니처 = 450ms 당겨, 글자 메뉴 = 250ms 당겨 */
+      if (k === "all"){ if (!REDUCE){ HERO.classList.add("h-load"); later(function(){ HERO.classList.remove("h-load"); }, 1100); } }
+      else headIn(k, k === "signature" ? -450 : -250);
+      return;
+    }
+    var homeFrom = from === "all", homeTo = k === "all", sigFrom = from === "signature", sigTo = k === "signature";
+    if (REDUCE){ heroApply(k); HHEAD.innerHTML = ""; headIn(k, 0); return; }
+    if (!homeFrom && !homeTo){   /* 메뉴 → 메뉴: 머리만(0~300 사라짐 · 250~ 새 머리), 시그니처에 들어갈 때 · 나갈 때만 영상 0~600 */
+      HERO.classList.toggle("h-sig", sigTo); HERO.dataset.head = k;
+      if (sigFrom !== sigTo) sigFade(sigTo, 0, 600);
+      headIn(k, sigTo ? -400 : 0); revealIn = 300; return;
+    }
+    /* 홈 ↔ 메뉴: 처음 모습을 재고 → 끝 모습을 움직임 없이 재고 → 높이 · 로고를 끝 모습으로 움직임 */
+    heroBusy = 1;
+    var h0 = HERO.offsetHeight, kr0 = rectIn(HKR), en0 = homeFrom ? rectIn(HEN) : null;
+    HERO.style.transition = "none";
+    HERO.classList.toggle("h-home", homeTo); HERO.classList.toggle("h-menu", !homeTo); HERO.dataset.head = k;
+    var h1 = HERO.offsetHeight, kr1 = rectIn(HKR), en1 = homeTo ? rectIn(HEN) : null;
+    HERO.style.height = h0 + "px"; HERO.classList.add("h-tr");
+    pin(HKR, kr1); pin(HEN, homeTo ? en1 : en0);
+    void HERO.offsetHeight;
+    HERO.style.transition = "height 750ms " + EZ + " 200ms"; HERO.style.height = h1 + "px";
+    anim(HKR, [{ transform: "translate(" + (kr0.x - kr1.x) + "px," + (kr0.y - kr1.y) + "px) scale(" + (kr0.h / kr1.h) + ")" }, { transform: "none" }], { duration: 750, delay: 200, easing: EZ, fill: "backwards" });
+    if (homeTo){   /* 700~1,400 영문 로고 왼쪽 → 오른쪽 드러남 + 흐림 6 → 0 */
+      HEN.classList.add("rv");
+      anim(HEN, [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0", filter: "blur(6px)" }, { maskPosition: "0 0", webkitMaskPosition: "0 0", filter: "blur(0)" }], { duration: 700, delay: 700, easing: EB, fill: "both" });
+      headIn("", 0); revealIn = 1000;
+    } else {      /* 200~600 영문 로고 왼쪽 위로 24 · 18px · ×0.9 하며 사라짐 */
+      anim(HEN, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translate(-24px,-18px) scale(.9)" }], { duration: 400, delay: 200, easing: EZ, fill: "both" });
+      headIn(k, 0); revealIn = 1000;
+    }
+    if (sigFrom !== sigTo){ HERO.classList.toggle("h-sig", sigTo); sigFade(sigTo, homeFrom ? 200 : 0, homeFrom ? 750 : 600); }
+    later(function(){ HEN.classList.remove("rv"); heroClear(); }, homeTo ? 1450 : 1000);
+  }
+  heroGo(parse(), "");   /* 처음 열 때(주소로 바로 · 새로 고침) 로고 · 머리 등장 */
   window.__placeUser = placeUser;
   if (UBQ){ if (UBQ.addEventListener) UBQ.addEventListener("change", placeUser); else if (UBQ.addListener) UBQ.addListener(placeUser); }
   if (NARROW){ if (NARROW.addEventListener) NARROW.addEventListener("change", placeUser); else if (NARROW.addListener) NARROW.addListener(placeUser); }
@@ -1224,33 +1367,81 @@
      0~120 버튼 눌림 + '✓ 로그인됐어요' · 240~560 메뉴 이름 줄 사라짐 · 320~800 카드 · 안내가 36px 내려가며 사라짐 · 400~1280 배너 높이 줄고 로고 묶음이 홈 자리로
      960~1520 내 정보 줄 · 1120~1680 메뉴 줄 · 1440 본문 라인 리빌. 동작 줄이기면 전부 없이 홈 0.2초 페이드 */
   var lgRevealAt = 0;
+  /* #152 · #161 로그인 화면 메뉴 이름 4개 → 홈 메뉴 줄(배너 밑) 각자 자리로, SALES DEVELOPMENT PART → 배너 오른쪽 아래로(한 번에 곧게)
+     #159 로그인 성공 후 첫 화면은 항상 홈 */
+  function lgMenuTargets(h1){
+    /* 로그인 화면을 잠깐 풀어 홈 메뉴 줄 글자 자리를 잼(같은 순간 되돌려서 화면에는 안 보임) */
+    var B = document.body, out = { links: {}, color: "", fs: 0 };
+    B.classList.remove("login-mode"); placeUser(); drawMenu("all");
+    var H = $("hero"), hs = H.style.height; H.style.height = h1 + "px";
+    var bar = document.querySelector(".bar"), sy = window.scrollY || 0;
+    if (bar && bar.offsetHeight && B.classList.contains("hero-nav")){
+      var br = bar.getBoundingClientRect(), dy = h1 - (br.top + sy);   /* 배너가 끝 높이가 됐을 때 메뉴 줄 위치 */
+      $("menu").querySelectorAll("a").forEach(function(a){
+        var rg = document.createRange(); rg.selectNodeContents(a); var t = rg.getBoundingClientRect();
+        out.links[a.textContent] = { x: t.left, y: t.top + sy + dy, w: t.width, h: t.height };
+        if (!a.hasAttribute("aria-current") && !out.color){ var cs = getComputedStyle(a); out.color = cs.color; out.fs = parseFloat(cs.fontSize); out.font = cs.fontWeight; out.ls = cs.letterSpacing; }
+      });
+    }
+    H.style.height = hs; B.classList.add("login-mode"); placeUser();
+    return out;
+  }
   function loginTrans(){
     var B = document.body, btn = $("ubtn");
+    if (location.href.split("#")[0] !== menuUrl("all")) history.replaceState(null, "", menuUrl("all"));   /* #159 */
     if (REDUCE){ return enter().then(function(){ var a = $("app"); a.classList.add("lg-fade"); setTimeout(function(){ a.classList.remove("lg-fade"); }, 260); }); }
     btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
     B.classList.add("lgt-out");
-    var H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr");
+    var H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr"), kick = brand.querySelector(".h-kick"), sdp = $("heroSdp"), clones = [];
+    var E = "cubic-bezier(.2,.8,.2,1)";
     setTimeout(function(){
       /* 1) 지금(로그인) 모습 재기 */
-      var a = kr.getBoundingClientRect(), h0 = H.offsetHeight, op0 = getComputedStyle(HV).objectPosition;
-      /* 2) 갈 화면(홈이면 영상 비율, 아니면 270 · 210 · 150)의 끝 모습을 움직임 없이 재기 */
-      heroMode(parse());
+      var a = kr.getBoundingClientRect(), h0 = H.offsetHeight, op0 = getComputedStyle(HV).objectPosition, k0 = kick.getBoundingClientRect(), sy = window.scrollY || 0;
+      var spans = Array.prototype.map.call($("heroMenus").querySelectorAll("span"), function(sp){ var r = sp.getBoundingClientRect(); return { t: sp.textContent, x: r.left, y: r.top + sy, w: r.width, h: r.height }; }).filter(function(o){ return o.w > 0; });
+      /* 2) 홈의 끝 모습을 움직임 없이 재기 */
+      heroApply("all"); heroKey = "all"; HHEAD.innerHTML = "";
       H.style.transition = "none"; B.classList.add("lgt-shrink");
       var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition;
-      /* 배너 높이가 바뀌는 동안 로고 묶음이 따라 흔들리지 않게 끝 자리에 고정 */
       var top1 = brand.offsetTop + kr.offsetTop;
       brand.style.top = top1 + "px"; brand.style.bottom = "auto";
-      var z = kr.getBoundingClientRect();
+      var z = kr.getBoundingClientRect(), s1 = sdp.getBoundingClientRect(), hr = H.getBoundingClientRect();
+      var T = spans.length ? lgMenuTargets(h1) : null;
       /* 3) 처음 높이로 돌려놓고 끝 높이로 움직임(#132 PC 1440: 460 → 433, 영상 50% 42% → 50% 58%) */
       H.style.height = h0 + "px"; void H.offsetHeight; H.style.transition = "";
       H.style.height = h1 + "px";
-      var E = "cubic-bezier(.2,.8,.2,1)";
       if (HV.animate && op0 !== op1) HV.animate([{ objectPosition:op0 }, { objectPosition:op1 }], { duration:880, easing:E });
       if (brand.animate && a.width && z.width){
         brand.animate([{ transform:"translate(" + ((a.left + a.width / 2) - (z.left + z.width / 2)) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin:"50% 0" },
                        { transform:"none", transformOrigin:"50% 0" }], { duration:880, easing:E });
       }
-      setTimeout(function(){ H.style.height = ""; brand.style.top = ""; brand.style.bottom = ""; }, 900);
+      /* SDP: 로그인 자리(로고 아래 가운데) → 배너 오른쪽 아래, 400~1,280 한 번에 곧게(#161). 배너 높이가 바뀌는 동안 끝 자리에 고정 */
+      if (sdp.animate && k0.width && s1.width){
+        sdp.style.top = (s1.top - hr.top) + "px"; sdp.style.bottom = "auto";
+        var tx = sdp.querySelector("text"), tw = 0; try { tw = tx.getBBox().width; } catch(e){}
+        if (!tw) tw = k0.width;
+        var sc = (parseFloat(getComputedStyle(kick).fontSize) || 13) / (parseFloat(getComputedStyle(tx).fontSize) || 13);
+        var ox = s1.width - tw / 2;   /* 글자 가운데를 기준으로 키움 */
+        sdp.style.transformOrigin = ox + "px 50%";
+        sdp.animate([{ transform:"translate(" + ((k0.left + k0.width / 2) - (s1.left + ox)) + "px," + ((k0.top + k0.height / 2) - (s1.top + s1.height / 2)) + "px) scale(" + sc + ")" }, { transform:"none" }], { duration:880, easing:E });
+      }
+      /* 메뉴 이름 4개: 크기 16 → 메뉴 글자 크기, 흰색(그림자) → 메뉴 글자색, 4개 같이 출발 */
+      if (T && T.fs){
+        spans.forEach(function(sp){
+          var t = T.links[sp.t]; if (!t) return;
+          var c = document.createElement("span"); c.className = "lgt-mn"; c.textContent = sp.t;
+          c.style.cssText = "left:" + t.x + "px;top:" + t.y + "px;font-size:" + T.fs + "px;font-weight:" + T.font + ";letter-spacing:" + T.ls + ";color:" + T.color;
+          document.body.appendChild(c); clones.push(c);
+          var sc = sp.h / t.h;
+          c.animate([{ transform:"translate(" + (sp.x - t.x) + "px," + (sp.y - t.y) + "px) scale(" + sc + ")", color:"#FFFFFF", textShadow:"0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)", offset:0 },
+                     { color:"#FFFFFF", textShadow:"0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)", offset:.23 },
+                     { transform:"none", color:T.color, textShadow:"0 0 0 rgba(0,0,0,0)", offset:1 }], { duration:880, easing:E, fill:"both" });
+        });
+        if (clones.length) B.classList.add("lgt-mn-on");
+      }
+      setTimeout(function(){
+        H.style.height = ""; brand.style.top = ""; brand.style.bottom = ""; sdp.style.top = ""; sdp.style.bottom = ""; sdp.style.transformOrigin = "";
+        clones.forEach(function(c){ if (c.parentNode) c.parentNode.removeChild(c); }); B.classList.remove("lgt-mn-on");
+      }, 900);
     }, 400);
     return new Promise(function(res){ setTimeout(res, 820); }).then(function(){
       lgRevealAt = Date.now() + 620;

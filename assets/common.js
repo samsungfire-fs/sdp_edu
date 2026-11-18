@@ -142,16 +142,44 @@
     var k = String(id).replace(/[^\w-]/g, "");
     el.classList.add("lrm"); el.style.setProperty("--lrc", "var(--mc-" + k + ", var(--mc-all))"); el.style.setProperty("--lrc-rgb", "var(--mcr-" + k + ", var(--mcr-all))");
   };
-  /* #116 상품연구 자동 썸네일(이미지를 안 올렸을 때) — 16:9 판에 제목 · 책임위원을 글자로. 색 4가지를 차례로(tone) */
-  SC.athTone = function (ym) { var x = /^(\d{4})-(\d{2})$/.exec(String(ym || "")); return x ? (+x[1] * 12 + +x[2]) % 4 : 0; };
-  SC.autoThumb = function (o) {
-    var t = String(o.title || "").trim(), by = String(o.by || "").trim(), n = Array.from(t).length;
-    return '<span class="ath t' + ((o.tone || 0) % 4) + (by ? "" : " nob") + '" role="img" aria-label="' + SC.esc(t + (by ? " · 책임위원 " + by : "")) + '">' +
-      '<span class="lb">' + SC.esc(o.label || "상품연구 전략자료") + '</span><b class="tt' + (n > 16 ? " xl" : n > 6 ? " l" : "") + '">' + SC.esc(t) + '</b>' +
-      (by ? '<span class="by"><i></i>책임위원<b>' + SC.esc(by) + '</b></span>' : '') + '</span>';
+  /* #153 · #162 상품연구 자동 썸네일 v4 — 왼쪽 유리 타일 아이콘 + 오른쪽 글자(첫째 줄 연월 · 연령대 / 둘째 줄 제목 / 책임위원), 글꼴 삼성금융체
+     색: 월 = 그 달 색((11 − 월) % 6 → 파랑 · 하늘 · 초록 · 주황 · 분홍 · 보라) + 문서 아이콘 / 연령 = 연령대 색(30대 이하 초록 · 40대 하늘 · 50대 주황 · 60대 이상 분홍) + 방패 */
+  SC.ATH_K = ["blue", "sky", "green", "orange", "pink", "purple"];
+  SC.ymLabel = function (ym) { var x = /^(\d{4})-(\d{2})$/.exec(String(ym || "")); return x ? x[1].slice(2) + "년 " + (+x[2]) + "월" : ""; };
+  /* #136 · #137 맨 앞 날짜 · 나이는 첫째 줄로(예전 데이터 대비 — #149부터 연령대는 따로 칸) */
+  SC.HEAD_RE = /^\s*((?:\d{2,4}\s*년\s*)?\d{1,2}\s*월|\d{2,4}\.\s?\d{1,2}\.?|\d{1,3}\s*[~∼-]\s*\d{1,3}\s*[대세]|\d{1,3}\s*[대세](?:\s*(?:이상|이하|미만|초과))?)\s+(.+)$/;
+  SC.BAND_RE = /^\s*(\d{1,3}\s*[~∼-]\s*\d{1,3}\s*[대세]|\d{1,3}\s*[대세](?:\s*(?:이상|이하|미만|초과))?)\s*$/;
+  SC.splitHead = function (t) {
+    var y = SC.BAND_RE.exec(String(t || "")); if (y) return [y[1].trim(), ""];   /* '40대' · '60대 이상'만 있는 제목 = 연령대만 */
+    var x = SC.HEAD_RE.exec(String(t || "")); return x ? [x[1].trim(), x[2].trim()] : null;
   };
-  SC.athMonth = function (m) { return { title: m.title, by: m.by, label: "상품연구 전략자료", tone: SC.athTone(m.ym) }; };
-  SC.athAge = function (m, a) { var i = (m.ages || []).indexOf(a); return { title: a.title, by: String(a.by || "").trim() || m.by, label: String(m.title || "").trim() + " · 상품연구 전략자료", tone: i < 0 ? 0 : i }; };
+  SC.athMonthKey = function (ym) { var x = /^(\d{4})-(\d{2})$/.exec(String(ym || "")); return x ? SC.ATH_K[(((11 - +x[2]) % 6) + 6) % 6] : "blue"; };
+  SC.athAgeKey = function (band) {
+    var x = /(\d{1,3})/.exec(String(band || "")); if (!x) return "blue";
+    var n = +x[1]; return n <= 30 ? "green" : n < 50 ? "sky" : n < 60 ? "orange" : "pink";
+  };
+  /* 연령 이름 = 연령대 + 제목(#149, 예: 40대 비급여통합치료비). 예전 데이터(연령대 칸 없음)는 제목 그대로 */
+  SC.ageBand = function (a) { var b = String((a && a.band) || "").trim(); if (b) return b; var x = SC.splitHead(a && a.title); return x && /[대세]/.test(x[0]) ? x[0] : ""; };
+  SC.ageName = function (a) { var b = String((a && a.band) || "").trim(), t = String((a && a.title) || "").trim(); return b ? (t ? b + " " + t : b) : t; };
+  SC.athSrc = "assets/";
+  SC.autoThumb = function (o) {
+    var A = String(o.a || "").trim(), B = String(o.b || "").trim(), by = String(o.by || "").trim(), k = SC.ATH_K.indexOf(o.k) >= 0 ? o.k : "blue";
+    return '<span class="ath k-' + k + '" role="img" aria-label="' + SC.esc([A, B].filter(Boolean).join(" ") + (by ? " · 책임위원 " + by : "")) + '">' +
+      '<span class="tile" aria-hidden="true"><img src="' + SC.athSrc + 'ath-' + (o.icon === "shield" ? "shield" : "docs") + '-' + k + '.svg" alt=""></span>' +
+      (A ? '<span class="a">' + SC.esc(A) + '</span>' : '') + (B ? '<span class="b' + (A ? '' : ' solo') + '">' + SC.esc(B) + '</span>' : '') +
+      (by ? '<span class="by">책임위원<b>' + SC.esc(by) + '</b></span>' : '') + '</span>';
+  };
+  SC.athMonth = function (m) {
+    var a = SC.ymLabel(m.ym), t = String(m.title || "").trim(), x = SC.splitHead(t), b = t;
+    if (x && (!a || x[0].replace(/\s/g, "") === a.replace(/\s/g, "") || /월|\./.test(x[0]))){ if (!a) a = x[0]; b = x[1]; }
+    if (b.replace(/\s/g, "") === a.replace(/\s/g, "")) b = "";
+    return { a: a, b: b, by: m.by, k: SC.athMonthKey(m.ym), icon: "docs" };
+  };
+  SC.athAge = function (m, a) {
+    var band = String(a.band || "").trim(), t = String(a.title || "").trim(), b = t;
+    if (!band){ var x = SC.splitHead(t); if (x && /[대세]/.test(x[0])){ band = x[0]; b = x[1]; } }
+    return { a: band, b: b, by: String(a.by || "").trim() || m.by, k: SC.athAgeKey(band), icon: "shield" };
+  };
   SC.menuVar = function (id) { return "var(--mc-" + String(id || "").replace(/[^\w-]/g, "") + ", var(--mc-all))"; };
   (function () {
     function rgb(h){ var n = parseInt(String(h).replace("#", ""), 16); return (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255); }
