@@ -23,7 +23,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261118e">
+<link rel="stylesheet" href="assets/site.css?v=20261118f">
 </head>
 <body>
 
@@ -85,7 +85,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261118e"></script>
+<script src="assets/common.js?v=20261118f"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -1185,7 +1185,9 @@
   /* 머리 바꾸기: shift = 등장 시간 당김/미룸(ms) — 홈 → 메뉴 0(시그니처 650~, 글자 750~), 메뉴 → 메뉴 시그니처 −400 · 글자 0(250~), 주소로 바로 시그니처 −450 · 글자 −250 */
   function headIn(k, shift){
     var old = HHEAD.querySelectorAll(".hh:not(.out)");
-    old.forEach(function(o){ o.classList.add("out"); setTimeout(function(){ if (o.parentNode) o.parentNode.removeChild(o); }, 320); });
+    /* #165 사라질 때도 움직임: 글자 메뉴 = 글자 하나씩 45ms(글자당 450ms), 시그니처 = 등장을 거꾸로(~650ms) */
+    old.forEach(function(o){ o.classList.add("out"); var n = o.querySelectorAll(".t i").length, ms = o.classList.contains("hh-sig") ? 680 : 480 + Math.max(0, n - 1) * 45;
+      setTimeout(function(){ if (o.parentNode) o.parentNode.removeChild(o); }, REDUCE ? 180 : ms); });
     if (!k || k === "all") return;
     var w = document.createElement("div"); w.innerHTML = headHtml(k); var hh = w.firstChild;
     if (shift != null && !REDUCE && !QUIET){ hh.style.setProperty("--hd", shift + "ms"); hh.classList.add("hh-on"); }
@@ -1224,7 +1226,7 @@
     if (!homeFrom && !homeTo){   /* 메뉴 → 메뉴: 머리만(0~300 사라짐 · 250~ 새 머리), 시그니처에 들어갈 때 · 나갈 때만 영상 0~600 */
       HERO.classList.toggle("h-sig", sigTo); HERO.dataset.head = k;
       if (sigFrom !== sigTo) sigFade(sigTo, 0, 600);
-      headIn(k, sigTo ? -400 : 0); revealIn = 300; return;
+      headIn(k, sigTo ? -200 : 200); revealIn = 300; return;   /* #165 새 제목 450~1,500 · 영문 800~1,700 */
     }
     /* 홈 ↔ 메뉴: 처음 모습을 재고 → 끝 모습을 움직임 없이 재고 → 높이 · 로고를 끝 모습으로 움직임 */
     heroBusy = 1;
@@ -1235,18 +1237,19 @@
     HERO.style.height = h0 + "px"; HERO.classList.add("h-tr");
     pin(HKR, kr1); pin(HEN, homeTo ? en1 : en0);
     void HERO.offsetHeight;
-    HERO.style.transition = "height 750ms " + EZ + " 200ms"; HERO.style.height = h1 + "px";
-    anim(HKR, [{ transform: "translate(" + (kr0.x - kr1.x) + "px," + (kr0.y - kr1.y) + "px) scale(" + (kr0.h / kr1.h) + ")" }, { transform: "none" }], { duration: 750, delay: 200, easing: EZ, fill: "backwards" });
+    var dH = homeTo ? 300 : 200;   /* #165 메뉴 → 홈은 머리가 사라진 뒤 300~1,050 */
+    HERO.style.transition = "height 750ms " + EZ + " " + dH + "ms"; HERO.style.height = h1 + "px";
+    anim(HKR, [{ transform: "translate(" + (kr0.x - kr1.x) + "px," + (kr0.y - kr1.y) + "px) scale(" + (kr0.h / kr1.h) + ")" }, { transform: "none" }], { duration: 750, delay: dH, easing: EZ, fill: "backwards" });
     if (homeTo){   /* 700~1,400 영문 로고 왼쪽 → 오른쪽 드러남 + 흐림 6 → 0 */
       HEN.classList.add("rv");
-      anim(HEN, [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0", filter: "blur(6px)" }, { maskPosition: "0 0", webkitMaskPosition: "0 0", filter: "blur(0)" }], { duration: 700, delay: 700, easing: EB, fill: "both" });
-      headIn("", 0); revealIn = 1000;
+      anim(HEN, [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0", filter: "blur(6px)" }, { maskPosition: "0 0", webkitMaskPosition: "0 0", filter: "blur(0)" }], { duration: 700, delay: 800, easing: EB, fill: "both" });
+      headIn("", 0); revealIn = 1100;
     } else {      /* 200~600 영문 로고 왼쪽 위로 24 · 18px · ×0.9 하며 사라짐 */
       anim(HEN, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translate(-24px,-18px) scale(.9)" }], { duration: 400, delay: 200, easing: EZ, fill: "both" });
       headIn(k, 0); revealIn = 1000;
     }
     if (sigFrom !== sigTo){ HERO.classList.toggle("h-sig", sigTo); sigFade(sigTo, homeFrom ? 200 : 0, homeFrom ? 750 : 600); }
-    later(function(){ HEN.classList.remove("rv"); heroClear(); }, homeTo ? 1450 : 1000);
+    later(function(){ HEN.classList.remove("rv"); heroClear(); }, homeTo ? 1550 : 1000);
   }
   heroGo(parse(), "");   /* 처음 열 때(주소로 바로 · 새로 고침) 로고 · 머리 등장 */
   window.__placeUser = placeUser;

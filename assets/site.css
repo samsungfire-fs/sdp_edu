@@ -1704,7 +1704,7 @@ body.lgt-in .bar, body.lgt-in .hero .h-pp{animation:lg-up 560ms cubic-bezier(.2,
   background:linear-gradient(150deg, #FFFFFF, color-mix(in srgb, var(--ath2) 14%, #FFFFFF) 60%, color-mix(in srgb, var(--ath2) 30%, #FFFFFF)); box-shadow:inset 0 0 0 .35cqw rgba(255,255,255,.9), 0 2cqw 5cqw color-mix(in srgb, var(--ath2) 30%, transparent)}
 .ath .tile img{position:absolute; left:4.5cqw; top:4.5cqw; width:22cqw; height:22cqw; display:block; filter:drop-shadow(0 0 2cqw color-mix(in srgb, var(--ath2) 45%, transparent))}
 .ath .a, .ath .b, .ath .by{position:absolute; left:42cqw; letter-spacing:-.03em; word-break:keep-all}
-.ath .a{right:3cqw; top:15.5cqw; font-size:9.4cqw; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0B1030}
+.ath .a{right:3cqw; top:14.3cqw; padding-top:.04em; font-size:9.4cqw; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0B1030}
 .ath .b{right:3cqw; top:28cqw; font-size:4.7cqw; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; color:var(--athc)}
 .ath .b.solo{top:20cqw; font-size:6cqw; line-height:1.22; color:#0B1030}
 .ath .by{bottom:6cqw; display:flex; align-items:baseline; gap:1.4cqw; font-size:3.5cqw; line-height:1; color:#6B7499; white-space:nowrap}
@@ -1870,3 +1870,26 @@ body.lgt-in .bar .menu .menu-ul{animation:lg-fade 560ms cubic-bezier(.2,.8,.2,1)
   .r-files .fl-ul > .file, .r-files .fl-ul > .file + .file{background:var(--card); border-radius:18px; padding:14px 12px 14px 14px}
   [data-theme="dark"] .r-files .fl-ul > .file{background:var(--card)}
 }
+
+/* ===== #165 메뉴 머리가 사라질 때도 움직임(누른 순간 0ms, cubic-bezier(.4,0,.6,1)) ===== */
+.hh-t.out, .hh-sig.out{animation:none}
+.hh-t.out .t i{animation:hhCo 450ms cubic-bezier(.4,0,.6,1) calc(var(--i, 0) * 45ms) both}
+.hh-t.out .e{animation:hhEo 450ms cubic-bezier(.4,0,.6,1) both}
+.hh-sig.out .sg-wr{animation:sgWrO 450ms cubic-bezier(.4,0,.6,1) both}
+.hh-sig.out .sg-cr{animation:sgCrO 400ms cubic-bezier(.4,0,.6,1) both}
+.hh-sig.out .h-orn span{animation:sgDmO 350ms cubic-bezier(.4,0,.6,1) 100ms both}
+.hh-sig.out .h-orn i{animation:sgLnO 400ms cubic-bezier(.4,0,.6,1) both}
+.hh-sig.out .h-tag{animation:sgTgO 400ms cubic-bezier(.4,0,.6,1) both}
+.hh-sig.out .sg-cl{animation:sgClO 450ms cubic-bezier(.4,0,.6,1) 150ms both}
+.hh-sig.out::before{animation:hhFo 450ms cubic-bezier(.4,0,.6,1) 200ms both}
+.hh-sig.out .sg-sh{animation:none; opacity:0}
+@keyframes hhCo{to{opacity:0; transform:translateY(-.5em); filter:blur(8px)}}
+@keyframes hhEo{to{opacity:0; letter-spacing:.7em; padding-left:.7em}}
+@keyframes sgWrO{from{-webkit-mask-position:0 0; mask-position:0 0}to{-webkit-mask-position:100% 0; mask-position:100% 0}}
+@keyframes sgCrO{to{opacity:0; transform:translateY(-12px)}}
+@keyframes sgDmO{from{transform:rotate(45deg) scale(1)}to{transform:rotate(225deg) scale(0); opacity:0}}
+@keyframes sgLnO{to{transform:scaleX(0)}}
+@keyframes sgTgO{to{opacity:0; filter:blur(4px); letter-spacing:.12em}}
+@keyframes sgClO{to{opacity:0; filter:blur(10px); transform:scale(1.04)}}
+@keyframes hhFo{to{opacity:0}}
+@media (prefers-reduced-motion:reduce){ .hh.out *, .hh.out::before{animation:none !important} .hh-t.out, .hh-sig.out{animation:hhIn 150ms ease reverse both} }
