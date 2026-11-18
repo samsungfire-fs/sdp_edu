@@ -1704,7 +1704,7 @@ body.lgt-in .bar, body.lgt-in .hero .h-pp{animation:lg-up 560ms cubic-bezier(.2,
   background:linear-gradient(150deg, #FFFFFF, color-mix(in srgb, var(--ath2) 14%, #FFFFFF) 60%, color-mix(in srgb, var(--ath2) 30%, #FFFFFF)); box-shadow:inset 0 0 0 .35cqw rgba(255,255,255,.9), 0 2cqw 5cqw color-mix(in srgb, var(--ath2) 30%, transparent)}
 .ath .tile img{position:absolute; left:4.5cqw; top:4.5cqw; width:22cqw; height:22cqw; display:block; filter:drop-shadow(0 0 2cqw color-mix(in srgb, var(--ath2) 45%, transparent))}
 .ath .a, .ath .b, .ath .by{position:absolute; left:42cqw; letter-spacing:-.03em; word-break:keep-all}
-.ath .a{right:3cqw; top:14.3cqw; padding-top:.04em; font-size:9.4cqw; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0B1030}
+.ath .a{top:14.3cqw; padding-top:.04em; font-size:9.4cqw; line-height:1.25; white-space:nowrap; overflow:visible; color:#0B1030}   /* #166 자르지 않기 */
 .ath .b{right:3cqw; top:28cqw; font-size:4.7cqw; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; color:var(--athc)}
 .ath .b.solo{top:20cqw; font-size:6cqw; line-height:1.22; color:#0B1030}
 .ath .by{bottom:6cqw; display:flex; align-items:baseline; gap:1.4cqw; font-size:3.5cqw; line-height:1; color:#6B7499; white-space:nowrap}
