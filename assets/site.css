@@ -1839,17 +1839,15 @@ body.hero-nav .bar, [data-theme="dark"] body.hero-nav .bar{background:var(--bg) 
   .hero .ubar.ub-mob .tm-ic svg{width:17px; height:17px} .hero .h-lgtop .tm-ic svg{width:18px; height:18px}
 }
 
-/* #152 로그인 → 홈: 메뉴 이름이 홈 메뉴 줄 자리로 이동(복제 글자), 구분선만 240~560 사라짐 */
-.lgt-mn{position:absolute; z-index:60; line-height:normal; white-space:nowrap; pointer-events:none; transform-origin:0 0}
-body.lgt-out .hero .h-menus{opacity:1 !important}
-body.lgt-out .hero .h-menus i{opacity:0; transition:opacity 320ms cubic-bezier(.2,.8,.2,1) 240ms}
-body.lgt-mn-on .bar .menu a{visibility:hidden}
-/* 메뉴 줄 바탕은 나타나고(640~1,200), '전체' + 밑줄은 왼쪽 14px에서 들어옴(1,040~1,600) — 메뉴 줄은 엔터 뒤 보이므로 그때부터 */
-body.lgt-in .bar{animation:lg-bar 380ms cubic-bezier(.2,.8,.2,1) both}
-body.lgt-in .bar .menu a:first-child{animation:lg-all 560ms cubic-bezier(.2,.8,.2,1) 220ms both}
-body.lgt-in .bar .menu .menu-ul{animation:lg-fade 560ms cubic-bezier(.2,.8,.2,1) 220ms both}
-@keyframes lg-bar{from{background-color:transparent; border-bottom-color:transparent}}
-@keyframes lg-all{from{opacity:0; transform:translateX(-14px)}to{opacity:1; transform:none}}
+/* #168 로그인 → 홈(#128 방식): 메뉴 이름 줄 · SDP(로고 아래)는 그 자리에서 240~560 사라짐, 홈 메뉴 줄은 1,120~1,680 아래 10px에서(위 #128 규칙),
+   홈 SDP(오른쪽 아래)는 960~1,520 위 8px에서 내려오며 나타남(맨 위 정보 줄과 같이) */
+body.lgt-out .hero .h-kick{opacity:0; transition:opacity 320ms cubic-bezier(.2,.8,.2,1) 240ms}
+body.lgt-shrink .hero .h-kick.lgt-keep{display:block}
+body.lgt-shrink .hero .h-menus.lgt-keep{display:flex; visibility:visible; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px 16px; font-size:16px; line-height:1.4; color:rgba(255,255,255,.9); text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
+@media (max-width:980px){ body.lgt-shrink .hero .h-menus.lgt-keep{font-size:15px} }
+@media (max-width:640px){ body.lgt-shrink .hero .h-menus.lgt-keep{display:none} }
+body.lgt-out .hero .h-sdp{opacity:0}
+body.lgt-in .hero .h-sdp{opacity:1; animation:lg-down 560ms cubic-bezier(.2,.8,.2,1) 140ms both}
 
 /* ===== #154 교육자료 목록 v2 (강의 페이지 · 상품연구 자료 받기) ===== */
 .fl-wt{margin:2px 0 14px 4px; display:flex; flex-direction:column; gap:2px; font-size:15px; line-height:1.55; color:var(--ink); word-break:keep-all}
@@ -1893,3 +1891,20 @@ body.lgt-in .bar .menu .menu-ul{animation:lg-fade 560ms cubic-bezier(.2,.8,.2,1)
 @keyframes sgClO{to{opacity:0; filter:blur(10px); transform:scale(1.04)}}
 @keyframes hhFo{to{opacity:0}}
 @media (prefers-reduced-motion:reduce){ .hh.out *, .hh.out::before{animation:none !important} .hh-t.out, .hh-sig.out{animation:hhIn 150ms ease reverse both} }
+
+/* #169 메뉴 → 홈: 머리 묶음 전체를 0~350 안에 투명으로(글자 하나씩 사라지는 움직임은 그대로) */
+.hh-t.out.fast, .hh-sig.out.fast{animation:hhFo 350ms cubic-bezier(.4,0,.6,1) both}
+/* #170 로그아웃 → 로그인 화면 */
+#logout.lgo-press, .ub.lgo-press{transform:scale(.94); background:rgba(255,255,255,.18); transition:transform 120ms cubic-bezier(.2,.8,.2,1), background 120ms}
+body.lgo-out .hero .ubar, body.lgo-out .hero .h-sdp{animation:lgo-upout 300ms cubic-bezier(.2,.8,.2,1) both}
+body.lgo-out .bar, body.lgo-out .hero .h-pp{animation:lgo-downout 300ms cubic-bezier(.2,.8,.2,1) both}
+body.lgo-out #app, body.lgo-out .foot{animation:lgo-wipe 300ms cubic-bezier(.2,.8,.2,1) both}
+body.lgo-in .hero .h-lgtop{animation:lgo-tm 780ms cubic-bezier(.2,.8,.2,1) both}
+body.lgo-in .hero .h-menus, body.lgo-in .hero .h-kick{animation:lg-fade 480ms cubic-bezier(.2,.8,.2,1) 400ms both}
+body.lgo-in .lg2-mid, body.lgo-in .lg2-help{animation:lgo-card 600ms cubic-bezier(.2,.8,.2,1) 500ms both}
+@keyframes lgo-upout{to{opacity:0; transform:translateY(-8px)}}
+@keyframes lgo-downout{to{opacity:0; transform:translateY(10px)}}
+@keyframes lgo-wipe{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 100% 0)}}
+@keyframes lgo-tm{from{opacity:0; transform:translateY(-18px)}to{opacity:1; transform:none}}
+@keyframes lgo-card{from{opacity:0; transform:translateY(36px)}to{opacity:1; transform:none}}
+@media (prefers-reduced-motion:reduce){ body.lgo-out *, body.lgo-in *{animation:none !important} }

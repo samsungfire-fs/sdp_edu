@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261118g">
+<link rel="stylesheet" href="assets/site.css?v=20261118i">
 </head>
 <body>
 
@@ -87,7 +87,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261118g"></script>
+<script src="assets/common.js?v=20261118i"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -1160,7 +1160,7 @@
     if (HV2) return HV2;
     var box = $("hv2"); HV2 = document.createElement("video");
     HV2.className = "hv-v"; HV2.muted = true; HV2.loop = true; HV2.playsInline = true; HV2.setAttribute("playsinline", ""); HV2.setAttribute("muted", "");
-    HV2.setAttribute("disablepictureinpicture", ""); HV2.preload = "auto"; HV2.poster = "assets/sig-poster.jpg?v=1";
+    HV2.setAttribute("disablepictureinpicture", ""); HV2.preload = "metadata"; HV2.poster = "assets/sig-poster.jpg?v=1";
     HV2.innerHTML = '<source src="assets/sig-1280.mp4?v=1" type="video/mp4" media="(max-width:980px)"><source src="assets/sig.webm?v=1" type="video/webm"><source src="assets/sig-1920.mp4?v=1" type="video/mp4">';
     box.insertBefore(HV2, box.firstChild);
     ["play", "pause", "playing"].forEach(function(ev){ HV2.addEventListener(ev, heroPaint); });
@@ -1174,7 +1174,7 @@
     HERO.classList.toggle("h-home", home); HERO.classList.toggle("h-menu", !home);
     HERO.classList.toggle("h-sig", sig);
     HERO.dataset.head = k || "";
-    if (sig){ sigVideo(); vPlay(HV2); if (!HV.paused) HV.pause(); }
+    if (sig){ sigVideo().preload = "auto"; vPlay(HV2); if (!HV.paused) HV.pause(); }
     else { if (HV2 && !HV2.paused) HV2.pause(); heroRun(); }
     heroPaint();
   }
@@ -1185,8 +1185,9 @@
   function pin(el, r){ el.style.cssText = "position:absolute;display:block;margin:0;left:" + r.x + "px;top:" + r.y + "px;height:" + r.h + "px;width:auto;transform-origin:0 0"; }
   function anim(el, kf, o){ if (!el.animate) return null; o.id = "hx"; return el.animate(kf, o); }
   /* 머리 바꾸기: shift = 등장 시간 당김/미룸(ms) — 홈 → 메뉴 0(시그니처 650~, 글자 750~), 메뉴 → 메뉴 시그니처 −400 · 글자 0(250~), 주소로 바로 시그니처 −450 · 글자 −250 */
-  function headIn(k, shift){
+  function headIn(k, shift, fast){
     var old = HHEAD.querySelectorAll(".hh:not(.out)");
+    if (fast) old.forEach(function(o){ o.classList.add("fast"); });   /* #169 메뉴 → 홈: 국문 로고가 머리 자리를 지나가므로 묶음 전체를 0~350 안에 투명으로 */
     /* #165 사라질 때도 움직임: 글자 메뉴 = 글자 하나씩 45ms(글자당 450ms), 시그니처 = 등장을 거꾸로(~650ms) */
     old.forEach(function(o){ o.classList.add("out"); var n = o.querySelectorAll(".t i").length, ms = o.classList.contains("hh-sig") ? 680 : 480 + Math.max(0, n - 1) * 45;
       setTimeout(function(){ if (o.parentNode) o.parentNode.removeChild(o); }, REDUCE ? 180 : ms); });
@@ -1199,7 +1200,7 @@
   /* 배경 영상 겹쳐 바꾸기(시그니처에 들어갈 때 · 나갈 때만) */
   function sigFade(on, delay, dur){
     var box = $("hv2");
-    if (on){ sigVideo(); vPlay(HV2); }
+    if (on){ sigVideo().preload = "auto"; vPlay(HV2); }
     else { vPlay(HV); }
     HERO.classList.add("h-sigx");
     var a = anim(box, [{ opacity: on ? 0 : 1 }, { opacity: on ? 1 : 0 }], { duration: dur, delay: delay, easing: EZ, fill: "both" });
@@ -1239,25 +1240,67 @@
     HERO.style.height = h0 + "px"; HERO.classList.add("h-tr");
     pin(HKR, kr1); pin(HEN, homeTo ? en1 : en0);
     void HERO.offsetHeight;
-    var dH = homeTo ? 300 : 200;   /* #165 메뉴 → 홈은 머리가 사라진 뒤 300~1,050 */
+    var dH = 0;   /* #169 메뉴를 누르면 밑줄과 배너가 동시에(0~750) */
     HERO.style.transition = "height 750ms " + EZ + " " + dH + "ms"; HERO.style.height = h1 + "px";
     anim(HKR, [{ transform: "translate(" + (kr0.x - kr1.x) + "px," + (kr0.y - kr1.y) + "px) scale(" + (kr0.h / kr1.h) + ")" }, { transform: "none" }], { duration: 750, delay: dH, easing: EZ, fill: "backwards" });
     if (homeTo){   /* 700~1,400 영문 로고 왼쪽 → 오른쪽 드러남 + 흐림 6 → 0 */
       HEN.classList.add("rv");
-      anim(HEN, [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0", filter: "blur(6px)" }, { maskPosition: "0 0", webkitMaskPosition: "0 0", filter: "blur(0)" }], { duration: 700, delay: 800, easing: EB, fill: "both" });
-      headIn("", 0); revealIn = 1100;
+      anim(HEN, [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0", filter: "blur(6px)" }, { maskPosition: "0 0", webkitMaskPosition: "0 0", filter: "blur(0)" }], { duration: 700, delay: 500, easing: EB, fill: "both" });
+      headIn("", 0, true); revealIn = 800;
     } else {      /* 200~600 영문 로고 왼쪽 위로 24 · 18px · ×0.9 하며 사라짐 */
-      anim(HEN, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translate(-24px,-18px) scale(.9)" }], { duration: 400, delay: 200, easing: EZ, fill: "both" });
-      headIn(k, 0); revealIn = 1000;
+      anim(HEN, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translate(-24px,-18px) scale(.9)" }], { duration: 400, delay: 0, easing: EZ, fill: "both" });
+      headIn(k, k === "signature" ? -200 : 300); revealIn = 800;   /* #169 시그니처 로고 450~(200ms 당김), 글자 메뉴 550~ */
     }
-    if (sigFrom !== sigTo){ HERO.classList.toggle("h-sig", sigTo); sigFade(sigTo, homeFrom ? 200 : 0, homeFrom ? 750 : 600); }
-    later(function(){ HEN.classList.remove("rv"); heroClear(); }, homeTo ? 1550 : 1000);
+    if (sigFrom !== sigTo){ HERO.classList.toggle("h-sig", sigTo); sigFade(sigTo, 0, homeFrom ? 750 : 600); }
+    later(function(){ HEN.classList.remove("rv"); heroClear(); }, homeTo ? 1250 : 800);
   }
   heroGo(parse(), "");   /* 처음 열 때(주소로 바로 · 새로 고침) 로고 · 머리 등장 */
+  /* 11-18 사용자: 처음 메뉴를 옮길 때 버벅임 → 시그니처 로고 그림 · 영상을 메뉴를 누르기 전에(첫 화면이 다 뜬 뒤 한가할 때) 미리 받아 둠.
+     PC는 영상까지, 휴대폰 · 태블릿은 데이터를 아끼려고 그림 · 영상 앞부분만 */
+  function warmSig(){
+    ["sg-class.png", "sg-crown.png", "sg-script.png", "class-sig-gold.png", "sig-poster.jpg?v=1"].forEach(function(f){
+      var im = new Image(); im.src = "assets/" + f; if (im.decode) im.decode().catch(function(){});
+    });
+    var v = sigVideo(); if (v.paused && !$("hero").classList.contains("h-sig")) v.preload = innerWidth > 980 ? "auto" : "metadata";
+  }
+  window.addEventListener("load", function(){ setTimeout(function(){ (window.requestIdleCallback || function(f){ f(); })(warmSig, { timeout: 4000 }); }, 2500); });
   window.__placeUser = placeUser;
   if (UBQ){ if (UBQ.addEventListener) UBQ.addEventListener("change", placeUser); else if (UBQ.addListener) UBQ.addListener(placeUser); }
   if (NARROW){ if (NARROW.addEventListener) NARROW.addEventListener("change", placeUser); else if (NARROW.addListener) NARROW.addListener(placeUser); }
-  function doLogout(){ MM.close(true); sesSet(null); SES = null; STATS = null; showLogin(""); }
+  function doLogout(){ MM.close(true); sesSet(null); SES = null; STATS = null; logoutTrans(); }   /* 세션은 누르자마자 지움, 전환은 그 위에서 */
+  /* #170 로그아웃 → 로그인 화면(로그인 → 홈을 거꾸로, cubic-bezier(.2,.8,.2,1)):
+     0~120 로그아웃 눌림 · 0~300 내 정보 줄 · SDP 위로 8px / 메뉴 줄 · ⏸ 아래로 10px 사라짐 · 본문 아래에서 위로 걷힘
+     300~1,080 배너 → 460 + 영상 50% 58% → 42% + 로고 묶음 로그인 자리로(×1.065 → 1) · 라이트/다크 버튼 위 18px에서
+     700~1,180 메뉴 이름 줄 · SDP(로고 아래) · 800~1,400 로그인 카드 · 안내 아래 36px에서. 움직임 줄이기 = 200ms 페이드 */
+  function logoutTrans(){
+    var B = document.body, lb = $("logout"), H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr");
+    if (REDUCE || !H.animate || B.classList.contains("login-mode")){
+      showLogin(""); var ap = $("app"); ap.classList.add("lg-fade"); setTimeout(function(){ ap.classList.remove("lg-fade"); }, 260); return;
+    }
+    if (lb) lb.classList.add("lgo-press");
+    B.classList.add("lgo-out");
+    setTimeout(function(){
+      var a = kr.getBoundingClientRect(), h0 = H.offsetHeight, op0 = getComputedStyle(HV).objectPosition, E = "cubic-bezier(.2,.8,.2,1)";
+      var wasSig = H.classList.contains("h-sig");
+      heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login";
+      if (wasSig) sigFade(false, 0, 500);   /* 시그니처 영상 → 홈 영상 겹쳐 바뀜 */
+      B.classList.remove("lgo-out");
+      showLogin(""); window.scrollTo(0, 0);
+      B.classList.add("lgo-in");
+      H.style.transition = "none";
+      var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect();
+      H.style.height = h0 + "px"; void H.offsetHeight;
+      H.style.transition = "height 780ms " + E; H.style.height = h1 + "px";
+      if (op0 !== op1) HV.animate([{ objectPosition: op0 }, { objectPosition: op1 }], { duration: 780, easing: E });
+      if (a.width && z.width){   /* 국문 로고 위 가운데를 기준점으로 키움(메뉴 화면의 작은 로고에서 와도 정확히) */
+        var br = brand.getBoundingClientRect(), org = (z.left + z.width / 2 - br.left) + "px " + (z.top - br.top) + "px";
+        brand.animate([{ transform: "translate(" + ((a.left + a.width / 2) - (z.left + z.width / 2)) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin: org },
+                       { transform: "none", transformOrigin: org }], { duration: 780, easing: E });
+      }
+      setTimeout(function(){ H.style.height = ""; H.style.transition = ""; }, 800);
+      setTimeout(function(){ B.classList.remove("lgo-in"); }, 1200);
+    }, 300);
+  }
 
   /* #63 휴대폰: 이름 칸 → [☰ 메뉴] 안으로. 바 바로 아래로 판이 내려오고, 판 밖은 검정 45% 덮개.
      닫힘 = ✕ · 덮개 · 뒤로 가기 · Esc · 판 안 항목 */
@@ -1370,45 +1413,30 @@
      0~120 버튼 눌림 + '✓ 로그인됐어요' · 240~560 메뉴 이름 줄 사라짐 · 320~800 카드 · 안내가 36px 내려가며 사라짐 · 400~1280 배너 높이 줄고 로고 묶음이 홈 자리로
      960~1520 내 정보 줄 · 1120~1680 메뉴 줄 · 1440 본문 라인 리빌. 동작 줄이기면 전부 없이 홈 0.2초 페이드 */
   var lgRevealAt = 0;
-  /* #152 · #161 로그인 화면 메뉴 이름 4개 → 홈 메뉴 줄(배너 밑) 각자 자리로, SALES DEVELOPMENT PART → 배너 오른쪽 아래로(한 번에 곧게)
-     #159 로그인 성공 후 첫 화면은 항상 홈 */
-  function lgMenuTargets(h1){
-    /* 로그인 화면을 잠깐 풀어 홈 메뉴 줄 글자 자리를 잼(같은 순간 되돌려서 화면에는 안 보임) */
-    var B = document.body, out = { links: {}, color: "", fs: 0 };
-    B.classList.remove("login-mode"); placeUser(); drawMenu("all");
-    var H = $("hero"), hs = H.style.height; H.style.height = h1 + "px";
-    var bar = document.querySelector(".bar"), sy = window.scrollY || 0;
-    if (bar && bar.offsetHeight && B.classList.contains("hero-nav")){
-      var br = bar.getBoundingClientRect(), dy = h1 - (br.top + sy);   /* 배너가 끝 높이가 됐을 때 메뉴 줄 위치 */
-      $("menu").querySelectorAll("a").forEach(function(a){
-        var rg = document.createRange(); rg.selectNodeContents(a); var t = rg.getBoundingClientRect();
-        out.links[a.textContent] = { x: t.left, y: t.top + sy + dy, w: t.width, h: t.height };
-        if (!a.hasAttribute("aria-current") && !out.color){ var cs = getComputedStyle(a); out.color = cs.color; out.fs = parseFloat(cs.fontSize); out.font = cs.fontWeight; out.ls = cs.letterSpacing; }
-      });
-    }
-    H.style.height = hs; B.classList.add("login-mode"); placeUser();
-    return out;
-  }
+  /* #159 로그인 성공 후 첫 화면은 항상 홈 · #168 메뉴 이름 줄 · SALES DEVELOPMENT PART는 그 자리에서 사라지고(240~560), 홈 메뉴 줄 1,120~ · SDP 960~ 나타남 */
   function loginTrans(){
     var B = document.body, btn = $("ubtn");
     if (location.href.split("#")[0] !== menuUrl("all")) history.replaceState(null, "", menuUrl("all"));   /* #159 */
     if (REDUCE){ return enter().then(function(){ var a = $("app"); a.classList.add("lg-fade"); setTimeout(function(){ a.classList.remove("lg-fade"); }, 260); }); }
     btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
     B.classList.add("lgt-out");
-    var H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr"), kick = brand.querySelector(".h-kick"), sdp = $("heroSdp"), clones = [];
+    var H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr"), en = brand.querySelector(".h-en"), kick = brand.querySelector(".h-kick"), mns = $("heroMenus");
     var E = "cubic-bezier(.2,.8,.2,1)";
     setTimeout(function(){
       /* 1) 지금(로그인) 모습 재기 */
-      var a = kr.getBoundingClientRect(), h0 = H.offsetHeight, op0 = getComputedStyle(HV).objectPosition, k0 = kick.getBoundingClientRect(), sy = window.scrollY || 0;
-      var spans = Array.prototype.map.call($("heroMenus").querySelectorAll("span"), function(sp){ var r = sp.getBoundingClientRect(); return { t: sp.textContent, x: r.left, y: r.top + sy, w: r.width, h: r.height }; }).filter(function(o){ return o.w > 0; });
+      var a = kr.getBoundingClientRect(), h0 = H.offsetHeight, op0 = getComputedStyle(HV).objectPosition;
+      /* 사라지는 중인 SDP · 메뉴 이름 줄은 영문 로고 아래 같은 거리에 붙여 둠(로고 묶음과 같이 움직이며 마저 사라짐) */
+      var enB = en.offsetTop + en.offsetHeight, gk = kick.offsetTop - enB, gm = mns.offsetTop - enB, kv = kick.offsetHeight > 0, mv = mns.offsetHeight > 0;
+      var pinL = function(top){ [[kick, gk, kv], [mns, gm, mv]].forEach(function(x){ if (!x[2]) return; x[0].classList.add("lgt-keep"); x[0].style.cssText = "position:absolute;left:0;right:0;margin:0;top:" + (top + x[1]) + "px"; }); };
+      pinL(enB);   /* 먼저 흐름에서 빼 둠(사라지는 중인 움직임이 끊기지 않게) */
       /* 2) 홈의 끝 모습을 움직임 없이 재기 */
       heroApply("all"); heroKey = "all"; HHEAD.innerHTML = "";
       H.style.transition = "none"; B.classList.add("lgt-shrink");
       var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition;
       var top1 = brand.offsetTop + kr.offsetTop;
       brand.style.top = top1 + "px"; brand.style.bottom = "auto";
-      var z = kr.getBoundingClientRect(), s1 = sdp.getBoundingClientRect(), hr = H.getBoundingClientRect();
-      var T = spans.length ? lgMenuTargets(h1) : null;
+      var z = kr.getBoundingClientRect(), enB1 = en.offsetTop + en.offsetHeight;
+      pinL(enB1);   /* 끝 모습에서도 영문 로고 아래 같은 거리 */
       /* 3) 처음 높이로 돌려놓고 끝 높이로 움직임(#132 PC 1440: 460 → 433, 영상 50% 42% → 50% 58%) */
       H.style.height = h0 + "px"; void H.offsetHeight; H.style.transition = "";
       H.style.height = h1 + "px";
@@ -1417,33 +1445,8 @@
         brand.animate([{ transform:"translate(" + ((a.left + a.width / 2) - (z.left + z.width / 2)) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin:"50% 0" },
                        { transform:"none", transformOrigin:"50% 0" }], { duration:880, easing:E });
       }
-      /* SDP: 로그인 자리(로고 아래 가운데) → 배너 오른쪽 아래, 400~1,280 한 번에 곧게(#161). 배너 높이가 바뀌는 동안 끝 자리에 고정 */
-      if (sdp.animate && k0.width && s1.width){
-        sdp.style.top = (s1.top - hr.top) + "px"; sdp.style.bottom = "auto";
-        var tx = sdp.querySelector("text"), tw = 0; try { tw = tx.getBBox().width; } catch(e){}
-        if (!tw) tw = k0.width;
-        var sc = (parseFloat(getComputedStyle(kick).fontSize) || 13) / (parseFloat(getComputedStyle(tx).fontSize) || 13);
-        var ox = s1.width - tw / 2;   /* 글자 가운데를 기준으로 키움 */
-        sdp.style.transformOrigin = ox + "px 50%";
-        sdp.animate([{ transform:"translate(" + ((k0.left + k0.width / 2) - (s1.left + ox)) + "px," + ((k0.top + k0.height / 2) - (s1.top + s1.height / 2)) + "px) scale(" + sc + ")" }, { transform:"none" }], { duration:880, easing:E });
-      }
-      /* 메뉴 이름 4개: 크기 16 → 메뉴 글자 크기, 흰색(그림자) → 메뉴 글자색, 4개 같이 출발 */
-      if (T && T.fs){
-        spans.forEach(function(sp){
-          var t = T.links[sp.t]; if (!t) return;
-          var c = document.createElement("span"); c.className = "lgt-mn"; c.textContent = sp.t;
-          c.style.cssText = "left:" + t.x + "px;top:" + t.y + "px;font-size:" + T.fs + "px;font-weight:" + T.font + ";letter-spacing:" + T.ls + ";color:" + T.color;
-          document.body.appendChild(c); clones.push(c);
-          var sc = sp.h / t.h;
-          c.animate([{ transform:"translate(" + (sp.x - t.x) + "px," + (sp.y - t.y) + "px) scale(" + sc + ")", color:"#FFFFFF", textShadow:"0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)", offset:0 },
-                     { color:"#FFFFFF", textShadow:"0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)", offset:.23 },
-                     { transform:"none", color:T.color, textShadow:"0 0 0 rgba(0,0,0,0)", offset:1 }], { duration:880, easing:E, fill:"both" });
-        });
-        if (clones.length) B.classList.add("lgt-mn-on");
-      }
       setTimeout(function(){
-        H.style.height = ""; brand.style.top = ""; brand.style.bottom = ""; sdp.style.top = ""; sdp.style.bottom = ""; sdp.style.transformOrigin = "";
-        clones.forEach(function(c){ if (c.parentNode) c.parentNode.removeChild(c); }); B.classList.remove("lgt-mn-on");
+        H.style.height = ""; brand.style.top = ""; brand.style.bottom = ""; kick.style.cssText = ""; mns.style.cssText = ""; kick.classList.remove("lgt-keep"); mns.classList.remove("lgt-keep");
       }, 900);
     }, 400);
     return new Promise(function(res){ setTimeout(res, 820); }).then(function(){
