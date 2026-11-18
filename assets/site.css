@@ -1526,39 +1526,43 @@ body nav.menu a[aria-current=page]{font-weight:800 !important}
 .menu a{line-height:1; overflow:visible}
 
 /* #126 모든 페이지 글꼴 = 삼성금융서체(SFN) — 사용자 · 관리자 · 로그인 전부. 300 · 400 · 500 · 600 · 700, 800 · 900은 Bold(700) 파일로(가짜 굵게 없이) */
-@font-face{font-family:"SFN"; font-weight:300; font-style:normal; font-display:swap; src:url(sfn300.woff2?v=1) format("woff2")}
-@font-face{font-family:"SFN"; font-weight:400; font-style:normal; font-display:swap; src:url(sfn400.woff2?v=1) format("woff2")}
-@font-face{font-family:"SFN"; font-weight:500; font-style:normal; font-display:swap; src:url(sfn500.woff2?v=1) format("woff2")}
-@font-face{font-family:"SFN"; font-weight:600; font-style:normal; font-display:swap; src:url(sfn600.woff2?v=1) format("woff2")}
-@font-face{font-family:"SFN"; font-weight:700 900; font-style:normal; font-display:swap; src:url(sfn700.woff2?v=1) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:300; font-style:normal; font-display:swap; src:url(sfn300.woff2?v=2) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:400; font-style:normal; font-display:swap; src:url(sfn400.woff2?v=2) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:500; font-style:normal; font-display:swap; src:url(sfn500.woff2?v=2) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:600; font-style:normal; font-display:swap; src:url(sfn600.woff2?v=2) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:700 900; font-style:normal; font-display:swap; src:url(sfn700.woff2?v=2) format("woff2")}
 :root{--body:"SFN", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; --head:"SFN", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; --jua:"SFN", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif}
 body, body *:not(svg):not(svg *){font-family:"SFN", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important}
 
 /* ===== #117~#125 홈 배너 = 영상 + 흰 로고 (글자 · 로고 늘 흰색, 영상 위 옅은 어두운 막 + 위 · 아래 남색 그늘) ===== */
 .banner-link{display:none !important}
-.hero{position:relative; overflow:hidden; isolation:isolate; height:340px; background:#05081C; color:#FFFFFF; --nh:58px}
-@media (max-width:980px){ .hero{height:210px; --nh:54px} }
-@media (max-width:640px){ .hero{height:150px; --nh:0px} }
+.hero{position:relative; overflow:hidden; isolation:isolate; height:270px; background:#05081C; color:#FFFFFF; --nh:0px}
+@media (max-width:980px){ .hero{height:210px} }
+@media (max-width:640px){ .hero{height:150px} }
+/* #131 · #132 홈(전체) 배너 = 영상 비율 고정 · 가로 꽉. PC · 태블릿 2880/865(영상 위 17.5% · 아래 12.4%만 잘림), 휴대폰 2880/1234(영상 전체) */
+.hero.h-home{height:auto; aspect-ratio:2880/865}
+.hero.h-home .hv-v{object-position:50% 58%}
+@media (max-width:640px){ .hero.h-home{aspect-ratio:2880/1234} .hero.h-home .hv-v{object-position:50% 50%} }
 .hero .hv{position:absolute; inset:0; z-index:-1; overflow:hidden}
 .hero .hv-v{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 40%; display:block}
-.hero .hv::after{content:""; position:absolute; inset:-3px; background:rgba(2,8,28,.34); pointer-events:none}
-.hero .hv-shade{position:absolute; inset:-3px; background:linear-gradient(180deg, rgba(2,4,16,.62) 0%, rgba(2,4,16,.08) 34%, rgba(2,4,16,.10) 60%, rgba(2,4,16,.72) 100%); z-index:1}
-.hero .h-brand{position:absolute; left:0; right:0; top:104px; z-index:1; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; color:#FFFFFF; text-decoration:none; width:max-content; max-width:100%; margin:0 auto}
+.hero .hv::after{content:""; position:absolute; inset:-3px; background:rgba(2,8,28,.24); pointer-events:none}   /* #133 막 .34 → .24 */
+.hero .hv-shade{position:absolute; inset:-3px; background:linear-gradient(180deg, rgba(2,4,16,.62) 0%, rgba(2,4,16,.08) 34%, rgba(2,4,16,.10) 60%, rgba(2,4,16,.72) 100%); z-index:1; opacity:.8}   /* #133 위아래 그늘 1 → .8 */
+.hero .h-brand{position:absolute; left:0; right:0; top:60px; bottom:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; color:#FFFFFF; text-decoration:none; width:max-content; max-width:100%; margin:0 auto}
 .hero .h-kr{display:block; height:66px; width:auto; filter:drop-shadow(0 4px 18px rgba(0,10,60,.45))}
-.hero .h-en{display:block; height:15.5px; width:auto; opacity:.95}
-.hero .h-kick{display:block; margin-top:4px; font-weight:700 !important; font-size:13px; line-height:1.2; letter-spacing:.26em; padding-left:.26em; color:#FFFFFF; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
+.hero .h-en{display:block; height:17px; width:auto; opacity:1}   /* #134 완전한 흰색 · 약 10% 크게 */
+.hero .h-kick{display:block; margin-top:4px; font-weight:700 !important; font-size:13px; line-height:1.2; letter-spacing:.26em; padding-left:.26em; color:#FFFFFF; opacity:1; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
 .hero .h-menus{display:none}
 @media (max-width:980px){
-  .hero .h-brand{top:60px; gap:8px}
-  .hero .h-kr{height:38px} .hero .h-en{height:9.5px}
+  .hero .h-brand{top:48px; gap:8px}
+  .hero .h-kr{height:38px} .hero .h-en{height:10.5px}
   .hero .h-kick{font-size:10px; letter-spacing:.22em; padding-left:.22em}
 }
 @media (max-width:640px){
-  .hero .h-brand{top:56px; gap:7px}
-  .hero .h-kr{height:25px} .hero .h-en{height:7.5px}
+  .hero .h-brand{top:42px; gap:7px}
+  .hero .h-kr{height:25px} .hero .h-en{height:8.2px}
   .hero .h-kick{font-size:8px; margin-top:2px}
 }
-/* 멈춤 버튼(오른쪽 아래, 메뉴 줄 위) */
+/* 멈춤 버튼(배너 오른쪽 아래 — #129 메뉴 줄은 배너 밑) */
 .hero .h-pp{position:absolute; right:20px; bottom:calc(var(--nh) + 12px); z-index:3; width:30px; height:30px; border:0; border-radius:9px; padding:0; background:rgba(255,255,255,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); color:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px)}
 .hero .h-pp svg{width:12px; height:12px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
 @media (hover:hover) and (pointer:fine){ .hero .h-pp:hover{background:rgba(255,255,255,.22)} }
@@ -1592,10 +1596,13 @@ body, body *:not(svg):not(svg *){font-family:"SFN", "Apple SD Gothic Neo", "Malg
   .hero .ubar.ub-mob .mm-btn svg{width:17px; height:17px}
   .hero .ubar.ub-mob .mm-btn.on, [data-theme="dark"] .hero .ubar.ub-mob .mm-btn.on{background:#FFFFFF; color:#003CDC; box-shadow:none}
 }
-/* PC · 태블릿 메뉴 줄 = 배너 맨 아래에 겹침(투명 · 흰 글자 · 메뉴 색 밑줄은 다크 값) → 스크롤해서 위에 붙으면 지금 모습 */
-body.hero-nav .hero + .bar{margin-top:calc(var(--nh-bar, 58px) * -1)}
+/* #129 PC · 태블릿 메뉴 줄 = 배너 밑(영상 밖). PC 58 · 23px · 좌우 24 / 태블릿 54 · 21px · 18, 바탕 흰색(다크 #0E1533) + 아래 1px 선, 그림자 없음 */
 body.hero-nav .bar .wrap{height:var(--nh-bar, 58px)}
 @media (max-width:980px){ body.hero-nav{--nh-bar:54px} }
+body.hero-nav .bar{background:#FFFFFF !important; box-shadow:none !important; border-bottom:1px solid #DCE1EE !important}
+[data-theme="dark"] body.hero-nav .bar{background:#0E1533 !important; border-bottom-color:#232B4D !important}
+body.hero-nav .menu a{padding-left:24px; padding-right:24px; text-shadow:none}
+@media (max-width:980px){ body.hero-nav .menu a{padding-left:18px; padding-right:18px} }
 .bar{transition:background-color 220ms ease, box-shadow 220ms ease, border-color 220ms ease}
 .bar.on-hero, [data-theme="dark"] .bar.on-hero{background:transparent !important; box-shadow:none !important; border-bottom-color:transparent !important}
 .bar.on-hero .menu a, [data-theme="dark"] .bar.on-hero .menu a{color:rgba(255,255,255,.9) !important; text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
@@ -1605,10 +1612,11 @@ body.hero-nav .bar .wrap{height:var(--nh-bar, 58px)}
 @media (prefers-reduced-motion:reduce){ .bar{transition:none} }
 
 /* ===== #127 사번 로그인 = PC도 위(배너) · 아래(카드). 배너 = 같은 영상 · 흰 로고 · SALES DEVELOPMENT PART · 메뉴 이름 줄 ===== */
-body.login-mode:not(.lgt-shrink) .hero{height:460px}
+body.login-mode:not(.lgt-shrink) .hero{height:460px; aspect-ratio:auto}
+body.login-mode:not(.lgt-shrink) .hero .hv-v{object-position:50% 42%}
 body.login-mode:not(.lgt-shrink) .hero .h-brand{top:40px; bottom:104px; justify-content:center; gap:0; pointer-events:none}
 body.login-mode:not(.lgt-shrink) .hero .h-kr{height:62px}
-body.login-mode:not(.lgt-shrink) .hero .h-en{height:15.8px; margin-top:12px}
+body.login-mode:not(.lgt-shrink) .hero .h-en{height:17.4px; margin-top:12px; filter:drop-shadow(0 2px 10px rgba(0,0,0,.22))}
 body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:13px; margin:12px 0 22px; letter-spacing:.26em; padding-left:.26em}
 body.login-mode:not(.lgt-shrink) .hero .h-menus{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px 16px; font-size:16px; line-height:1.4; color:rgba(255,255,255,.9); text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
 .hero .h-menus span{white-space:nowrap}
@@ -1628,10 +1636,10 @@ body.login-mode .hero .h-lgtop{display:block}
 .lg2-help{width:100%; max-width:520px; padding:28px 0 40px; display:flex; justify-content:center}
 .lg2 .umsg.in2{background:var(--blue-soft); color:var(--link)}
 @media (max-width:980px){
-  body.login-mode:not(.lgt-shrink) .hero{height:520px}
+  body.login-mode:not(.lgt-shrink) .hero{height:520px; aspect-ratio:auto}
   body.login-mode:not(.lgt-shrink) .hero .h-brand{bottom:96px}
   body.login-mode:not(.lgt-shrink) .hero .h-kr{height:50px}
-  body.login-mode:not(.lgt-shrink) .hero .h-en{height:12.8px}
+  body.login-mode:not(.lgt-shrink) .hero .h-en{height:14px}
   body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:12px}
   body.login-mode:not(.lgt-shrink) .hero .h-menus{font-size:15px}
   .hero .h-lgtop{top:32px; right:40px}
@@ -1640,10 +1648,10 @@ body.login-mode .hero .h-lgtop{display:block}
   .lg2-tit{font-size:33px}
 }
 @media (max-width:640px){
-  body.login-mode:not(.lgt-shrink) .hero{height:260px}
+  body.login-mode:not(.lgt-shrink) .hero{height:260px; aspect-ratio:auto}
   body.login-mode:not(.lgt-shrink) .hero .h-brand{top:40px; bottom:28px}
   body.login-mode:not(.lgt-shrink) .hero .h-kr{height:30px}
-  body.login-mode:not(.lgt-shrink) .hero .h-en{height:7.7px; margin-top:7px}
+  body.login-mode:not(.lgt-shrink) .hero .h-en{height:8.5px; margin-top:7px}
   body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:9px; margin:8px 0 0; letter-spacing:.22em; padding-left:.22em}
   body.login-mode:not(.lgt-shrink) .hero .h-menus{display:none}
   .hero .h-lgtop{top:16px; right:16px}
@@ -1658,7 +1666,7 @@ body.login-mode .hero .h-lgtop{display:block}
 @media (max-width:980px){
   body.login-mode .hero{transition:height 360ms cubic-bezier(.32,.72,0,1)}
   .lg2-mid{transition:margin-top 360ms cubic-bezier(.32,.72,0,1), padding-top 360ms cubic-bezier(.32,.72,0,1)}
-  html.kb-in:not(.ios) body.login-mode .hero{height:0}
+  html.kb-in:not(.ios) body.login-mode .hero{height:0; aspect-ratio:auto}
   html.kb-in:not(.ios) .lg2-mid{margin-top:0; padding-top:calc(12px + env(safe-area-inset-top, 0px))}
 }
 
@@ -1671,7 +1679,7 @@ body.mob2 .bar .tm-ic{display:none !important}
 body.lgt-out .hero .h-menus{opacity:0; transition:opacity 320ms cubic-bezier(.2,.8,.2,1) 240ms}
 body.lgt-out .lg2-mid, body.lgt-out .lg2-help{opacity:0; transform:translateY(36px); transition:opacity 480ms cubic-bezier(.2,.8,.2,1) 320ms, transform 480ms cubic-bezier(.2,.8,.2,1) 320ms}
 body.lgt-out .hero .h-lgtop{opacity:0; transform:translateY(-18px); transition:opacity 480ms cubic-bezier(.2,.8,.2,1) 400ms, transform 480ms cubic-bezier(.2,.8,.2,1) 400ms}
-body.lgt-shrink .hero{transition:height 880ms cubic-bezier(.2,.8,.2,1)}
+body.lgt-shrink .hero{transition:height 880ms cubic-bezier(.2,.8,.2,1)}   /* 높이는 JS가 그때 화면 폭으로 정한 값(#132 PC 1440 → 433) */
 body.lgt-shrink .hero .h-menus{position:absolute; visibility:hidden}
 body.lgt-in .hero .ubar{animation:lg-down 560ms cubic-bezier(.2,.8,.2,1) 140ms both}
 body.lgt-in .bar, body.lgt-in .hero .h-pp{animation:lg-up 560ms cubic-bezier(.2,.8,.2,1) 300ms both}

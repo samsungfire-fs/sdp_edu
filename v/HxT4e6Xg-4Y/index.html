@@ -21,9 +21,9 @@
 <link rel="icon" href="assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
-<link rel="preload" href="assets/sfn400.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/sfn700.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261118a">
+<link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=20261118c">
 </head>
 <body>
 
@@ -31,10 +31,10 @@
      #127 로그인 화면에서도 같은 배너(더 높게 + 메뉴 이름 줄), #128 로그인하면 배너는 그대로 이어지고 높이만 줄어듦 -->
 <section class="hero" id="hero" aria-label="삼성화재금융서비스 영업개발파트 교육 자료실">
   <div class="hv" aria-hidden="true">
-    <video class="hv-v" id="heroV" poster="assets/hero-poster.jpg?v=1" autoplay muted loop playsinline preload="auto" disablepictureinpicture>
-      <source src="assets/hero-1280.mp4?v=1" type="video/mp4" media="(max-width:980px)">
-      <source src="assets/hero.webm?v=1" type="video/webm">
-      <source src="assets/hero-1920.mp4?v=1" type="video/mp4">
+    <video class="hv-v" id="heroV" poster="assets/hero-poster.jpg?v=2" autoplay muted loop playsinline preload="auto" disablepictureinpicture>
+      <source src="assets/hero-1280.mp4?v=2" type="video/mp4" media="(max-width:980px)">
+      <source src="assets/hero.webm?v=2" type="video/webm">
+      <source src="assets/hero-1920.mp4?v=2" type="video/mp4">
     </video>
     <span class="hv-shade"></span>
   </div>
@@ -82,7 +82,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261118a"></script>
+<script src="assets/common.js?v=20261118c"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -913,7 +913,8 @@
     var view = r.v ? "video" : r.r ? "research" : "list";
     didRestore = false;
     document.title = TAB_TITLE;
-    document.body.classList.toggle("r-page", !r.v && !!r.r);          /* #95 상품연구 화면 큰 제목 = 둥근바람 400 */
+    document.body.classList.toggle("r-page", !r.v && !!r.r);
+    heroMode(r);          /* #95 상품연구 화면 큰 제목 = 둥근바람 400 */
     if (r.v || r.r) lastListMenu = "";   /* #113 강의 · 상품연구에 다녀오면 '다른 메뉴에서 넘어온 것' */
     if (r.v){ renderVideo(r.v); want = videoUrl(r.v); }
     else if (r.r) want = renderResearch(r);
@@ -1088,8 +1089,7 @@
     $("ubar").hidden = !(wide || mob2);
     $("ubar").classList.toggle("ub-mob", mob2);
     B.classList.toggle("mob2", mob2);
-    B.classList.toggle("hero-nav", wide);   /* PC · 태블릿: 메뉴 줄이 배너 맨 아래에 겹쳐 있다가 스크롤하면 위에 붙음 */
-    heroStick();
+    B.classList.toggle("hero-nav", wide);   /* #129 PC · 태블릿: 메뉴 줄 = 배너 밑(58 · 54) */
   }
   /* ---------- #117~#125 홈 배너 영상 ---------- */
   var HV = $("heroV"), HPP = $("heroPP"), heroUser = false;
@@ -1104,15 +1104,8 @@
   if (window.IntersectionObserver) new IntersectionObserver(function(es){ heroVis = es[0].isIntersecting; heroRun(); }).observe($("hero"));
   document.addEventListener("visibilitychange", heroRun);
   heroPaint();
-  /* 메뉴 줄: 배너 위에 있을 땐 투명 + 흰 글자(메뉴 색은 다크 값), 위에 붙으면 지금처럼 */
-  function heroStick(){
-    var B = document.body, bar = document.querySelector(".bar"), on = B.classList.contains("hero-nav");
-    var stuck = !on || $("hero").getBoundingClientRect().bottom <= bar.offsetHeight + 1;
-    bar.classList.toggle("on-hero", on && !stuck);
-    bar.classList.toggle("mc-dark", on && !stuck);
-  }
-  window.addEventListener("scroll", heroStick, { passive:true });
-  window.addEventListener("resize", heroStick);
+  /* #131 · #132 홈(전체) 배너만 영상 비율 고정(가로 꽉), 다른 메뉴 · 강의 · 상품연구는 270 · 210 · 150 */
+  function heroMode(r){ $("hero").classList.toggle("h-home", !!r && !r.v && !r.r && r.m === "all"); }
   window.__placeUser = placeUser;
   if (UBQ){ if (UBQ.addEventListener) UBQ.addEventListener("change", placeUser); else if (UBQ.addListener) UBQ.addListener(placeUser); }
   if (NARROW){ if (NARROW.addEventListener) NARROW.addEventListener("change", placeUser); else if (NARROW.addListener) NARROW.addListener(placeUser); }
@@ -1234,16 +1227,28 @@
     if (REDUCE){ return enter().then(function(){ var a = $("app"); a.classList.add("lg-fade"); setTimeout(function(){ a.classList.remove("lg-fade"); }, 260); }); }
     btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
     B.classList.add("lgt-out");
-    var brand = document.querySelector(".hero .h-brand");
+    var H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr");
     setTimeout(function(){
-      var a = brand.getBoundingClientRect();
-      B.classList.add("lgt-shrink");
-      var z = brand.getBoundingClientRect();
+      /* 1) 지금(로그인) 모습 재기 */
+      var a = kr.getBoundingClientRect(), h0 = H.offsetHeight, op0 = getComputedStyle(HV).objectPosition;
+      /* 2) 갈 화면(홈이면 영상 비율, 아니면 270 · 210 · 150)의 끝 모습을 움직임 없이 재기 */
+      heroMode(parse());
+      H.style.transition = "none"; B.classList.add("lgt-shrink");
+      var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition;
+      /* 배너 높이가 바뀌는 동안 로고 묶음이 따라 흔들리지 않게 끝 자리에 고정 */
+      var top1 = brand.offsetTop + kr.offsetTop;
+      brand.style.top = top1 + "px"; brand.style.bottom = "auto";
+      var z = kr.getBoundingClientRect();
+      /* 3) 처음 높이로 돌려놓고 끝 높이로 움직임(#132 PC 1440: 460 → 433, 영상 50% 42% → 50% 58%) */
+      H.style.height = h0 + "px"; void H.offsetHeight; H.style.transition = "";
+      H.style.height = h1 + "px";
+      var E = "cubic-bezier(.2,.8,.2,1)";
+      if (HV.animate && op0 !== op1) HV.animate([{ objectPosition:op0 }, { objectPosition:op1 }], { duration:880, easing:E });
       if (brand.animate && a.width && z.width){
-        var sx = a.width / z.width;
-        brand.animate([{ transform:"translate(" + ((a.left + a.width / 2) - (z.left + z.width / 2)) + "px," + (a.top - z.top) + "px) scale(" + sx + ")", transformOrigin:"50% 0" },
-                       { transform:"none", transformOrigin:"50% 0" }], { duration:880, easing:"cubic-bezier(.2,.8,.2,1)" });
+        brand.animate([{ transform:"translate(" + ((a.left + a.width / 2) - (z.left + z.width / 2)) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin:"50% 0" },
+                       { transform:"none", transformOrigin:"50% 0" }], { duration:880, easing:E });
       }
+      setTimeout(function(){ H.style.height = ""; brand.style.top = ""; brand.style.bottom = ""; }, 900);
     }, 400);
     return new Promise(function(res){ setTimeout(res, 820); }).then(function(){
       lgRevealAt = Date.now() + 620;
