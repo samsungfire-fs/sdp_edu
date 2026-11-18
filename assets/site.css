@@ -1324,8 +1324,8 @@ body .lec-act .ab, body .lec-act .ab *{font-weight:400 !important}
 
 /* ===== #91 휴대폰 · 태블릿: 위로 당겨 새로고침 ===== */
 @media (max-width:980px), (pointer:coarse){ body{overscroll-behavior-y:contain} }
-html.ptr-on .banner-link, html.ptr-on .ubar, html.ptr-on .bar, html.ptr-on #app, html.ptr-on .foot{translate:0 var(--ptr, 0px)}
-html.ptr-anim .banner-link, html.ptr-anim .ubar, html.ptr-anim .bar, html.ptr-anim #app, html.ptr-anim .foot{transition:translate 300ms cubic-bezier(.23,1,.32,1)}
+html.ptr-on .hero, html.ptr-on .bar, html.ptr-on #app, html.ptr-on .foot{translate:0 var(--ptr, 0px)}
+html.ptr-anim .hero, html.ptr-anim .bar, html.ptr-anim #app, html.ptr-anim .foot{transition:translate 300ms cubic-bezier(.23,1,.32,1)}
 .ptr{position:fixed; left:0; right:0; top:0; height:0; z-index:60; overflow:hidden; pointer-events:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px}
 html.ptr-anim .ptr{transition:height 300ms cubic-bezier(.23,1,.32,1)}
 .ptr-c{position:relative; width:36px; height:36px; flex:none; border-radius:50%; background:var(--card); box-shadow:inset 0 0 0 1px #DCE1EE, 0 4px 12px rgba(11,16,48,.14); color:#8A93B4; display:flex; align-items:center; justify-content:center; transition:background 160ms ease, color 160ms ease}
@@ -1524,3 +1524,180 @@ body nav.menu a[aria-current=page]{font-weight:800 !important}
    → 메뉴 줄은 옆으로만 넘어가게(세로 넘김 · 끝에서 튕김 막음). 아이폰은 글꼴 줄 높이 때문에 글자 칸이 1~2px 넘쳐 세로로도 밀리던 것 */
 .menu{overflow-y:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch}
 .menu a{line-height:1; overflow:visible}
+
+/* #126 모든 페이지 글꼴 = 삼성금융서체(SFN) — 사용자 · 관리자 · 로그인 전부. 300 · 400 · 500 · 600 · 700, 800 · 900은 Bold(700) 파일로(가짜 굵게 없이) */
+@font-face{font-family:"SFN"; font-weight:300; font-style:normal; font-display:swap; src:url(sfn300.woff2?v=1) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:400; font-style:normal; font-display:swap; src:url(sfn400.woff2?v=1) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:500; font-style:normal; font-display:swap; src:url(sfn500.woff2?v=1) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:600; font-style:normal; font-display:swap; src:url(sfn600.woff2?v=1) format("woff2")}
+@font-face{font-family:"SFN"; font-weight:700 900; font-style:normal; font-display:swap; src:url(sfn700.woff2?v=1) format("woff2")}
+:root{--body:"SFN", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; --head:"SFN", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; --jua:"SFN", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif}
+body, body *:not(svg):not(svg *){font-family:"SFN", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important}
+
+/* ===== #117~#125 홈 배너 = 영상 + 흰 로고 (글자 · 로고 늘 흰색, 영상 위 옅은 어두운 막 + 위 · 아래 남색 그늘) ===== */
+.banner-link{display:none !important}
+.hero{position:relative; overflow:hidden; isolation:isolate; height:340px; background:#05081C; color:#FFFFFF; --nh:58px}
+@media (max-width:980px){ .hero{height:210px; --nh:54px} }
+@media (max-width:640px){ .hero{height:150px; --nh:0px} }
+.hero .hv{position:absolute; inset:0; z-index:-1; overflow:hidden}
+.hero .hv-v{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 40%; display:block}
+.hero .hv::after{content:""; position:absolute; inset:-3px; background:rgba(2,8,28,.34); pointer-events:none}
+.hero .hv-shade{position:absolute; inset:-3px; background:linear-gradient(180deg, rgba(2,4,16,.62) 0%, rgba(2,4,16,.08) 34%, rgba(2,4,16,.10) 60%, rgba(2,4,16,.72) 100%); z-index:1}
+.hero .h-brand{position:absolute; left:0; right:0; top:104px; z-index:1; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; color:#FFFFFF; text-decoration:none; width:max-content; max-width:100%; margin:0 auto}
+.hero .h-kr{display:block; height:66px; width:auto; filter:drop-shadow(0 4px 18px rgba(0,10,60,.45))}
+.hero .h-en{display:block; height:15.5px; width:auto; opacity:.95}
+.hero .h-kick{display:block; margin-top:4px; font-weight:700 !important; font-size:13px; line-height:1.2; letter-spacing:.26em; padding-left:.26em; color:#FFFFFF; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
+.hero .h-menus{display:none}
+@media (max-width:980px){
+  .hero .h-brand{top:60px; gap:8px}
+  .hero .h-kr{height:38px} .hero .h-en{height:9.5px}
+  .hero .h-kick{font-size:10px; letter-spacing:.22em; padding-left:.22em}
+}
+@media (max-width:640px){
+  .hero .h-brand{top:56px; gap:7px}
+  .hero .h-kr{height:25px} .hero .h-en{height:7.5px}
+  .hero .h-kick{font-size:8px; margin-top:2px}
+}
+/* 멈춤 버튼(오른쪽 아래, 메뉴 줄 위) */
+.hero .h-pp{position:absolute; right:20px; bottom:calc(var(--nh) + 12px); z-index:3; width:30px; height:30px; border:0; border-radius:9px; padding:0; background:rgba(255,255,255,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); color:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px)}
+.hero .h-pp svg{width:12px; height:12px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+@media (hover:hover) and (pointer:fine){ .hero .h-pp:hover{background:rgba(255,255,255,.22)} }
+@media (max-width:640px){ .hero .h-pp{width:26px; height:26px; right:12px; bottom:10px; border-radius:8px} .hero .h-pp svg{width:11px; height:11px} }
+/* 위 내 정보 줄 = 배너 안(흰 글자 + 옅은 그림자) */
+.hero .ubar{position:absolute; top:0; left:0; right:0; z-index:3; background:none !important; border:0 !important; padding-top:env(safe-area-inset-top, 0px)}
+.hero .ubar-in{height:auto; padding-top:10px; padding-bottom:10px; gap:14px}
+.hero .ubar .who, .hero .ubar .who a, .hero .ubar .who button, .hero .ubar .nm, .hero .ubar .sb, .hero .ubar .ub{color:#FFFFFF !important; text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
+.hero .ubar .ub svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.hero .ubar .ub .ext{color:rgba(255,255,255,.8) !important}
+.hero .ubar .usep{background:rgba(255,255,255,.28)}
+@media (hover:hover) and (pointer:fine){ .hero .ubar .ub:hover, [data-theme="dark"] .hero .ubar .ub:hover{background:rgba(255,255,255,.14)} }
+.hero .tm, [data-theme="dark"] .hero .tm{display:flex; background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px)}
+.hero .tm button{color:rgba(255,255,255,.9); text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.hero .tm button[aria-checked="true"], [data-theme="dark"] .hero .tm button[aria-checked="true"]{background:#FFFFFF; color:#003CDC; text-shadow:none; box-shadow:0 1px 3px rgba(11,16,48,.14)}
+.hero .tm-ic{display:none !important}
+.hero .ubar .tm{padding:3px; border-radius:11px}
+.hero .ubar .tm button{height:34px; padding:0 12px .06em; font-size:13.5px; border-radius:8px; gap:5px}
+.hero .ubar .tm button svg{width:15px; height:15px}
+@media (max-width:980px){   /* #125 태블릿 맨 위 줄 작게 */
+  .hero .ubar-in{padding:8px 14px 8px 20px; gap:10px; max-width:none}
+  .hero .ubar .who{gap:4px} .hero .ubar .who .nm{font-size:13px} .hero .ubar .who .sb{font-size:12px}
+  .hero .ubar .rb{height:19px; padding:0 6px; font-size:10.5px; border-radius:5px}
+  .hero .ubar .ub{height:30px; padding:0 6px} .hero .ubar .ub svg{width:14px; height:14px}
+  .hero .ubar .tm{padding:2px; border-radius:8px} .hero .ubar .tm button{height:28px; padding:0 9px .06em; font-size:12px; border-radius:6px; gap:4px} .hero .ubar .tm button svg{width:13px; height:13px}
+}
+@media (max-width:640px){   /* #125 휴대폰: 라이트/다크 두 칸 26 · ☰ 30 */
+  .hero .ubar.ub-mob .ubar-in{height:auto; padding:6px 10px; gap:6px}
+  .hero .ubar .tm{padding:2px; border-radius:8px} .hero .ubar .tm button{height:26px; padding:0 7px .06em; font-size:11.5px; gap:3px} .hero .ubar .tm button svg{width:12px; height:12px}
+  .hero .ubar.ub-mob .mm-btn, [data-theme="dark"] .hero .ubar.ub-mob .mm-btn{width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.2); color:#FFFFFF}
+  .hero .ubar.ub-mob .mm-btn svg{width:17px; height:17px}
+  .hero .ubar.ub-mob .mm-btn.on, [data-theme="dark"] .hero .ubar.ub-mob .mm-btn.on{background:#FFFFFF; color:#003CDC; box-shadow:none}
+}
+/* PC · 태블릿 메뉴 줄 = 배너 맨 아래에 겹침(투명 · 흰 글자 · 메뉴 색 밑줄은 다크 값) → 스크롤해서 위에 붙으면 지금 모습 */
+body.hero-nav .hero + .bar{margin-top:calc(var(--nh-bar, 58px) * -1)}
+body.hero-nav .bar .wrap{height:var(--nh-bar, 58px)}
+@media (max-width:980px){ body.hero-nav{--nh-bar:54px} }
+.bar{transition:background-color 220ms ease, box-shadow 220ms ease, border-color 220ms ease}
+.bar.on-hero, [data-theme="dark"] .bar.on-hero{background:transparent !important; box-shadow:none !important; border-bottom-color:transparent !important}
+.bar.on-hero .menu a, [data-theme="dark"] .bar.on-hero .menu a{color:rgba(255,255,255,.9) !important; text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
+.bar.on-hero .menu a[aria-current="page"]{color:#FFFFFF !important}
+.bar.on-hero .menu-box::before, .bar.on-hero .menu-box::after{opacity:0 !important}
+.bar.on-hero .menu .menu-ul{box-shadow:0 1px 3px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:reduce){ .bar{transition:none} }
+
+/* ===== #127 사번 로그인 = PC도 위(배너) · 아래(카드). 배너 = 같은 영상 · 흰 로고 · SALES DEVELOPMENT PART · 메뉴 이름 줄 ===== */
+body.login-mode:not(.lgt-shrink) .hero{height:460px}
+body.login-mode:not(.lgt-shrink) .hero .h-brand{top:40px; bottom:104px; justify-content:center; gap:0; pointer-events:none}
+body.login-mode:not(.lgt-shrink) .hero .h-kr{height:62px}
+body.login-mode:not(.lgt-shrink) .hero .h-en{height:15.8px; margin-top:12px}
+body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:13px; margin:12px 0 22px; letter-spacing:.26em; padding-left:.26em}
+body.login-mode:not(.lgt-shrink) .hero .h-menus{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px 16px; font-size:16px; line-height:1.4; color:rgba(255,255,255,.9); text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
+.hero .h-menus span{white-space:nowrap}
+.hero .h-menus i{width:1px; height:14px; background:rgba(255,255,255,.35); flex:none}
+body.login-mode .hero .h-pp{display:none}
+.hero .h-lgtop{display:none; position:absolute; top:28px; right:40px; z-index:3}
+body.login-mode .hero .h-lgtop{display:block}
+.hero .h-lgtop .tm, [data-theme="dark"] .hero .h-lgtop .tm{background:rgba(255,255,255,.16); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); padding:3px; border-radius:11px}
+.hero .h-lgtop .tm button{height:34px; padding:0 12px .06em; font-size:13.5px; border-radius:8px; gap:5px}
+.lg.lg2{display:flex; flex-direction:column; align-items:center; min-height:0; background:var(--bg); grid-template-columns:none; grid-template-rows:none; padding:0 48px}
+.lg2-mid{position:relative; z-index:3; width:100%; max-width:520px; margin-top:-104px}
+.lg.lg2 .lg2-card{max-width:none; background:var(--card); border-radius:24px; padding:40px; gap:20px; box-shadow:0 24px 48px -24px rgba(11,16,48,.28) !important}
+[data-theme="dark"] .lg.lg2 .lg2-card{box-shadow:0 0 0 1px #243066, 0 24px 48px -20px rgba(0,0,0,.7) !important}
+.lg2-fh{line-height:1.2 !important; margin:0}
+.lg2-tit{display:block; font-size:34px; line-height:1.2; font-weight:400 !important; letter-spacing:-.02em; color:#003CDC}
+[data-theme="dark"] .lg2-tit{color:#FFFFFF}
+.lg2-help{width:100%; max-width:520px; padding:28px 0 40px; display:flex; justify-content:center}
+.lg2 .umsg.in2{background:var(--blue-soft); color:var(--link)}
+@media (max-width:980px){
+  body.login-mode:not(.lgt-shrink) .hero{height:520px}
+  body.login-mode:not(.lgt-shrink) .hero .h-brand{bottom:96px}
+  body.login-mode:not(.lgt-shrink) .hero .h-kr{height:50px}
+  body.login-mode:not(.lgt-shrink) .hero .h-en{height:12.8px}
+  body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:12px}
+  body.login-mode:not(.lgt-shrink) .hero .h-menus{font-size:15px}
+  .hero .h-lgtop{top:32px; right:40px}
+  .hero .h-lgtop .tm{padding:2px; border-radius:9px} .hero .h-lgtop .tm button{height:30px; padding:0 9px .06em; font-size:12.5px; border-radius:7px; gap:4px}
+  .lg2-mid{margin-top:-96px}
+  .lg2-tit{font-size:33px}
+}
+@media (max-width:640px){
+  body.login-mode:not(.lgt-shrink) .hero{height:260px}
+  body.login-mode:not(.lgt-shrink) .hero .h-brand{top:40px; bottom:28px}
+  body.login-mode:not(.lgt-shrink) .hero .h-kr{height:30px}
+  body.login-mode:not(.lgt-shrink) .hero .h-en{height:7.7px; margin-top:7px}
+  body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:9px; margin:8px 0 0; letter-spacing:.22em; padding-left:.22em}
+  body.login-mode:not(.lgt-shrink) .hero .h-menus{display:none}
+  .hero .h-lgtop{top:16px; right:16px}
+  .lg.lg2{padding:0}
+  .lg2-mid{max-width:none; margin-top:-28px; background:var(--bg); border-radius:24px 24px 0 0; padding:30px 20px 0}
+  .lg.lg2 .lg2-card{background:none; border-radius:0; padding:0; gap:18px; box-shadow:none !important}
+  [data-theme="dark"] .lg.lg2 .lg2-card{box-shadow:none !important}
+  .lg2-tit{font-size:26px}
+  .lg2-help{max-width:none; padding:26px 20px calc(28px + env(safe-area-inset-bottom, 0px)); justify-content:flex-start}
+}
+/* 안드로이드 키패드: 배너를 접어 칸이 가려지지 않게(아이폰은 그대로 — 11-17) */
+@media (max-width:980px){
+  body.login-mode .hero{transition:height 360ms cubic-bezier(.32,.72,0,1)}
+  .lg2-mid{transition:margin-top 360ms cubic-bezier(.32,.72,0,1), padding-top 360ms cubic-bezier(.32,.72,0,1)}
+  html.kb-in:not(.ios) body.login-mode .hero{height:0}
+  html.kb-in:not(.ios) .lg2-mid{margin-top:0; padding-top:calc(12px + env(safe-area-inset-top, 0px))}
+}
+
+.bar.on-hero .menu a + a::before{opacity:0}
+body.mob2 .bar .tm-ic{display:none !important}
+
+/* ===== #128 로그인 성공 → 홈 전환 ===== */
+.ubtn.lg-ok{transform:scale(.97); transition:transform 120ms cubic-bezier(.2,.8,.2,1)}
+.ubtn.lg-ok svg{width:20px; height:20px}
+body.lgt-out .hero .h-menus{opacity:0; transition:opacity 320ms cubic-bezier(.2,.8,.2,1) 240ms}
+body.lgt-out .lg2-mid, body.lgt-out .lg2-help{opacity:0; transform:translateY(36px); transition:opacity 480ms cubic-bezier(.2,.8,.2,1) 320ms, transform 480ms cubic-bezier(.2,.8,.2,1) 320ms}
+body.lgt-out .hero .h-lgtop{opacity:0; transform:translateY(-18px); transition:opacity 480ms cubic-bezier(.2,.8,.2,1) 400ms, transform 480ms cubic-bezier(.2,.8,.2,1) 400ms}
+body.lgt-shrink .hero{transition:height 880ms cubic-bezier(.2,.8,.2,1)}
+body.lgt-shrink .hero .h-menus{position:absolute; visibility:hidden}
+body.lgt-in .hero .ubar{animation:lg-down 560ms cubic-bezier(.2,.8,.2,1) 140ms both}
+body.lgt-in .bar, body.lgt-in .hero .h-pp{animation:lg-up 560ms cubic-bezier(.2,.8,.2,1) 300ms both}
+#app.lg-hold{visibility:hidden}
+#app.lg-fade{animation:lg-fade 200ms ease both}
+@keyframes lg-down{from{opacity:0; transform:translateY(-8px)}to{opacity:1; transform:none}}
+@keyframes lg-up{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
+@keyframes lg-fade{from{opacity:0}to{opacity:1}}
+
+/* ===== #116 상품연구 자동 썸네일(올린 이미지가 없을 때) — 판 폭에 맞춰 같이 커짐(cqw) ===== */
+.thumb.r-th.auto{background:none}
+.thumb.r-th.auto::after{display:none}
+.ath{position:absolute; inset:0; container-type:inline-size; overflow:hidden; display:block; --fg:#FFFFFF; --sub:rgba(255,255,255,.78); --ln:rgba(255,255,255,.42); --dot:#5BC2E7; background:linear-gradient(135deg, #003CDC 0%, #0A2296 100%)}
+.ath.t1{background:linear-gradient(135deg, #0B1A4A 0%, #16256B 100%)}
+.ath.t2{background:linear-gradient(135deg, #6CCBEC 0%, #3FA9D6 100%); --fg:#06134A; --sub:rgba(6,19,74,.72); --ln:rgba(6,19,74,.30); --dot:#003CDC}
+.ath.t3{background:linear-gradient(135deg, #F2F6FF 0%, #DCE6FF 100%); --fg:#003CDC; --sub:rgba(0,40,150,.70); --ln:rgba(0,60,220,.30); --dot:#5BC2E7}
+.ath::before{content:""; position:absolute; inset:4cqw; border:max(1px, .55cqw) solid var(--ln); border-radius:3.4cqw; pointer-events:none}
+.ath::after{content:""; position:absolute; right:-18cqw; top:-30cqw; width:70cqw; height:70cqw; border-radius:50%; background:radial-gradient(closest-side, rgba(255,255,255,.16), transparent); pointer-events:none}
+.ath.t2::after, .ath.t3::after{background:radial-gradient(closest-side, rgba(255,255,255,.55), transparent)}
+.ath .lb{position:absolute; left:8.5cqw; top:8cqw; right:8.5cqw; font-size:3.7cqw; line-height:1.3; color:var(--sub); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ath .tt{position:absolute; left:8.5cqw; right:8.5cqw; top:50%; transform:translateY(-58%); font-size:12cqw; line-height:1.12; color:var(--fg); letter-spacing:-.02em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:keep-all; overflow-wrap:normal}
+.ath .tt.l{font-size:8cqw; line-height:1.2}
+.ath .tt.xl{font-size:6.4cqw; line-height:1.24}
+.ath.nob .tt{transform:translateY(-45%)}
+.ath .by{position:absolute; left:8.5cqw; bottom:7.6cqw; display:flex; align-items:center; gap:1.6cqw; font-size:3.6cqw; line-height:1.2; color:var(--sub); white-space:nowrap}
+.ath .by i{width:1.7cqw; height:1.7cqw; border-radius:.5cqw; background:var(--dot); flex:none}
+.ath .by b{font-size:4.6cqw; color:var(--fg)}
+body .ath .tt, body .ath .lb, body .ath .by b{font-weight:800 !important}
+body .ath .by{font-weight:400 !important}

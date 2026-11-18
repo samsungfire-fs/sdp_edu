@@ -142,6 +142,16 @@
     var k = String(id).replace(/[^\w-]/g, "");
     el.classList.add("lrm"); el.style.setProperty("--lrc", "var(--mc-" + k + ", var(--mc-all))"); el.style.setProperty("--lrc-rgb", "var(--mcr-" + k + ", var(--mcr-all))");
   };
+  /* #116 상품연구 자동 썸네일(이미지를 안 올렸을 때) — 16:9 판에 제목 · 책임위원을 글자로. 색 4가지를 차례로(tone) */
+  SC.athTone = function (ym) { var x = /^(\d{4})-(\d{2})$/.exec(String(ym || "")); return x ? (+x[1] * 12 + +x[2]) % 4 : 0; };
+  SC.autoThumb = function (o) {
+    var t = String(o.title || "").trim(), by = String(o.by || "").trim(), n = Array.from(t).length;
+    return '<span class="ath t' + ((o.tone || 0) % 4) + (by ? "" : " nob") + '" role="img" aria-label="' + SC.esc(t + (by ? " · 책임위원 " + by : "")) + '">' +
+      '<span class="lb">' + SC.esc(o.label || "상품연구 전략자료") + '</span><b class="tt' + (n > 16 ? " xl" : n > 6 ? " l" : "") + '">' + SC.esc(t) + '</b>' +
+      (by ? '<span class="by"><i></i>책임위원<b>' + SC.esc(by) + '</b></span>' : '') + '</span>';
+  };
+  SC.athMonth = function (m) { return { title: m.title, by: m.by, label: "상품연구 전략자료", tone: SC.athTone(m.ym) }; };
+  SC.athAge = function (m, a) { var i = (m.ages || []).indexOf(a); return { title: a.title, by: String(a.by || "").trim() || m.by, label: String(m.title || "").trim() + " · 상품연구 전략자료", tone: i < 0 ? 0 : i }; };
   SC.menuVar = function (id) { return "var(--mc-" + String(id || "").replace(/[^\w-]/g, "") + ", var(--mc-all))"; };
   (function () {
     function rgb(h){ var n = parseInt(String(h).replace("#", ""), 16); return (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255); }
@@ -153,7 +163,7 @@
       A.push('[data-menu="' + c.id + '"]{--mc:var(--mc-' + c.id + ')}');
     });
     var st = document.createElement("style"); st.id = "sc-menu-colors";
-    st.textContent = ":root{" + L.join(";") + '}\n:root[data-theme="dark"]{' + D.join(";") + "}\n" + A.join("\n");
+    st.textContent = ":root{" + L.join(";") + '}\n:root[data-theme="dark"]{' + D.join(";") + "}\n.mc-dark{" + D.join(";") + "}\n" + A.join("\n");   /* .mc-dark = 어두운 배너 위(라이트 모드여도 다크 값) */
     (document.head || document.documentElement).appendChild(st);
   })();
   SC.MENUS = [{ id: "all", label: "전체" }].concat(SC.CATS, [SC.RESEARCH]);
@@ -297,14 +307,7 @@
       opts.sw.addEventListener("click", function (e) { set(cur() === "dark" ? "light" : "dark", e, this); });
       if (opts.sw.parentElement) opts.sw.parentElement.addEventListener("click", function (e) { var l = e.target.closest("[data-theme-set]"); if (l) set(l.dataset.themeSet, e, opts.sw); });
     }
-    /* 직접 고른 적이 없으면 기기 설정이 바뀔 때 따라감 */
-    if (window.matchMedia) {
-      var mq = matchMedia("(prefers-color-scheme: dark)"), follow = function () {
-        var saved = ""; try { saved = localStorage.getItem(KEY) || ""; } catch (er) {}
-        if (!saved) { root.setAttribute("data-theme", mq.matches ? "dark" : "light"); paint(); }
-      };
-      if (mq.addEventListener) mq.addEventListener("change", follow); else if (mq.addListener) mq.addListener(follow);
-    }
+    /* 11-17 사용자: 다크가 기본 — 직접 고른 적이 없으면 기기 설정과 상관없이 다크(맨 위 깜빡임 방지 스크립트도 같음) */
     paint();
     return { set: set, cur: cur };
   };

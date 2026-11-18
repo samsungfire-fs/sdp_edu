@@ -2145,3 +2145,9 @@ html.aptr-anim .aptr{transition:height 300ms cubic-bezier(.23,1,.32,1)}
 #app .mtab[aria-selected="true"]{box-shadow:inset 0 -3px 0 var(--c, var(--k-ac))}
 .pv2 .al-g i{width:7px; height:7px; border-radius:2px; flex:none}
 .k-pill .mcd{display:inline-block; width:7px; height:7px; border-radius:2px; margin-right:6px; flex:none; vertical-align:1px}
+/* #116 자동 썸네일 미리보기 · 책임위원 칸 */
+.th-now .th-auto{position:relative; display:block; width:160px; aspect-ratio:16/9; border-radius:10px; overflow:hidden}
+.rthumb .ath{border-radius:inherit}
+.f.rby{margin-top:14px}
+.f.rby .opt{font-weight:400 !important; color:var(--ink-2); font-size:.92em}
+.fc > .f.rby > .help{display:block}

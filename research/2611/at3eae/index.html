@@ -16,30 +16,38 @@
 <title>삼성화재금융서비스 교육 자료실</title>
 <meta name="description" content="교육자료 2개">
 <meta name="theme-color" content="#F1F3FA">
-<script>/* 라이트/다크: 저장된 값(없으면 기기 설정)을 CSS보다 먼저 붙여 깜빡임 방지 */(function(){var t;try{t=localStorage.getItem("sdp-theme")}catch(e){}if(t!=="dark"&&t!=="light")t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t)})();</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap"></noscript>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@900&text=%EA%B5%90%EC%9C%A1%20%EC%9E%90%EB%A3%8C%EC%8B%A4&display=swap" media="print" onload="this.media='all'">
+<script>/* 라이트/다크: 저장된 값(11-17 사용자: 없으면 다크가 기본)을 CSS보다 먼저 붙여 깜빡임 방지 */(function(){var t;try{t=localStorage.getItem("sdp-theme")}catch(e){}if(t!=="dark"&&t!=="light")t="dark";document.documentElement.setAttribute("data-theme",t)})();</script>
 <link rel="icon" href="assets/favicon-48.png?v=3" type="image/png" sizes="48x48">
 <link rel="icon" href="assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
-<link rel="preload" href="assets/rw400.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/rw800.woff2?v=1" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261117e">
+<!-- #126 모든 글자 = 삼성금융서체(SFN) -->
+<link rel="preload" href="assets/sfn400.woff2?v=1" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/sfn700.woff2?v=1" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=20261118a">
 </head>
 <body>
 
-<a class="banner-link" href="./" data-go aria-label="홈으로">
-<picture>
-  <source type="image/webp" sizes="max(100vw, 576px)" srcset="assets/banner-960.webp?v=2 960w, assets/banner-1600.webp?v=2 1600w, assets/banner-2560.webp?v=2 2560w, assets/banner-3840.webp?v=2 3840w">
-  <img class="banner" src="assets/banner-1600.jpg?v=2" sizes="max(100vw, 576px)" srcset="assets/banner-960.jpg?v=2 960w, assets/banner-1600.jpg?v=2 1600w, assets/banner-2560.jpg?v=2 2560w, assets/banner-3840.jpg?v=2 3840w" width="5120" height="854" alt="삼성화재금융서비스 영업개발파트" fetchpriority="high">
-</picture>
-<span class="ban-sweep" aria-hidden="true"></span>
-</a>
-
-<!-- #83 PC · 태블릿: 위 = 내 정보 줄(관리자 페이지 · 이름 · 로그아웃 · 라이트/다크), 아래 = 메뉴 줄(스크롤하면 메뉴 줄만 붙음) -->
-<div class="ubar" id="ubar" hidden><div class="wrap ubar-in" id="ubarIn"></div></div>
+<!-- #117~#125 홈 배너 = 30초 원테이크 타임랩스 영상(끝 = 처음, 끊김 없이 반복) + 가운데 흰 로고 · 위 내 정보 줄 · (PC · 태블릿) 아래 메뉴 줄이 배너 안
+     #127 로그인 화면에서도 같은 배너(더 높게 + 메뉴 이름 줄), #128 로그인하면 배너는 그대로 이어지고 높이만 줄어듦 -->
+<section class="hero" id="hero" aria-label="삼성화재금융서비스 영업개발파트 교육 자료실">
+  <div class="hv" aria-hidden="true">
+    <video class="hv-v" id="heroV" poster="assets/hero-poster.jpg?v=1" autoplay muted loop playsinline preload="auto" disablepictureinpicture>
+      <source src="assets/hero-1280.mp4?v=1" type="video/mp4" media="(max-width:980px)">
+      <source src="assets/hero.webm?v=1" type="video/webm">
+      <source src="assets/hero-1920.mp4?v=1" type="video/mp4">
+    </video>
+    <span class="hv-shade"></span>
+  </div>
+  <a class="h-brand" href="./" data-go aria-label="홈으로">
+    <img class="h-kr" src="assets/hero-kr-w.png?v=1" alt="삼성화재금융서비스" width="1332" height="167">
+    <img class="h-en" src="assets/hero-en-w.png?v=1" alt="" width="2012" height="81">
+    <span class="h-kick">SALES DEVELOPMENT PART</span>
+    <span class="h-menus" id="heroMenus" aria-hidden="true"></span>
+  </a>
+  <div class="ubar" id="ubar" hidden><div class="wrap ubar-in" id="ubarIn"></div></div>
+  <div class="h-lgtop" id="heroLgTop"></div>
+  <button type="button" class="h-pp" id="heroPP" aria-label="배너 움직임 멈추기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+</section>
 <header class="bar">
   <div class="wrap">
     <a class="bar-back rp" id="barBack" href="all/" data-go>
@@ -74,7 +82,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261117d"></script>
+<script src="assets/common.js?v=20261118a"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -84,6 +92,7 @@
   var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var IC = {
+    ok: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
     play: '<svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',
     dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>',
     spin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 1-9 9"/></svg>',
@@ -309,16 +318,18 @@
   }
   /* 상품연구 카드 (월 · 연령): 썸네일 없으면 흰 바탕 로고 기본 썸네일 */
   var RDEF = "assets/research-default.png";
-  function rThumb(src, cls, eager){
+  /* #116 이미지가 없으면 제목 · 책임위원으로 그린 자동 썸네일(at) */
+  function rThumb(src, cls, eager, at){
+    if (!src && at) return '<div class="thumb r-th auto' + (cls ? " " + cls : "") + '">' + SC.autoThumb(at) + '</div>';
     return '<div class="thumb r-th' + (cls ? " " + cls : "") + (src ? "" : " dflt") + '">' +
       '<img src="' + esc(src || RDEF) + '" alt=""' + (src ? "" : ' data-default="true"') + (eager ? "" : ' loading="lazy"') + '></div>';
   }
-  function rCard(href, thumb, title, left, n, priv){
-    return '<li><a class="card r-card rp" href="' + href + '" data-go>' + rThumb(thumb, priv ? "has-priv" : "").replace(/<\/div>$/, (priv ? privTag() : '') + '</div>') +
+  function rCard(href, thumb, title, left, n, priv, at){
+    return '<li><a class="card r-card rp" href="' + href + '" data-go>' + rThumb(thumb, priv ? "has-priv" : "", false, at).replace(/<\/div>$/, (priv ? privTag() : '') + '</div>') +
       cardBody(title, "", [left, "자료 " + n + "개"]) + '</a></li>';
   }
-  function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령 ' + rAges(m).length + '개', rFileCount(m), !SC.isPublic(m)); }
-  function ageCard(m, a){ return rCard(rUrl(ymCode(m.ym), a.id), a.thumb, a.title, "", (a.files || []).length, !SC.isPublic(a) || !SC.isPublic(m)); }
+  function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령 ' + rAges(m).length + '개', rFileCount(m), !SC.isPublic(m), SC.athMonth(m)); }
+  function ageCard(m, a){ return rCard(rUrl(ymCode(m.ym), a.id), a.thumb, a.title, "", (a.files || []).length, !SC.isPublic(a) || !SC.isPublic(m), SC.athAge(m, a)); }
 
   /* ---------- 목록 화면 (전체 · 메뉴 · 상품연구 월/연령) ---------- */
   var L = null;            /* 지금 목록 상태 { m, page, q, items, card, search, url } */
@@ -357,7 +368,7 @@
   function plCard(m){
     var n = rFileCount(m), priv = !SC.isPublic(m), title = (m.title || "") + " 상품연구 전략자료";
     return '<li><a class="card pl-card rp" href="' + rUrl(ymCode(m.ym)) + '" data-go><div class="pl-stack">' +
-      rThumb(m.thumb, priv ? "has-priv" : "").replace(/<\/div>$/, (priv ? privTag() : '') + '<span class="pl-badge">' + IC_LIST + '자료 ' + n + '개</span></div>') + '</div>' +
+      rThumb(m.thumb, priv ? "has-priv" : "", false, SC.athMonth(m)).replace(/<\/div>$/, (priv ? privTag() : '') + '<span class="pl-badge">' + IC_LIST + '자료 ' + n + '개</span></div>') + '</div>' +
       '<div class="card-body yt-b"><h3 class="yt-t pl-t" title="' + esc(title) + '">' + esc(title) + '</h3><span class="ys"><span>연령 ' + rAges(m).length + '개</span></span></div></a></li>';
   }
   function drawShelves(){
@@ -543,6 +554,13 @@
        뒤로 돌아올 때 · 당겨서 새로고침 · 검색 중 · 같은 메뉴를 다시 그릴 때 · 줄이기 설정이면 없이 바로 */
     var sigPlay = r.m === "signature" && lastListMenu !== "signature" && !restoreNext && !QUIET && !REDUCE && !L.q && !okSaved;
     lastListMenu = r.m;
+    if (lgRevealAt && !sigPlay){   /* #128 로그인 직후 홈: 1.44초에 본문 라인 리빌(그 전엔 자리만 잡고 안 보이게) */
+      var dl = Math.max(0, lgRevealAt - Date.now()), lb = $("listLr"), ap = $("app");
+      lgRevealAt = 0; lb.classList.add("wait"); ap.classList.add("lg-hold");
+      setTimeout(function(){ ap.classList.remove("lg-hold"); if (!lb.isConnected) return; lb.classList.remove("wait"); SC.lineReveal(lb); }, dl);
+      L.noLr = true;
+    }
+    lgRevealAt = 0;
     if (sigPlay){
       var hd = document.querySelector(".sig-head"), box = $("listLr");
       hd.classList.add("sig-play"); box.classList.add("wait");
@@ -624,7 +642,7 @@
       '<div class="rget">' +
         '<a class="back-all rp" href="' + rUrl(code) + '" data-go>' + IC.back + esc(mo.title) + '</a>' +
         '<div class="rget-grid">' +
-          '<aside class="rget-side">' + rThumb(a.thumb, "rget-th", true) +
+          '<aside class="rget-side">' + rThumb(a.thumb, "rget-th", true, SC.athAge(mo, a)) +
             '<div class="rget-info"><span class="r-pill">상품연구 전략자료</span>' +
               '<h1>' + esc(mo.title + " " + (a.title || "")) + '</h1>' +
               '<p class="rget-count">교육자료 <span class="nowrap">' + files.length + '개</span></p>' +
@@ -1063,13 +1081,38 @@
     var B = document.body, login = B.classList.contains("login-mode"), wide = !!(UBQ && UBQ.matches) && !login, box = $("ubarIn"), bar = document.querySelector(".bar .wrap");
     var mob2 = !wide && !login && !!SES && !(NARROW && NARROW.matches && (B.classList.contains("watch-page") || B.classList.contains("back-page")));
     var mb = $("mmBtn"), put = function(par, ids){ ids.forEach(function(id){ var el = $(id); if (el && (el.parentNode !== par || el.nextSibling)) par.appendChild(el); }); };
-    if (wide){ put(box, ["who", "whoSep", "tm", "tmIc"]); put(bar, ["mmBtn"]); }
-    else if (mob2){ put(bar, ["who", "whoSep", "tm"]); put(box, ["tmIc", "mmBtn"]); }
+    if (login){ put(bar, ["who", "whoSep", "tmIc", "mmBtn"]); put($("heroLgTop"), ["tm"]); }   /* #127 로그인: 라이트/다크 두 칸 = 배너 오른쪽 위 */
+    else if (wide){ put(box, ["who", "whoSep", "tm", "tmIc"]); put(bar, ["mmBtn"]); }
+    else if (mob2){ put(bar, ["who", "whoSep", "tmIc"]); put(box, ["tm", "mmBtn"]); }   /* #118 휴대폰 배너도 [☀ 라이트 | ☾ 다크] 두 칸 + ☰ */
     else put(bar, ["who", "whoSep", "tm", "tmIc", "mmBtn"]);
     $("ubar").hidden = !(wide || mob2);
     $("ubar").classList.toggle("ub-mob", mob2);
     B.classList.toggle("mob2", mob2);
+    B.classList.toggle("hero-nav", wide);   /* PC · 태블릿: 메뉴 줄이 배너 맨 아래에 겹쳐 있다가 스크롤하면 위에 붙음 */
+    heroStick();
   }
+  /* ---------- #117~#125 홈 배너 영상 ---------- */
+  var HV = $("heroV"), HPP = $("heroPP"), heroUser = false;
+  function heroPaint(){ var pz = HV.paused; HPP.innerHTML = pz ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+    HPP.setAttribute("aria-label", pz ? "배너 움직임 다시 켜기" : "배너 움직임 멈추기"); }
+  HPP.addEventListener("click", function(){ heroUser = !HV.paused; if (HV.paused){ var pr = HV.play(); if (pr && pr.catch) pr.catch(function(){}); } else HV.pause(); });
+  ["play", "pause", "playing"].forEach(function(ev){ HV.addEventListener(ev, heroPaint); });
+  if (REDUCE){ HV.removeAttribute("autoplay"); HV.pause(); heroUser = true; }   /* 동작 줄이기: 첫 장면에서 멈춘 채 */
+  /* 화면 밖이거나 다른 탭이면 쉬었다가 돌아오면 이어서(사용자가 멈춘 건 그대로) */
+  var heroVis = true;
+  function heroRun(){ if (heroUser) return; if (heroVis && !document.hidden){ if (HV.paused){ var pr = HV.play(); if (pr && pr.catch) pr.catch(function(){}); } } else if (!HV.paused) HV.pause(); }
+  if (window.IntersectionObserver) new IntersectionObserver(function(es){ heroVis = es[0].isIntersecting; heroRun(); }).observe($("hero"));
+  document.addEventListener("visibilitychange", heroRun);
+  heroPaint();
+  /* 메뉴 줄: 배너 위에 있을 땐 투명 + 흰 글자(메뉴 색은 다크 값), 위에 붙으면 지금처럼 */
+  function heroStick(){
+    var B = document.body, bar = document.querySelector(".bar"), on = B.classList.contains("hero-nav");
+    var stuck = !on || $("hero").getBoundingClientRect().bottom <= bar.offsetHeight + 1;
+    bar.classList.toggle("on-hero", on && !stuck);
+    bar.classList.toggle("mc-dark", on && !stuck);
+  }
+  window.addEventListener("scroll", heroStick, { passive:true });
+  window.addEventListener("resize", heroStick);
   window.__placeUser = placeUser;
   if (UBQ){ if (UBQ.addEventListener) UBQ.addEventListener("change", placeUser); else if (UBQ.addListener) UBQ.addListener(placeUser); }
   if (NARROW){ if (NARROW.addEventListener) NARROW.addEventListener("change", placeUser); else if (NARROW.addListener) NARROW.addListener(placeUser); }
@@ -1130,20 +1173,17 @@
     var MN = SC.MENUS.filter(function(c){ return c.id !== "all"; }).map(function(c){ return '<span>' + esc(c.label) + '</span>'; }).join('<i aria-hidden="true"></i>');
     var NOTES = '<ul class="lg-notes"><li><span class="mk" aria-hidden="true">※</span><span><span class="t">본 페이지는 삼성화재금융서비스 RC 전용입니다.</span><br><span class="nw">RC가 아닌 사람에게</span> <span class="nw">링크나 내용을 공유하는 것을 금지합니다.</span></span></li>' +
       '<li><span class="mk" aria-hidden="true">※</span><span><span class="t">사번 업데이트는 실시간이 아닙니다.</span><br><span class="nw">사번 부여 후 1~2일 소요될 수 있습니다.</span></span></li></ul>';
-    $("app").innerHTML = '<div class="lg">' +
-      '<div class="lg-brand" aria-hidden="true"><div class="lg-glow"></div></div>' +
-      '<div class="lg-copy"><h2 class="lg-h2">교육 자료실</h2><span class="lg-bar" aria-hidden="true"></span><p class="lg-menus">' + MN + '</p></div>' +
-      '<button type="button" class="lg-tm rp" id="lgTm"></button>' +
-      '<main class="lg-mid"><form class="lg-form ulog-card" id="ulog" novalidate>' +
+    /* #127 로그인 = 위 배너(#hero: 같은 영상 · 흰 로고 · 메뉴 이름 줄, 라이트/다크 두 칸은 배너 오른쪽 위) + 아래 카드(제목 = 글자 '교육 자료실') */
+    $("heroMenus").innerHTML = MN;
+    $("app").innerHTML = '<div class="lg lg2">' +
+      '<main class="lg2-mid"><form class="lg-form ulog-card lg2-card" id="ulog" novalidate>' +
         (kind === "expired" ? '<p class="umsg in2" role="status">' + IC.clock + '<span>로그인 시간이 끝났어요. 다시 로그인해 주세요.</span></p>' : '') +
-        '<div class="lg-hd"><h1 class="lg-fh"><span class="lg-flogo" role="img" aria-label="삼성화재금융서비스"><img class="l" src="' + ROOT + 'assets/samsungfs-logo-blue.png" alt="" width="1332" height="167"><img class="d" src="' + ROOT + 'assets/samsungfs-logo-white.png" alt="" width="1332" height="167"></span><span class="sr">사번 로그인</span></h1><p>사번 8자리를 입력해 주세요.</p></div>' +
+        '<div class="lg-hd"><h1 class="lg-fh lg2-fh"><span class="lg2-tit">교육 자료실</span><span class="sr"> · 사번 로그인</span></h1><p>사번 8자리를 입력해 주세요.</p></div>' +
         '<div class="lg-fld"><label class="lg-lab" for="usb">사번</label><div class="lg-in" id="usbBox">' + CARD +
           '<input id="usb" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="username" placeholder="숫자 8자리" aria-describedby="umsg"><span class="lg-cnt" id="usbCnt" aria-hidden="true">0/8</span></div>' +
           '<p class="umsg" id="umsg" role="alert" hidden></p></div>' +
         '<button type="submit" class="ubtn lg-go rp" id="ubtn">로그인' + GO + '</button>' +
-      '</form></main><div class="lg-helpw">' + NOTES + '</div></div>';
-    var syncTm = function(){ var a = $("tmIc"), b = $("lgTm"); if (a && b){ b.innerHTML = a.innerHTML; b.setAttribute("aria-label", a.getAttribute("aria-label") || "화면 모드 바꾸기"); } };
-    syncTm(); $("lgTm").addEventListener("click", function(){ $("tmIc").click(); setTimeout(syncTm, 30); setTimeout(syncTm, 700); });
+      '</form></main><div class="lg2-help">' + NOTES + '</div></div>';
     var inp = $("usb");
     inp.addEventListener("input", function(){
       var v = this.value.replace(/\D/g, "").slice(0, 8); if (v !== this.value) this.value = v;
@@ -1169,7 +1209,7 @@
       if (r.ok){
         SES = { t: r.t, s: r.sabun, n: r.name, a: r.admin ? 1 : 0, m: r.master ? 1 : 0, e: r.exp, k: r.key };
         sesSet(SES); lsSet("sdp-seen-" + SES.s, String(Date.now()));   /* 로그인 자체가 접속 기록 */
-        return enter();
+        return loginTrans();
       }
       done();
       if (r.error === "notnormal") loginMsg("er", "정상회원이 아닙니다", true);
@@ -1185,6 +1225,35 @@
     }).catch(function(){ done(); loginMsg("wa", "지금은 로그인할 수 없어요.<br>잠시 후 다시 시도해 주세요.", false); });
   }
 
+  /* #128 로그인 성공 → 홈: 배너(영상)는 그대로 이어지고 로그인에만 있는 것은 빠지고 홈에만 있는 것이 들어옴(모두 cubic-bezier(.2,.8,.2,1))
+     0~120 버튼 눌림 + '✓ 로그인됐어요' · 240~560 메뉴 이름 줄 사라짐 · 320~800 카드 · 안내가 36px 내려가며 사라짐 · 400~1280 배너 높이 줄고 로고 묶음이 홈 자리로
+     960~1520 내 정보 줄 · 1120~1680 메뉴 줄 · 1440 본문 라인 리빌. 동작 줄이기면 전부 없이 홈 0.2초 페이드 */
+  var lgRevealAt = 0;
+  function loginTrans(){
+    var B = document.body, btn = $("ubtn");
+    if (REDUCE){ return enter().then(function(){ var a = $("app"); a.classList.add("lg-fade"); setTimeout(function(){ a.classList.remove("lg-fade"); }, 260); }); }
+    btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
+    B.classList.add("lgt-out");
+    var brand = document.querySelector(".hero .h-brand");
+    setTimeout(function(){
+      var a = brand.getBoundingClientRect();
+      B.classList.add("lgt-shrink");
+      var z = brand.getBoundingClientRect();
+      if (brand.animate && a.width && z.width){
+        var sx = a.width / z.width;
+        brand.animate([{ transform:"translate(" + ((a.left + a.width / 2) - (z.left + z.width / 2)) + "px," + (a.top - z.top) + "px) scale(" + sx + ")", transformOrigin:"50% 0" },
+                       { transform:"none", transformOrigin:"50% 0" }], { duration:880, easing:"cubic-bezier(.2,.8,.2,1)" });
+      }
+    }, 400);
+    return new Promise(function(res){ setTimeout(res, 820); }).then(function(){
+      lgRevealAt = Date.now() + 620;
+      B.classList.add("lgt-in");
+      return enter();
+    }).then(function(){
+      setTimeout(function(){ B.classList.remove("lgt-out", "lgt-shrink", "lgt-in"); }, 1000);
+    });
+  }
+
   /* ---------- 목록 열기 · 화면 그리기 ---------- */
   function enter(){
     return Promise.all([SC.box.open(WRAP[0], SES.k), WRAP[1] ? SC.box.open(WRAP[1], SES.k) : null]).then(function(o){
@@ -1196,6 +1265,7 @@
       paintWho(); loadStats(); seen();
     }).catch(function(){
       /* 열쇠가 바뀌었거나 표가 맞지 않으면 다시 로그인 */
+      document.body.classList.remove("lgt-out", "lgt-shrink", "lgt-in"); lgRevealAt = 0;
       sesSet(null); SES = null; showLogin("");
     });
   }
