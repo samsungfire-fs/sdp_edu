@@ -23,7 +23,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261119h">
+<link rel="stylesheet" href="assets/site.css?v=20261119i">
 </head>
 <body>
 
@@ -86,7 +86,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261119h"></script>
+<script src="assets/common.js?v=20261119i"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -1076,7 +1076,7 @@
     if (!live() || !GATE || !SES.a) return;
     var k = "sdp-renew", last = +(lsGet(k) || 0); if (Date.now() - last < 3600 * 1000) return; lsSet(k, String(Date.now()));
     gate({ action: "siteRenew", t: SES.t }).then(function(r){
-      if (r.ok){ SES = sesFrom(r); sesSet(SES); paintWho(); }
+      if (r.ok && r.t && r.exp && r.key){ SES = sesFrom(r); sesSet(SES); paintWho(); }   /* 빈 답이면 지금 로그인 그대로 */
       else if (r.error === "nosession"){ sesSet(null); SES = null; showLogin(""); }
     }).catch(function(){});
   }
@@ -1398,51 +1398,169 @@
     }, 300);
   }
 
-  /* #189 휴대폰 로그아웃 → 로그인(#188을 거꾸로, cubic-bezier(.2,.8,.2,1), 누른 순간 = 0ms):
-     0~200 ☰ 메뉴 판 · 막 위로 10px 사라짐 · 0~300 ☰ · 왼쪽 위 SDP 위로 6px / 메뉴 줄 · ⏸ 아래로 8px 사라짐 · 0~350 본문 아래 → 위로 걷힘
-     200~1,080 배너 167 → 260 clip-path로 펼침 · 같은 영상 이어서(50% 50% → 42%, transform) · 국문 · 영문 로고 따로 FLIP(로그인 자리를 재서)
-     · 라이트/다크 버튼 30 → 34 로그인 자리로 / 700~1,180 로고 아래 SDP / 800~1,400 아래 시트 60px 아래에서. transform · opacity · clip-path만 */
+  /* ===== #190 휴대폰 로그인 · 로그아웃 전환 2차(#188 · #189 시간 대체) =====
+     배너 · 국문/영문 로고 · 라이트/다크 버튼 = cubic-bezier(.65,0,.35,1) 700ms(천천히 출발 → 천천히 도착), 나머지 (.2,.8,.2,1).
+     단계를 겹쳐 중간에 멈추는 순간이 없게: 화면(레이아웃)은 한 번에 바꾸고, 사라지는 중인 것은 같은 그림(고스트)이 마저 사라짐.
+     시각은 모두 누른 순간(t0)부터 잼 */
+  var CIO = "cubic-bezier(.65,0,.35,1)", COUT = "cubic-bezier(.2,.8,.2,1)";
+  function bez(x1, y1, x2, y2){
+    return function(x){
+      if (x <= 0) return 0; if (x >= 1) return 1;
+      var t = x;
+      for (var i = 0; i < 8; i++){
+        var cx = 3 * x1 * t * (1 - t) * (1 - t) + 3 * x2 * t * t * (1 - t) + t * t * t - x;
+        var dx = 3 * x1 * (1 - t) * (1 - t) + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
+        if (Math.abs(cx) < 1e-5 || !dx) break; t -= cx / dx; t = Math.min(1, Math.max(0, t));
+      }
+      return 3 * y1 * t * (1 - t) * (1 - t) + 3 * y2 * t * t * (1 - t) + t * t * t;
+    };
+  }
+  var EIO = bez(.65, 0, .35, 1), EOUT = bez(.2, .8, .2, 1);
+  function mobT(){ return !REDUCE && innerWidth <= 640 && !!document.body.animate; }
+  /* 고스트에 옮겨 적는 모양 속성(보이는 데 필요한 것만 — 전부 옮기면 휴대폰에서 느림) */
+  var GH_P = ("display position top right bottom left width height min-width min-height max-width max-height box-sizing margin-top margin-right margin-bottom margin-left " +
+    "padding-top padding-right padding-bottom padding-left flex-direction flex-wrap flex-grow flex-shrink flex-basis align-items align-self justify-content gap row-gap column-gap order " +
+    "font-family font-size font-weight font-style line-height letter-spacing text-align text-decoration-line text-shadow text-transform white-space word-break text-overflow vertical-align " +
+    "color background-color background-image background-size background-position background-repeat border-top-width border-right-width border-bottom-width border-left-width " +
+    "border-top-style border-right-style border-bottom-style border-left-style border-top-color border-right-color border-bottom-color border-left-color " +
+    "border-top-left-radius border-top-right-radius border-bottom-left-radius border-bottom-right-radius box-shadow opacity transform transform-origin overflow-x overflow-y z-index visibility " +
+    "fill stroke stroke-width stroke-linecap stroke-linejoin object-fit object-position filter backdrop-filter -webkit-backdrop-filter").split(" ");
+  /* 작은 덩어리 고스트: 지금 그려진 모양 그대로(계산된 스타일을 글자로 박아) 같은 자리에 — 화면이 바뀌어도 모양이 안 바뀜 */
+  function ghostCopy(el){
+    if (!el || el.hidden) return null;
+    var r = el.getBoundingClientRect(); if (!r.width || !r.height) return null;
+    var c = el.cloneNode(true), src = [el].concat([].slice.call(el.querySelectorAll("*"))), dst = [c].concat([].slice.call(c.querySelectorAll("*")));
+    src.forEach(function(s, i){
+      var cs = getComputedStyle(s), d = dst[i], t = "";
+      for (var k = 0; k < GH_P.length; k++){ var v = cs.getPropertyValue(GH_P[k]); if (v) t += GH_P[k] + ":" + v + ";"; }
+      d.style.cssText = t + "animation:none;transition:none"; d.removeAttribute("id"); d.removeAttribute("class");
+    });
+    c.setAttribute("aria-hidden", "true");
+    ["position:fixed", "left:" + r.left + "px", "top:" + r.top + "px", "right:auto", "bottom:auto", "width:" + r.width + "px", "height:" + r.height + "px", "margin:0", "transform:none", "pointer-events:none", "z-index:60", "box-sizing:border-box", "display:" + (getComputedStyle(el).display === "none" ? "block" : getComputedStyle(el).display)].forEach(function(x){ var kv = x.split(/:(.+)/); c.style.setProperty(kv[0], kv[1], "important"); });
+    document.body.appendChild(c); return c;
+  }
+  /* 큰 덩어리(본문) 고스트: 노드를 그대로 옮겨(그림 · 글꼴 다시 받지 않음) 화면에 보이는 부분만 같은 자리에 */
+  function ghostMove(box){
+    var r = box.getBoundingClientRect(), cs = getComputedStyle(box);
+    var top = Math.max(0, r.top), h = Math.max(0, Math.min(r.bottom, innerHeight) - top);
+    [].forEach.call(box.querySelectorAll("h1, h1 *, h2, h2 *"), function(x){ var c = getComputedStyle(x); x.style.fontFamily = c.fontFamily; x.style.fontWeight = c.fontWeight; x.style.letterSpacing = c.letterSpacing; x.style.lineHeight = c.lineHeight; });
+    var w = document.createElement("div"), inner = document.createElement("div");
+    w.setAttribute("aria-hidden", "true"); w.className = "lgx-gh";
+    w.style.cssText = "position:fixed;left:" + r.left + "px;top:" + top + "px;width:" + r.width + "px;height:" + h + "px;overflow:hidden;pointer-events:none;z-index:60;margin:0";
+    inner.style.cssText = "box-sizing:border-box;width:" + r.width + "px;padding:" + cs.padding + ";margin-top:" + (r.top - top) + "px";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    w.appendChild(inner); document.body.appendChild(w); return w;
+  }
+  function gone(el, ms){ setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, ms); }
+  /* 그려진 영상 자리(같은 video를 transform으로 이어 그림) */
+  function vDrawn(W, Hb, op){
+    var vw = HV.videoWidth || 1280, vh = HV.videoHeight || 548, m = String(op).match(/(-?[\d.]+)%\s+(-?[\d.]+)%/), p2 = m ? [+m[1] / 100, +m[2] / 100] : [.5, .5];
+    var sc = Math.max(W / vw, Hb / vh); return { s: sc, w: vw * sc, h: vh * sc, x: (W - vw * sc) * p2[0], y: (Hb - vh * sc) * p2[1] };
+  }
+  function flipKF(a, z){ return [{ transform: "translate(" + (a.left - z.left) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }]; }
+  function smooth(els, on){ els.forEach(function(e){ if (!e) return; e.style.willChange = on ? "transform" : ""; e.style.backfaceVisibility = on ? "hidden" : ""; }); }
+
+  /* 로그아웃 → 로그인: 메뉴 판 0~200 · ☰ · 메뉴 줄 · ⏸ 0~250 · 목록 걷힘 0~300 · 배너 · 로고 · 버튼 50~750 · 로고 아래 영문 450~850 · 시트 450~950.
+     레이아웃 바꾸기 전에 홈 로고 자리를 재서 출발점으로 */
   function logoutTransM(){
     var B = document.body, H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr"), en = brand.querySelector(".h-en"), tmI = $("tmIc");
-    var E = "cubic-bezier(.2,.8,.2,1)", D = 880;
+    var t0 = performance.now(), at = function(ms){ return Math.max(0, ms - (performance.now() - t0)); };
     lgoBusy = true;
-    B.classList.add("lgo-out", "lgo-m");
-    setTimeout(function(){
-      /* 1) 지금(홈 · 메뉴) 모습 재기 */
-      var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), enOp = +getComputedStyle(en).opacity, h0 = H.offsetHeight, W = H.clientWidth;
-      var op0 = getComputedStyle(HV).objectPosition, tA = tmI ? tmI.getBoundingClientRect() : null;
-      var wasSig = H.classList.contains("h-sig");
-      /* 2) 로그인 화면으로 바꾸고 끝 모습 재기 */
-      heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login";
-      if (wasSig) sigFade(false, 0, 500);
-      B.classList.remove("lgo-out");
-      showLogin(""); window.scrollTo(0, 0);
-      B.classList.add("lgo-in");
-      H.style.transition = "none";   /* 배너 자리 높이는 한 번에 바꾸고(아래 시트는 아직 안 보임) 보이는 펼침은 clip-path로 */
-      var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), tZ = tmI ? tmI.getBoundingClientRect() : null, dH = h1 - h0;
-      var anim = function(el, kf, o){ if (!el || !el.animate) return null; o.easing = o.easing || E; o.duration = o.duration || D; return el.animate(kf, o); };
-      /* 배너: 아래 끝을 clip-path로 167 → 260 */
-      if (dH > 0) anim(H, [{ clipPath: "inset(0 0 " + dH + "px 0)" }, { clipPath: "inset(0 0 0 0)" }], {});
-      /* 영상: 끝(로그인) 모습의 그려진 자리에 통째로 그려 두고, 처음(홈) 모습 자리로 되돌려 놓은 transform → none (같은 video 이어서) */
-      var vw = HV.videoWidth || 1280, vh = HV.videoHeight || 548;
-      var pos = function(op){ var m = String(op).match(/(-?[\d.]+)%\s+(-?[\d.]+)%/); return m ? [+m[1] / 100, +m[2] / 100] : [.5, .5]; };
-      var drawn = function(Hb, op){ var sc = Math.max(W / vw, Hb / vh), p2 = pos(op); return { s: sc, w: vw * sc, h: vh * sc, x: (W - vw * sc) * p2[0], y: (Hb - vh * sc) * p2[1] }; };
-      var d0 = drawn(h0, op0), d1 = drawn(h1, op1);
+    /* 1) 지금(홈 · 메뉴) 모습 재기 — 아무것도 바꾸기 전에 */
+    var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), enOp = +getComputedStyle(en).opacity, h0 = H.offsetHeight, W = H.clientWidth;
+    var op0 = getComputedStyle(HV).objectPosition, tA = tmI ? tmI.getBoundingClientRect() : null, wasSig = H.classList.contains("h-sig");
+    /* 2) 사라지는 것들은 같은 그림으로 남겨 두고 마저 사라짐 */
+    var gUp = [ghostCopy($("mmBtn")), ghostCopy(H.querySelector(".h-sdpm"))], gDn = [ghostCopy(document.querySelector(".bar")), ghostCopy(H.querySelector(".h-pp")), ghostCopy(document.querySelector(".fab"))];
+    gUp.forEach(function(g){ if (g){ g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 250, easing: COUT, fill: "forwards" }); gone(g, 270); } });
+    gDn.forEach(function(g){ if (g){ g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(8px)" }], { duration: 250, easing: COUT, fill: "forwards" }); gone(g, 270); } });
+    var gA = ghostMove($("app"));
+    gA.animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }], { duration: 300, easing: COUT, fill: "forwards" }); gone(gA, 320);
+    /* 3) 로그인 화면으로 한 번에 바꾸고 끝 모습 재기 */
+    heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login";
+    if (wasSig) sigFade(false, 0, 500);
+    H.style.transition = "none";
+    showLogin(""); window.scrollTo(0, 0);
+    var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), tZ = tmI ? tmI.getBoundingClientRect() : null, dH = h1 - h0;
+    var o = { duration: 700, easing: CIO, delay: at(50), fill: "backwards" };
+    var go = function(el, kf, oo){ if (el && el.animate) el.animate(kf, oo || o); };
+    if (dH > 0) go(H, [{ clipPath: "inset(0 0 " + dH + "px 0)" }, { clipPath: "inset(0 0 0 0)" }]);
+    var d0 = vDrawn(W, h0, op0), d1 = vDrawn(W, h1, op1);
+    HV.style.cssText = "position:absolute;inset:auto;left:" + d1.x + "px;top:" + d1.y + "px;width:" + d1.w + "px;height:" + d1.h + "px;object-fit:fill;transform-origin:0 0;will-change:transform";
+    go(HV, [{ transform: "translate(" + (d0.x - d1.x) + "px," + (d0.y - d1.y) + "px) scale(" + (d0.s / d1.s) + ")" }, { transform: "none" }]);
+    var sh = HV.parentNode.querySelector(".hv-shade");
+    if (sh && dH){ sh.style.cssText = "top:-3px;bottom:auto;height:" + (h1 + 6) + "px;transform-origin:0 0;will-change:transform"; go(sh, [{ transform: "scaleY(" + ((h0 + 6) / (h1 + 6)) + ")" }, { transform: "none" }]); }
+    if (a.width && z.width) go(kr, flipKF(a, z));
+    if (aE.width && zE.width && enOp > .5) go(en, flipKF(aE, zE));
+    else go(en, [{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: COUT, delay: at(300), fill: "backwards" });
+    if (tA && tZ && tA.width && tZ.width) go(tmI, flipKF(tA, tZ));
+    smooth([kr, en, tmI], true);
+    go(brand.querySelector(".h-kick"), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(450), fill: "backwards" });
+    [document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(60px)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: COUT, delay: at(450), fill: "backwards" }); });
+    setTimeout(function(){ HV.style.cssText = ""; H.style.transition = ""; if (sh) sh.style.cssText = ""; smooth([kr, en, tmI], false); }, at(750) + 20);
+    setTimeout(function(){ lgoBusy = false; }, at(950) + 20);
+  }
+
+  /* 로그인 → 홈: 버튼 ✓ 0~120 · 로고 아래 영문 0~300 · 시트 0~400 · 배너 · 로고 · 버튼 100~800 · ☰ · 왼쪽 위 영문 500~900
+     · 메뉴 줄 · ⏸ 550~950(배너 아래 끝을 따라 붙어 옴) · 라인 리빌 650~ (목록 · 썸네일은 100에 그려 두고 미리 받음) */
+  function loginTransM(){
+    var B = document.body, btn = $("ubtn"), H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr"), en = brand.querySelector(".h-en"), kick = brand.querySelector(".h-kick"), tmI = $("tmIc");
+    var t0 = performance.now(), at = function(ms){ return Math.max(0, ms - (performance.now() - t0)); };
+    btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
+    var sheet = [document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")].filter(Boolean);
+    var aK = kick && kick.animate ? kick.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: COUT, fill: "forwards" }) : null;
+    var aS = sheet.map(function(el){ return el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(36px)" }], { duration: 400, easing: COUT, fill: "forwards" }); });
+    var opened = enterOpen();
+    return Promise.all([opened, new Promise(function(r){ setTimeout(r, 100); })]).then(function(res){
+      var o = res[0];
+      /* 1) 지금(로그인) 모습 재기 */
+      var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), h0 = H.offsetHeight, W = H.clientWidth, op0 = getComputedStyle(HV).objectPosition, tA = tmI ? tmI.getBoundingClientRect() : null;
+      /* 2) 사라지는 중인 것: 로고 아래 영문(남은 시간) · 시트(본문 노드째 옮겨서 남은 시간) */
+      var gK = ghostCopy(kick); if (aK) aK.cancel();
+      if (gK){ gK.animate([{ opacity: +gK.style.opacity || 1 }, { opacity: 0 }], { duration: Math.max(1, at(300)), easing: COUT, fill: "forwards" }); gone(gK, at(300) + 20); }
+      var cur = sheet.map(function(el){ var c = getComputedStyle(el); return [c.opacity, c.transform]; });
+      var gA = ghostMove($("app"));
+      sheet.forEach(function(el, i){ aS[i].cancel(); el.animate([{ opacity: cur[i][0], transform: cur[i][1] === "none" ? "none" : cur[i][1] }, { opacity: 0, transform: "translateY(36px)" }], { duration: Math.max(1, at(400)), easing: COUT, fill: "forwards" }); });
+      gone(gA, at(400) + 20);
+      /* 3) 홈을 한 번에 그림(목록은 라인 리빌까지 접어 둠) */
+      H.style.transition = "none";
+      heroApply("all"); heroKey = "all"; HHEAD.innerHTML = "";
+      lgRevealAt = Date.now() + at(650);
+      enterDraw(o);
+      [].forEach.call($("app").querySelectorAll("img[loading=lazy]"), function(im, i){ if (i < 12) im.loading = "eager"; });
+      /* 4) 홈 끝 모습 재기 */
+      var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), tZ = tmI ? tmI.getBoundingClientRect() : null, dH = h0 - h1;
+      var oo = { duration: 700, easing: CIO, delay: at(100), fill: "backwards" };
+      var go = function(el, kf, x){ if (el && el.animate) return el.animate(kf, x || oo); };
+      /* 배너: 보이는 그림은 처음 높이에서 시작 — 영상 · 그늘을 처음 높이로 그려 두고, 아래 끝은 바탕색 판이 올라와 덮음 */
+      var hv = HV.parentNode, sh = hv.querySelector(".hv-shade");
+      H.style.overflow = "visible"; hv.style.bottom = "auto"; hv.style.height = h0 + "px";
+      var d0 = vDrawn(W, h0, op0), d1 = vDrawn(W, h1, op1);
       HV.style.cssText = "position:absolute;inset:auto;left:" + d1.x + "px;top:" + d1.y + "px;width:" + d1.w + "px;height:" + d1.h + "px;object-fit:fill;transform-origin:0 0;will-change:transform";
-      anim(HV, [{ transform: "translate(" + (d0.x - d1.x) + "px," + (d0.y - d1.y) + "px) scale(" + (d0.s / d1.s) + ")" }, { transform: "none" }], {});
-      /* 위아래 그늘: 높이 그대로 두고 scaleY(홈 높이 → 로그인 높이) */
-      var sh = HV.parentNode.querySelector(".hv-shade");
-      if (sh && dH){ sh.style.cssText = "top:-3px;bottom:auto;height:" + (h1 + 6) + "px;transform-origin:0 0;will-change:transform"; anim(sh, [{ transform: "scaleY(" + ((h0 + 6) / (h1 + 6)) + ")" }, { transform: "none" }], {}); }
-      /* 로고: 국문 · 영문 따로(왼쪽 위 기준) — 메뉴 화면(영문 숨김)에서 오면 영문은 나타나기만 */
-      if (a.width && z.width) anim(kr, [{ transform: "translate(" + (a.left - z.left) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], {});
-      if (aE.width && zE.width && enOp > .5) anim(en, [{ transform: "translate(" + (aE.left - zE.left) + "px," + (aE.top - zE.top) + "px) scale(" + (aE.width / zE.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], {});
-      else anim(en, [{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 300, fill: "backwards" });
-      /* 라이트/다크 버튼: 배너 오른쪽 위 30 → 로그인 자리 34 */
-      if (tA && tZ && tA.width && tZ.width) anim(tmI, [{ transform: "translate(" + (tA.left - tZ.left) + "px," + (tA.top - tZ.top) + "px) scale(" + (tA.width / tZ.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], {});
-      kr.style.willChange = en.style.willChange = "transform";
-      setTimeout(function(){ HV.style.cssText = ""; H.style.transition = ""; if (sh) sh.style.cssText = ""; kr.style.willChange = en.style.willChange = ""; }, D + 20);
-      setTimeout(function(){ B.classList.remove("lgo-in", "lgo-m"); lgoBusy = false; }, 1250);
-    }, 200);
+      go(HV, [{ transform: "translate(" + (d0.x - d1.x) + "px," + (d0.y - d1.y) + "px) scale(" + (d0.s / d1.s) + ")" }, { transform: "none" }]);
+      if (sh){ sh.style.cssText = "top:-3px;bottom:auto;height:" + (h0 + 6) + "px;transform-origin:0 0;will-change:transform"; go(sh, [{ transform: "none" }, { transform: "scaleY(" + ((h1 + 6) / (h0 + 6)) + ")" }], { duration: 700, easing: CIO, delay: at(100), fill: "both" }); }
+      var cov = document.createElement("i"); cov.className = "lgt-cover"; cov.style.cssText = "top:" + h0 + "px;height:" + (dH + 4) + "px";
+      H.appendChild(cov); go(cov, [{ transform: "none" }, { transform: "translateY(" + (-dH) + "px)" }], { duration: 700, easing: CIO, delay: at(100), fill: "both" });
+      if (a.width && z.width) go(kr, flipKF(a, z));
+      if (aE.width && zE.width) go(en, flipKF(aE, zE));
+      if (tA && tZ && tA.width && tZ.width) go(tmI, flipKF(tA, tZ));
+      smooth([kr, en, tmI], true);
+      /* ☰ · 왼쪽 위 영문 500~900 */
+      [$("mmBtn"), H.querySelector(".h-sdpm")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: COUT, delay: at(500), fill: "backwards" }); });
+      /* 메뉴 줄 · ⏸ 550~950: 배너 아래 끝(덮는 판)을 따라 붙어 오며 나타남 — 겹치지 않게 같은 곡선으로 계산한 자리 */
+      var ts = performance.now() - t0, span = Math.max(1, 950 - ts), kf = [];
+      for (var i = 0; i <= 24; i++){
+        var t = ts + span * i / 24, off = dH * (1 - EIO((t - 100) / 700)), p = EOUT(Math.min(1, Math.max(0, (t - 550) / 400)));
+        kf.push({ offset: i / 24, opacity: p, transform: "translateY(" + (off + 10 * (1 - p)).toFixed(2) + "px)" });
+      }
+      [document.querySelector(".bar"), H.querySelector(".h-pp")].forEach(function(el){ go(el, kf, { duration: span, easing: "linear", fill: "backwards" }); });
+      go(document.querySelector(".fab"), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(550), fill: "backwards" });   /* 맨 위로 버튼도 메뉴 줄과 같이 */
+      setTimeout(function(){
+        H.style.overflow = ""; H.style.transition = ""; hv.style.bottom = ""; hv.style.height = ""; HV.style.cssText = "";
+        if (sh){ sh.style.cssText = ""; if (sh.getAnimations) sh.getAnimations().forEach(function(x){ x.cancel(); }); }
+        if (cov.parentNode) cov.parentNode.removeChild(cov);
+        smooth([kr, en, tmI], false);
+      }, at(800) + 20);
+    }, enterFail);
   }
 
   /* #63 휴대폰: 이름 칸 → [☰ 메뉴] 안으로. 바 바로 아래로 판이 내려오고, 판 밖은 검정 45% 덮개.
@@ -1564,6 +1682,7 @@
   function loginTrans(){
     var B = document.body, btn = $("ubtn");
     if (location.href.split("#")[0] !== menuUrl("all")) history.replaceState(null, "", menuUrl("all"));   /* #159 */
+    if (mobT()) return loginTransM();   /* #190 휴대폰 */
     if (REDUCE){ return enter().then(function(){ var a = $("app"); a.classList.add("lg-fade"); setTimeout(function(){ a.classList.remove("lg-fade"); }, 260); }); }
     btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
     B.classList.add("lgt-out");
@@ -1630,8 +1749,9 @@
   }
 
   /* ---------- 목록 열기 · 화면 그리기 ---------- */
-  function enter(){
-    return Promise.all([SC.box.open(WRAP[0], SES.k), WRAP[1] ? SC.box.open(WRAP[1], SES.k) : null]).then(function(o){
+  function enterOpen(){ return Promise.all([SC.box.open(WRAP[0], SES.k), WRAP[1] ? SC.box.open(WRAP[1], SES.k) : null]); }
+  function enter(){ return enterOpen().then(enterDraw, enterFail); }
+  function enterDraw(o){
       DATA = o[0] || DATA; RES = (o[1] && o[1].months) ? o[1] : { months:[] };
       booted = true;
       document.body.classList.remove("login-mode");
@@ -1639,11 +1759,11 @@
       try { drawNotice((DATA.site || {}).notice); route(); window.scrollTo(0, 0); }
       catch (er){ try { console.error(er); document.body.classList.remove("lgt-out", "lgt-shrink", "lgt-in"); lgRevealAt = 0; failed(); } catch (e2){} }
       try { paintWho(); loadStats(); seen(); } catch (er){}
-    }, function(){
+  }
+  function enterFail(){
       /* 열쇠가 바뀌었거나 표가 맞지 않으면(목록을 못 열면) 다시 로그인 */
       document.body.classList.remove("lgt-out", "lgt-shrink", "lgt-in"); lgRevealAt = 0;
       sesSet(null); SES = null; showLogin("");
-    });
   }
   /* 링크 복사처럼 화면을 바꾸지 않는 동작 중에 로그인이 끝났으면: 토스트 후 로그인 화면 */
   document.addEventListener("click", function(e){
