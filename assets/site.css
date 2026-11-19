@@ -1967,3 +1967,22 @@ body.mob2 nav.menu > a{height:50px; max-height:50px}
   body.lgt-shrink .hero.h-home .h-en{height:6.6px}
 }
 .hero .lgt-cover{position:absolute; left:0; right:0; z-index:4; display:block; background:var(--bg); pointer-events:none; will-change:transform}
+
+/* 11-19 카카오톡 안에서 열었을 때 로그인 화면 안내(기본 브라우저로 열기) */
+.lg-kakao{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:14px 0 0; padding:12px 14px; border-radius:12px; background:#FFF6D6; color:#5A4500; font-size:13.5px; line-height:1.5}
+.lg-kakao a{font-weight:700 !important; color:#3A2A00; text-decoration:underline; text-underline-offset:3px; white-space:nowrap}
+[data-theme="dark"] .lg-kakao{background:rgba(254,229,0,.12); color:#FFE88A}
+[data-theme="dark"] .lg-kakao a{color:#FEE500}
+
+/* 11-19 #189 휴대폰 로그아웃 → 로그인(#188 거꾸로): 라이트/다크 버튼은 사라지지 않고 로그인 자리로(FLIP), ☰만 위로 6px */
+body.lgo-out.lgo-m .hero .ubar{animation:none}
+body.lgo-out.lgo-m .hero .ubar .mm-btn, body.lgo-out.lgo-m .hero .h-sdpm{animation:lgo-up6 300ms cubic-bezier(.2,.8,.2,1) both}
+body.lgo-out.lgo-m .bar, body.lgo-out.lgo-m .hero .h-pp, body.lgo-out.lgo-m .fab{animation:lgo-down8 300ms cubic-bezier(.2,.8,.2,1) both}
+body.lgo-out.lgo-m #app, body.lgo-out.lgo-m .foot{animation:lgo-wipe 350ms cubic-bezier(.2,.8,.2,1) both}
+body.lgo-in.lgo-m .hero .h-lgtop{animation:none}
+body.lgo-in.lgo-m .hero .h-kick{animation:lg-fade 480ms cubic-bezier(.2,.8,.2,1) 500ms both}
+body.lgo-in.lgo-m .lg2-mid, body.lgo-in.lgo-m .lg2-help{animation:lgo-card60 600ms cubic-bezier(.2,.8,.2,1) 600ms both}
+@keyframes lgo-up6{to{opacity:0; transform:translateY(-6px)}}
+@keyframes lgo-down8{to{opacity:0; transform:translateY(8px)}}
+@keyframes lgo-card60{from{opacity:0; transform:translateY(60px)}to{opacity:1; transform:none}}
+body.lgo-out .fab{animation:lgo-downout 300ms cubic-bezier(.2,.8,.2,1) both; pointer-events:none}   /* #189 맨 위로 버튼도 메뉴 줄과 같이 사라짐 */

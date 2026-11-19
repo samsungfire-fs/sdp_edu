@@ -1,6 +1,11 @@
 /* 교육 자료실 관리자 — data/videos.json 을 편집해 GitHub에 바로 저장합니다. */
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
+  /* 11-19: common.js가 예전 것으로 남아 있어도(사이트 업데이트에서 빠졌거나 브라우저에 남은 경우) 멈추지 않게 — 없으면 여기서 채움 */
+  if (!SC.upPic) SC.upPic = function(p){ p = String(p || ""); return /^assets\/research\/u-/.test(p) ? p : ""; };
+  if (!SC.ageKey) SC.ageKey = function(a){ var b = (SC.ageBand ? SC.ageBand(a) : "") || String((a && a.title) || ""), m = /(\d{1,3})/.exec(b); return m ? +m[1] + (/이상|초과/.test(b) ? 0.5 : 0) : 1e6; };
+  if (!SC.sortAges) SC.sortAges = function(l){ return (l || []).map(function(a, i){ return [a, i, SC.ageKey(a)]; }).sort(function(x, y){ return x[2] - y[2] || x[1] - y[1]; }).map(function(x){ return x[0]; }); };
+
   var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* 11-16 사용자: 표 머리 글자를 누르면 그 칸으로 정렬, 한 번 더 누르면 오름차순 ↔ 내림차순(회원 관리 · 분석 · 관리자 표) */
   var TS = (function(){
@@ -2713,7 +2718,7 @@
      - 세일즈온 어드민 아이디·비밀번호는 사번 목록의 비밀 칸(스크립트 속성)에만. 이 화면에는 가린 아이디만 다시 보임 */
   var Gate = (function(){
     var SCRIPT_ID = "1gq8_W7tE25FrOxcws0xbun4pj72lIY3eJywh-XkulrjDFzvSQvLKtbuc";   /* 11-12 사용자가 알려 준 세일즈온 사번 목록 Apps Script (코드 v19부터는 서버가 알려 준 값을 먼저 씀) */
-    var GATE_V = 23; /* 사번 목록 코드(Code.gs) 최신 버전 */
+    var GATE_V = 25; /* 사번 목록 코드(Code.gs) 최신 버전 */
     var CFG = "data/config.json", RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/;
     var url = "", cfg = {}, csha = null, st = null, lastRun = null, syncBusy = false, testBusy = false;
     function call(action, extra){

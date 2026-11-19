@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261119e">
+<link rel="stylesheet" href="assets/site.css?v=20261119h">
 </head>
 <body>
 
@@ -88,7 +88,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261119e"></script>
+<script src="assets/common.js?v=20261119h"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -1010,6 +1010,7 @@
   }
   window.addEventListener("popstate", function(){
     if (MM.onPop()) return;
+    if (lgoBusy){ try { history.pushState(null, "", location.href); } catch (e){} return; }   /* #189 전환 중 뒤로 가기 막기 */
     if (lastView === "list") feedSave();
     restoreNext = lastView === "video";
     route();
@@ -1055,6 +1056,10 @@
      - 강의 · 자료 목록은 저장소에 잠가 둔 data/*.enc.json (관리자가 저장할 때 잠금). 잠긴 목록이 있으면 로그인해야 보임.
      - 로그인하면 세일즈온 사번 목록이 다음 새벽 3시까지 쓸 표 + 목록 열쇠를 줌 → 이 브라우저에 보관(그날은 다시 묻지 않음).
      - 접속(10분에 한 번) · 강의 열기 · [받기]를 사번 목록에 기록. 숫자는 사번 목록이 1분마다 새로 셈(관리자는 뺌). */
+  /* 11-19: common.js가 예전 것으로 남아 있어도(사이트 업데이트에서 빠졌거나 브라우저에 남은 경우) 멈추지 않게 — 없으면 여기서 채움 */
+  if (!SC.upPic) SC.upPic = function(p){ p = String(p || ""); return /^assets\/research\/u-/.test(p) ? p : ""; };
+  if (!SC.ageKey) SC.ageKey = function(a){ var b = (SC.ageBand ? SC.ageBand(a) : "") || String((a && a.title) || ""), m = /(\d{1,3})/.exec(b); return m ? +m[1] + (/이상|초과/.test(b) ? 0.5 : 0) : 1e6; };
+  if (!SC.sortAges) SC.sortAges = function(l){ return (l || []).map(function(a, i){ return [a, i, SC.ageKey(a)]; }).sort(function(x, y){ return x[2] - y[2] || x[1] - y[1]; }).map(function(x){ return x[0]; }); };
   var S_KEY = "sdp-site", GATE = "", LOCKED = false, WRAP = null, SES = null, STATS = null, booted = false;
   function kstNow(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19); }
   function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
@@ -1065,6 +1070,25 @@
   function isAdm(){ return !!(SES && SES.a && SES.e > kstNow()); }
   function live(){ return !!(LOCKED && SES && SES.e > kstNow()); }
   function expired(){ return !!(LOCKED && booted && !live()); }
+  /* 11-19 사용자: 로그인한 기기를 기억 — 로그인 표는 이 기기(localStorage)에 남아 껐다 켜도 이어짐(브라우저에 '지우지 말아 달라'고도 부탁).
+     회원 = 다음 새벽 5시까지, 관리자 · 마스터 = 30일(사이트를 열 때마다 다시 30일 — 사번 목록 코드 v25). 시각이 지나면 열려 있던 화면도 바로 로그인 화면으로 */
+  function keepStore(){ try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function(){}); } catch (e){} }
+  function sesFrom(r){ return { t: r.t, s: r.sabun, n: r.name, a: r.admin ? 1 : 0, m: r.master ? 1 : 0, e: r.exp, k: r.key }; }
+  function renew(){
+    if (!live() || !GATE || !SES.a) return;
+    var k = "sdp-renew", last = +(lsGet(k) || 0); if (Date.now() - last < 3600 * 1000) return; lsSet(k, String(Date.now()));
+    gate({ action: "siteRenew", t: SES.t }).then(function(r){
+      if (r.ok){ SES = sesFrom(r); sesSet(SES); paintWho(); }
+      else if (r.error === "nosession"){ sesSet(null); SES = null; showLogin(""); }
+    }).catch(function(){});
+  }
+  function watchExp(){
+    if (!LOCKED || !booted || document.body.classList.contains("login-mode")) return;
+    if (!live()){ var had = !!SES; sesSet(null); SES = null; showLogin(had ? "expired" : ""); window.scrollTo(0, 0); }
+  }
+  setInterval(watchExp, 30000);
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden){ watchExp(); renew(); } });
+  window.addEventListener("pageshow", function(){ watchExp(); });
   function gate(body, keep){
     return fetch(GATE, { method:"POST", body: JSON.stringify(body), cache:"no-store", redirect:"follow", keepalive: !!keep })
       .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); });
@@ -1327,12 +1351,26 @@
   window.__placeUser = placeUser;
   if (UBQ){ if (UBQ.addEventListener) UBQ.addEventListener("change", placeUser); else if (UBQ.addListener) UBQ.addListener(placeUser); }
   if (NARROW){ if (NARROW.addEventListener) NARROW.addEventListener("change", placeUser); else if (NARROW.addListener) NARROW.addListener(placeUser); }
-  function doLogout(){ MM.close(true); sesSet(null); SES = null; STATS = null; logoutTrans(); }   /* 세션은 누르자마자 지움, 전환은 그 위에서 */
+  /* #189 휴대폰: 열려 있던 ☰ 메뉴 판 · 어두운 막은 0~200 위로 10px 가며 사라짐(진짜 판은 바로 닫고 같은 모양 그림만 남겨서) */
+  function mmGhost(){
+    [".mm-panel:not([hidden])", ".mm-dim:not([hidden])"].forEach(function(q){
+      var el = document.querySelector(q); if (!el || !el.animate) return;
+      var g = el.cloneNode(true); g.removeAttribute("id"); g.setAttribute("aria-hidden", "true"); g.style.animation = "none"; g.style.pointerEvents = "none";
+      Array.prototype.forEach.call(g.querySelectorAll("[id]"), function(x){ x.removeAttribute("id"); });
+      el.parentNode.insertBefore(g, el.nextSibling);
+      var an = g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-10px)" }], { duration: 200, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards" });
+      an.onfinish = function(){ if (g.parentNode) g.parentNode.removeChild(g); };
+    });
+  }
+  function lgoMob(){ return !REDUCE && document.body.classList.contains("mob2") && innerWidth <= 640 && !!$("hero").animate; }
+  var lgoBusy = false;   /* #189 전환 중 뒤로 가기로 홈에 못 돌아가게 */
+  function doLogout(){ if (lgoMob()) mmGhost(); MM.close(true); sesSet(null); SES = null; STATS = null; logoutTrans(); }   /* 세션은 누르자마자 지움, 전환은 그 위에서 */
   /* #170 로그아웃 → 로그인 화면(로그인 → 홈을 거꾸로, cubic-bezier(.2,.8,.2,1)):
      0~120 로그아웃 눌림 · 0~300 내 정보 줄 · SDP 위로 8px / 메뉴 줄 · ⏸ 아래로 10px 사라짐 · 본문 아래에서 위로 걷힘
      300~1,080 배너 → 460 + 영상 50% 58% → 42% + 로고 묶음 로그인 자리로(×1.065 → 1) · 라이트/다크 버튼 위 18px에서
      700~1,180 메뉴 이름 줄 · SDP(로고 아래) · 800~1,400 로그인 카드 · 안내 아래 36px에서. 움직임 줄이기 = 200ms 페이드 */
   function logoutTrans(){
+    if (lgoMob() && !document.body.classList.contains("login-mode")) return logoutTransM();
     var B = document.body, lb = $("logout"), H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr");
     if (REDUCE || !H.animate || B.classList.contains("login-mode")){
       showLogin(""); var ap = $("app"); ap.classList.add("lg-fade"); setTimeout(function(){ ap.classList.remove("lg-fade"); }, 260); return;
@@ -1360,6 +1398,53 @@
       setTimeout(function(){ H.style.height = ""; H.style.transition = ""; }, 800);
       setTimeout(function(){ B.classList.remove("lgo-in"); }, 1200);
     }, 300);
+  }
+
+  /* #189 휴대폰 로그아웃 → 로그인(#188을 거꾸로, cubic-bezier(.2,.8,.2,1), 누른 순간 = 0ms):
+     0~200 ☰ 메뉴 판 · 막 위로 10px 사라짐 · 0~300 ☰ · 왼쪽 위 SDP 위로 6px / 메뉴 줄 · ⏸ 아래로 8px 사라짐 · 0~350 본문 아래 → 위로 걷힘
+     200~1,080 배너 167 → 260 clip-path로 펼침 · 같은 영상 이어서(50% 50% → 42%, transform) · 국문 · 영문 로고 따로 FLIP(로그인 자리를 재서)
+     · 라이트/다크 버튼 30 → 34 로그인 자리로 / 700~1,180 로고 아래 SDP / 800~1,400 아래 시트 60px 아래에서. transform · opacity · clip-path만 */
+  function logoutTransM(){
+    var B = document.body, H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr"), en = brand.querySelector(".h-en"), tmI = $("tmIc");
+    var E = "cubic-bezier(.2,.8,.2,1)", D = 880;
+    lgoBusy = true;
+    B.classList.add("lgo-out", "lgo-m");
+    setTimeout(function(){
+      /* 1) 지금(홈 · 메뉴) 모습 재기 */
+      var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), enOp = +getComputedStyle(en).opacity, h0 = H.offsetHeight, W = H.clientWidth;
+      var op0 = getComputedStyle(HV).objectPosition, tA = tmI ? tmI.getBoundingClientRect() : null;
+      var wasSig = H.classList.contains("h-sig");
+      /* 2) 로그인 화면으로 바꾸고 끝 모습 재기 */
+      heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login";
+      if (wasSig) sigFade(false, 0, 500);
+      B.classList.remove("lgo-out");
+      showLogin(""); window.scrollTo(0, 0);
+      B.classList.add("lgo-in");
+      H.style.transition = "none";   /* 배너 자리 높이는 한 번에 바꾸고(아래 시트는 아직 안 보임) 보이는 펼침은 clip-path로 */
+      var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), tZ = tmI ? tmI.getBoundingClientRect() : null, dH = h1 - h0;
+      var anim = function(el, kf, o){ if (!el || !el.animate) return null; o.easing = o.easing || E; o.duration = o.duration || D; return el.animate(kf, o); };
+      /* 배너: 아래 끝을 clip-path로 167 → 260 */
+      if (dH > 0) anim(H, [{ clipPath: "inset(0 0 " + dH + "px 0)" }, { clipPath: "inset(0 0 0 0)" }], {});
+      /* 영상: 끝(로그인) 모습의 그려진 자리에 통째로 그려 두고, 처음(홈) 모습 자리로 되돌려 놓은 transform → none (같은 video 이어서) */
+      var vw = HV.videoWidth || 1280, vh = HV.videoHeight || 548;
+      var pos = function(op){ var m = String(op).match(/(-?[\d.]+)%\s+(-?[\d.]+)%/); return m ? [+m[1] / 100, +m[2] / 100] : [.5, .5]; };
+      var drawn = function(Hb, op){ var sc = Math.max(W / vw, Hb / vh), p2 = pos(op); return { s: sc, w: vw * sc, h: vh * sc, x: (W - vw * sc) * p2[0], y: (Hb - vh * sc) * p2[1] }; };
+      var d0 = drawn(h0, op0), d1 = drawn(h1, op1);
+      HV.style.cssText = "position:absolute;inset:auto;left:" + d1.x + "px;top:" + d1.y + "px;width:" + d1.w + "px;height:" + d1.h + "px;object-fit:fill;transform-origin:0 0;will-change:transform";
+      anim(HV, [{ transform: "translate(" + (d0.x - d1.x) + "px," + (d0.y - d1.y) + "px) scale(" + (d0.s / d1.s) + ")" }, { transform: "none" }], {});
+      /* 위아래 그늘: 높이 그대로 두고 scaleY(홈 높이 → 로그인 높이) */
+      var sh = HV.parentNode.querySelector(".hv-shade");
+      if (sh && dH){ sh.style.cssText = "top:-3px;bottom:auto;height:" + (h1 + 6) + "px;transform-origin:0 0;will-change:transform"; anim(sh, [{ transform: "scaleY(" + ((h0 + 6) / (h1 + 6)) + ")" }, { transform: "none" }], {}); }
+      /* 로고: 국문 · 영문 따로(왼쪽 위 기준) — 메뉴 화면(영문 숨김)에서 오면 영문은 나타나기만 */
+      if (a.width && z.width) anim(kr, [{ transform: "translate(" + (a.left - z.left) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], {});
+      if (aE.width && zE.width && enOp > .5) anim(en, [{ transform: "translate(" + (aE.left - zE.left) + "px," + (aE.top - zE.top) + "px) scale(" + (aE.width / zE.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], {});
+      else anim(en, [{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 300, fill: "backwards" });
+      /* 라이트/다크 버튼: 배너 오른쪽 위 30 → 로그인 자리 34 */
+      if (tA && tZ && tA.width && tZ.width) anim(tmI, [{ transform: "translate(" + (tA.left - tZ.left) + "px," + (tA.top - tZ.top) + "px) scale(" + (tA.width / tZ.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], {});
+      kr.style.willChange = en.style.willChange = "transform";
+      setTimeout(function(){ HV.style.cssText = ""; H.style.transition = ""; if (sh) sh.style.cssText = ""; kr.style.willChange = en.style.willChange = ""; }, D + 20);
+      setTimeout(function(){ B.classList.remove("lgo-in", "lgo-m"); lgoBusy = false; }, 1250);
+    }, 200);
   }
 
   /* #63 휴대폰: 이름 칸 → [☰ 메뉴] 안으로. 바 바로 아래로 판이 내려오고, 판 밖은 검정 45% 덮개.
@@ -1415,6 +1500,9 @@
     /* #58 최종(11-12 11:08): 브랜드 칸 = '교육 자료실'(Noto Sans KR 900) · 하늘 선 · 메뉴 이름, 폼 맨 위 = 삼성화재금융서비스 로고(라이트 블루 / 다크 흰색),
        아래 안내 2개(※ RC 전용 · 사번 업데이트) */
     var MN = SC.MENUS.filter(function(c){ return c.id !== "all"; }).map(function(c){ return '<span>' + esc(c.label) + '</span>'; }).join('<i aria-hidden="true"></i>');
+    /* 11-19: 카카오톡 안에서 열면 창을 닫을 때 로그인 기억이 지워질 수 있어서 기본 브라우저로 열기 안내 */
+    var KAKAO = SC.inApp && SC.inApp() === "kakao" ? '<p class="lg-kakao"><span>카카오톡 안에서 열면 창을 닫을 때 로그인이 풀릴 수 있어요.</span>' +
+      '<a class="rp" href="kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href) + '">기본 브라우저로 열기 ↗</a></p>' : '';
     var NOTES = '<ul class="lg-notes"><li><span class="mk" aria-hidden="true">※</span><span><span class="t">본 페이지는 삼성화재금융서비스 RC 전용입니다.</span><br><span class="nw">RC가 아닌 사람에게</span> <span class="nw">링크나 내용을 공유하는 것을 금지합니다.</span></span></li>' +
       '<li><span class="mk" aria-hidden="true">※</span><span><span class="t">사번 업데이트는 실시간이 아닙니다.</span><br><span class="nw">사번 부여 후 1~2일 소요될 수 있습니다.</span></span></li></ul>';
     /* #127 로그인 = 위 배너(#hero: 같은 영상 · 흰 로고 · 메뉴 이름 줄, 라이트/다크 두 칸은 배너 오른쪽 위) + 아래 카드(제목 = 글자 '교육 자료실') */
@@ -1427,7 +1515,7 @@
           '<input id="usb" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="username" placeholder="숫자 8자리" aria-describedby="umsg"><span class="lg-cnt" id="usbCnt" aria-hidden="true">0/8</span></div>' +
           '<p class="umsg" id="umsg" role="alert" hidden></p></div>' +
         '<button type="submit" class="ubtn lg-go rp" id="ubtn">로그인' + GO + '</button>' +
-      '</form></main><div class="lg2-help">' + NOTES + '</div></div>';
+      KAKAO + '</form></main><div class="lg2-help">' + NOTES + '</div></div>';
     var inp = $("usb");
     inp.addEventListener("input", function(){
       var v = this.value.replace(/\D/g, "").slice(0, 8); if (v !== this.value) this.value = v;
@@ -1451,8 +1539,8 @@
     function done(){ inp.disabled = false; $("usbBox").classList.remove("dim"); btn.classList.remove("busy"); btn.removeAttribute("aria-busy"); btn.innerHTML = '로그인<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'; btn.disabled = !!waitT; }
     gate({ action:"siteLogin", sabun: v, dev: devId() }).then(function(r){
       if (r.ok){
-        SES = { t: r.t, s: r.sabun, n: r.name, a: r.admin ? 1 : 0, m: r.master ? 1 : 0, e: r.exp, k: r.key };
-        sesSet(SES); lsSet("sdp-seen-" + SES.s, String(Date.now()));   /* 로그인 자체가 접속 기록 */
+        SES = sesFrom(r);
+        sesSet(SES); keepStore(); lsSet("sdp-seen-" + SES.s, String(Date.now()));   /* 로그인 자체가 접속 기록 */
         return loginTrans();
       }
       done();
@@ -1549,11 +1637,12 @@
       DATA = o[0] || DATA; RES = (o[1] && o[1].months) ? o[1] : { months:[] };
       booted = true;
       document.body.classList.remove("login-mode");
-      drawNotice((DATA.site || {}).notice);
-      route(); window.scrollTo(0, 0);
-      paintWho(); loadStats(); seen();
-    }).catch(function(){
-      /* 열쇠가 바뀌었거나 표가 맞지 않으면 다시 로그인 */
+      /* 11-19: 화면 그리기 중 오류는 로그아웃 사유가 아님(전엔 오류가 나면 로그인 화면으로 되돌아갔음) — 로그인은 그대로 두고 화면만 다시 */
+      try { drawNotice((DATA.site || {}).notice); route(); window.scrollTo(0, 0); }
+      catch (er){ try { console.error(er); document.body.classList.remove("lgt-out", "lgt-shrink", "lgt-in"); lgRevealAt = 0; failed(); } catch (e2){} }
+      try { paintWho(); loadStats(); seen(); } catch (er){}
+    }, function(){
+      /* 열쇠가 바뀌었거나 표가 맞지 않으면(목록을 못 열면) 다시 로그인 */
       document.body.classList.remove("lgt-out", "lgt-shrink", "lgt-in"); lgRevealAt = 0;
       sesSet(null); SES = null; showLogin("");
     });
@@ -1680,6 +1769,7 @@
       SES = raw && raw.t && raw.k && raw.e > kstNow() ? raw : null;
       if (!SES){ if (raw) sesSet(null); showLogin(raw && raw.t ? "expired" : ""); return; }
       if (!SC.box.ok){ failed(); return; }
+      keepStore(); setTimeout(renew, 1500);
       return enter();
     }
     /* 아직 잠그기 전(관리자가 사번 목록 v18로 저장하기 전): 예전처럼 누구나 */
