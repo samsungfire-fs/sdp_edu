@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261119i">
+<link rel="stylesheet" href="assets/site.css?v=20261119j">
 </head>
 <body>
 
@@ -88,7 +88,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261119i"></script>
+<script src="assets/common.js?v=20261119j"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -1363,6 +1363,8 @@
     });
   }
   function lgoMob(){ return !REDUCE && document.body.classList.contains("mob2") && innerWidth <= 640 && !!$("hero").animate; }
+  /* #191 로그아웃 새 전환 = PC · 태블릿 · 휴대폰 모두(좁은 강의 · 자료 페이지는 배너가 달라서 예전 방식) */
+  function lgoAll(){ var B = document.body; return !REDUCE && !!$("hero").animate && !(NARROW && NARROW.matches && (B.classList.contains("watch-page") || B.classList.contains("back-page"))); }
   var lgoBusy = false;   /* #189 전환 중 뒤로 가기로 홈에 못 돌아가게 */
   function doLogout(){ if (lgoMob()) mmGhost(); MM.close(true); sesSet(null); SES = null; STATS = null; logoutTrans(); }   /* 세션은 누르자마자 지움, 전환은 그 위에서 */
   /* #170 로그아웃 → 로그인 화면(로그인 → 홈을 거꾸로, cubic-bezier(.2,.8,.2,1)):
@@ -1370,7 +1372,7 @@
      300~1,080 배너 → 460 + 영상 50% 58% → 42% + 로고 묶음 로그인 자리로(×1.065 → 1) · 라이트/다크 버튼 위 18px에서
      700~1,180 메뉴 이름 줄 · SDP(로고 아래) · 800~1,400 로그인 카드 · 안내 아래 36px에서. 움직임 줄이기 = 200ms 페이드 */
   function logoutTrans(){
-    if (lgoMob() && !document.body.classList.contains("login-mode")) return logoutTransM();
+    if (lgoAll() && !document.body.classList.contains("login-mode")) return logoutTransM();
     var B = document.body, lb = $("logout"), H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr");
     if (REDUCE || !H.animate || B.classList.contains("login-mode")){
       showLogin(""); var ap = $("app"); ap.classList.add("lg-fade"); setTimeout(function(){ ap.classList.remove("lg-fade"); }, 260); return;
@@ -1460,6 +1462,9 @@
     var sc = Math.max(W / vw, Hb / vh); return { s: sc, w: vw * sc, h: vh * sc, x: (W - vw * sc) * p2[0], y: (Hb - vh * sc) * p2[1] };
   }
   function flipKF(a, z){ return [{ transform: "translate(" + (a.left - z.left) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }]; }
+  /* 라이트/다크: PC · 태블릿 = 두 칸(tm), 휴대폰 = 아이콘(tmIc) — 보이는 것을 재서 FLIP */
+  function tmRects(){ return ["tm", "tmIc"].map(function(id){ var el = $(id), r = el && el.offsetWidth ? el.getBoundingClientRect() : null; return [el, r]; }); }
+  function tmFlip(before, go){ var els = []; tmRects().forEach(function(z, i){ var a = before[i][1]; if (a && z[1] && a.width && z[1].width){ go(z[0], flipKF(a, z[1])); els.push(z[0]); } }); return els; }
   function smooth(els, on){ els.forEach(function(e){ if (!e) return; e.style.willChange = on ? "transform" : ""; e.style.backfaceVisibility = on ? "hidden" : ""; }); }
 
   /* 로그아웃 → 로그인: 메뉴 판 0~200 · ☰ · 메뉴 줄 · ⏸ 0~250 · 목록 걷힘 0~300 · 배너 · 로고 · 버튼 50~750 · 로고 아래 영문 450~850 · 시트 450~950.
@@ -1470,9 +1475,9 @@
     lgoBusy = true;
     /* 1) 지금(홈 · 메뉴) 모습 재기 — 아무것도 바꾸기 전에 */
     var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), enOp = +getComputedStyle(en).opacity, h0 = H.offsetHeight, W = H.clientWidth;
-    var op0 = getComputedStyle(HV).objectPosition, tA = tmI ? tmI.getBoundingClientRect() : null, wasSig = H.classList.contains("h-sig");
-    /* 2) 사라지는 것들은 같은 그림으로 남겨 두고 마저 사라짐 */
-    var gUp = [ghostCopy($("mmBtn")), ghostCopy(H.querySelector(".h-sdpm"))], gDn = [ghostCopy(document.querySelector(".bar")), ghostCopy(H.querySelector(".h-pp")), ghostCopy(document.querySelector(".fab"))];
+    var op0 = getComputedStyle(HV).objectPosition, tB = tmRects(), wasSig = H.classList.contains("h-sig");
+    /* 2) 사라지는 것들은 같은 그림으로 남겨 두고 마저 사라짐 — 맨 위 정보 줄(이름 · 사번 · 로그아웃 / ☰) · 왼쪽 위 SDP 위로, 메뉴 줄 · ⏸ · 오른쪽 아래 SDP · 맨 위로 버튼 아래로 */
+    var gUp = [ghostCopy($("mmBtn")), ghostCopy(H.querySelector(".h-sdpm")), ghostCopy($("who")), ghostCopy($("whoSep"))], gDn = [ghostCopy(document.querySelector(".bar")), ghostCopy(H.querySelector(".h-pp")), ghostCopy(H.querySelector(".h-sdp")), ghostCopy(document.querySelector(".fab"))];
     gUp.forEach(function(g){ if (g){ g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 250, easing: COUT, fill: "forwards" }); gone(g, 270); } });
     gDn.forEach(function(g){ if (g){ g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(8px)" }], { duration: 250, easing: COUT, fill: "forwards" }); gone(g, 270); } });
     var gA = ghostMove($("app"));
@@ -1482,7 +1487,7 @@
     if (wasSig) sigFade(false, 0, 500);
     H.style.transition = "none";
     showLogin(""); window.scrollTo(0, 0);
-    var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), tZ = tmI ? tmI.getBoundingClientRect() : null, dH = h1 - h0;
+    var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), dH = h1 - h0;
     var o = { duration: 700, easing: CIO, delay: at(50), fill: "backwards" };
     var go = function(el, kf, oo){ if (el && el.animate) el.animate(kf, oo || o); };
     if (dH > 0) go(H, [{ clipPath: "inset(0 0 " + dH + "px 0)" }, { clipPath: "inset(0 0 0 0)" }]);
@@ -1494,11 +1499,12 @@
     if (a.width && z.width) go(kr, flipKF(a, z));
     if (aE.width && zE.width && enOp > .5) go(en, flipKF(aE, zE));
     else go(en, [{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: COUT, delay: at(300), fill: "backwards" });
-    if (tA && tZ && tA.width && tZ.width) go(tmI, flipKF(tA, tZ));
-    smooth([kr, en, tmI], true);
-    go(brand.querySelector(".h-kick"), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(450), fill: "backwards" });
+    var tEls = tmFlip(tB, go);
+    smooth([kr, en].concat(tEls), true);
+    /* 로고 아래 SDP · (PC · 태블릿) 메뉴 이름 줄 450~850 */
+    [brand.querySelector(".h-kick"), H.querySelector(".h-menus")].forEach(function(el){ go(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(450), fill: "backwards" }); });
     [document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(60px)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: COUT, delay: at(450), fill: "backwards" }); });
-    setTimeout(function(){ HV.style.cssText = ""; H.style.transition = ""; if (sh) sh.style.cssText = ""; smooth([kr, en, tmI], false); }, at(750) + 20);
+    setTimeout(function(){ HV.style.cssText = ""; H.style.transition = ""; if (sh) sh.style.cssText = ""; smooth([kr, en].concat(tEls), false); }, at(750) + 20);
     setTimeout(function(){ lgoBusy = false; }, at(950) + 20);
   }
 
@@ -1511,26 +1517,39 @@
     var sheet = [document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")].filter(Boolean);
     var aK = kick && kick.animate ? kick.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: COUT, fill: "forwards" }) : null;
     var aS = sheet.map(function(el){ return el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(36px)" }], { duration: 400, easing: COUT, fill: "forwards" }); });
-    var opened = enterOpen();
-    return Promise.all([opened, new Promise(function(r){ setTimeout(r, 100); })]).then(function(res){
-      var o = res[0];
+    var mnu = H.querySelector(".h-menus"), aMn = mnu && mnu.animate && mnu.offsetWidth ? mnu.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: COUT, fill: "forwards" }) : null;
+    /* #191 ⓓ 데이터 풀기는 누르자마자 · ⓐ 풀리는 대로 홈을 미리 다 그려 두고(전환 중엔 새로 그리지 않음) 움직임은 100ms부터 */
+    return enterOpen().then(function(o){
       /* 1) 지금(로그인) 모습 재기 */
-      var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), h0 = H.offsetHeight, W = H.clientWidth, op0 = getComputedStyle(HV).objectPosition, tA = tmI ? tmI.getBoundingClientRect() : null;
-      /* 2) 사라지는 중인 것: 로고 아래 영문(남은 시간) · 시트(본문 노드째 옮겨서 남은 시간) */
-      var gK = ghostCopy(kick); if (aK) aK.cancel();
-      if (gK){ gK.animate([{ opacity: +gK.style.opacity || 1 }, { opacity: 0 }], { duration: Math.max(1, at(300)), easing: COUT, fill: "forwards" }); gone(gK, at(300) + 20); }
+      var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), h0 = H.offsetHeight, W = H.clientWidth, op0 = getComputedStyle(HV).objectPosition, tB = tmRects();
+      /* 2) 사라지는 중인 것: 로고 아래 영문 · 메뉴 이름 줄(남은 시간) · 카드/시트(본문 노드째 옮겨서 남은 시간) */
+      [[kick, aK], [mnu, aMn]].forEach(function(x){
+        var g = ghostCopy(x[0]); if (x[1]) x[1].cancel();
+        if (g){ g.animate([{ opacity: +g.style.opacity || 1 }, { opacity: 0 }], { duration: Math.max(1, at(300)), easing: COUT, fill: "forwards" }); gone(g, at(300) + 20); }
+      });
       var cur = sheet.map(function(el){ var c = getComputedStyle(el); return [c.opacity, c.transform]; });
       var gA = ghostMove($("app"));
       sheet.forEach(function(el, i){ aS[i].cancel(); el.animate([{ opacity: cur[i][0], transform: cur[i][1] === "none" ? "none" : cur[i][1] }, { opacity: 0, transform: "translateY(36px)" }], { duration: Math.max(1, at(400)), easing: COUT, fill: "forwards" }); });
       gone(gA, at(400) + 20);
+      [kick, mnu].forEach(function(el){ if (el) el.style.visibility = "hidden"; });
+      /* #191 ⓕ 긴 작업(50ms 넘는 것)을 만들지 않게: 고스트로 바꾼 화면을 한 번 그린 뒤 다음 작업에서 홈을 그림 */
+      return new Promise(function(r){ requestAnimationFrame(function(){ setTimeout(r, 0); }); }).then(function(){
       /* 3) 홈을 한 번에 그림(목록은 라인 리빌까지 접어 둠) */
       H.style.transition = "none";
       heroApply("all"); heroKey = "all"; HHEAD.innerHTML = "";
       lgRevealAt = Date.now() + at(650);
       enterDraw(o);
-      [].forEach.call($("app").querySelectorAll("img[loading=lazy]"), function(im, i){ if (i < 12) im.loading = "eager"; });
+      /* 썸네일: 화면에 들어올 것은 바로 받고, 다 풀린(decode) 것만 보이게 — 하나씩 '툭' 뜨지 않게 */
+      [].forEach.call($("app").querySelectorAll("img"), function(im, i){
+        if (i >= 16) return;
+        if (im.loading === "lazy") im.loading = "eager";
+        if (im.complete && im.naturalWidth) return;
+        im.style.opacity = "0";
+        var show = function(){ im.style.transition = "opacity .2s"; im.style.opacity = ""; setTimeout(function(){ im.style.transition = ""; }, 260); };
+        (im.decode ? im.decode() : Promise.reject()).then(show, function(){ im.addEventListener("load", show, { once: true }); im.addEventListener("error", show, { once: true }); });
+      });
       /* 4) 홈 끝 모습 재기 */
-      var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), tZ = tmI ? tmI.getBoundingClientRect() : null, dH = h0 - h1;
+      var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), dH = h0 - h1;
       var oo = { duration: 700, easing: CIO, delay: at(100), fill: "backwards" };
       var go = function(el, kf, x){ if (el && el.animate) return el.animate(kf, x || oo); };
       /* 배너: 보이는 그림은 처음 높이에서 시작 — 영상 · 그늘을 처음 높이로 그려 두고, 아래 끝은 바탕색 판이 올라와 덮음 */
@@ -1544,24 +1563,26 @@
       H.appendChild(cov); go(cov, [{ transform: "none" }, { transform: "translateY(" + (-dH) + "px)" }], { duration: 700, easing: CIO, delay: at(100), fill: "both" });
       if (a.width && z.width) go(kr, flipKF(a, z));
       if (aE.width && zE.width) go(en, flipKF(aE, zE));
-      if (tA && tZ && tA.width && tZ.width) go(tmI, flipKF(tA, tZ));
-      smooth([kr, en, tmI], true);
-      /* ☰ · 왼쪽 위 영문 500~900 */
-      [$("mmBtn"), H.querySelector(".h-sdpm")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: COUT, delay: at(500), fill: "backwards" }); });
+      var tEls = tmFlip(tB, go);
+      smooth([kr, en].concat(tEls), true);
+      /* 맨 위 정보 줄(이름 · 사번 · 로그아웃 / 휴대폰 ☰) · 왼쪽 위 영문 500~900 */
+      [$("mmBtn"), H.querySelector(".h-sdpm"), $("who"), $("whoSep")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: COUT, delay: at(500), fill: "backwards" }); });
       /* 메뉴 줄 · ⏸ 550~950: 배너 아래 끝(덮는 판)을 따라 붙어 오며 나타남 — 겹치지 않게 같은 곡선으로 계산한 자리 */
       var ts = performance.now() - t0, span = Math.max(1, 950 - ts), kf = [];
       for (var i = 0; i <= 24; i++){
         var t = ts + span * i / 24, off = dH * (1 - EIO((t - 100) / 700)), p = EOUT(Math.min(1, Math.max(0, (t - 550) / 400)));
         kf.push({ offset: i / 24, opacity: p, transform: "translateY(" + (off + 10 * (1 - p)).toFixed(2) + "px)" });
       }
-      [document.querySelector(".bar"), H.querySelector(".h-pp")].forEach(function(el){ go(el, kf, { duration: span, easing: "linear", fill: "backwards" }); });
+      [document.querySelector(".bar"), H.querySelector(".h-pp"), H.querySelector(".h-sdp")].forEach(function(el){ go(el, kf, { duration: span, easing: "linear", fill: "backwards" }); });
       go(document.querySelector(".fab"), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(550), fill: "backwards" });   /* 맨 위로 버튼도 메뉴 줄과 같이 */
       setTimeout(function(){
         H.style.overflow = ""; H.style.transition = ""; hv.style.bottom = ""; hv.style.height = ""; HV.style.cssText = "";
         if (sh){ sh.style.cssText = ""; if (sh.getAnimations) sh.getAnimations().forEach(function(x){ x.cancel(); }); }
         if (cov.parentNode) cov.parentNode.removeChild(cov);
-        smooth([kr, en, tmI], false);
+        smooth([kr, en].concat(tEls), false);
       }, at(800) + 20);
+      [kick, mnu].forEach(function(el){ if (el) el.style.visibility = ""; });
+      });
     }, enterFail);
   }
 
@@ -1684,7 +1705,7 @@
   function loginTrans(){
     var B = document.body, btn = $("ubtn");
     if (location.href.split("#")[0] !== menuUrl("all")) history.replaceState(null, "", menuUrl("all"));   /* #159 */
-    if (mobT()) return loginTransM();   /* #190 휴대폰 */
+    if (!REDUCE && document.body.animate) return loginTransM();   /* #190 휴대폰 → #191 PC · 태블릿도 같은 방식 */
     if (REDUCE){ return enter().then(function(){ var a = $("app"); a.classList.add("lg-fade"); setTimeout(function(){ a.classList.remove("lg-fade"); }, 260); }); }
     btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
     B.classList.add("lgt-out");
