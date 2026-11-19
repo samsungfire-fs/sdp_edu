@@ -1319,7 +1319,7 @@ body .lec-act .ab, body .lec-act .ab *{font-weight:400 !important}
   body.mob2 .bar .wrap{height:50px; padding-right:0}
   /* #98 버그: 오른쪽 여백을 0으로 둔 위에 -16px을 더 빼서 문서가 화면보다 16px 넓어졌음 → 뺌 */
   body.mob2 .menu{padding-right:40px}                                /* 마지막 메뉴 뒤 40px */
-  body.mob2 .menu-box.more::after{opacity:1}                         /* 오른쪽 끝 56px 흐림 = 더 있음 */
+  body.mob2 .menu-box.mn-more::after{opacity:1}                         /* 오른쪽 끝 56px 흐림 = 더 있음 */
 }
 
 /* ===== #91 휴대폰 · 태블릿: 위로 당겨 새로고침 ===== */
@@ -1928,9 +1928,13 @@ body.lgo-in .lg2-mid, body.lgo-in .lg2-help{animation:lgo-card 600ms cubic-bezie
 /* 11-18 사용자(아이폰): 메뉴 줄을 오른쪽 끝까지 당기면 글자 · 밑줄이 위로 올라감 — 11-17 overflow-y:hidden만으로는 안 막힘.
    아이폰은 가로 스크롤 칸 높이가 소수점으로 1px라도 넘치면 세로로도 튕김 → ① 터치 화면에서 메뉴 칸은 가로로만 움직이게(touch-action:pan-x)
    ② 칸 · 메뉴 글자 높이를 정수로 못 박고 안쪽이 칸보다 커지지 않게 ③ (index.html) 혹시 세로로 밀려도 바로 0으로 */
+/* 11-19: 진짜 원인은 아래 '더보기' 이름 겹침이었음 → 11-18에 넣은 '가로로만 움직이게(pan-x)'는 메뉴 줄 위에서 위아래로 쓸어도 페이지가 안 움직여 불편해서 되돌림 */
 @media (hover:none), (pointer:coarse){
-  nav.menu{touch-action:pan-x; overscroll-behavior:contain; overscroll-behavior-y:none}
+  nav.menu{overscroll-behavior-x:contain}
 }
+/* 11-19 메뉴 줄 상자에 붙던 이름 'more'가 강의 소개 [더보기] 버튼 규칙(.more{margin-top:12px; height:44px; padding:0 2px; display:inline-flex})까지 받아
+   메뉴 줄이 5px 아래 · 폭 4px 좁게 그려지다가, 끝까지 밀면 그 이름이 빠지면서 원래 자리로 올라갔음 → 이름을 mn-more로 바꿈(혹시 몰라 아래로도 막음) */
+.menu-box.more{margin-top:0; height:100%; padding:0; display:flex}
 body.mob2 nav.menu{height:50px; max-height:50px}
 body.mob2 nav.menu > a{height:50px; max-height:50px}
 

@@ -23,7 +23,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261119b">
+<link rel="stylesheet" href="assets/site.css?v=20261119d">
 </head>
 <body>
 
@@ -86,7 +86,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261119b"></script>
+<script src="assets/common.js?v=20261119d"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -218,7 +218,7 @@
     ul.style.transform = "translateX(" + x + "px)"; ul.style.width = w + "px";
   }
   /* #92 오른쪽 끝 흐림 = 옆에 메뉴가 더 있음(끝까지 밀면 사라짐) */
-  function menuFade(){ var mn = $("menu"); if (mn.scrollTop) mn.scrollTop = 0;   /* 아이폰: 가로 끝에서 튕길 때 세로로 밀린 것 되돌림 */ $("menuBox").classList.toggle("cut", mn.scrollLeft > 2); $("menuBox").classList.toggle("more", mn.scrollWidth - mn.clientWidth - mn.scrollLeft > 4); }
+  function menuFade(){ var mn = $("menu"); if (mn.scrollTop) mn.scrollTop = 0;   /* 아이폰: 가로 끝에서 튕길 때 세로로 밀린 것 되돌림 */ $("menuBox").classList.toggle("cut", mn.scrollLeft > 2); $("menuBox").classList.toggle("mn-more", mn.scrollWidth - mn.clientWidth - mn.scrollLeft > 4); }   /* 11-19: 'more'는 강의 소개 [더보기] 버튼 이름과 겹쳐 메뉴 줄이 5px 내려가 있었음(끝까지 밀면 그 이름이 빠져 올라감) → 이름 바꿈 */
   function drawMenu(cur){
     var mn = $("menu"), old = mn.querySelector(".menu-ul"), from = old && old.dataset.x != null && !old.hidden ? { x: +old.dataset.x, w: +old.dataset.w } : null;
     mn.innerHTML = SC.MENUS.map(function(c){
@@ -324,7 +324,9 @@
   var RDEF = "assets/research-default.png";
   /* #116 이미지가 없으면 제목 · 책임위원으로 그린 자동 썸네일(at) */
   function rThumb(src, cls, eager, at){
-    /* #162 상품연구 썸네일 = 모두 자동 썸네일(v4)로 통일(예전에 올린 그림도 쓰지 않음) */
+    /* #162 상품연구 썸네일 = 자동 썸네일(v4) · #187 직접 올린 그림이 있으면 그 그림(예전 그림은 쓰지 않음) */
+    var up = SC.upPic(src);
+    if (up) return '<div class="thumb r-th up' + (cls ? " " + cls : "") + '"><img src="' + esc(ROOT + up) + '" alt=""' + (eager ? "" : ' loading="lazy"') + '></div>';
     if (at) return '<div class="thumb r-th auto' + (cls ? " " + cls : "") + '">' + SC.autoThumb(at) + '</div>';
     return '<div class="thumb r-th' + (cls ? " " + cls : "") + (src ? "" : " dflt") + '">' +
       '<img src="' + esc(src || RDEF) + '" alt=""' + (src ? "" : ' data-default="true"') + (eager ? "" : ' loading="lazy"') + '></div>';
