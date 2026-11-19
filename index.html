@@ -23,7 +23,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261118i">
+<link rel="stylesheet" href="assets/site.css?v=20261119a">
 </head>
 <body>
 
@@ -42,11 +42,12 @@
   <a class="h-brand" href="./" data-go aria-label="홈으로">
     <img class="h-kr" src="assets/hero-kr-w.png?v=1" alt="삼성화재금융서비스" width="1332" height="167">
     <img class="h-en" src="assets/hero-en-w.png?v=1" alt="" width="2012" height="81">
-    <span class="h-kick">SALES DEVELOPMENT PART</span>
+    <span class="h-kick">SALES DEVELOPMENT DEPARTMENT</span>
     <span class="h-menus" id="heroMenus" aria-hidden="true"></span>
   </a>
   <div class="h-head" id="heroHead"></div>
-  <svg class="h-sdp" id="heroSdp" aria-hidden="true" focusable="false"><text x="100%" y="100%" text-anchor="end">SALES DEVELOPMENT PART</text></svg>
+  <svg class="h-sdp" id="heroSdp" aria-hidden="true" focusable="false"><text x="100%" y="100%" text-anchor="end">SALES DEVELOPMENT DEPARTMENT</text></svg>
+  <svg class="h-sdpm" id="heroSdpM" aria-hidden="true" focusable="false"><text x="0" y="100%">SALES DEVELOPMENT DEPARTMENT</text></svg>
   <div class="ubar" id="ubar" hidden><div class="wrap ubar-in" id="ubarIn"></div></div>
   <div class="h-lgtop" id="heroLgTop"></div>
   <button type="button" class="h-pp" id="heroPP" aria-label="배너 움직임 멈추기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
@@ -85,7 +86,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261118i"></script>
+<script src="assets/common.js?v=20261119a"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -217,7 +218,7 @@
     ul.style.transform = "translateX(" + x + "px)"; ul.style.width = w + "px";
   }
   /* #92 오른쪽 끝 흐림 = 옆에 메뉴가 더 있음(끝까지 밀면 사라짐) */
-  function menuFade(){ var mn = $("menu"); $("menuBox").classList.toggle("cut", mn.scrollLeft > 2); $("menuBox").classList.toggle("more", mn.scrollWidth - mn.clientWidth - mn.scrollLeft > 4); }
+  function menuFade(){ var mn = $("menu"); if (mn.scrollTop) mn.scrollTop = 0;   /* 아이폰: 가로 끝에서 튕길 때 세로로 밀린 것 되돌림 */ $("menuBox").classList.toggle("cut", mn.scrollLeft > 2); $("menuBox").classList.toggle("more", mn.scrollWidth - mn.clientWidth - mn.scrollLeft > 4); }
   function drawMenu(cur){
     var mn = $("menu"), old = mn.querySelector(".menu-ul"), from = old && old.dataset.x != null && !old.hidden ? { x: +old.dataset.x, w: +old.dataset.w } : null;
     mn.innerHTML = SC.MENUS.map(function(c){
@@ -533,7 +534,7 @@
   var lastListMenu = "";
   /* #128 로그인 직후 홈(1.44초) · #140 · #159 메뉴 이동(홈 ↔ 메뉴 1초 · 메뉴 → 메뉴 0.3초): 그 시각까지 목록을 접어 두었다가 라인 리빌 */
   function holdList(){
-    var at = lgRevealAt || (revealIn ? Date.now() + revealIn : 0), whole = !!lgRevealAt, lb = $("listLr"), ap = $("app");
+    var at = lgRevealAt || glideAt || (revealIn ? Date.now() + revealIn : 0), whole = !!lgRevealAt, lb = $("listLr"), ap = $("app");
     lgRevealAt = 0; revealIn = 0;
     if (!at || !lb || !L) return;
     var dl = Math.max(0, at - Date.now());
@@ -566,6 +567,7 @@
     L.noLr = false;
     $("q").addEventListener("input", function(){ L.q = this.value.trim(); L.page = 1; L.count = 0; drawGrid(); syncUrl(false); });
     $("q").addEventListener("keydown", function(e){ if (e.key === "Enter") this.blur(); });
+    fitQ();
     lastList = menuUrl(L.m, L.page, L.q);
     return lastList;
   }
@@ -953,9 +955,55 @@
     if (expired()){ if (a.href !== location.href) history.pushState(null, "", a.href); showLogin("expired"); window.scrollTo(0, 0); return; }
     if (lastView === "list") feedSave();
     restoreNext = lastView === "video" && !!a.closest("#barBack, .back-all");
+    var y0 = window.scrollY, from = lastView;
     if (a.href !== location.href) history.pushState(null, "", a.href);
-    route(); if (!didRestore) window.scrollTo(0, 0);
+    /* #177 스크롤을 내린 채 다른 메뉴(목록)로 갈 때: 같은 화면에서 맨 위로 700ms 미끄러지며 보던 목록은 0~250 옅어지며 8px 아래로, 새 목록은 600~ 라인 리빌 */
+    var to = parse(), glide = !REDUCE && y0 > 2 && !restoreNext && (from === "list" || from === "research") && !to.v;
+    var oldNodes = glide ? listLeave() : null;
+    if (glide) glideAt = Date.now() + 600;
+    route(); glideAt = 0;
+    if (glide){ listGhost(oldNodes); glideTop(y0); }
+    else if (!didRestore) window.scrollTo(0, 0);
   });
+  /* #180 휴대폰: 검색창이 제목 옆 남은 폭을 씀 — 안내 글이 다 안 들어가면 '제목 찾기'로 줄임 */
+  var fitCv = null;
+  function fitQ(){
+    var q = $("q"); if (!q) return; var box = q.closest(".search"), full = "강의 제목으로 찾기";
+    if (!fitCv) fitCv = document.createElement("canvas"); var cx = fitCv.getContext("2d"), cs = getComputedStyle(q, "::placeholder");
+    cx.font = (cs.fontWeight || 400) + " " + (cs.fontSize || "15px") + " " + (cs.fontFamily || "sans-serif");
+    q.placeholder = q.getBoundingClientRect().width >= cx.measureText(full).width + 2 ? full : "제목 찾기";
+  }
+  window.addEventListener("resize", function(){ fitQ(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ fitQ(); });
+  /* #177 보던 목록 떼어 두기 → 새 목록 위에 겹쳐 0~250 사라짐(아이디는 지워 새 목록과 안 겹치게) */
+  var glideAt = 0;
+  function listLeave(){
+    var ap = $("app"), fr = document.createDocumentFragment(), h = ap.offsetHeight;
+    while (ap.firstChild) fr.appendChild(ap.firstChild);
+    fr.querySelectorAll("[id]").forEach(function(e){ e.removeAttribute("id"); });
+    ap.style.minHeight = h + "px";   /* 새 목록이 짧아도 미끄러지는 동안 스크롤이 뚝 잘리지 않게 */
+    return fr;
+  }
+  function listGhost(fr){
+    var ap = $("app"), g = document.createElement("div");
+    g.className = "list-ghost"; g.setAttribute("aria-hidden", "true"); g.setAttribute("inert", "");
+    var cs = getComputedStyle(ap); g.style.left = cs.paddingLeft; g.style.right = cs.paddingRight; g.style.top = cs.paddingTop;
+    g.appendChild(fr); ap.style.position = "relative"; ap.appendChild(g);
+    setTimeout(function(){ if (g.parentNode) g.parentNode.removeChild(g); }, 280);
+  }
+  /* 맨 위로 700ms 직접 미끄러짐(cubic-bezier(.65,0,.35,1)) — 그 사이 사용자가 휠 · 터치 · 키를 쓰면 바로 멈추고 사용자 스크롤을 따름 */
+  function glideTop(y0){
+    var ap = $("app"), t0 = 0, stop = false, D = 700;
+    function ez(k){   /* cubic-bezier(.65,0,.35,1): x(u) = k 를 반으로 나눠 찾고 y(u) */
+      var a = 0, b = 1, u = k, n;
+      for (n = 0; n < 20; n++){ u = (a + b) / 2; var x = 3 * (1 - u) * (1 - u) * u * .65 + 3 * (1 - u) * u * u * .35 + u * u * u; if (x < k) a = u; else b = u; }
+      return 3 * (1 - u) * u * u + u * u * u; }
+    function end(){ ["wheel", "touchstart", "keydown"].forEach(function(ev){ window.removeEventListener(ev, halt, true); }); setTimeout(function(){ ap.style.minHeight = ""; ap.style.position = ""; }, 300); }
+    function halt(){ stop = true; end(); }
+    ["wheel", "touchstart", "keydown"].forEach(function(ev){ window.addEventListener(ev, halt, { capture: true, passive: true }); });
+    requestAnimationFrame(function f(t){ if (stop) return; if (!t0) t0 = t; var k = Math.min(1, (t - t0) / D);
+      window.scrollTo(0, Math.round(y0 * (1 - ez(k)))); if (k < 1) requestAnimationFrame(f); else end(); });
+  }
   window.addEventListener("popstate", function(){
     if (MM.onPop()) return;
     if (lastView === "list") feedSave();
@@ -1198,7 +1246,10 @@
   /* 배경 영상 겹쳐 바꾸기(시그니처에 들어갈 때 · 나갈 때만) */
   function sigFade(on, delay, dur){
     var box = $("hv2");
-    if (on){ sigVideo().preload = "auto"; vPlay(HV2); }
+    if (on){ var v2 = sigVideo(); v2.preload = "auto";
+      /* 영상이 아직 준비 전이면 배너가 움직이는 동안은 첫 장면 그림(포스터)만 → 움직임이 끝난 뒤 재생(받기 · 풀기가 움직임과 겹치지 않게) */
+      if (v2.readyState >= 3) vPlay(v2);
+      else { v2.load && v2.networkState === 0 && v2.load(); later(function(){ if (HERO.classList.contains("h-sig")) vPlay(v2); }, delay + dur + 50); } }
     else { vPlay(HV); }
     HERO.classList.add("h-sigx");
     var a = anim(box, [{ opacity: on ? 0 : 1 }, { opacity: on ? 1 : 0 }], { duration: dur, delay: delay, easing: EZ, fill: "both" });
@@ -1253,15 +1304,22 @@
     later(function(){ HEN.classList.remove("rv"); heroClear(); }, homeTo ? 1250 : 800);
   }
   heroGo(parse(), "");   /* 처음 열 때(주소로 바로 · 새로 고침) 로고 · 머리 등장 */
-  /* 11-18 사용자: 처음 메뉴를 옮길 때 버벅임 → 시그니처 로고 그림 · 영상을 메뉴를 누르기 전에(첫 화면이 다 뜬 뒤 한가할 때) 미리 받아 둠.
+  /* 11-18 사용자: 처음 메뉴를 옮길 때 버벅임 → 시그니처 로고 그림 · 영상을 메뉴를 누르기 전에 미리 받아 둠.
+     ① 첫 화면이 다 뜨면 바로(한가한 틈, 늦어도 0.8초 안) ② 그 전이라도 메뉴에 마우스를 올리거나 손가락이 닿는 순간
      PC는 영상까지, 휴대폰 · 태블릿은 데이터를 아끼려고 그림 · 영상 앞부분만 */
+  var warmed = false, warmImgs = [];
   function warmSig(){
+    if (warmed) return; warmed = true;
     ["sg-class.png", "sg-crown.png", "sg-script.png", "class-sig-gold.png", "sig-poster.jpg?v=1"].forEach(function(f){
-      var im = new Image(); im.src = "assets/" + f; if (im.decode) im.decode().catch(function(){});
+      var im = new Image(); im.src = "assets/" + f; if (im.decode) im.decode().catch(function(){}); warmImgs.push(im);   /* 붙잡아 둬야 풀어 둔 그림이 버려지지 않음 */
     });
     var v = sigVideo(); if (v.paused && !$("hero").classList.contains("h-sig")) v.preload = innerWidth > 980 ? "auto" : "metadata";
   }
-  window.addEventListener("load", function(){ setTimeout(function(){ (window.requestIdleCallback || function(f){ f(); })(warmSig, { timeout: 4000 }); }, 2500); });
+  function warmSoon(){ (window.requestIdleCallback || function(f){ setTimeout(f, 200); })(warmSig, { timeout: 800 }); }
+  if (document.readyState === "complete") warmSoon(); else window.addEventListener("load", warmSoon);
+  ["pointerover", "touchstart", "focusin"].forEach(function(ev){
+    document.addEventListener(ev, function w(e){ if (!e.target.closest || !e.target.closest("nav.menu, .menu-box, #mmPanel")) return; warmSig(); }, { passive: true, capture: true });
+  });
   window.__placeUser = placeUser;
   if (UBQ){ if (UBQ.addEventListener) UBQ.addEventListener("change", placeUser); else if (UBQ.addListener) UBQ.addListener(placeUser); }
   if (NARROW){ if (NARROW.addEventListener) NARROW.addEventListener("change", placeUser); else if (NARROW.addListener) NARROW.addListener(placeUser); }

@@ -1846,8 +1846,8 @@ body.lgt-shrink .hero .h-kick.lgt-keep{display:block}
 body.lgt-shrink .hero .h-menus.lgt-keep{display:flex; visibility:visible; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px 16px; font-size:16px; line-height:1.4; color:rgba(255,255,255,.9); text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
 @media (max-width:980px){ body.lgt-shrink .hero .h-menus.lgt-keep{font-size:15px} }
 @media (max-width:640px){ body.lgt-shrink .hero .h-menus.lgt-keep{display:none} }
-body.lgt-out .hero .h-sdp{opacity:0}
-body.lgt-in .hero .h-sdp{opacity:1; animation:lg-down 560ms cubic-bezier(.2,.8,.2,1) 140ms both}
+body.lgt-out .hero .h-sdp, body.lgt-out .hero .h-sdpm{opacity:0}
+body.lgt-in .hero .h-sdp, body.lgt-in .hero .h-sdpm{opacity:1; animation:lg-down 560ms cubic-bezier(.2,.8,.2,1) 140ms both}
 
 /* ===== #154 교육자료 목록 v2 (강의 페이지 · 상품연구 자료 받기) ===== */
 .fl-wt{margin:2px 0 14px 4px; display:flex; flex-direction:column; gap:2px; font-size:15px; line-height:1.55; color:var(--ink); word-break:keep-all}
@@ -1896,7 +1896,7 @@ body.lgt-in .hero .h-sdp{opacity:1; animation:lg-down 560ms cubic-bezier(.2,.8,.
 .hh-t.out.fast, .hh-sig.out.fast{animation:hhFo 350ms cubic-bezier(.4,0,.6,1) both}
 /* #170 로그아웃 → 로그인 화면 */
 #logout.lgo-press, .ub.lgo-press{transform:scale(.94); background:rgba(255,255,255,.18); transition:transform 120ms cubic-bezier(.2,.8,.2,1), background 120ms}
-body.lgo-out .hero .ubar, body.lgo-out .hero .h-sdp{animation:lgo-upout 300ms cubic-bezier(.2,.8,.2,1) both}
+body.lgo-out .hero .ubar, body.lgo-out .hero .h-sdp, body.lgo-out .hero .h-sdpm{animation:lgo-upout 300ms cubic-bezier(.2,.8,.2,1) both}
 body.lgo-out .bar, body.lgo-out .hero .h-pp{animation:lgo-downout 300ms cubic-bezier(.2,.8,.2,1) both}
 body.lgo-out #app, body.lgo-out .foot{animation:lgo-wipe 300ms cubic-bezier(.2,.8,.2,1) both}
 body.lgo-in .hero .h-lgtop{animation:lgo-tm 780ms cubic-bezier(.2,.8,.2,1) both}
@@ -1908,3 +1908,50 @@ body.lgo-in .lg2-mid, body.lgo-in .lg2-help{animation:lgo-card 600ms cubic-bezie
 @keyframes lgo-tm{from{opacity:0; transform:translateY(-18px)}to{opacity:1; transform:none}}
 @keyframes lgo-card{from{opacity:0; transform:translateY(36px)}to{opacity:1; transform:none}}
 @media (prefers-reduced-motion:reduce){ body.lgo-out *, body.lgo-in *{animation:none !important} }
+
+/* ===== #171 ~ #174 (11-18) 영문 이름 = SALES DEVELOPMENT DEPARTMENT(#173 · index.html 글자만) ·
+   휴대폰(640px 이하)만: SDP = 홈 배너 왼쪽 위(left 14 · top 19.4, 4.5px), 메뉴 배너에는 없음(#174) · 메뉴 머리 = 배너 위아래 · 좌우 가운데 · 홈 국문 로고 20px.
+   PC · 태블릿은 #160 오른쪽 아래 그대로 ===== */
+.hero .h-sdpm{display:none}
+@media (max-width:640px){
+  .hero .h-sdp{display:none !important}
+  .hero .h-sdpm{display:block; position:absolute; left:14px; top:19.4px; width:240px; height:3.24px; z-index:3; overflow:visible; pointer-events:none; opacity:1;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)) drop-shadow(0 0 10px rgba(0,0,0,.28)); transition:opacity 700ms cubic-bezier(.2,.8,.2,1) 500ms}
+  .hero .h-sdpm text{font-family:"SFN", sans-serif; font-weight:700; font-size:4.5px; letter-spacing:.9px; fill:#FFFFFF}
+  .hero.h-menu .h-sdpm{opacity:0; transition:opacity 400ms cubic-bezier(.2,.8,.2,1)}   /* 홈 → 메뉴: 영문 로고와 같이 0~400 사라짐 / 메뉴 → 홈: 500~1,200 나타남 */
+  body.login-mode:not(.lgt-shrink) .hero .h-sdpm{display:none}
+  body:not(.login-mode) .hero.h-home .h-kr{height:20px} body:not(.login-mode) .hero.h-home .h-en{height:6.6px}
+  .hero .hh-t, .hero .hh-sig{top:0; bottom:0; justify-content:center}
+}
+@media (max-width:640px) and (prefers-reduced-motion:reduce){ .hero .h-sdpm{transition:none} }
+
+/* 11-18 사용자(아이폰): 메뉴 줄을 오른쪽 끝까지 당기면 글자 · 밑줄이 위로 올라감 — 11-17 overflow-y:hidden만으로는 안 막힘.
+   아이폰은 가로 스크롤 칸 높이가 소수점으로 1px라도 넘치면 세로로도 튕김 → ① 터치 화면에서 메뉴 칸은 가로로만 움직이게(touch-action:pan-x)
+   ② 칸 · 메뉴 글자 높이를 정수로 못 박고 안쪽이 칸보다 커지지 않게 ③ (index.html) 혹시 세로로 밀려도 바로 0으로 */
+@media (hover:none), (pointer:coarse){
+  nav.menu{touch-action:pan-x; overscroll-behavior:contain; overscroll-behavior-y:none}
+}
+body.mob2 nav.menu{height:50px; max-height:50px}
+body.mob2 nav.menu > a{height:50px; max-height:50px}
+
+/* ===== #175 · #176 · #178 (11-19) 휴대폰 배너: 메뉴 배너 회사 로고 9px(left 14 · top 16.5, 가운데 높이 21 = ☾ · ☰와 같은 높이) · 홈 로고 묶음 = 배너(167) 위아래 정가운데 ===== */
+@media (max-width:640px){
+  body:not(.login-mode) .hero.h-menu .h-kr{left:14px; top:16.5px; height:9px}
+  body:not(.login-mode) .hero.h-home .h-brand, body.lgt-shrink .hero.h-home .h-brand{top:0; bottom:0; justify-content:center}
+}
+/* ===== #179 · #180 (11-19) 태블릿 · 휴대폰 홈 · 메뉴: '강의 제목으로 찾기' 검색창을 제목과 같은 줄로. PC 그대로 ===== */
+@media (max-width:980px){
+  .list-page .list-head:has(.search){flex-direction:row; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:20px}
+  .list-page .list-head:has(.search) h1{flex:none; white-space:nowrap; min-width:0}
+  .list-page .list-head .search{flex:0 0 360px; width:360px; max-width:none; min-width:0}
+}
+@media (max-width:640px){
+  .list-page .list-head:has(.search){gap:12px}
+  .list-page .list-head:has(.search) h1{font-size:26px}
+  .list-page .list-head .search{flex:1 1 auto; width:auto; height:44px; padding:0 12px 0 16px; gap:6px}
+  .list-page .list-head .search svg{width:20px; height:20px}
+  .list-page .list-head .search input::placeholder{font-size:15px}
+}
+/* #177 메뉴 바꿀 때 보던 목록(스크롤 내린 상태) — 0~250 옅어지며 8px 아래로 */
+.list-ghost{position:absolute; left:0; right:0; top:0; pointer-events:none; animation:lghost 250ms cubic-bezier(.4,0,.6,1) both}
+@keyframes lghost{from{opacity:1; transform:none}to{opacity:0; transform:translateY(8px)}}
