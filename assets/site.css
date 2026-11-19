@@ -1959,3 +1959,11 @@ body.mob2 nav.menu > a{height:50px; max-height:50px}
 /* #177 메뉴 바꿀 때 보던 목록(스크롤 내린 상태) — 0~250 옅어지며 8px 아래로 */
 .list-ghost{position:absolute; left:0; right:0; top:0; pointer-events:none; animation:lghost 250ms cubic-bezier(.4,0,.6,1) both}
 @keyframes lghost{from{opacity:1; transform:none}to{opacity:0; transform:translateY(8px)}}
+
+/* ===== #188 (11-19) 로그인 → 홈: 휴대폰 홈 로고 크기(#171 · #178 20px · 6.6px)를 전환 중(lgt-shrink)에도 같게 — 끝 자리를 재서 FLIP하므로 '툭' 없음.
+   배너 아래 끝을 덮는 바탕색 판(transform으로 올라옴) ===== */
+@media (max-width:640px){
+  body.lgt-shrink .hero.h-home .h-kr{height:20px}
+  body.lgt-shrink .hero.h-home .h-en{height:6.6px}
+}
+.hero .lgt-cover{position:absolute; left:0; right:0; z-index:4; display:block; background:var(--bg); pointer-events:none; will-change:transform}

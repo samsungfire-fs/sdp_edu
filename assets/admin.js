@@ -887,7 +887,9 @@
   function isDupYm(m){ return rdata.months.some(function(o){ return o !== m && o.ym === m.ym; }); }
   function missCount(files){ return files.filter(function(f){ return !SC.download(f.link, f.type).url; }).length; }
   function rImg(path, cls, at){
-    if (at) return SC.autoThumb(at);   /* #162 상품연구 썸네일 = 모두 자동 썸네일(v4) — 예전에 올린 그림도 쓰지 않음 */
+    var up = SC.upPic(path);   /* #187 직접 올린 그림이 있으면 그 그림, 없으면 자동 썸네일(#162 — 예전 그림은 쓰지 않음) */
+    if (up) return '<img src="' + esc(pendingImgs[up] || up) + '" alt=""' + (cls ? '' : ' loading="lazy"') + ' style="width:100%;height:100%;object-fit:cover;display:block">';
+    if (at) return SC.autoThumb(at);
     return '<img src="' + esc(pendingImgs[path] || path || "assets/research-default.png") + '" alt=""' + (path ? '' : ' class="dflt"') + (cls ? '' : ' loading="lazy"') + '>';
   }
   function rAt(o){ for (var i = 0; i < rdata.months.length; i++){ var m = rdata.months[i]; if (m === o) return SC.athMonth(m); if (m.ages.indexOf(o) >= 0) return SC.athAge(m, o); } return null; }
@@ -914,9 +916,18 @@
         '<div class="lac">' + lsw(pub, 'data-act="rvis" ' + at) + edBtn(ed, 'data-act="redit" ' + at) + '</div>' +
       '</div></li>';
   }
-  /* #162 썸네일 칸 = 자동 썸네일 미리보기만(첫째 줄 연월 · 연령대 / 둘째 줄 제목 / 책임위원) */
+  /* #187 썸네일 칸 = 왼쪽 [눌러서 올리기 · 또는 끌어다 놓기](올린 뒤엔 [다른 이미지로 바꾸기] [썸네일 지우기]) + 오른쪽 '지금 보이는 모습'
+     (올린 그림이 있으면 그 그림, 없으면 자동 썸네일 — 첫째 줄 연월 · 연령대 / 둘째 줄 제목 / 책임위원) */
   function thumbField(o, attrs, ai){
-    return '<div class="th-now th-only"><span>지금 보이는 모습</span><div class="th-auto" data-athn' + (ai != null ? ' data-ai="' + ai + '"' : '') + '>' + (rAt(o) ? SC.autoThumb(rAt(o)) : '') + '</div></div>';
+    var up = SC.upPic(o.thumb), src = up ? (pendingImgs[up] || up) : "";
+    var left = up
+      ? '<div class="th-btns th-drop-zone" ' + attrs + '><button type="button" class="btn-soft rp press" data-act="rthPick" ' + attrs + '>' + IC.upload + '다른 이미지로 바꾸기</button>' +
+          '<button type="button" class="btn-line rp press" data-act="rthDel" ' + attrs + '>썸네일 지우기</button></div>'
+      : '<button type="button" class="th-drop th-drop-zone rp" data-act="rthPick" ' + attrs + '>' + IC.upload + '<b>눌러서 올리기</b><span>또는 끌어다 놓기</span></button>';
+    return '<div class="th-row">' + left +
+      '<div class="th-now th-only"><span>지금 보이는 모습</span>' + (up
+        ? '<div class="th-auto th-pic"><img src="' + esc(src) + '" alt="올린 썸네일"></div>'
+        : '<div class="th-auto" data-athn' + (ai != null ? ' data-ai="' + ai + '"' : '') + '>' + (rAt(o) ? SC.autoThumb(rAt(o)) : '') + '</div>') + '</div></div>';
   }
   function prevMonth(m){
     var best = null;
@@ -996,7 +1007,7 @@
   /* #183 바뀐 칸 수(들어올 때 값과 비교): 연령대 · 제목 · 책임위원 · 공개 · 자료 줄마다 */
   function ageChanges(a){
     if (ageSnap == null) return 0; var o = JSON.parse(ageSnap), n = 0;
-    ["band", "title", "by"].forEach(function(k){ if (String(a[k] || "").trim() !== String(o[k] || "").trim()) n++; });
+    ["band", "title", "by", "thumb"].forEach(function(k){ if (String(a[k] || "").trim() !== String(o[k] || "").trim()) n++; });
     if ((a.visible !== false) !== (o.visible !== false)) n++;
     var fa = a.files || [], fo = o.files || [], k = Math.max(fa.length, fo.length);
     for (var i = 0; i < k; i++){ var x = fa[i], y = fo[i]; if (!x || !y || String(x.link || "").trim() !== String(y.link || "").trim()) n++; }
@@ -1057,7 +1068,7 @@
     if (!o) return;
     shrinkImg(file).then(function(du){
       var m = rdata.months.filter(function(x){ return x === o || x.ages.indexOf(o) > -1; })[0];
-      var path = "assets/research/" + (ymCode(m && m.ym) || "r") + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + ".jpg";
+      var path = "assets/research/u-" + (ymCode(m && m.ym) || "r") + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + ".jpg";
       pendingImgs[path] = du; o.thumb = path; markDirty(); render();
       toast("썸네일을 넣었어요. 저장하면 사이트에 반영돼요");
     }).catch(function(){ toast("이미지를 읽지 못했어요. JPG나 PNG 파일로 올려 주세요"); });
@@ -1126,7 +1137,7 @@
     if (act === "raddFile"){ a.files.push({ name:"", type:"", link:"", size:"", _st:"" }); markDirty(); render(); var fl = $("r" + b.dataset.m + "a" + b.dataset.a + "f" + (a.files.length - 1) + "l"); if (fl) fl.focus(); return; }
     if (act === "rfdel"){ a.files.splice(+b.dataset.f, 1); markDirty(); render(); return; }
     if (act === "rthPick"){ thTarget = rObj(b); $("thFile").click(); return; }
-    if (act === "rthDel"){ var o = rObj(b); if (o){ o.thumb = ""; markDirty(); render(); toast("썸네일을 지웠어요. 삼프스 로고가 보여요"); } return; }
+    if (act === "rthDel"){ var o = rObj(b); if (o){ o.thumb = ""; markDirty(); render(); toast("썸네일을 지웠어요. 자동 썸네일이 보여요"); } return; }
     if (act === "rcopy"){
       var pv = prevMonth(m); if (!pv) return;
       if (m._copied){ m.ages = []; m._copied = false; }
@@ -1387,10 +1398,10 @@
       var code = ymCode(m.ym); if (m.visible === false || !code) return;
       var ages = m.ages.filter(function(a){ return a.visible !== false; }), nf = ages.reduce(function(n, a){ return n + a.files.length; }, 0);
       list.push({ path:"research/" + code + "/index.html", mode:"100644", type:"blob", content: ogPage(tpl, { base:"../../",
-        title: m.title + " " + SC.RESEARCH.label, desc: "연령 " + ages.length + "개 · 자료 " + nf + "개", image: img(m.thumb), url: root + "research/" + code + "/", type:"website" }) });
+        title: m.title + " " + SC.RESEARCH.label, desc: "연령 " + ages.length + "개 · 자료 " + nf + "개", image: img(SC.upPic(m.thumb)), url: root + "research/" + code + "/", type:"website" }) });
       ages.forEach(function(a){
         list.push({ path:"research/" + code + "/" + a.id + "/index.html", mode:"100644", type:"blob", content: ogPage(tpl, { base:"../../../",
-          title: m.title + " " + SC.ageName(a) + " " + SC.RESEARCH.label, desc: "교육자료 " + a.files.length + "개", image: img(a.thumb || m.thumb), url: root + "research/" + code + "/" + a.id + "/", type:"website" }) });
+          title: m.title + " " + SC.ageName(a) + " " + SC.RESEARCH.label, desc: "교육자료 " + a.files.length + "개", image: img(SC.upPic(a.thumb) || SC.upPic(m.thumb)), url: root + "research/" + code + "/" + a.id + "/", type:"website" }) });
       });
     });
     return list;
@@ -3549,7 +3560,7 @@
       } else {
         (rdata.months || []).forEach(function(m){
           var code = ymCode(m.ym); if (!code) return;
-          SC.sortAges(m.ages).forEach(function(a, i){ out.push({ key:"r:" + code + "/" + a.id, title: ((m.title || m.ym) + " " + SC.ageName(a)).trim(), gid: m.ym, group: m.title || m.ym, go: -Number(m.ym.replace("-", "")), date: m.ym + "-" + (900 - i), thumb: a.thumb || m.thumb || "assets/research-default.png", rs: true, files: a.files || [], meta: [["자료", (a.files || []).length + "개"]], link: "research/" + code + "/" + a.id + "/" }); });
+          SC.sortAges(m.ages).forEach(function(a, i){ out.push({ key:"r:" + code + "/" + a.id, title: ((m.title || m.ym) + " " + SC.ageName(a)).trim(), gid: m.ym, group: m.title || m.ym, go: -Number(m.ym.replace("-", "")), date: m.ym + "-" + (900 - i), thumb: SC.upPic(a.thumb) || SC.upPic(m.thumb) || "", rs: true, files: a.files || [], meta: [["자료", (a.files || []).length + "개"]], link: "research/" + code + "/" + a.id + "/" }); });
         });
       }
       return out;

@@ -23,7 +23,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261119d">
+<link rel="stylesheet" href="assets/site.css?v=20261119e">
 </head>
 <body>
 
@@ -86,7 +86,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261119d"></script>
+<script src="assets/common.js?v=20261119e"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -1472,6 +1472,7 @@
      960~1520 내 정보 줄 · 1120~1680 메뉴 줄 · 1440 본문 라인 리빌. 동작 줄이기면 전부 없이 홈 0.2초 페이드 */
   var lgRevealAt = 0;
   /* #159 로그인 성공 후 첫 화면은 항상 홈 · #168 메뉴 이름 줄 · SALES DEVELOPMENT PART는 그 자리에서 사라지고(240~560), 홈 메뉴 줄 1,120~ · SDP 960~ 나타남 */
+  var lgtShrinkAt = null;
   function loginTrans(){
     var B = document.body, btn = $("ubtn");
     if (location.href.split("#")[0] !== menuUrl("all")) history.replaceState(null, "", menuUrl("all"));   /* #159 */
@@ -1481,33 +1482,57 @@
     var H = $("hero"), brand = H.querySelector(".h-brand"), kr = brand.querySelector(".h-kr"), en = brand.querySelector(".h-en"), kick = brand.querySelector(".h-kick"), mns = $("heroMenus");
     var E = "cubic-bezier(.2,.8,.2,1)";
     setTimeout(function(){
+      /* #188 전부 transform(+ 한 번의 높이 바꿈)으로 — 매 프레임 높이 · 크기를 바꾸지 않음.
+         ① 국문 · 영문 로고를 따로, 홈 실제 자리 · 크기(재서)까지 FLIP(끝나면 같은 그림 그대로 = 바꿔치기 없음)
+         ② 배너 영상은 같은 video를 이어서 재생: 끝 모습(홈) 그대로 그려 두고 처음 모습으로 되돌려 놓은 transform → none
+         ③ 배너 아래 끝(260 → 167)은 바탕색 판이 아래에서 올라와 덮음(transform) · 위아래 그늘은 scaleY
+         ④ 배너 자리 높이는 로그인 카드가 다 사라진 뒤(820ms, 홈으로 바뀔 때) 한 번에 바꿈 */
       /* 1) 지금(로그인) 모습 재기 */
-      var a = kr.getBoundingClientRect(), h0 = H.offsetHeight, op0 = getComputedStyle(HV).objectPosition;
+      var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), h0 = H.offsetHeight, W = H.clientWidth, op0 = getComputedStyle(HV).objectPosition;
       /* 사라지는 중인 SDP · 메뉴 이름 줄은 영문 로고 아래 같은 거리에 붙여 둠(로고 묶음과 같이 움직이며 마저 사라짐) */
       var enB = en.offsetTop + en.offsetHeight, gk = kick.offsetTop - enB, gm = mns.offsetTop - enB, kv = kick.offsetHeight > 0, mv = mns.offsetHeight > 0;
       var pinL = function(top){ [[kick, gk, kv], [mns, gm, mv]].forEach(function(x){ if (!x[2]) return; x[0].classList.add("lgt-keep"); x[0].style.cssText = "position:absolute;left:0;right:0;margin:0;top:" + (top + x[1]) + "px"; }); };
       pinL(enB);   /* 먼저 흐름에서 빼 둠(사라지는 중인 움직임이 끊기지 않게) */
-      /* 2) 홈의 끝 모습을 움직임 없이 재기 */
+      /* 2) 홈의 끝 모습을 움직임 없이 재기(#178 휴대폰 홈 로고 20px · 위아래 가운데까지 = 실제 홈과 같은 규칙) */
       heroApply("all"); heroKey = "all"; HHEAD.innerHTML = "";
       H.style.transition = "none"; B.classList.add("lgt-shrink");
       var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition;
       var top1 = brand.offsetTop + kr.offsetTop;
       brand.style.top = top1 + "px"; brand.style.bottom = "auto";
-      var z = kr.getBoundingClientRect(), enB1 = en.offsetTop + en.offsetHeight;
+      var z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), enB1 = en.offsetTop + en.offsetHeight;
       pinL(enB1);   /* 끝 모습에서도 영문 로고 아래 같은 거리 */
-      /* 3) 처음 높이로 돌려놓고 끝 높이로 움직임(#132 PC 1440: 460 → 433, 영상 50% 42% → 50% 58%) */
-      H.style.height = h0 + "px"; void H.offsetHeight; H.style.transition = "";
-      H.style.height = h1 + "px";
-      if (HV.animate && op0 !== op1) HV.animate([{ objectPosition:op0 }, { objectPosition:op1 }], { duration:880, easing:E });
-      if (brand.animate && a.width && z.width){
-        brand.animate([{ transform:"translate(" + ((a.left + a.width / 2) - (z.left + z.width / 2)) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin:"50% 0" },
-                       { transform:"none", transformOrigin:"50% 0" }], { duration:880, easing:E });
-      }
+      /* 3) 배너 자리는 잠깐 처음 높이 그대로(아래 로그인 카드가 튀지 않게) */
+      var hv = HV.parentNode, sh = hv.querySelector(".hv-shade"), dH = h0 - h1;
+      H.style.height = h0 + "px"; H.style.overflow = "visible";
+      hv.style.bottom = "auto"; hv.style.height = h0 + "px";
+      var anim2 = function(el, kf, o){ if (!el || !el.animate) return; o.easing = o.easing || E; el.animate(kf, o); };
+      /* ② 영상: 끝(홈) 모습의 그려진 자리에 통째로 그려 두고(fill) → 처음(로그인) 모습 자리로 되돌려 놓은 transform → none */
+      var vw = HV.videoWidth || 1280, vh = HV.videoHeight || 548;
+      var pos = function(op){ var m = String(op).match(/(-?[\d.]+)%\s+(-?[\d.]+)%/); return m ? [+m[1] / 100, +m[2] / 100] : [.5, .5]; };
+      var drawn = function(Hb, op){ var sc = Math.max(W / vw, Hb / vh), p2 = pos(op); return { s: sc, w: vw * sc, h: vh * sc, x: (W - vw * sc) * p2[0], y: (Hb - vh * sc) * p2[1] }; };
+      var d0 = drawn(h0, op0), d1 = drawn(h1, op1), kk = d0.s / d1.s;
+      HV.style.cssText = "position:absolute;inset:auto;left:" + d1.x + "px;top:" + d1.y + "px;width:" + d1.w + "px;height:" + d1.h + "px;object-fit:fill;transform-origin:0 0;will-change:transform";
+      anim2(HV, [{ transform: "translate(" + (d0.x - d1.x) + "px," + (d0.y - d1.y) + "px) scale(" + kk + ")" }, { transform: "none" }], { duration: 880 });
+      /* ③ 위아래 그늘(inset -3px)은 높이 그대로 두고 scaleY, 아래 끝은 바탕색 판이 올라와 덮음 */
+      if (sh){ sh.style.cssText = "top:-3px;bottom:auto;height:" + (h0 + 6) + "px;transform-origin:0 0;will-change:transform"; anim2(sh, [{ transform: "none" }, { transform: "scaleY(" + ((h1 + 6) / (h0 + 6)) + ")" }], { duration: 880, fill: "forwards" }); }
+      var cov = document.createElement("i"); cov.className = "lgt-cover"; cov.style.cssText = "top:" + h0 + "px;height:" + (dH + 4) + "px";
+      H.appendChild(cov); anim2(cov, [{ transform: "none" }, { transform: "translateY(" + (-dH) + "px)" }], { duration: 880, fill: "forwards" });
+      /* ① 로고: 국문 · 영문 따로(왼쪽 위 기준) */
+      if (a.width && z.width) anim2(kr, [{ transform: "translate(" + (a.left - z.left) + "px," + (a.top - z.top) + "px) scale(" + (a.width / z.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], { duration: 880 });
+      if (aE.width && zE.width) anim2(en, [{ transform: "translate(" + (aE.left - zE.left) + "px," + (aE.top - zE.top) + "px) scale(" + (aE.width / zE.width) + ")", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], { duration: 880 });
+      kr.style.willChange = en.style.willChange = "transform";
+      /* ④ 820ms(카드가 다 사라지고 홈으로 바뀌는 때) 배너 자리 높이를 한 번에 끝 높이로 — 보이는 그림은 위 transform이 이어 그림 */
+      lgtShrinkAt = function(){ H.style.height = ""; };
       setTimeout(function(){
-        H.style.height = ""; brand.style.top = ""; brand.style.bottom = ""; kick.style.cssText = ""; mns.style.cssText = ""; kick.classList.remove("lgt-keep"); mns.classList.remove("lgt-keep");
+        H.style.height = ""; H.style.overflow = ""; H.style.transition = ""; hv.style.bottom = ""; hv.style.height = ""; HV.style.cssText = ""; if (sh) sh.style.cssText = "";
+        if (sh && sh.getAnimations) sh.getAnimations().forEach(function(x){ x.cancel(); });
+        if (cov.parentNode) cov.parentNode.removeChild(cov);
+        kr.style.willChange = en.style.willChange = "";
+        brand.style.top = ""; brand.style.bottom = ""; kick.style.cssText = ""; mns.style.cssText = ""; kick.classList.remove("lgt-keep"); mns.classList.remove("lgt-keep");
       }, 900);
     }, 400);
     return new Promise(function(res){ setTimeout(res, 820); }).then(function(){
+      if (lgtShrinkAt){ lgtShrinkAt(); lgtShrinkAt = null; }
       lgRevealAt = Date.now() + 620;
       B.classList.add("lgt-in");
       return enter();

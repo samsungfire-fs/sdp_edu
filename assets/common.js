@@ -163,6 +163,9 @@
   /* #182 연령 = 적은 나이 → 많은 나이(이름 앞 숫자, 같으면 '이상' · '초과'가 뒤, 숫자 없으면 맨 뒤) — 관리자 · 사이트 · 분석 모두 */
   SC.ageKey = function (a) { var b = SC.ageBand(a) || String((a && a.title) || ""), m = /(\d{1,3})/.exec(b); return m ? +m[1] + (/이상|초과/.test(b) ? 0.5 : 0) : 1e6; };
   SC.sortAges = function (list) { return (list || []).map(function (a, i) { return [a, i, SC.ageKey(a)]; }).sort(function (x, y) { return x[2] - y[2] || x[1] - y[1]; }).map(function (x) { return x[0]; }); };
+  /* #187 상품연구 썸네일: 직접 올린 그림(11-19부터 올린 것, 'assets/research/u-…')이 있으면 그 그림, 없으면 자동 썸네일.
+     11-18 전에 올린 예전 그림은 #162대로 쓰지 않음(데이터는 남겨 둠) */
+  SC.upPic = function (p) { p = String(p || ""); return /^assets\/research\/u-/.test(p) ? p : ""; };
   SC.ageName = function (a) { var b = String((a && a.band) || "").trim(), t = String((a && a.title) || "").trim(); return b ? (t ? b + " " + t : b) : t; };
   SC.athSrc = "assets/";
   SC.autoThumb = function (o) {
