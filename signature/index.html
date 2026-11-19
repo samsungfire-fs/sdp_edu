@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261119a">
+<link rel="stylesheet" href="assets/site.css?v=20261119b">
 </head>
 <body>
 
@@ -88,7 +88,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261119a"></script>
+<script src="assets/common.js?v=20261119b"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -198,7 +198,7 @@
     return (RES.months || []).filter(function(m){ return vis(m) && ymCode(m.ym); })
       .sort(function(a, b){ return String(b.ym).localeCompare(String(a.ym)); });
   }
-  function rAges(m){ return (m.ages || []).filter(vis); }
+  function rAges(m){ return SC.sortAges((m.ages || []).filter(vis)); }   /* #182 적은 나이부터 */
   function rFileCount(m){ return rAges(m).reduce(function(n, a){ return n + (a.files || []).length; }, 0); }
   function findMonth(code){ return rMonths().filter(function(m){ return ymCode(m.ym) === code; })[0]; }
 

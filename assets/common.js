@@ -160,6 +160,9 @@
   };
   /* 연령 이름 = 연령대 + 제목(#149, 예: 40대 비급여통합치료비). 예전 데이터(연령대 칸 없음)는 제목 그대로 */
   SC.ageBand = function (a) { var b = String((a && a.band) || "").trim(); if (b) return b; var x = SC.splitHead(a && a.title); return x && /[대세]/.test(x[0]) ? x[0] : ""; };
+  /* #182 연령 = 적은 나이 → 많은 나이(이름 앞 숫자, 같으면 '이상' · '초과'가 뒤, 숫자 없으면 맨 뒤) — 관리자 · 사이트 · 분석 모두 */
+  SC.ageKey = function (a) { var b = SC.ageBand(a) || String((a && a.title) || ""), m = /(\d{1,3})/.exec(b); return m ? +m[1] + (/이상|초과/.test(b) ? 0.5 : 0) : 1e6; };
+  SC.sortAges = function (list) { return (list || []).map(function (a, i) { return [a, i, SC.ageKey(a)]; }).sort(function (x, y) { return x[2] - y[2] || x[1] - y[1]; }).map(function (x) { return x[0]; }); };
   SC.ageName = function (a) { var b = String((a && a.band) || "").trim(), t = String((a && a.title) || "").trim(); return b ? (t ? b + " " + t : b) : t; };
   SC.athSrc = "assets/";
   SC.autoThumb = function (o) {

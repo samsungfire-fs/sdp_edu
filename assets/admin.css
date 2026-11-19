@@ -2193,3 +2193,49 @@ html.aptr-anim .aptr{transition:height 300ms cubic-bezier(.23,1,.32,1)}
 .vexp.aged svg{width:15px; height:15px; transform:none !important}
 @media (max-width:640px){ .as-top{padding:14px 16px 0} .as-foot{padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px)); border-radius:0} .vexp.aged span{display:none} .vexp.aged{padding:0; width:36px; justify-content:center} }
 body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !important}
+/* #167 연령 화면: 제목 바로 밑 '‹ 26년 12월' 하나(SFN 700 15px), 아래 줄은 [취소] [연령 저장]만 · 설명 글 한 문장 한 줄 */
+.as-back{margin:-2px 0 0 -6px; height:30px; padding:0 8px 0 2px; font-size:15px; font-weight:700 !important; color:#003CDC}
+[data-theme="dark"] .as-back{color:#5BC2E7}
+.as-back svg{width:18px; height:18px}
+.mstep .flb .hp, .astep .flb .hp, .mstep .help, .astep .help{word-break:keep-all; overflow-wrap:break-word; text-wrap:pretty}
+
+/* ===== #183 ~ #186 (11-19) 연령 화면 =====
+   머리 = 연령 제목 → 8px 아래 단계 줄 '✓ (월 제목) —— ② 연령 설정'. 상품연구 표시 · 공개 스위치 · 월 저장(되돌리기 · 저장됨)은 연령 화면에서 숨김 */
+.editor.age-mode #edPill, .editor.age-mode #edSwBox, .editor.age-mode #efUndo, .editor.age-mode #efSave{display:none !important}
+@media (min-width:981px){
+  #app .editor.age-mode .ed-head{position:sticky}
+  #app .editor.age-mode .ed-r1{position:absolute; top:14px; right:16px; width:auto}
+  #app .editor.age-mode .ed-head h2{padding-right:48px}
+}
+.editor .ed-head h2 .as-em{font-family:var(--body); font-style:normal; font-weight:400 !important; font-size:16px; color:var(--k-t3)}
+#app .editor.age-mode #edSteps{margin-top:-4px}
+#edSteps .as-steps{padding:0; flex-wrap:nowrap; min-width:0}
+#edSteps .as-steps li.ok{min-width:0; flex:0 1 auto}
+#edSteps .as-steps .mt{display:block; max-width:420px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#edSteps .as-steps .ln, #edSteps .as-steps .on, #edSteps .as-steps i{flex:none}
+/* 내용 맨 위 '‹ 뒤로가기'(위아래 14px) */
+.astep > .as-back{margin:14px 0 0 22px; align-self:flex-start}
+.astep{display:flex; flex-direction:column}
+.astep > .as-back + .fs{margin-top:14px}
+@media (max-width:640px){ .astep > .as-back{margin:10px 0 0 10px} }
+/* 맨 아래 = 상태 글자 + [되돌리기] [연령 저장] */
+.as-st{display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:700 !important; color:var(--k-t3); white-space:nowrap}
+.as-st.on{color:var(--k-t1)}
+.as-st .dt{width:8px; height:8px; border-radius:50%; background:#F5B300; flex:none}
+.as-foot .bb.g:disabled{opacity:.45; cursor:default}
+.as-foot .bb.p:disabled{background:#C9D2EC; color:#6B7390; box-shadow:none; cursor:default}
+[data-theme="dark"] .as-foot .bb.p:disabled{background:#2A3045; color:#6B7390}
+@media (max-width:420px){ .as-st{font-size:12.5px} }
+/* #181 · #182 새 연령: 노란 바탕 + '새 연령' → 1.8~2.4초에 사라짐 */
+.aitem.anew .arow{background:#FFF6D6; transition:background-color 600ms ease}
+[data-theme="dark"] .aitem.anew .arow{background:rgba(245,179,0,.16)}
+.aitem.anew .vtext h3::after{content:"새 연령"; display:inline-block; margin-left:8px; padding:1px 7px; border-radius:6px; background:#F5B300; color:#3A2A00; font-family:var(--body); font-size:11.5px; font-weight:800; vertical-align:2px; transition:opacity 600ms ease}
+.aitem.anew.anew-out .arow{background:transparent}
+[data-theme="dark"] .aitem.anew.anew-out .arow{background:transparent}
+.aitem.anew.anew-out .vtext h3::after{opacity:0}
+/* #181 정렬 칸: 바꾸면 파랑 2px 한 번 */
+.sort-ping{animation:sortPing 700ms ease}
+@keyframes sortPing{0%,35%{box-shadow:0 0 0 2px #003CDC}100%{box-shadow:0 0 0 2px rgba(0,60,220,0)}}
+[data-theme="dark"] .sort-ping{animation-name:sortPingD}
+@keyframes sortPingD{0%,35%{box-shadow:0 0 0 2px #5BC2E7}100%{box-shadow:0 0 0 2px rgba(91,194,231,0)}}
+@media (prefers-reduced-motion:reduce){ .sort-ping{animation:none} }

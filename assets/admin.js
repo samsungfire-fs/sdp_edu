@@ -285,7 +285,7 @@
     }) };
     rdata = { months: ((rj && rj.months) || []).map(function(m){
       var mo = { ym: m.ym || "", _oym: m.ym || "", title: m.title || "", by: m.by || "", thumb: m.thumb || "", visible: m.visible !== false, ages: [] };
-      mo.ages = (m.ages || []).map(function(a){ return { id: a.id || newAgeId(mo), band: a.band || "", title: a.title || "", by: a.by || "", thumb: a.thumb || "", visible: a.visible !== false, files: (a.files || []).map(fileIn) }; });
+      mo.ages = SC.sortAges((m.ages || []).map(function(a){ return { id: a.id || newAgeId(mo), band: a.band || "", title: a.title || "", by: a.by || "", thumb: a.thumb || "", visible: a.visible !== false, files: (a.files || []).map(fileIn) }; }));   /* #182 적은 나이부터 */
       return mo;
     }) };
     openM = openA = null; pendingImgs = {};
@@ -694,6 +694,59 @@
   var wide = window.matchMedia ? matchMedia("(min-width:981px)") : { matches: true };
   /* 넓은 화면 + 동작 줄이기 꺼짐일 때만 FLIP · 거꾸로 닫기 */
   function motionOk(){ return wide.matches && !REDUCE; }
+  /* #181 목록 순서가 바뀔 때: 바뀌기 전 자리를 재고 → 새 순서로 그리고 → 차이만큼 되돌려 놓고 0으로(450ms, 위아래 동시).
+     움직이는 줄만 가운데쯤 옅은 그림자, 화면 밖에서 들어오는 줄 · 새 줄은 150ms 페이드, 정렬 칸은 파랑 2px 한 번 */
+  var EZF = "cubic-bezier(.2,.8,.2,1)", SH0 = "0 0 0 0 rgba(16,24,64,0)", SH1 = "0 10px 24px rgba(16,24,64,.16)";
+  function flipSort(box, sel, keyOf, draw, ctl){
+    if (ctl && !REDUCE){ ctl.classList.remove("sort-ping"); void ctl.offsetWidth; ctl.classList.add("sort-ping"); }
+    if (!box || REDUCE || !box.animate){ draw(); if (box && REDUCE && box.animate) box.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 150 }); return; }
+    var old = {}, vh = innerHeight;
+    box.querySelectorAll(sel).forEach(function(e){ var k = keyOf(e); if (k) old[k] = e.getBoundingClientRect().top; });
+    draw();
+    box.querySelectorAll(sel).forEach(function(e){
+      var k = keyOf(e), r = e.getBoundingClientRect(), y0 = old[k], seen = r.bottom > 0 && r.top < vh;
+      if (y0 == null || y0 > vh || y0 + r.height < 0){ if (seen) e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: "ease" }); return; }
+      var d = y0 - r.top; if (Math.abs(d) < 1 || (!seen && Math.abs(d) > vh)) return;
+      e.animate([{ transform: "translateY(" + d + "px)", boxShadow: SH0, zIndex: 2 }, { boxShadow: SH1, zIndex: 2, offset: .5 }, { transform: "none", boxShadow: SH0, zIndex: 2 }], { duration: 450, easing: EZF });
+    });
+  }
+  /* #181 · #182 연령 저장 뒤: 새 연령은 맨 아래에 300ms 나타났다가(10px 아래 · 노란 바탕 + '새 연령') 제자리로 560ms(살짝 들리며),
+     밀리는 줄은 60ms 간격으로 한 칸씩 · 1.8~2.4초에 노란 바탕 사라짐. 연령대만 바뀐 연령은 바로 450ms */
+  /* 새 연령 노란 바탕은 저장 뒤 다시 그려져도 이어짐(ageHtml이 시각을 보고 붙임) */
+  var ageHi = null;
+  function ageHiOn(id){
+    ageHi = { id: id, t: Date.now() };
+    var q = function(){ return document.querySelector('.aitem[data-aid="' + id + '"]'); };
+    setTimeout(function(){ var e = q(); if (e) e.classList.add("anew-out"); }, 1800);
+    setTimeout(function(){ var e = q(); if (e) e.classList.remove("anew", "anew-out"); if (ageHi && ageHi.id === id) ageHi = null; }, 2500);
+  }
+  function ageFlip(before, mover, isNew){
+    var list = document.querySelector(".mstep .ages"); if (!list || REDUCE || !list.animate) return;
+    var rows = Array.prototype.slice.call(list.querySelectorAll(".aitem")); if (!rows.length) return;
+    var slot = rows.map(function(e){ return e.getBoundingClientRect().top; }), byId = {};
+    rows.forEach(function(e){ byId[e.dataset.aid] = e; });
+    var lead = isNew ? 300 : 0, k = 0;
+    before.forEach(function(o, oi){
+      var e = byId[o.id]; if (!e) return; var ni = rows.indexOf(e); if (ni === oi) return;
+      var d = slot[oi] - slot[ni];
+      if (o === mover){
+        if (isNew){
+          e.classList.add("anew"); ageHiOn(mover.id);
+          /* 0~300 맨 아래 자리에 10px 아래에서 나타남 → 300~860 제자리로 올라감(가운데쯤 살짝 들림 + 그림자) */
+          e.animate([{ transform: "translateY(" + (d + 10) + "px)", opacity: 0, boxShadow: SH0, zIndex: 3, easing: EZF }, { transform: "translateY(" + d + "px)", opacity: 1, boxShadow: SH0, zIndex: 3, offset: 300 / 860, easing: "ease-in-out" },
+            { transform: "translateY(" + d * .5 + "px) scale(1.015)", boxShadow: SH1, zIndex: 3, offset: 580 / 860, easing: EZF }, { transform: "none", opacity: 1, boxShadow: SH0, zIndex: 3 }], { duration: 860 });
+        } else
+          e.animate([{ transform: "translateY(" + d + "px)", boxShadow: SH0, zIndex: 3 }, { transform: "translateY(" + d * .5 + "px) scale(1.015)", boxShadow: SH1, zIndex: 3, offset: .5 }, { transform: "none", boxShadow: SH0, zIndex: 3 }],
+            { duration: 450, easing: EZF });
+      } else {
+        e.animate([{ transform: "translateY(" + d + "px)" }, { transform: "none" }], { duration: 450, delay: lead + (isNew ? 60 * k++ : 0), easing: EZF, fill: "backwards" });
+      }
+    });
+    if (isNew && before.indexOf(mover) === rows.indexOf(byId[mover.id])){   /* 이미 맨 아래가 제자리 → 나타나기만 */
+      var e2 = byId[mover.id]; e2.classList.add("anew"); ageHiOn(mover.id);
+      e2.animate([{ transform: "translateY(10px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 300, easing: EZF, fill: "backwards" });
+    }
+  }
   function flipKey(el){ return el.dataset.flip || (el.dataset.v != null ? "v" + el.dataset.v : el.dataset.m != null ? "m" + el.dataset.m : ""); }
   function flipEls(){ return Array.prototype.slice.call(document.querySelectorAll(".amain [data-flip], .videos > li[data-v], .videos > li[data-m]")); }
   function flipFirst(){ var m = {}; flipEls().forEach(function(el){ var k = flipKey(el); if (k) m[k] = el.getBoundingClientRect(); }); return m; }
@@ -730,11 +783,19 @@
     $("edPill").innerHTML = '<span class="mk" aria-hidden="true" style="--c:' + catColor(cid) + '"></span>' + esc(isR ? SC.RESEARCH.label : SC.catLabel(cid));
     $("edSwBox").innerHTML = lsw(pub, 'data-act="edvis"', isR ? "이 달을 사이트에 공개" : "이 강의를 사이트에 공개");
     $("edSheetT").textContent = isR ? "월 편집" : "강의 편집";
+    var ageOn = isR && !!openA && openM.ages.indexOf(openA) > -1;
+    $("editor").classList.toggle("age-mode", ageOn); $("edSteps").hidden = !ageOn;
     if (isR){
       var mi = rdata.months.indexOf(openM), mt = openM.title.trim();
       $("edTitle").textContent = mt || (isNew ? "새 달" : "제목 없음");
       $("edTitle").classList.toggle("ph", !mt);
       $("edNewH").hidden = true;
+      if (ageOn){   /* #184 · #185 연령 화면 머리: 연령 제목 · 그 아래 단계 줄 '✓ (월 제목) —— ② 연령 설정' */
+        var an = SC.ageName(openA), lab2 = mt || SC.ymLabel(openM.ym) || "이 달";
+        $("edTitle").innerHTML = '<span data-asname>' + esc(an || (openA._new ? "새 연령" : "제목 없음")) + '</span> <em class="as-em">· ' + (openA._new ? "연령 추가" : "연령 편집") + '</em>';
+        $("edTitle").classList.toggle("ph", !an);
+        $("edSteps").innerHTML = '<ol class="as-steps" aria-label="단계"><li class="ok"><i aria-hidden="true">✓</i><span class="mt">' + esc(lab2) + '</span></li><li class="ln" aria-hidden="true"></li><li class="on" aria-current="step"><i aria-hidden="true">2</i>연령 설정</li></ol>';
+      }
     } else {
       var i = data.videos.indexOf(openV);
       $("edTitle").textContent = openV.title || "새 강의";
@@ -745,6 +806,7 @@
     var body = $("edBody"), st = body.scrollTop;
     body.innerHTML = isR ? monthBody(openM, mi) : videoBody(openV, i);
     body.scrollTop = swap || opening ? 0 : st;
+    ageFoot();
     /* 11-18: 넓은 화면은 편집 칸이 페이지와 함께 스크롤 → 열거나 바꿀 때 편집 칸 맨 위가 바 밑에 보이게 */
     if ((swap || opening) && wide.matches) requestAnimationFrame(function(){
       var bar = document.querySelector(".abar"), t = bar ? bar.getBoundingClientRect().bottom : 0, r = wrap.getBoundingClientRect();
@@ -863,25 +925,29 @@
   }
   /* #149 월 편집 칸 = 1 연월 → 2 제목(+ 책임위원) → 3 썸네일 → 4 연령. 연령을 고치거나 더할 땐 같은 칸 안 '연령' 화면으로 넘어감 */
   var stepDir = "", ageSnap = null, IC_BK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+  /* #167 항목 설명 글 = 한 문장 한 줄(문장 끝에서 줄바꿈) */
+  function brSent(h){ return String(h).replace(/([.!?])\s+(?=[^\s<])/g, "$1<br>"); }
+  function rsec(n, name, help, inner, extra){ return fsec(n, name, brSent(help), inner, extra); }
   function monthBody(m, mi){
     if (openA && m.ages.indexOf(openA) > -1) return ageStep(m, mi, openA);
+    m.ages = SC.sortAges(m.ages);   /* #182 늘 적은 나이부터 */
     var at = 'data-m="' + mi + '"', pub = m.visible !== false, dup = isDupYm(m), code = ymCode(m.ym);
     var y = +(m.ym.split("-")[0]) || new Date().getFullYear(), mo = +(m.ym.split("-")[1]) || 1, y0 = new Date().getFullYear();
     var years = []; for (var k = Math.min(y, 2024); k <= Math.max(y, y0 + 1); k++) years.push(k);
     var saved = !m._new && !dirtyMonth(m), wt = m._oym ? "r:" + ymCode(m._oym) : "", back = stepDir === "back"; stepDir = "";
     return '<div class="mstep' + (back ? " back" : "") + '">' +
-      fsec(1, "연월", "썸네일 첫째 줄에 크게 나와요. 이 달이 최신일수록 사이트에서 위에 보여요.",
+      rsec(1, "연월", "썸네일 첫째 줄에 크게 나와요. 이 달이 최신일수록 사이트에서 위에 보여요.",
         '<div class="ym' + (dup ? " dup" : "") + '" role="group" aria-label="연월">' +
           '<label class="asel"><select id="rm' + mi + 'y" ' + at + ' data-rym="y" aria-label="년">' + years.map(function(k){ return '<option value="' + k + '"' + (k === y ? " selected" : "") + '>' + k + '년</option>'; }).join("") + '</select>' + IC.down + '</label>' +
           '<label class="asel"><select id="rm' + mi + 'mo" ' + at + ' data-rym="m" aria-label="월">' + [1,2,3,4,5,6,7,8,9,10,11,12].map(function(k){ return '<option value="' + k + '"' + (k === mo ? " selected" : "") + '>' + k + '월</option>'; }).join("") + '</select>' + IC.down + '</label>' +
         '</div>' + (dup ? '<span class="pill bad ym-err" role="alert">이미 등록된 달이에요. 다른 달을 골라 주세요.</span>' : '')) +
-      fsec(2, "제목", "썸네일 둘째 줄에 나와요. 사이트의 카드와 페이지 제목에도 그대로 나와요.",
+      rsec(2, "제목", "썸네일 둘째 줄에 나와요. 사이트의 카드와 페이지 제목에도 그대로 나와요.",
         '<input type="text" id="rm' + mi + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(m.title) + '" placeholder="예) 비급여통합치료비 상품연구 전략자료 모음" autocomplete="off" aria-label="제목">' +
         '<div class="f rby"><label for="rm' + mi + 'by">책임위원 <span class="opt">(선택)</span></label>' +
           '<input type="text" id="rm' + mi + 'by" class="ip" ' + at + ' data-rk="by" value="' + esc(m.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20">' +
-          '<span class="help">썸네일 아래쪽에 나와요. 비우면 안 나와요. 이 달 연령들의 기본값이 돼요.</span></div>') +
-      fsec(3, "썸네일", "연월 · 제목 · 책임위원으로 자동으로 만들어요. 색은 달마다 바뀌어요.", thumbField(m, at)) +
-      fsec(4, '연령 <b class="fn">' + m.ages.length + '</b>', "▲▼로 순서를 바꾸면 사이트 연령 목록 순서도 바뀌어요.",
+          '<span class="help">' + brSent("썸네일 아래쪽에 나와요. 비우면 안 나와요. 이 달 연령들의 기본값이 돼요.") + '</span></div>') +
+      rsec(3, "썸네일", "연월 · 제목 · 책임위원으로 자동으로 만들어요. 색은 달마다 바뀌어요.", thumbField(m, at)) +
+      rsec(4, '연령 <b class="fn">' + m.ages.length + '</b>', "연령은 적은 나이부터 자동으로 정렬돼요. 사이트 목록도 같은 순서예요.",
         (m.ages.length ? '<ul class="ages">' + m.ages.map(function(a, ai){ return ageHtml(m, mi, a, ai); }).join("") + '</ul>'
           : '<p class="ages-empty"><b>아직 연령이 없어요</b><span>아래 [+ 연령 추가]로 이 달 연령을 하나씩 넣어 주세요.</span></p>') +
         '<button type="button" class="add rp" data-act="raddAge" ' + at + '>' + IC.plus + '연령 추가</button>', HOWTO_BTN) +
@@ -890,27 +956,27 @@
   function ageStep(m, mi, a){
     var ai = m.ages.indexOf(a), at = 'data-m="' + mi + '" data-a="' + ai + '"', idp = "r" + mi + "a" + ai, pub = a.visible !== false, isN = !!a._new;
     var lab = SC.ymLabel(m.ym) || m.title || "이 달", code = ymCode(m.ym), saved = !m._new && !dirtyMonth(m), cin = stepDir === "in"; stepDir = "";
+    /* #184 · #185 연령 화면: 편집 칸 머리 = 연령 제목 + 단계 줄(renderEditor) · 내용 맨 위 '‹ 뒤로가기' */
     return '<div class="astep' + (cin ? " as-in" : "") + '" data-ai="' + ai + '">' +
-      '<div class="as-top"><button type="button" class="as-back rp" data-act="rageBack" ' + at + '>' + IC_BK + '<span>' + esc(lab) + ' · 월 정보로</span></button>' +
-        '<h3 class="as-t"><span data-asname>' + (isN && !SC.ageName(a) ? "새 연령" : esc(SC.ageName(a) || "제목 없음")) + '</span> <em>· 연령 ' + (ai + 1) + '</em></h3>' +
-        '<ol class="as-steps" aria-label="단계"><li class="ok"><i aria-hidden="true">✓</i>월 정보 · ' + esc(lab) + '</li><li class="ln" aria-hidden="true"></li><li class="on" aria-current="step"><i aria-hidden="true">2</i>' + (isN ? "연령 추가" : "연령 고치기") + '</li></ol></div>' +
-      fsec(1, '연령대 <span class="req" aria-label="필수">*</span>', "직접 입력해요. 썸네일 첫째 줄에 크게 나와요.",
+      '<button type="button" class="as-back rp" data-act="rageBack" ' + at + ' aria-label="월 정보로 뒤로가기">' + IC_BK + '<span>뒤로가기</span></button>' +
+      rsec(1, '연령대 <span class="req" aria-label="필수">*</span>', "입력하면 자동으로 썸네일이 만들어져요!",
         '<input type="text" id="' + idp + 'band" class="ip" ' + at + ' data-rk="band" value="' + esc(a.band || "") + '" placeholder="예) 40대 · 60세 이상 · 30~40대" autocomplete="off" maxlength="20" aria-label="연령대">') +
-      fsec(2, '제목 <span class="req" aria-label="필수">*</span>', '썸네일 둘째 줄에 나와요. 사이트 카드 · 페이지 제목은 <b>연령대 + 제목</b>(40대 비급여통합치료비)으로 나와요.',
+      rsec(2, '제목 <span class="req" aria-label="필수">*</span>', '연령대 밑에 들어갈 제목을 입력해주세요',
         '<input type="text" id="' + idp + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(a.title) + '" placeholder="예) 비급여통합치료비" autocomplete="off" aria-label="제목">') +
-      fsec(3, '책임위원 <span class="opt">(선택)</span>', '<span data-byhelp>' + byHelp(m) + '</span>',
+      rsec(3, '책임위원 <span class="opt">(선택)</span>', '<span data-byhelp>' + byHelp(m) + '</span>',
         '<input type="text" id="' + idp + 'by" class="ip" ' + at + ' data-rk="by" value="' + esc(a.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20" aria-label="책임위원">') +
-      fsec(4, "썸네일", "연령대 · 제목 · 책임위원으로 자동으로 만들어요. 색은 연령대마다 바뀌어요.", thumbField(a, at, ai)) +
-      fsec(5, '교육자료 <b class="fn">' + a.files.length + '</b>', "드라이브에서 파일 우클릭 → 공유 → ‘링크가 있는 모든 사용자’ → 링크 복사",
+      rsec(4, "썸네일", "올리지 않으면 연령대 · 제목 · 책임위원으로 자동으로 만들어요. 이미지 사이즈 16:9(1280x720)", thumbField(a, at, ai)) +
+      rsec(5, '교육자료 <b class="fn">' + a.files.length + '</b>', "드라이브에서 파일 우클릭 → 공유 → ‘링크가 있는 모든 사용자’ → 링크 복사",
         '<div class="fsort">' + filesHtml(a.files, at, idp, "rfdel", m._oym ? "rf:" + ymCode(m._oym) + "/" + a.id : "", savedKeys("r", m._oym, a.id)) + '</div>' +
         '<div><button type="button" class="btn-soft rp press" data-act="raddFile" ' + at + '>' + IC.plus + '자료 추가</button></div>', HOWTO_BTN) +
-      fsec(6, "공개", pub ? "사이트 연령 목록과 주소에서 누구나 볼 수 있어요." : "사이트 연령 목록에서 빠지고, 주소로 들어와도 보이지 않아요.",
+      rsec(6, "공개", pub ? "사이트 연령 목록과 주소에서 누구나 볼 수 있어요." : "사이트 연령 목록에서 빠지고, 주소로 들어와도 보이지 않아요.",
         '<div class="segs" role="radiogroup" aria-label="공개 설정">' + rSeg("ravisSet", at, "1", pub, "공개", IC.eye) + rSeg("ravisSet", at, "0", !pub, "비공개", IC.lock) + '</div>' +
         (isN ? '' : '<div class="as-del">' + (pub && saved && m.visible !== false ? '<a class="site-link rp" href="research/' + code + '/' + esc(a.id) + '/" target="_blank" rel="noopener">사이트에서 보기 ↗</a>' : '<span></span>') +
           delAsk(armedDel === a, "이 연령과 자료가 지워져요. 정말 삭제할까요?", 'data-act="radelYes" ' + at, 'data-act="delNo"', 'data-act="radel" ' + at, "연령 삭제") + '</div>')) +
-      '<div class="as-foot"><button type="button" class="tb rp" data-act="rageBack" ' + at + '>' + IC_BK + '월 정보로</button><span class="sp"></span>' +
-        '<button type="button" class="bb g rp" data-act="rageCancel" ' + at + '>취소</button>' +
-        '<button type="button" class="bb p rp" data-act="rageSave" ' + at + '>연령 저장</button></div>' +
+      /* #183 맨 아래 = 상태 글자 + [되돌리기] [연령 저장] — 바뀐 게 없으면 꺼짐(ageFoot) */
+      '<div class="as-foot" id="asFoot"><span class="as-st" id="asSt"></span><span class="sp"></span>' +
+        '<button type="button" class="bb g rp" id="asUndo" data-act="rageUndo" ' + at + '>되돌리기</button>' +
+        '<button type="button" class="bb p rp" id="asSave" data-act="rageSave" ' + at + '>연령 저장</button></div>' +
     '</div>';
   }
   function ageEdited(a){ return ageSnap != null && JSON.stringify(a) !== ageSnap; }
@@ -919,16 +985,38 @@
     else if (ageSnap){ var o = JSON.parse(ageSnap); Object.keys(a).forEach(function(k){ delete a[k]; }); Object.keys(o).forEach(function(k){ a[k] = o[k]; }); }
   }
   function ageLeave(){ ageSnap = null; openA = null; armedDel = null; stepDir = "back"; markDirty(); render(); var ed = $("edBody"); if (ed) ed.scrollTop = 0; }
-  function ageOpen(a){ ageSnap = JSON.stringify(a); openA = a; armedDel = null; stepDir = "in"; render(); var ed = $("edBody"); if (ed) ed.scrollTop = 0; var w = $("edWrap"); if (w && w.getBoundingClientRect().top < 0) w.scrollIntoView({ block:"start" }); }
+  function ageOpen(a){ ageSnap = JSON.stringify(a); openA = a; armedDel = null; stepDir = "in"; render(); edTop(); }
+  /* #183 연령 화면에 들어가면 늘 맨 위(뒤로가기가 보이게): 시트는 안쪽 스크롤 0, 넓은 화면은 편집 칸 맨 위를 바 밑으로 */
+  function edTop(){
+    var ed = $("edBody"); if (ed) ed.scrollTop = 0;
+    var w = $("edWrap"); if (!w || !wide.matches) return;
+    var bar = document.querySelector(".abar"), t = bar ? bar.getBoundingClientRect().bottom : 0, r = w.getBoundingClientRect();
+    if (Math.abs(r.top - t - 24) > 2) window.scrollBy({ top: r.top - t - 24, behavior: REDUCE ? "auto" : "smooth" });
+  }
+  /* #183 바뀐 칸 수(들어올 때 값과 비교): 연령대 · 제목 · 책임위원 · 공개 · 자료 줄마다 */
+  function ageChanges(a){
+    if (ageSnap == null) return 0; var o = JSON.parse(ageSnap), n = 0;
+    ["band", "title", "by"].forEach(function(k){ if (String(a[k] || "").trim() !== String(o[k] || "").trim()) n++; });
+    if ((a.visible !== false) !== (o.visible !== false)) n++;
+    var fa = a.files || [], fo = o.files || [], k = Math.max(fa.length, fo.length);
+    for (var i = 0; i < k; i++){ var x = fa[i], y = fo[i]; if (!x || !y || String(x.link || "").trim() !== String(y.link || "").trim()) n++; }
+    return n;
+  }
+  function ageFoot(){
+    var st = $("asSt"), un = $("asUndo"), sv = $("asSave"); if (!st || !openA) return;
+    var n = ageChanges(openA), full = !!String(openA.band || "").trim() && !!String(openA.title || "").trim();
+    st.innerHTML = n ? '<i class="dt" aria-hidden="true"></i>저장하지 않은 변경 ' + n + '개' : '바뀐 내용이 없어요';
+    st.classList.toggle("on", !!n);
+    un.disabled = !n; sv.disabled = !n || saving || (!!openA._new && !full);
+  }
   /* 저장된 상태에도 있는 달인지(사이트에서 보기 링크용) */
   function dirtyMonth(m){
     try { var S = JSON.parse(baseline).r.months; return !S.some(function(o){ return o.ym === m.ym && o.visible !== false; }); } catch(e){ return true; }
   }
   function ageHtml(m, mi, a, ai){
     var pub = a.visible !== false, at = 'data-m="' + mi + '" data-a="' + ai + '"', miss = missCount(a.files), t = SC.ageName(a);
-    return '<li class="aitem" data-vis="' + pub + '"><div class="arow" data-act="rage" ' + at + '>' +
-      '<span class="ord"><button type="button" class="ordb" data-act="rup" ' + at + ' aria-label="위로"' + (ai === 0 ? " disabled" : "") + '>' + IC.tri + '</button>' +
-        '<button type="button" class="ordb dn" data-act="rdown" ' + at + ' aria-label="아래로"' + (ai === m.ages.length - 1 ? " disabled" : "") + '>' + IC.tri + '</button></span>' +
+    var hi = ageHi && ageHi.id === a.id ? Date.now() - ageHi.t : -1, hc = hi < 0 || hi > 2500 ? "" : " anew" + (hi > 1800 ? " anew-out" : "");
+    return '<li class="aitem' + hc + '" data-vis="' + pub + '" data-aid="' + esc(a.id) + '"><div class="arow" data-act="rage" ' + at + '>' +
       '<div class="vthumb rthumb athumb dim" data-athp="' + mi + '-' + ai + '">' + rImg(a.thumb, "", SC.athAge(m, a)) + '</div>' +
       '<div class="vtext"><h3 class="dim' + (t ? "" : " untitled") + '">' + esc(t || "제목 없음") + '</h3><div class="badges">' +
         '<span class="bdg priv">비공개</span><span class="bdg files dim">자료 ' + a.files.length + '개</span>' +
@@ -1011,13 +1099,6 @@
     if (act === "rvisSet"){ var nv = b.dataset.val === "1"; if (m.visible !== nv){ m.visible = nv; markDirty(); render(); } return; }
     if (act === "ravis"){ a.visible = a.visible === false; markDirty(); render(); return; }
     if (act === "ravisSet"){ var na = b.dataset.val === "1"; if (a.visible !== na){ a.visible = na; markDirty(); render(); } return; }
-    if (act === "rup" || act === "rdown"){
-      var k = m.ages.indexOf(a), to = act === "rup" ? k - 1 : k + 1;
-      if (to < 0 || to >= m.ages.length) return;
-      m.ages.splice(to, 0, m.ages.splice(k, 1)[0]); markDirty(); render();
-      var nb = document.querySelector('.ordb[data-act="' + act + '"][data-m="' + b.dataset.m + '"][data-a="' + to + '"]');
-      if (nb && !nb.disabled) nb.focus(); return;
-    }
     if (act === "raddAge"){   /* #149 같은 편집 칸 안 '연령 추가' 화면으로(오른쪽에서 밀려 들어옴) */
       var na2 = { id: newAgeId(m), band: "", title: "", by: "", thumb: "", visible: true, files: [{ name:"", type:"", link:"", size:"", _st:"" }], _new: true };
       m.ages.push(na2); ageOpen(na2);
@@ -1030,10 +1111,17 @@
       ageLeave(); return;
     }
     if (act === "rageCancel"){ ageRestore(m, a); ageLeave(); return; }
+    if (act === "rageUndo"){   /* #183 들어올 때 값으로(새 연령이면 빈 칸) — 연령 화면은 그대로 */
+      if (ageSnap){ var o0 = JSON.parse(ageSnap); Object.keys(a).forEach(function(k){ delete a[k]; }); Object.keys(o0).forEach(function(k){ a[k] = o0[k]; }); }
+      markDirty(); render(); return;
+    }
     if (act === "rageSave"){
       var bd = String(a.band || "").trim(), tt = String(a.title || "").trim(), ai2 = m.ages.indexOf(a);
       if (!bd || !tt){ toast(!bd ? "연령대를 입력해 주세요" : "제목을 입력해 주세요"); var fe = $("r" + b.dataset.m + "a" + ai2 + (!bd ? "band" : "title")); if (fe) fe.focus(); return; }
-      delete a._new; ageSnap = null; openA = null; armedDel = null; stepDir = "back"; markDirty(); render(); save(); return;
+      var wasNew = !!a._new, oldBand = ageSnap ? String(JSON.parse(ageSnap).band || "").trim() : "", before = m.ages.slice();
+      delete a._new; ageSnap = null; openA = null; armedDel = null; stepDir = "back"; markDirty(); render();
+      if (wasNew || oldBand !== bd) ageFlip(before, a, wasNew);   /* #181 · #182 새 연령 · 연령대 바뀜 → 제자리로 미끄러짐 */
+      save(); return;
     }
     if (act === "raddFile"){ a.files.push({ name:"", type:"", link:"", size:"", _st:"" }); markDirty(); render(); var fl = $("r" + b.dataset.m + "a" + b.dataset.a + "f" + (a.files.length - 1) + "l"); if (fl) fl.focus(); return; }
     if (act === "rfdel"){ a.files.splice(+b.dataset.f, 1); markDirty(); render(); return; }
@@ -1058,7 +1146,7 @@
     }
     if (act === "radelYes"){ m.ages.splice(m.ages.indexOf(a), 1); ageSnap = null; openA = null; armedDel = null; stepDir = "back"; markDirty(); render(); toast("연령을 뺐어요. 위 [저장]을 눌러야 사이트에서도 빠져요"); return; }
   }
-  function byHelp(m){ var b = String(m.by || "").trim(); return b ? "비우면 월에 넣은 책임위원(" + esc(b) + ")이 나와요. 다른 사람이면 여기에 넣어 주세요." : "비우면 책임위원 줄이 안 나와요(월에도 비어 있어요). 넣으면 이 연령 썸네일에 나와요."; }
+  function byHelp(m){ var b = String(m.by || "").trim(); return brSent(b ? "비우면 월에 넣은 책임위원(" + esc(b) + ")이 나와요. 다른 사람이면 여기에 넣어 주세요." : "비우면 책임위원 줄이 안 나와요(월에도 비어 있어요). 넣으면 이 연령 썸네일에 나와요."); }
   /* #116 제목 · 책임위원을 고치면 자동 썸네일(목록 줄 · 지금 보이는 모습)이 바로 바뀜 */
   function athRefresh(mi){
     var m = rdata.months[mi]; if (!m) return;
@@ -1114,7 +1202,7 @@
 
   /* ---------- 저장 바 ---------- */
   function snap(){ return JSON.stringify({ v: cleanData(), r: cleanResearch() }); }
-  function markDirty(){ dirty = snap() !== baseline; updateSaveBar(); }
+  function markDirty(){ dirty = snap() !== baseline; updateSaveBar(); ageFoot(); }
   /* #51 저장 줄: 편집 칸 맨 아래에 붙음. 바꾼 게 없으면 줄 자체가 없음 (맨 아래 저장 바는 없앰) */
   var baseObjS = "", baseObj = null;
   function base(){ if (baseObjS !== baseline){ baseObjS = baseline; baseObj = baseline ? JSON.parse(baseline) : null; } return baseObj; }
@@ -1216,12 +1304,12 @@
       return { name: sn.name || "자료", type: t, link: f.link.trim(), size: f.size || "" };
     });
   }
-  /* 상품연구: 월은 연월 최신순, 연령은 ▲▼로 정한 순서 그대로 */
+  /* 상품연구: 월은 연월 최신순, 연령은 적은 나이부터(#182 — ▲▼ 순서 없앰) */
   function cleanResearch(){
     return { months: rSorted().map(function(x){
       var m = x.m;
       return { ym: m.ym, title: m.title.trim(), by: String(m.by || "").trim(), thumb: m.thumb || "", visible: m.visible !== false,
-        ages: m.ages.map(function(a){ return { id: a.id, band: String(a.band || "").trim(), title: a.title.trim(), by: String(a.by || "").trim(), thumb: a.thumb || "", visible: a.visible !== false, files: cleanFiles(a.files) }; }) };
+        ages: SC.sortAges(m.ages).map(function(a){ return { id: a.id, band: String(a.band || "").trim(), title: a.title.trim(), by: String(a.by || "").trim(), thumb: a.thumb || "", visible: a.visible !== false, files: cleanFiles(a.files) }; }) };
     }) };
   }
   /* ---------- 강의별 공유 페이지(v/영상ID/) — 카톡·SNS 미리보기에 영상 썸네일·제목이 나오게 ---------- */
@@ -3123,7 +3211,7 @@
         var st = nsState[x.uid] || (x.manual ? (x.dup ? "dup" : x.manualOk ? "ok" : "bad") : ""), val = st && st.v != null ? st.v : x.manual;
         var stt = typeof st === "object" ? st.s : st;
         var msg = stt === "ok" ? '<span class="ns-st ok">✓ 저장됨</span>' : stt === "bad" ? '<span class="ns-st er">8자리 숫자로 적어 주세요</span>' : stt === "dup" ? '<span class="ns-st er">회원 탭에 이미 있는 사번이에요</span>' : stt === "busy" ? '<span class="ns-st">' + SPIN + '</span>' : stt === "err" ? '<span class="ns-st er">저장하지 못했어요</span>' : '';
-        return '<div class="tr c g-ns" role="row"><span class="t2 el" title="' + esc(x.uid) + '">' + esc(x.uid) + '</span><span class="nm">' + esc(x.name) + '</span><span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span>' +
+        return '<div class="tr c g-ns" role="row" data-uk="' + esc(x.uid) + '"><span class="t2 el" title="' + esc(x.uid) + '">' + esc(x.uid) + '</span><span class="nm">' + esc(x.name) + '</span><span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span>' +
           '<span>' + (x.state === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : '<span class="k-pill s">비정상 회원</span>') + '</span>' +
           '<span class="ns-in"><input class="k-in k-num" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" data-ns="' + esc(x.uid) + '" value="' + esc(val || "") + '" placeholder="8자리" aria-label="' + esc(x.name) + ' 사번 직접 입력"' + (stt === "bad" || stt === "dup" ? ' aria-invalid="true"' : '') + '>' +
           '<button type="button" class="k-btn k-btn2 xs rp" data-nssave="' + esc(x.uid) + '">저장</button>' + msg + '</span></div>';
@@ -3132,7 +3220,7 @@
       var stp = '<span class="stc">' + (x.state === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : '<span class="k-pill s">비정상 회원</span>') + '</span>';
       if (q.tab === "abnormal") return '<div class="tr go g-mem2' + on + '" role="row" tabindex="0" data-sb="' + esc(x.sabun) + '"><span class="t2">' + esc(x.sabun) + '</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span></div>';
       /* #52 [전체] 칸: 사번 없는 회원도 같은 표에 (사번 자리는 '사번 없음', 상세 없음) */
-      if (!x.sabun) return '<div class="tr g-mem nosb" role="row"><span class="mu">사번 없음</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span><span class="mu" data-k="마지막 접속">—</span><span class="r mu" data-k="조회">—</span><span class="r mu" data-k="다운로드">—</span></div>';
+      if (!x.sabun) return '<div class="tr g-mem nosb" role="row" data-uk="' + esc(x.uid || "") + '"><span class="mu">사번 없음</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span><span class="mu" data-k="마지막 접속">—</span><span class="r mu" data-k="조회">—</span><span class="r mu" data-k="다운로드">—</span></div>';
       return '<div class="tr go g-mem' + on + '" role="row" tabindex="0" data-sb="' + esc(x.sabun) + '"><span class="t2">' + esc(x.sabun) + '</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span>' +
         (x.last ? '<span data-k="마지막 접속">' + esc(relAt(x.last)) + '</span>' : '<span class="mu" data-k="마지막 접속">접속 전</span>') +
         '<span class="r' + (x.views ? '' : ' mu') + '" data-k="조회">' + nf(x.views) + '</span><span class="r' + (x.downs ? '' : ' mu') + '" data-k="다운로드">' + nf(x.downs) + '</span></div>';
@@ -3368,8 +3456,10 @@
     $("memQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(typeT); typeT = setTimeout(function(){ if (v === q.q) return; q.q = v; q.page = 1; fetch1(); }, 300); });
     /* #101 정렬 선택칸 = 표 머리와 1:1(칸 × 오름/내림) */
     document.addEventListener("click", function(e){ if (e.target.closest("[data-synclog]")) SyncLog.open(); });
-    $("memSort").addEventListener("change", function(){ var v = this.value.split(":"); q.sort = v[0]; q.dir = v[1] || defDir(v[0]); q.page = 1; lrWant = true; fetch1(true); });
-    TS.on.mem = function(s){ q.sort = s.k; q.dir = s.d; q.page = 1; lrWant = true; fetch1(true); };
+    /* #181 정렬을 바꾸면 줄이 새 자리로 미끄러짐(받아 둔 전체 명단이 있을 때 — 없으면 예전처럼 라인 리빌) */
+    function reSort(ctl){ if (full) flipSort($("memTbl"), ".tr[data-sb], .tr[data-uk]", function(e){ return e.dataset.sb || e.dataset.uk; }, function(){ fetch1(true); }, ctl); else { lrWant = true; fetch1(true); } }
+    $("memSort").addEventListener("change", function(){ var v = this.value.split(":"); q.sort = v[0]; q.dir = v[1] || defDir(v[0]); q.page = 1; reSort(this); });
+    TS.on.mem = function(s){ q.sort = s.k; q.dir = s.d; q.page = 1; reSort($("memSort")); };
     $("memFilter").addEventListener("click", function(e){ var b = e.target.closest("[data-f]"); if (!b || b.dataset.f === q.filter) return; q.filter = b.dataset.f; q.page = 1; lrWant = true; fetch1(); });
     $("memXls").addEventListener("click", exportAll);
     $("memTbl").addEventListener("click", function(e){
@@ -3459,7 +3549,7 @@
       } else {
         (rdata.months || []).forEach(function(m){
           var code = ymCode(m.ym); if (!code) return;
-          m.ages.forEach(function(a, i){ out.push({ key:"r:" + code + "/" + a.id, title: ((m.title || m.ym) + " " + SC.ageName(a)).trim(), gid: m.ym, group: m.title || m.ym, go: -Number(m.ym.replace("-", "")), date: m.ym + "-" + (900 - i), thumb: a.thumb || m.thumb || "assets/research-default.png", rs: true, files: a.files || [], meta: [["자료", (a.files || []).length + "개"]], link: "research/" + code + "/" + a.id + "/" }); });
+          SC.sortAges(m.ages).forEach(function(a, i){ out.push({ key:"r:" + code + "/" + a.id, title: ((m.title || m.ym) + " " + SC.ageName(a)).trim(), gid: m.ym, group: m.title || m.ym, go: -Number(m.ym.replace("-", "")), date: m.ym + "-" + (900 - i), thumb: a.thumb || m.thumb || "assets/research-default.png", rs: true, files: a.files || [], meta: [["자료", (a.files || []).length + "개"]], link: "research/" + code + "/" + a.id + "/" }); });
         });
       }
       return out;
@@ -3660,7 +3750,7 @@
     var tT = null;
     $("anaKind").addEventListener("click", function(e){ var b = e.target.closest("[data-kind]"); if (!b || b.dataset.kind === kind) return; kind = b.dataset.kind; LS.set("sc-ana-kind", kind); sel = ""; chip = ""; shQ = ""; $("anaShQ").value = ""; openF = {}; tab = kind === "r" ? "down" : "view"; lrL = lrM = true; paintList(); LS.set("sc-ana-key", sel); loadDetail(); });
     $("anaQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(tT); tT = setTimeout(function(){ qs = v; paintList(); }, 150); });
-    $("anaSort").addEventListener("change", function(){ sort = this.value; paintList(); });
+    $("anaSort").addEventListener("change", function(){ var sv = this; sort = sv.value; flipSort($("anaList"), ".al-i", function(e){ return e.dataset.ak; }, paintList, sv); });
     $("anaList").addEventListener("click", function(e){ var b = e.target.closest("[data-ak]"); if (b) pick(b.dataset.ak); });
     $("anaPick").addEventListener("change", function(){ pick(this.value); });
     $("anaChips").addEventListener("click", function(e){
@@ -3675,7 +3765,7 @@
     $("anaSheet").addEventListener("click", function(e){
       if (e.target.closest("[data-amx]")){ closeSheet(); return; }
       var r = e.target.closest("[data-ak]"); if (r){ closeSheet(); pick(r.dataset.ak); return; }
-      var ss = e.target.closest("[data-ss]"); if (ss){ shSort = ss.dataset.ss; paintSheet(); }
+      var ss = e.target.closest("[data-ss]"); if (ss){ shSort = ss.dataset.ss; flipSort($("anaSheet"), ".am-row", function(e){ return e.dataset.ak; }, paintSheet, null); }
     });
     var shT = null;
     $("anaShQ").addEventListener("input", function(){ var v = this.value.trim(); clearTimeout(shT); shT = setTimeout(function(){ shQ = v; paintSheet(); }, 120); });
