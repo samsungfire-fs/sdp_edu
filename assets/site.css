@@ -2127,17 +2127,59 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
 /* SPEC 글자 묶음: 높이 = 배너 높이의 56%, 가로세로 1683:621, 배너 가운데 · 옅은 그림자 */
 .hero .hh-spec{top:0; bottom:0; justify-content:center}
 .hh-spec .spx{position:relative; display:block; height:56%; aspect-ratio:1683/621; flex:none; filter:drop-shadow(0 2px 10px rgba(40,60,150,.16))}
-.hh-spec .sp-l{position:absolute; top:0; height:100%; max-width:none; display:block}
-/* ④ 메뉴 이동: 이전 제목이 거의 사라진 뒤 글자 하나씩 60ms 간격(글자당 700ms) — 아래 .4em(= 글자 높이의 40%) · 흐림 8 · 투명 → 제자리
-   ③ 주소로 바로 · 새로 고침(.ld): 화면이 뜨고 250ms 뒤 S → P → E → C 70ms 간격(글자당 900ms) — 아래 글자 높이의 14% · 흐림 10 · 투명 → 제자리
-   시작 전(기다리는 동안)에도 투명(both) — 글자가 한 번 보였다 사라지는 깜빡임 없음 */
-@keyframes spIn{from{opacity:0; transform:translateY(40%); filter:blur(8px)}to{opacity:1; transform:none; filter:blur(0)}}
-@keyframes spInL{from{opacity:0; transform:translateY(14%); filter:blur(10px)}to{opacity:1; transform:none; filter:blur(0)}}
-.hh-spec.hh-on .sp-l{animation:spIn 700ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 60ms) both}
-.hh-spec.hh-on.ld .sp-l{animation:spInL 900ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 70ms) both}
-/* 나갈 때: 글자 하나씩 위로 .5em · 흐림 · 투명(다른 메뉴 제목과 같은 방식), 홈으로 갈 때는 묶음 전체를 0~350 안에 */
+.hh-spec .spx{container-type:inline-size}
+.hh-spec .sp-w{position:absolute; top:0; height:100%; display:block}
+.hh-spec .sp-l{position:absolute; left:0; top:0; width:100%; height:100%; max-width:none; display:block}
+/* #244 SPEC 전용 등장 — '정밀하게 재서 펼치는 연구 자료'. ① 스캔 리빌 ② 치수선 · 눈금 ③ 빛 결 ④ 반짝. 곡선은 따로 적은 것 말고 (.22,1,.36,1)
+   시간: 메뉴 이동 = --hd 기준(메뉴 → 메뉴 --hd 200 → 글자 450~, 홈 → 상품연구 --hd 300 → 모두 100ms 뒤), 주소로 바로 · 새로 고침 = .ld(--hd 0) */
+.hh-spec .sp-g{position:absolute; inset:0; display:block; opacity:0; pointer-events:none;
+  -webkit-mask-size:100% 100%; mask-size:100% 100%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  background:linear-gradient(100deg, rgba(255,255,255,0) 37%, rgba(91,194,231,.92) 45%, rgba(118,132,255,.78) 50%, rgba(255,150,206,.62) 55%, rgba(255,255,255,0) 63%) no-repeat;
+  background-size:250cqw 100%}
+.hh-spec .sp-ln{position:absolute; left:1%; right:1%; top:108%; height:1.5px; margin-top:-.75px; background:rgba(255,255,255,.88); box-shadow:0 1px 6px rgba(40,60,150,.28); transform-origin:50% 50%; display:block}
+.hh-spec .sp-tk{position:absolute; top:103.5%; height:9%; width:1.5px; background:rgba(255,255,255,.88); box-shadow:0 1px 6px rgba(40,60,150,.28); transform-origin:50% 50%; display:block}
+.hh-spec .sp-tk.l{left:1%} .hh-spec .sp-tk.r{right:1%}
+.hh-spec .sp-st{position:absolute; left:95.5%; top:9%; width:11%; aspect-ratio:1; margin:-5.5% 0 0 -5.5%; display:block; opacity:0; pointer-events:none; filter:drop-shadow(0 0 6px rgba(91,194,231,.95))}
+.hh-spec .sp-st svg{display:block; width:100%; height:100%; fill:#FFFFFF}
+@keyframes spScan{0%{clip-path:inset(50% 0 50% 0); opacity:0; transform:translateY(8%) scaleX(1.04); filter:blur(8px)}
+  45%{clip-path:inset(0); opacity:1; transform:translateY(1.6%) scaleX(1.008); filter:blur(2px)}
+  100%{clip-path:inset(0); opacity:1; transform:none; filter:blur(0)}}
+@keyframes spLn{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes spTk{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes spGl{from{opacity:1; background-position:calc(-195cqw - var(--l, 0) * 1cqw) 0}to{opacity:1; background-position:calc(45cqw - var(--l, 0) * 1cqw) 0}}
+@keyframes spSt{0%{opacity:1; transform:rotate(-45deg) scale(0)}40%{opacity:1; transform:rotate(0deg) scale(1)}100%{opacity:0; transform:rotate(35deg) scale(.35)}}
+/* 메뉴 이동(누른 순간 = 0): 글자 450~ 90ms 간격 · 치수선 1,100~1,850 · 눈금 1,700~2,080 · 빛 결 1,400~2,500 · 반짝 2,400~2,960 */
+.hh-spec.hh-on .sp-w{animation:spScan 1000ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 90ms) both}
+.hh-spec.hh-on .sp-ln{animation:spLn 750ms cubic-bezier(.65,0,.35,1) calc(var(--hd) + 900ms) both}
+.hh-spec.hh-on .sp-tk{animation:spTk 380ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 1500ms) both}
+.hh-spec.hh-on .sp-g{animation:spGl 1100ms cubic-bezier(.45,0,.25,1) calc(var(--hd) + 1200ms) both}
+.hh-spec.hh-on .sp-st{animation:spSt 560ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 2200ms) both}
+/* 주소로 바로 · 새로 고침(배너가 뜬 때 = 0): 글자 250 · 340 · 430 · 520 · 치수선 950~1,710 · 눈금 1,560~1,940 · 빛 결 1,350~2,650 · 반짝 2,350~3,110 */
+.hh-spec.hh-on.ld .sp-w{animation-delay:calc(250ms + var(--i, 0) * 90ms)}
+.hh-spec.hh-on.ld .sp-ln{animation-duration:760ms; animation-delay:950ms}
+.hh-spec.hh-on.ld .sp-tk{animation-delay:1560ms}
+.hh-spec.hh-on.ld .sp-g{animation-duration:1300ms; animation-delay:1350ms}
+.hh-spec.hh-on.ld .sp-st{animation-duration:760ms; animation-delay:2350ms}
+/* 나갈 때: 지금처럼 글자 하나씩 위로 · 흐림 · 투명, 치수선 · 눈금도 같이 사라짐, 빛 결 · 별은 바로 숨김. 홈으로 갈 때는 묶음 전체를 0~350 안에 */
 @keyframes spOut{to{opacity:0; transform:translateY(-50%); filter:blur(8px)}}
 .hh-spec.out{animation:none}
-.hh-spec.out .sp-l{animation:spOut 450ms cubic-bezier(.4,0,.6,1) calc(var(--i, 0) * 45ms) both}
+.hh-spec.out .sp-w{animation:spOut 450ms cubic-bezier(.4,0,.6,1) calc(var(--i, 0) * 45ms) both}
+.hh-spec.out .sp-ln, .hh-spec.out .sp-tk{animation:hhFo 400ms cubic-bezier(.4,0,.6,1) both}
+.hh-spec.out .sp-g, .hh-spec.out .sp-st{animation:none; opacity:0}
 .hh-spec.out.fast{animation:hhFo 350ms cubic-bezier(.4,0,.6,1) both}
-@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-l{animation:none !important} }
+/* 움직임 줄이기: 글자 · 치수선은 바로 보이고 빛 결 · 반짝 없음 */
+@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-w, .hh-spec .sp-ln, .hh-spec .sp-tk{animation:none !important} .hh-spec .sp-g, .hh-spec .sp-st{animation:none !important; opacity:0} }
+
+/* ===== #242 ① (11-23) 휴대폰 다크 링크 복사 버튼 = 어두운 버튼(0-13 '흰 버튼 그대로' 규칙 없앰) =====
+   상품연구 [자료 링크 복사] = PC · 태블릿 다크와 같게(#0E1533 · 흰 글자 · 2px #243066 · 아이콘 #A9BCFF), 강의 [링크 복사] = U3 강의 캔버스(#0E1533 + 1px #232B4D) */
+@media (max-width:560px){
+  [data-theme="dark"] .rget-info .r-copy{background:#0E1533; color:#FFFFFF; box-shadow:inset 0 0 0 2px #243066}
+  [data-theme="dark"] .lec-info .copy-btn, [data-theme="dark"] .lec-info .ab.g{background:#0E1533; box-shadow:inset 0 0 0 1px #232B4D}   /* 강의 [링크 복사](지금은 .ab.g) */
+  [data-theme="dark"] .lec-info .copy-btn svg, [data-theme="dark"] .rget-info .r-copy svg{color:#A9BCFF}
+}
+
+/* ===== #247 (11-23) 휴대폰 화면 확대 · 축소 막기 — 두 손가락 · 두 번 톡 확대 없음, 가로로 밀리지 않음
+   html = overflow-x:hidden(화면 전체로 넘어가서 맨 위 메뉴 줄 sticky가 그대로 동작), body = clip(body에 hidden을 주면 sticky가 깨져서).
+   입력칸 16px 규칙(11-12)은 그대로 — 글자칸 확대가 다시 생기지 않게 ===== */
+html{touch-action:pan-x pan-y; overflow-x:hidden}
+body{overflow-x:clip}

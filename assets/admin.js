@@ -680,7 +680,7 @@
     var target = view.cat === RID ? openM : openV, first = ($("edWrap").hidden && target && motionOk()) ? flipFirst() : null;
     var V = data.videos, isR = view.cat === RID, label = isR ? SC.RESEARCH.label : SC.catLabel(view.cat);
     /* #52 메뉴 칸 = 밑줄 탭: 색 표시 + 메뉴 이름만(숫자 없음, 휴대폰은 색 표시도 없음) */
-    $("mtabs").innerHTML = SC.CATS.concat([SC.RESEARCH]).map(function(c){
+    $("mtabs").innerHTML = SC.MENUS.filter(function(c){ return c.id !== "all"; }).map(function(c){   /* #243 메뉴 순서 */
       return '<button type="button" class="mtab" role="tab" aria-selected="' + (c.id === view.cat) + '" data-cat="' + c.id + '" style="--c:' + catColor(c.id) + '"><span class="mk" aria-hidden="true"></span>' + esc(c.label) + '</button>';
     }).join("");
     $("aqBox").hidden = isR; $("asortBox").hidden = isR; $("rnote").hidden = !isR;
@@ -1432,8 +1432,8 @@
       .replace(/<meta charset="utf-8">\n?/, function(){ return '<meta charset="utf-8">\n' + meta; });
   }
   /* 저장·업데이트 때 함께 만드는 페이지들 (공개 강의 공유 페이지 + 메뉴 페이지) */
-  function builtPages(tpl, out, thumbs, rout){
-    var list = rout ? rPages(tpl, rout) : [];
+  function builtPages(tpl, out, thumbs, rout, tsha){
+    var list = rout ? rPages(tpl, rout, tsha) : [];
     out.videos.forEach(function(v, k){
       if (v.visible === false) return;
       list.push({ path:"v/" + v.id + "/index.html", mode:"100644", type:"blob", content: sharePage(tpl, v, out.site, thumbs[k]) });
@@ -1447,26 +1447,145 @@
       .map(function(p){ return { path:p, mode:"100644", type:"blob", sha:null }; });
   }
   /* 상품연구 공유 페이지: research/2611/ (월) · research/2611/{연령ID}/ (연령) — 공개된 것만 */
-  function rPages(tpl, rout){
+  function rPages(tpl, rout, tsha){
     var list = [], root = siteRoot();
-    function img(p){ return root + (p || "assets/research-default.png"); }
+    /* #246 그림 = 올린 썸네일 → 없으면 그 월 · 연령 자동 썸네일 그림(t-…jpg, ?v=지문 — 바뀌면 카톡이 새로 받게) → 그것도 없으면 기본 그림 */
+    function img(up, auto){
+      if (up) return root + up;
+      var s = tsha && tsha[auto];
+      return root + (s ? auto + "?v=" + s.slice(0, 8) : "assets/research-default.png");
+    }
     rout.months.forEach(function(m){
       var code = ymCode(m.ym); if (m.visible === false || !code) return;
       var ages = m.ages.filter(function(a){ return a.visible !== false; }), nf = ages.reduce(function(n, a){ return n + a.files.length; }, 0);
       list.push({ path:"research/" + code + "/index.html", mode:"100644", type:"blob", content: ogPage(tpl, { base:"../../",
-        title: m.title + " " + SC.RESEARCH.label, desc: "연령 " + ages.length + "개 · 자료 " + nf + "개", image: img(SC.upPic(m.thumb)), url: root + "research/" + code + "/", type:"website" }) });
+        title: m.title + " " + SC.RESEARCH.label, desc: "연령 " + ages.length + "개 · 자료 " + nf + "개", image: img(SC.upPic(m.thumb), "assets/research/t-" + code + ".jpg"), url: root + "research/" + code + "/", type:"website" }) });
       ages.forEach(function(a){
         list.push({ path:"research/" + code + "/" + a.id + "/index.html", mode:"100644", type:"blob", content: ogPage(tpl, { base:"../../../",
-          title: m.title + " " + SC.ageName(a) + " " + SC.RESEARCH.label, desc: "교육자료 " + a.files.length + "개", image: img(SC.upPic(a.thumb) || SC.upPic(m.thumb)), url: root + "research/" + code + "/" + a.id + "/", type:"website" }) });
+          title: m.title + " " + SC.ageName(a) + " " + SC.RESEARCH.label, desc: "교육자료 " + a.files.length + "개", image: img(SC.upPic(a.thumb), "assets/research/t-" + code + "-" + a.id + ".jpg"), url: root + "research/" + code + "/" + a.id + "/", type:"website" }) });
       });
     });
     return list;
   }
   function rPagePaths(rout){ return rPages("<meta charset=\"utf-8\">", rout).map(function(x){ return x.path; }); }
+  /* ---------- #246 상품연구 자동 썸네일 → 그림 파일(카톡 · SNS 공유 그림) ----------
+     올린 썸네일이 없는 공개 월 · 연령마다 assets/research/t-2611.jpg · t-2611-{연령ID}.jpg (1280×720 JPG, 라이트 모양).
+     화면의 자동 썸네일 HTML · CSS를 그대로 SVG(foreignObject)에 넣어 굽기 — 글꼴(SFN 400 · 600 · 700)은 그림 안에 넣음 */
+  function rAutoList(rout){
+    var list = [];
+    rout.months.forEach(function(m){
+      var code = ymCode(m.ym); if (m.visible === false || !code) return;
+      if (!SC.upPic(m.thumb)) list.push({ path: "assets/research/t-" + code + ".jpg", o: SC.athMonth(m), key: "m:" + code });
+      m.ages.forEach(function(a){
+        if (a.visible === false || SC.upPic(a.thumb)) return;
+        list.push({ path: "assets/research/t-" + code + "-" + a.id + ".jpg", o: SC.athAge(m, a), key: "a:" + code + "/" + a.id });
+      });
+    });
+    return list;
+  }
+  var ThumbJpg = (function(){
+    var W = 1280, H = 720, fontP = null, cssTxt = null, iconP = {};   /* cssTxt = Promise */
+    function b64(buf){ var b = new Uint8Array(buf), s = "", CH = 0x8000; for (var i = 0; i < b.length; i += CH) s += String.fromCharCode.apply(null, b.subarray(i, i + CH)); return btoa(s); }
+    function fonts(){
+      return fontP || (fontP = Promise.all([["400", "sfn400"], ["600", "sfn600"], ["700 900", "sfn700"]].map(function(f){
+        return fetch("assets/" + f[1] + ".woff2?v=2").then(function(r){ if (!r.ok) throw new Error("font"); return r.arrayBuffer(); })
+          .then(function(buf){ return '@font-face{font-family:"SFN";font-weight:' + f[0] + ';font-style:normal;src:url(data:font/woff2;base64,' + b64(buf) + ') format("woff2")}'; });
+      })).then(function(a){ return a.join("\n"); }).catch(function(e){ fontP = null; throw e; }));
+    }
+    /* 자동 썸네일 규칙만(다크 규칙 · 화면 크기별(@media) 규칙은 빼고 = 라이트 모양). 브라우저 CSSOM은 var()가 든 background를
+       빈 값으로 내보내서 site.css 원문에서 맨 바깥 규칙을 직접 골라냄. 'body .ath …'는 그림 안에 body가 없어 'body '를 뗌 */
+    function athCss(){
+      if (cssTxt) return cssTxt;
+      var link = document.querySelector('link[href*="site.css"]'), href = link ? link.getAttribute("href") : "assets/site.css";
+      return cssTxt = fetch(href).then(function(r){ return r.text(); }).then(function(t){
+        t = t.replace(/\/\*[\s\S]*?\*\//g, "");
+        var out = [], i = 0, n = t.length;
+        while (i < n){
+          var o = t.indexOf("{", i); if (o < 0) break;
+          var sel = t.slice(i, o).trim(), d = 1, j = o + 1;
+          while (j < n && d){ if (t[j] === "{") d++; else if (t[j] === "}") d--; j++; }
+          if (sel.charAt(0) !== "@" && /\.ath\b/.test(sel) && !/data-theme|:hover|\.r-card|\.thumb|\.ed-|\.am-|\.vitem|\.aitem/.test(sel))
+            out.push(sel.replace(/(^|,)\s*body\s+/g, "$1") + t.slice(o, j));
+          i = j;
+        }
+        return out.join("\n");
+      }).catch(function(e){ cssTxt = null; throw e; });
+    }
+    function icon(src){
+      return iconP[src] || (iconP[src] = fetch(src).then(function(r){ return r.ok ? r.text() : ""; })
+        .then(function(t){ return t ? "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(t))) : ""; }).catch(function(){ return ""; }));
+    }
+    /* 한 번에 여러 장을 세로로 이어 한 그림으로 굽고 잘라 냄(글꼴을 한 번만 넣으려고) */
+    function batch(items){
+      var box = document.createElement("div");
+      box.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+      box.style.cssText = "position:relative;width:" + W + "px;height:" + (H * items.length) + "px;margin:0;font-family:SFN,sans-serif;-webkit-font-smoothing:antialiased";
+      items.forEach(function(it, i){
+        var cell = document.createElement("div");
+        cell.style.cssText = "position:absolute;left:0;top:" + (H * i) + "px;width:" + W + "px;height:" + H + "px;overflow:hidden";
+        cell.innerHTML = SC.autoThumb(it.o);
+        box.appendChild(cell);
+      });
+      var imgs = Array.prototype.slice.call(box.querySelectorAll("img"));
+      return Promise.all([fonts(), athCss()].concat(imgs.map(function(im){ return icon(im.getAttribute("src")).then(function(d){ if (d) im.setAttribute("src", d); else im.remove(); }); })))
+        .then(function(r){
+          var st = document.createElement("style"); st.textContent = r[0] + "\n" + r[1] + "\n.ath *{font-family:SFN,sans-serif}";
+          box.insertBefore(st, box.firstChild);
+          var xml = new XMLSerializer().serializeToString(box);
+          var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + (H * items.length) + '"><foreignObject x="0" y="0" width="100%" height="100%">' + xml + '</foreignObject></svg>';
+          return new Promise(function(res, rej){
+            var im = new Image();
+            im.onload = function(){ (im.decode ? im.decode().catch(function(){}) : Promise.resolve()).then(function(){ setTimeout(function(){ res(im); }, 60); }); };
+            im.onerror = function(){ rej(new Error("svg")); };
+            im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+          });
+        }).then(function(im){
+          var c = document.createElement("canvas"); c.width = W; c.height = H; var g = c.getContext("2d");
+          return items.map(function(it, i){
+            g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, W, H);
+            g.drawImage(im, 0, H * i, W, H, 0, 0, W, H);
+            return { path: it.path, b64: c.toDataURL("image/jpeg", 0.9).split(",")[1] };
+          });
+        });
+    }
+    function make(items){
+      var out = [], i = 0, N = 8;
+      function next(){
+        if (i >= items.length) return Promise.resolve(out);
+        var part = items.slice(i, i + N); i += N;
+        return batch(part).then(function(r){ out = out.concat(r); return next(); });
+      }
+      return next();
+    }
+    return { make: make };
+  })();
+  window.__scThumbJpg = function(rout){ return ThumbJpg.make(rAutoList(rout || cleanResearch())); };   /* 확인용(관리자 콘솔) */
+  function b64Sha(b64){
+    var s = atob(b64), b = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+    var head = new TextEncoder().encode("blob " + b.length + "\0"), all = new Uint8Array(head.length + b.length);
+    all.set(head, 0); all.set(b, head.length);
+    return crypto.subtle.digest("SHA-1", all).then(function(h){ return Array.prototype.map.call(new Uint8Array(h), function(x){ return (x < 16 ? "0" : "") + x.toString(16); }).join(""); });
+  }
+  /* 그릴 것(only)만 구워서 저장소와 다른 것만 blob으로 올림 → { tree: [...], sha: {경로: sha} } (실패하면 빈 결과 — 공유 그림만 기본 그림) */
+  function rAutoImgs(only, remote){
+    var sha = {}; Object.keys(remote).forEach(function(p){ if (/^assets\/research\/t-/.test(p)) sha[p] = remote[p]; });
+    if (!only.length) return Promise.resolve({ tree: [], sha: sha });
+    return ThumbJpg.make(only).then(function(imgs){
+      return Promise.all(imgs.map(function(x){
+        return b64Sha(x.b64).then(function(s){
+          if (remote[x.path] === s){ sha[x.path] = s; return null; }
+          return gh("/git/blobs", { method:"POST", body: JSON.stringify({ content: x.b64, encoding:"base64" }) })
+            .then(function(r){ sha[x.path] = r.sha; return { path: x.path, mode:"100644", type:"blob", sha: r.sha }; });
+        });
+      }));
+    }).then(function(t){ return { tree: t.filter(Boolean), sha: sha }; })
+      .catch(function(){ return { tree: [], sha: sha }; });
+  }
   /* 썸네일 파일: 새로 올린 것은 blob으로 만들고, 더 안 쓰는 것은 지움 */
   function rThumbs(rout, remote){
     var used = {};
     rout.months.forEach(function(m){ if (m.thumb) used[m.thumb] = 1; m.ages.forEach(function(a){ if (a.thumb) used[a.thumb] = 1; }); });
+    rAutoList(rout).forEach(function(x){ used[x.path] = 1; });   /* #246 자동 썸네일 그림은 남겨 둠 */
     var stale = Object.keys(remote).filter(function(p){ return /^assets\/research\/[\w.\-]+$/.test(p) && !used[p]; })
       .map(function(p){ return { path:p, mode:"100644", type:"blob", sha:null }; });
     return Promise.all(Object.keys(used).filter(function(p){ return pendingImgs[p] && !remote[p]; }).map(function(p){
@@ -1490,18 +1609,35 @@
           .concat(SC.MENUS.map(function(c){ return c.id + "/index.html"; }), rPagePaths(rsaved));
         var missing = want.filter(function(p){ return !remote[p]; });
         var stale = staleShare(remote, want.map(function(p){ return { path:p }; }));
-        if (!missing.length && !stale.length) return null;
+        /* #246 빠진 상품연구 공유 그림(t-…jpg)이 있으면 구워 두고, 그림 주소가 바뀌는 상품연구 공유 페이지도 다시 씀 */
+        var noImg = rAutoList(rsaved).filter(function(x){ return !remote[x.path]; });
+        if (!missing.length && !stale.length && !noImg.length) return null;
+        var made = 0;
         return Promise.all([
           fetch("index.html?tpl=" + Date.now(), { cache:"no-store" }).then(function(r){ if (!r.ok) throw new Error("tpl"); return r.text(); }),
-          Promise.all(saved.videos.map(function(v){ return missing.indexOf("v/" + v.id + "/index.html") > -1 ? bestThumb(v.id) : ""; }))
+          Promise.all(saved.videos.map(function(v){ return missing.indexOf("v/" + v.id + "/index.html") > -1 ? bestThumb(v.id) : ""; })),
+          rAutoImgs(noImg, remote)
         ]).then(function(r){
           var need = {}; missing.forEach(function(p){ need[p] = true; });
-          var tree = builtPages(r[0], saved, r[1], rsaved).filter(function(x){ return need[x.path]; }).concat(stale);
-          return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree }) });
+          var ai = r[2], built = builtPages(r[0], saved, r[1], rsaved, ai.sha);
+          return Promise.all(built.map(function(x){
+            if (need[x.path]) return x;
+            if (!ai.tree.length || !/^research\//.test(x.path)) return null;
+            return gitSha(x.content).then(function(s){ return s === remote[x.path] ? null : x; });
+          })).then(function(pg){
+            var tree = pg.filter(Boolean).concat(stale, ai.tree);
+            made = pg.filter(function(x){ return x && /^v\//.test(x.path); }).length;
+            if (!tree.length) return null;
+            return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree }) });
+          });
         }).then(function(t){
+          if (!t) return null;
           return gh("/git/commits", { method:"POST", body: JSON.stringify({ message: "공유·메뉴 페이지 자동 정리", tree: t.sha, parents:[head] }) });
         }).then(function(c){
-          return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) }).then(function(){ return c; });
+          if (!c) return null;
+          return gh("/git/refs/heads/" + encodeURIComponent(branch), { method:"PATCH", body: JSON.stringify({ sha: c.sha }) }).then(function(){
+            if (made) toast("강의 공유 페이지 " + made + "개를 새로 만들었어요 · 카톡 미리보기에 썸네일이 나와요");   /* #246 */
+            return c; });
         });
       })
       .then(function(c){ if (c){ showLast(c.committer && c.committer.date); Deploy.expect(c.sha); } })
@@ -1578,11 +1714,16 @@
       var tpl = r[1], thumbs = r[2], pair = r[3]; newSha = pair.vsha; newRsha = pair.rsha;
       if (sha && remote[VPATH] && remote[VPATH] !== sha){ throw Object.assign(new Error("conflict"), { status:409 }); }
       if (rsha && remote[RPATH] && remote[RPATH] !== rsha){ throw Object.assign(new Error("conflict"), { status:409 }); }
-      var pages = builtPages(tpl, out, thumbs, rout);
-      var tree = dataTree(pair, rout, remote);
-      tree = tree.concat(pages, staleShare(remote, pages));
-      return rThumbs(rout, remote).then(function(imgs){
-        return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree.concat(imgs) }) });
+      /* #246 자동 썸네일 그림: 저장소에 없거나 썸네일 내용(연월 · 제목 · 책임위원 · 연령대)이 바뀐 것만 다시 구움 */
+      var prevKey = {}; (before.r && before.r.months || []).length && rAutoList(before.r).forEach(function(x){ prevKey[x.path] = JSON.stringify(x.o); });
+      var redo = rAutoList(rout).filter(function(x){ return !remote[x.path] || prevKey[x.path] !== JSON.stringify(x.o); });
+      return rAutoImgs(redo, remote).then(function(ai){
+        var pages = builtPages(tpl, out, thumbs, rout, ai.sha);
+        var tree = dataTree(pair, rout, remote);
+        tree = tree.concat(pages, staleShare(remote, pages), ai.tree);
+        return rThumbs(rout, remote).then(function(imgs){
+          return gh("/git/trees", { method:"POST", body: JSON.stringify({ base_tree: baseTree, tree: tree.concat(imgs) }) });
+        });
       });
     }).then(function(t){
       return gh("/git/commits", { method:"POST", body: JSON.stringify({ message: "자료실 업데이트" + (first ? " · " + first.title.slice(0, 40) : ""), tree: t.sha, parents:[head] }) });
@@ -1860,7 +2001,8 @@
         if (idx && canSave){
           var out = cleanData(), tpl = new TextDecoder().decode(idx.buf);
           pages = Promise.all(out.videos.map(function(v){ return bestThumb(v.id); })).then(function(th){
-            var built = builtPages(tpl, out, th, cleanResearch());
+            var tsha = {}; Object.keys(remote).forEach(function(p){ if (/^assets\/research\/t-/.test(p)) tsha[p] = remote[p]; });   /* #246 공유 그림 지문 그대로 */
+            var built = builtPages(tpl, out, th, cleanResearch(), tsha);
             return built.concat(staleShare(remote, built));
           });
         }

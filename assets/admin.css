@@ -2410,3 +2410,9 @@ body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !impo
 /* 편집 칸이 좁을 때(981~1399 편집 중)는 썸네일 128 · 휴대폰(640 이하)은 지금처럼 썸네일 없이 */
 @media (min-width:981px) and (max-width:1399px){ #app.is-edit .mstep .arow .athumb{width:128px} #app.is-edit .mstep .arow{gap:14px; min-height:0} }
 @media (max-width:640px){ .mstep .arow{gap:10px; min-height:0; padding:12px 10px 12px 12px} }
+
+/* ===== #247 (11-23) 휴대폰 화면 확대 · 축소 막기 — 두 손가락 · 두 번 톡 확대 없음, 가로로 밀리지 않음
+   html = overflow-x:hidden(화면 전체로 넘어가서 맨 위 메뉴 줄 sticky가 그대로 동작), body = clip(body에 hidden을 주면 sticky가 깨져서).
+   입력칸 16px 규칙(11-12)은 그대로 — 글자칸 확대가 다시 생기지 않게 ===== */
+html{touch-action:pan-x pan-y; overflow-x:hidden}
+body{overflow-x:clip}

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <base href="../">
 <meta property="og:url" content="https://samsungfire-fs.github.io/sdp_edu/newbie/">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex, nofollow">
 <title>삼성화재금융서비스 교육 자료실</title>
@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261123g">
+<link rel="stylesheet" href="assets/site.css?v=20261123h">
 </head>
 <body>
 
@@ -90,7 +90,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261123d"></script>
+<script src="assets/common.js?v=20261123e"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -246,12 +246,20 @@
     menuShow();
   }
   /* 고른 메뉴가 화면 밖이면 보이게만 (보이면 그대로 두어 '전체'가 잘리지 않게) — #107 글자 폭이 바뀌어 글꼴을 받은 뒤에도 다시 */
+  /* #243 메뉴가 화면에 다 안 들어갈 때(휴대폰 등): 고른 메뉴가 가운데로 오게 메뉴 줄을 밀어 줌 — 밑줄과 같은 곡선 · 같은 시간(360ms, cubic-bezier(.23,1,.32,1)).
+     '전체'를 고르면 맨 왼쪽(0), 끝 메뉴는 끝까지만 */
+  var menuSlide = 0;
   function menuShow(){
     var mn = $("menu"), act = mn.querySelector("[aria-current]");
-    if (act){
-      var a = act.getBoundingClientRect(), r = mn.getBoundingClientRect();
-      if (a.right > r.right) mn.scrollLeft += a.right - r.right + 16;
-      else if (a.left < r.left) mn.scrollLeft -= r.left - a.left + 16;
+    if (act && mn.scrollWidth > mn.clientWidth + 1){
+      var max = mn.scrollWidth - mn.clientWidth, to = Math.max(0, Math.min(max, Math.round(act.offsetLeft + act.offsetWidth / 2 - mn.clientWidth / 2))), x0 = mn.scrollLeft;
+      if (act.offsetParent !== mn){ var a = act.getBoundingClientRect(), r = mn.getBoundingClientRect(); to = Math.max(0, Math.min(max, Math.round(x0 + a.left - r.left + a.width / 2 - r.width / 2))); }
+      cancelAnimationFrame(menuSlide);
+      if (Math.abs(to - x0) > 1){
+        if (REDUCE || !mn.offsetWidth) mn.scrollLeft = to;
+        else { var E = bez(.23, 1, .32, 1), t0 = performance.now();
+          (function step(t){ var k = Math.min(1, (t - t0) / 360); mn.scrollLeft = x0 + (to - x0) * E(k); if (k < 1) menuSlide = requestAnimationFrame(step); else menuFade(); })(t0); }
+      }
     }
     menuFade();
   }
@@ -398,12 +406,13 @@
         '<a class="sh-all rp" href="' + href + '" data-go><span class="sh-l">전체 보기</span><span class="sh-s">전체</span>' + IC.next + '</a></div>' +
         '<div class="sh-wrap"><ul class="sh-row grid vgrid">' + items + '</ul>' + ARR("prev") + ARR("next") + '</div></section>';
     }
-    SC.CATS.forEach(function(c){
+    /* #243 줄 순서 = 메뉴 순서(시그니처 → 상품연구 → 신입 → 제휴사) */
+    SC.MENUS.forEach(function(c){
+      if (c.id === "all") return;
+      if (c.id === "research"){ var ms = rMonths(); html += shelf("research", SC.RESEARCH.label, rUrl(), ms.length, ms.slice(0, 10).map(plCard).join("")); return; }
       var list = listOf(c.id);
       html += shelf(c.id, c.label, menuUrl(c.id), list.length, list.slice(0, 10).map(function(v){ return card(v, false); }).join(""));
     });
-    var ms = rMonths();
-    html += shelf("research", SC.RESEARCH.label, rUrl(), ms.length, ms.slice(0, 10).map(plCard).join(""));
     $("listBody").innerHTML = html + '</div>';
     document.querySelectorAll("#listBody .sh-row").forEach(function(row){ row.addEventListener("scroll", function(){ shNav(row); }, { passive:true }); shNav(row); });
   }
@@ -682,10 +691,12 @@
     });
     /* #236 [공유하기] = 강의와 같은 공유 창(PC · 태블릿 = 카카오톡 · QR / 휴대폰 = 기기 공유 시트), 제목 = '{달 제목} {연령}', 썸네일 = 그 연령 썸네일 */
     $("shareOpen").addEventListener("click", function(){
-      var up = SC.upPic(a.thumb) || SC.upPic(mo.thumb), at = SC.athAge(mo, a);
+      /* #246 카톡 카드 그림 = 올린 썸네일 → 없으면 관리자가 저장할 때 만들어 둔 그 연령 자동 썸네일 그림(t-…jpg). ?k = 썸네일 내용 지문(바뀌면 카톡이 새로 받게) */
+      var up = SC.upPic(a.thumb), at = SC.athAge(mo, a), k = JSON.stringify(at), h = 5381;
+      for (var i = 0; i < k.length; i++) h = ((h * 33) ^ k.charCodeAt(i)) >>> 0;
       Share.open({ files: files, share: { title: mo.title + " " + SC.ageName(a), url: rUrl(code, a.id),
-        thumb: SC.upPic(a.thumb) ? '<img src="' + esc(ROOT + SC.upPic(a.thumb)) + '" alt="">' : (at ? SC.autoThumb(at) : ''),
-        img: new URL(ROOT + (up || "assets/research-default.png"), location.href).href } }, this);
+        thumb: up ? '<img src="' + esc(ROOT + up) + '" alt="">' : (at ? SC.autoThumb(at) : ''),
+        img: new URL(ROOT + (up || "assets/research/t-" + code + "-" + a.id + ".jpg?k=" + h.toString(36)), location.href).href } }, this);
     });
     reveal(".rget .others"); playLr($("app"));
     return rUrl(code, a.id);
@@ -1365,11 +1376,16 @@
         '<img class="sg-cl" src="assets/sg-class.png" alt="" width="474" height="270"><img class="sg-cr" src="assets/sg-crown.png" alt="" width="474" height="270">' +
         '<span class="sg-wr"></span><span class="sg-sh"></span></span><span class="h-orn" aria-hidden="true"><i></i><span></span><i></i></span>' +
         '<span class="h-tag" aria-hidden="true">현장에서 검증된 영업 고수들의 노하우</span></div>';
-    /* #238 · #239 상품연구 = 글자 제목 대신 SPEC 글자 그림 4장(영상 위에 따로) — 자리 = 묶음 너비 기준 %(왼쪽 / 너비) */
+    /* #238 · #239 상품연구 = 글자 제목 대신 SPEC 글자 그림 4장(영상 위에 따로) — 자리 = 묶음 너비 기준 %(왼쪽 / 너비)
+       #244 글자마다 빛 결 칸(그 글자 모양으로 가림) + 치수선 · 양 끝 눈금 + C 오른쪽 위 반짝 별 */
     if (k === "research")
       return '<div class="hh hh-spec" role="img" aria-label="' + esc(SC.RESEARCH.label) + ' SPEC"><span class="spx" aria-hidden="true">' +
         [["s", 0, 21.093], ["p", 24.361, 23.589], ["e", 50.446, 22.4], ["c", 75.876, 24.124]].map(function(L, i){
-          return '<img class="sp-l" src="assets/spec-' + L[0] + '.png?v=1" alt="" style="--i:' + i + ';left:' + L[1] + '%;width:' + L[2] + '%" decoding="async">'; }).join("") +
+          var src = "assets/spec-" + L[0] + ".png?v=1";
+          return '<span class="sp-w" style="--i:' + i + ';--l:' + L[1] + ';left:' + L[1] + '%;width:' + L[2] + '%"><img class="sp-l" src="' + src + '" alt="" decoding="async">' +
+            '<span class="sp-g" style="-webkit-mask-image:url(&quot;' + src + '&quot;);mask-image:url(&quot;' + src + '&quot;)"></span></span>'; }).join("") +
+        '<span class="sp-ln"></span><span class="sp-tk l"></span><span class="sp-tk r"></span>' +
+        '<span class="sp-st"><svg viewBox="0 0 24 24"><path d="M12 0C12.7 7.4 16.6 11.3 24 12 16.6 12.7 12.7 16.6 12 24 11.3 16.6 7.4 12.7 0 12 7.4 11.3 11.3 7.4 12 0Z"/></svg></span>' +
         '</span></div>';
     var t = SC.catLabel(k);
     return '<div class="hh hh-t" role="img" aria-label="' + esc(t) + '"><span class="t" aria-hidden="true">' +

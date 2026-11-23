@@ -222,7 +222,18 @@
     st.textContent = ":root{" + L.join(";") + '}\n:root[data-theme="dark"]{' + D.join(";") + "}\n.mc-dark{" + D.join(";") + "}\n" + A.join("\n");   /* .mc-dark = 어두운 배너 위(라이트 모드여도 다크 값) */
     (document.head || document.documentElement).appendChild(st);
   })();
-  SC.MENUS = [{ id: "all", label: "전체" }].concat(SC.CATS, [SC.RESEARCH]);
+  /* #243 메뉴 순서 = 전체 · 시그니처클래스 · 상품연구 전략자료 · 신입 교육 · 제휴사 상품 전략 — 사이트 · 관리자 메뉴가 나오는 곳은 모두 이 순서(SC.MENUS / SC.MENU_ORDER) */
+  /* #247 아이폰 사파리는 viewport의 user-scalable=no를 무시할 때가 있어 두 손가락 확대 · 축소 몸짓을 직접 막음(사이트 · 관리자 공통) */
+  (function () {
+    function stop(e) { if (e.cancelable) e.preventDefault(); }
+    ["gesturestart", "gesturechange", "gestureend"].forEach(function (ev) { document.addEventListener(ev, stop, { passive: false }); });
+  })();
+  SC.MENU_ORDER = ["signature", "research", "newbie", "partner"];
+  SC.MENUS = [{ id: "all", label: "전체" }].concat(SC.MENU_ORDER.map(function (id) {
+    if (id === "research") return SC.RESEARCH;
+    for (var i = 0; i < SC.CATS.length; i++) if (SC.CATS[i].id === id) return SC.CATS[i];
+    return null;
+  }).filter(Boolean), SC.CATS.filter(function (c) { return SC.MENU_ORDER.indexOf(c.id) < 0; }));
   SC.catLabel = function (id) {
     for (var i = 0; i < SC.MENUS.length; i++) if (SC.MENUS[i].id === id) return SC.MENUS[i].label;
     return SC.CATS[0].label;
