@@ -23,7 +23,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261123c">
+<link rel="stylesheet" href="assets/site.css?v=20261123d">
 </head>
 <body>
 
@@ -1689,17 +1689,19 @@
     var t0 = performance.now(), at = function(ms){ return Math.max(0, ms - (performance.now() - t0)); };
     btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
     var sheet = [document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")].filter(Boolean);
-    var aK = kick && kick.animate ? kick.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: COUT, fill: "forwards" }) : null;
+    /* #219 로고 아래 영문 · 메뉴 이름 줄 = 0~700 스르륵(투명 + 위로 4px, 천천히 시작 · 천천히 끝) */
+    var KO = [{ opacity: 1, translate: "0 0" }, { opacity: 0, translate: "0 -4px" }], KOo = { duration: 700, easing: "cubic-bezier(.4,0,.6,1)", fill: "forwards" };
+    var aK = kick && kick.animate ? kick.animate(KO, KOo) : null;
     var aS = sheet.map(function(el){ return el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(36px)" }], { duration: 400, easing: COUT, fill: "forwards" }); });
-    var mnu = H.querySelector(".h-menus"), aMn = mnu && mnu.animate && mnu.offsetWidth ? mnu.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: COUT, fill: "forwards" }) : null;
+    var mnu = H.querySelector(".h-menus"), aMn = mnu && mnu.animate && mnu.offsetWidth ? mnu.animate(KO, KOo) : null;
     /* #191 ⓓ 데이터 풀기는 누르자마자 · ⓐ 풀리는 대로 홈을 미리 다 그려 두고(전환 중엔 새로 그리지 않음) 움직임은 100ms부터 */
     return enterOpen().then(function(o){
       /* 1) 지금(로그인) 모습 재기 */
       var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), h0 = H.offsetHeight, ops0 = vOps(), tB = tmRects();
       /* 2) 사라지는 중인 것: 로고 아래 영문 · 메뉴 이름 줄(남은 시간) · 카드/시트(본문 노드째 옮겨서 남은 시간) */
       [[kick, aK], [mnu, aMn]].forEach(function(x){
-        var g = ghostCopy(x[0]); if (x[1]) x[1].cancel();
-        if (g){ g.animate([{ opacity: +g.style.opacity || 1 }, { opacity: 0 }], { duration: Math.max(1, at(300)), easing: COUT, fill: "forwards" }); gone(g, at(300) + 20); }
+        var ct = x[1] ? +x[1].currentTime || 0 : 0, g = ghostCopy(x[0]); if (x[1]) x[1].cancel();
+        if (g){ g.style.opacity = ""; g.style.translate = ""; var ga = g.animate(KO, KOo); ga.currentTime = ct; gone(g, at(700) + 20); }   /* 같은 움직임을 같은 시각부터 이어서 */
       });
       var cur = sheet.map(function(el){ var c = getComputedStyle(el); return [c.opacity, c.transform]; });
       var gA = ghostMove($("app"));
@@ -1733,11 +1735,13 @@
       var tEls = tmFlip(tB, go);
       smooth([kr, en].concat(tEls), true);
       /* 맨 위 정보 줄(이름 · 사번 · 로그아웃 / 휴대폰 ☰) · 왼쪽 위 영문 500~900 */
-      [$("mmBtn"), H.querySelector(".h-sdpm"), $("who"), $("whoSep")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: COUT, delay: at(700), fill: "backwards" }); });   /* #217 700~1,100 */
+      [$("mmBtn"), H.querySelector(".h-sdpm"), $("who"), $("whoSep")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 700, easing: COUT, delay: at(800), fill: "backwards" }); });   /* #219 800~1,500 */
       /* 메뉴 줄 · ⏸ · SDP 550~950: 보이는 배너 아래 끝을 따라 붙어 오며 나타남(커질 때도 작아질 때도) · 목록(라인 리빌 전 접혀 있음)도 같이 따라옴 */
-      follow([document.querySelector(".bar"), H.querySelector(".h-pp"), H.querySelector(".h-sdp")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 900, bE: EIO, aS: 750, aD: 400, rise: 10 });   /* #217 메뉴 줄 · ⏸ 750~1,150 */
+      /* #219 ⏸ · 오른쪽 아래 SDP 800~1,500 위에서 8px / 메뉴 줄 850~1,550 아래에서 10px — 둘 다 보이는 배너 아래 끝을 따라 붙어 옴 */
+      follow([H.querySelector(".h-pp"), H.querySelector(".h-sdp")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 900, bE: EIO, aS: 800, aD: 700, rise: -8 });
+      follow([document.querySelector(".bar")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 900, bE: EIO, aS: 850, aD: 700, rise: 10 });
       follow([$("app")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 900, bE: EIO });
-      go(document.querySelector(".fab"), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(750), fill: "backwards" });   /* 맨 위로 버튼도 메뉴 줄과 같이 */
+      go(document.querySelector(".fab"), [{ opacity: 0 }, { opacity: 1 }], { duration: 700, easing: COUT, delay: at(850), fill: "backwards" });   /* 맨 위로 버튼도 메뉴 줄과 같이 */
       setTimeout(function(){ if (bannerUndo) bannerUndo(); H.style.transition = ""; smooth([kr, en].concat(tEls), false); }, at(1000) + 20);
       [kick, mnu].forEach(function(el){ if (el) el.style.visibility = ""; });
       });
