@@ -23,7 +23,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261123f">
+<link rel="stylesheet" href="assets/site.css?v=20261123g">
 </head>
 <body>
 
@@ -39,6 +39,8 @@
     <span class="hv-shade"></span>
   </div>
   <div class="hv hv2" id="hv2" aria-hidden="true"><span class="hv-shade"></span></div>
+  <!-- #238 · #239 상품연구 배경 영상(SPEC 배경, 글자 없음) — 상품연구 머리를 처음 쓸 때 받음 -->
+  <div class="hv hv3" id="hv3" aria-hidden="true"><span class="hv-shade"></span></div>
   <a class="h-brand" href="./" data-go aria-label="홈으로">
     <img class="h-kr" src="assets/hero-kr-w.png?v=1" alt="삼성화재금융서비스" width="1332" height="167">
     <img class="h-en" src="assets/hero-en-w.png?v=1" alt="" width="2012" height="81">
@@ -1361,36 +1363,52 @@
         '<img class="sg-cl" src="assets/sg-class.png" alt="" width="474" height="270"><img class="sg-cr" src="assets/sg-crown.png" alt="" width="474" height="270">' +
         '<span class="sg-wr"></span><span class="sg-sh"></span></span><span class="h-orn" aria-hidden="true"><i></i><span></span><i></i></span>' +
         '<span class="h-tag" aria-hidden="true">현장에서 검증된 영업 고수들의 노하우</span></div>';
-    var t = k === "research" ? SC.RESEARCH.label : SC.catLabel(k);
+    /* #238 · #239 상품연구 = 글자 제목 대신 SPEC 글자 그림 4장(영상 위에 따로) — 자리 = 묶음 너비 기준 %(왼쪽 / 너비) */
+    if (k === "research")
+      return '<div class="hh hh-spec" role="img" aria-label="' + esc(SC.RESEARCH.label) + ' SPEC"><span class="spx" aria-hidden="true">' +
+        [["s", 0, 21.093], ["p", 24.361, 23.589], ["e", 50.446, 22.4], ["c", 75.876, 24.124]].map(function(L, i){
+          return '<img class="sp-l" src="assets/spec-' + L[0] + '.png?v=1" alt="" style="--i:' + i + ';left:' + L[1] + '%;width:' + L[2] + '%" decoding="async">'; }).join("") +
+        '</span></div>';
+    var t = SC.catLabel(k);
     return '<div class="hh hh-t" role="img" aria-label="' + esc(t) + '"><span class="t" aria-hidden="true">' +
       Array.from(t).map(function(c, i){ return '<i style="--i:' + i + '">' + (c === " " ? "&nbsp;" : esc(c)) + '</i>'; }).join("") + '</span>' +
       (HEAD_EN[k] ? '<span class="e" aria-hidden="true">' + HEAD_EN[k] + '</span>' : '') + '</div>';
   }
   /* 시그니처 배경 영상(#150 물결)은 시그니처 머리를 처음 쓸 때 받음 */
-  var HV2 = null;
-  function sigVideo(){
-    if (HV2) return HV2;
-    var box = $("hv2"); HV2 = document.createElement("video");
-    HV2.className = "hv-v"; HV2.muted = true; HV2.loop = true; HV2.playsInline = true; HV2.setAttribute("playsinline", ""); HV2.setAttribute("muted", "");
-    HV2.setAttribute("disablepictureinpicture", ""); HV2.preload = "metadata"; HV2.poster = "assets/sig-poster.jpg?v=1";
-    HV2.innerHTML = '<source src="assets/sig-1280.mp4?v=1" type="video/mp4" media="(max-width:980px)"><source src="assets/sig.webm?v=1" type="video/webm"><source src="assets/sig-1920.mp4?v=1" type="video/mp4">';
-    box.insertBefore(HV2, box.firstChild);
-    ["play", "pause", "playing"].forEach(function(ev){ HV2.addEventListener(ev, heroPaint); });
-    return HV2;
+  /* 홈 영상 위에 겹치는 배경 영상 층 — 시그니처(#150 물결) · 상품연구(#238 · #239 SPEC 배경). DOM 순서 = 겹치는 순서(상품연구가 위) */
+  var OV = {
+    signature: { box: "hv2", cls: "h-sig", x: "h-sigx", poster: "assets/sig-poster.jpg?v=1", v: null,
+      src: '<source src="assets/sig-1280.mp4?v=1" type="video/mp4" media="(max-width:980px)"><source src="assets/sig.webm?v=1" type="video/webm"><source src="assets/sig-1920.mp4?v=1" type="video/mp4">' },
+    research: { box: "hv3", cls: "h-res", x: "h-resx", poster: "assets/spec-bg.jpg?v=1", v: null,
+      src: '<source src="assets/spec-bg.webm?v=1" type="video/webm"><source src="assets/spec-bg.mp4?v=1" type="video/mp4">' }
+  }, OV_ORDER = ["signature", "research"];
+  function ovOf(k){ return OV[k] ? k : ""; }
+  function ovVideo(n){
+    var o = OV[n]; if (o.v) return o.v;
+    var box = $(o.box), v = o.v = document.createElement("video");
+    v.className = "hv-v"; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("muted", "");
+    v.setAttribute("disablepictureinpicture", ""); v.preload = "metadata"; v.poster = o.poster; v.innerHTML = o.src;
+    box.insertBefore(v, box.firstChild);
+    ["play", "pause", "playing"].forEach(function(ev){ v.addEventListener(ev, heroPaint); });
+    return v;
   }
-  function curV(){ return HV2 && $("hero").classList.contains("h-sig") ? HV2 : HV; }
+  function sigVideo(){ return ovVideo("signature"); }
+  function curK(){ var H = $("hero"); return H.classList.contains("h-res") ? "research" : H.classList.contains("h-sig") ? "signature" : ""; }
+  function curV(){ var n = curK(); return n && OV[n].v ? OV[n].v : HV; }
   function vPlay(v){ if (!v || heroUser) return; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
+  function ovSet(n){ HERO.classList.toggle("h-sig", n === "signature"); HERO.classList.toggle("h-res", n === "research"); }
   /* 정적 상태(움직임 없이) */
   function heroApply(k){
-    var home = k === "all", sig = k === "signature";
+    var home = k === "all", ov = ovOf(k);
     HERO.classList.toggle("h-home", home); HERO.classList.toggle("h-menu", !home);
-    HERO.classList.toggle("h-sig", sig);
+    ovSet(ov);
     HERO.dataset.head = k || "";
-    if (sig){ sigVideo().preload = "auto"; vPlay(HV2); if (!HV.paused) HV.pause(); }
-    else { if (HV2 && !HV2.paused) HV2.pause(); heroRun(); }
+    OV_ORDER.forEach(function(n){ var v = OV[n].v; if (n !== ov && v && !v.paused) v.pause(); });
+    if (ov){ var v = ovVideo(ov); v.preload = "auto"; vPlay(v); if (!HV.paused) HV.pause(); }
+    else heroRun();
     heroPaint();
   }
-  function heroClear(){ heroT.forEach(clearTimeout); heroT = []; HERO.getAnimations && HERO.getAnimations({ subtree: true }).forEach(function(a){ if (a.id === "hx") a.cancel(); });
+  function heroClear(){ heroT.forEach(clearTimeout); heroT = []; HERO.classList.remove("h-sigx", "h-resx"); HERO.getAnimations && HERO.getAnimations({ subtree: true }).forEach(function(a){ if (a.id === "hx") a.cancel(); });
     [HKR, HEN].forEach(function(el){ el.removeAttribute("style"); }); HERO.style.height = ""; HERO.style.transition = ""; HERO.classList.remove("h-tr", "h-load"); heroBusy = 0;
     if (heroFol){ heroFol.forEach(function(a){ a.cancel(); }); heroFol = null; } if (bannerUndo) bannerUndo(); }
   var heroFol = null;
@@ -1403,7 +1421,7 @@
     var old = HHEAD.querySelectorAll(".hh:not(.out)");
     if (fast) old.forEach(function(o){ o.classList.add("fast"); });   /* #169 메뉴 → 홈: 국문 로고가 머리 자리를 지나가므로 묶음 전체를 0~350 안에 투명으로 */
     /* #165 사라질 때도 움직임: 글자 메뉴 = 글자 하나씩 45ms(글자당 450ms), 시그니처 = 등장을 거꾸로(~650ms) */
-    old.forEach(function(o){ o.classList.add("out"); var n = o.querySelectorAll(".t i").length, ms = o.classList.contains("hh-sig") ? 680 : 480 + Math.max(0, n - 1) * 45;
+    old.forEach(function(o){ o.classList.add("out"); var n = o.querySelectorAll(".t i, .sp-l").length, ms = o.classList.contains("hh-sig") ? 680 : 480 + Math.max(0, n - 1) * 45;
       setTimeout(function(){ if (o.parentNode) o.parentNode.removeChild(o); }, REDUCE ? 180 : ms); });
     if (!k || k === "all") return;
     var w = document.createElement("div"); w.innerHTML = headHtml(k); var hh = w.firstChild;
@@ -1411,24 +1429,28 @@
     else if (shift != null && REDUCE) hh.classList.add("fade");
     HHEAD.appendChild(hh);
   }
-  /* 배경 영상 겹쳐 바꾸기(시그니처에 들어갈 때 · 나갈 때만) */
-  function sigFade(on, delay, dur){
-    var box = $("hv2");
-    if (on){ var v2 = sigVideo(); v2.preload = "auto";
+  /* 배경 영상 겹쳐 바꾸기(시그니처 · 상품연구에 들어갈 때 · 나갈 때만). from / to = 겹침 층 이름("" = 홈 영상)
+     위에 있는 층만 투명도가 움직이고 아래 층은 그동안 그대로 보임(두 층 다 반투명해져 홈 영상이 비치지 않게) */
+  function ovFade(from, to, delay, dur){
+    if (from === to) return;
+    if (to){ var v2 = ovVideo(to); v2.preload = "auto";
       /* 영상이 아직 준비 전이면 배너가 움직이는 동안은 첫 장면 그림(포스터)만 → 움직임이 끝난 뒤 재생(받기 · 풀기가 움직임과 겹치지 않게) */
       if (v2.readyState >= 3) vPlay(v2);
-      else { v2.load && v2.networkState === 0 && v2.load(); later(function(){ if (HERO.classList.contains("h-sig")) vPlay(v2); }, delay + dur + 50); } }
-    else { vPlay(HV); }
-    HERO.classList.add("h-sigx");
-    var a = anim(box, [{ opacity: on ? 0 : 1 }, { opacity: on ? 1 : 0 }], { duration: dur, delay: delay, easing: EZ, fill: "both" });
-    later(function(){ HERO.classList.remove("h-sigx"); if (a) a.cancel(); if (on){ if (!HV.paused) HV.pause(); } else if (HV2 && !HV2.paused) HV2.pause(); heroPaint(); }, delay + dur + 30);
+      else { v2.load && v2.networkState === 0 && v2.load(); later(function(){ if (HERO.classList.contains(OV[to].cls)) vPlay(v2); }, delay + dur + 50); } }
+    else vPlay(HV);
+    var top = !from ? to : !to ? from : (OV_ORDER.indexOf(to) > OV_ORDER.indexOf(from) ? to : from), anims = [];
+    [from, to].forEach(function(n){ if (!n) return; HERO.classList.add(OV[n].x);
+      var kf = n !== top ? [{ opacity: 1 }, { opacity: 1 }] : n === to ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 1 }, { opacity: 0 }];
+      anims.push(anim($(OV[n].box), kf, { duration: dur, delay: delay, easing: EZ, fill: "both" })); });
+    later(function(){ [from, to].forEach(function(n){ if (n) HERO.classList.remove(OV[n].x); }); anims.forEach(function(a){ if (a) a.cancel(); });
+      if (to){ if (!HV.paused) HV.pause(); } if (from){ var fv = OV[from].v; if (fv && !fv.paused) fv.pause(); } heroPaint(); }, delay + dur + 30);
   }
   /* 목록 라인 리빌 시각(ms 뒤) — renderList · 상품연구 목록이 이 시각까지 접어 둠 */
   var revealIn = 0, revealAbs = 0;
   function heroGo(r, how){
     var k = headKeyOf(r);
     if (document.body.classList.contains("login-mode")){ heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login"; return; }
-    if (!k){ HERO.classList.remove("h-home", "h-sig"); HERO.classList.add("h-menu"); return; }   /* 강의 목록을 받기 전(어느 메뉴인지 모름): 작은 로고 자리만 */
+    if (!k){ HERO.classList.remove("h-home", "h-sig", "h-res"); HERO.classList.add("h-menu"); return; }   /* 강의 목록을 받기 전(어느 메뉴인지 모름): 작은 로고 자리만 */
     var from = heroKey; heroKey = k;
     if (from === k) return;
     var first = !from || from === "login" || how === "still";
@@ -1438,14 +1460,15 @@
       if (how === "still" || how === "quiet" || QUIET){ headIn(k, null); return; }
       /* 주소로 바로 · 새로 고침: 홈 = 국문 흐림 → 또렷 · 영문 드러남, 시그니처 = 450ms 당겨, 글자 메뉴 = 250ms 당겨 */
       if (k === "all"){ if (!REDUCE){ HERO.classList.add("h-load"); later(function(){ HERO.classList.remove("h-load"); }, 1100); } }
-      else headIn(k, k === "signature" ? -450 : -250);
+      else { headIn(k, k === "signature" ? -450 : k === "research" ? 0 : -250);   /* #239 SPEC 글자 = 화면이 뜨고 250ms 뒤 · 70ms 간격 · 900ms */
+        var hs = k === "research" && HHEAD.querySelector(".hh-spec:not(.out)"); if (hs) hs.classList.add("ld"); }
       return;
     }
-    var homeFrom = from === "all", homeTo = k === "all", sigFrom = from === "signature", sigTo = k === "signature";
+    var homeFrom = from === "all", homeTo = k === "all", sigTo = k === "signature", ovFrom = ovOf(from), ovTo = ovOf(k);
     if (REDUCE){ heroApply(k); HHEAD.innerHTML = ""; headIn(k, 0); return; }
     if (!homeFrom && !homeTo){   /* 메뉴 → 메뉴: 머리만(0~300 사라짐 · 250~ 새 머리), 시그니처에 들어갈 때 · 나갈 때만 영상 0~600 */
-      HERO.classList.toggle("h-sig", sigTo); HERO.dataset.head = k;
-      if (sigFrom !== sigTo) sigFade(sigTo, 0, 600);
+      ovSet(ovTo); HERO.dataset.head = k;
+      if (ovFrom !== ovTo) ovFade(ovFrom, ovTo, 0, 600);
       headIn(k, sigTo ? -200 : 200); revealIn = 300; return;   /* #165 새 제목 450~1,500 · 영문 800~1,700 */
     }
     /* 홈 ↔ 메뉴: 처음 모습을 재고 → 끝 모습을 움직임 없이 재고 → 높이 · 로고를 끝 모습으로 움직임 */
@@ -1469,7 +1492,7 @@
       anim(HEN, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translate(-24px,-18px) scale(.9)" }], { duration: 400, delay: 0, easing: EZ, fill: "both" });
       headIn(k, k === "signature" ? -200 : 300); revealIn = 800;   /* #169 시그니처 로고 450~(200ms 당김), 글자 메뉴 550~ */
     }
-    if (sigFrom !== sigTo){ HERO.classList.toggle("h-sig", sigTo); sigFade(sigTo, 0, homeFrom ? 750 : 600); }
+    if (ovFrom !== ovTo){ ovSet(ovTo); ovFade(ovFrom, ovTo, 0, homeFrom && ovTo !== "research" ? 750 : 600); }   /* #238 상품연구 = 누른 순간부터 600ms */
     later(function(){ HEN.classList.remove("rv"); heroClear(); }, homeTo ? 1250 : 800);
   }
   heroGo(parse(), "");   /* 처음 열 때(주소로 바로 · 새로 고침) 로고 · 머리 등장 */
@@ -1483,6 +1506,10 @@
       var im = new Image(); im.src = "assets/" + f; if (im.decode) im.decode().catch(function(){}); warmImgs.push(im);   /* 붙잡아 둬야 풀어 둔 그림이 버려지지 않음 */
     });
     var v = sigVideo(); if (v.paused && !$("hero").classList.contains("h-sig")) v.preload = innerWidth > 980 ? "auto" : "metadata";
+    /* #239 상품연구 SPEC 글자 · 배경 첫 장면도 미리(영상은 1MB라 PC만 끝까지) */
+    ["spec-s.png?v=1", "spec-p.png?v=1", "spec-e.png?v=1", "spec-c.png?v=1", "spec-bg.jpg?v=1"].forEach(function(f){
+      var im = new Image(); im.src = "assets/" + f; if (im.decode) im.decode().catch(function(){}); warmImgs.push(im); });
+    var vr = ovVideo("research"); if (vr.paused && !$("hero").classList.contains("h-res")) vr.preload = innerWidth > 980 ? "auto" : "metadata";
   }
   function warmSoon(){ (window.requestIdleCallback || function(f){ setTimeout(f, 200); })(warmSig, { timeout: 800 }); }
   if (document.readyState === "complete") warmSoon(); else window.addEventListener("load", warmSoon);
@@ -1522,9 +1549,9 @@
     B.classList.add("lgo-out");
     setTimeout(function(){
       var a = kr.getBoundingClientRect(), h0 = H.offsetHeight, op0 = getComputedStyle(HV).objectPosition, E = "cubic-bezier(.2,.8,.2,1)";
-      var wasSig = H.classList.contains("h-sig");
+      var wasOv = curK();
       heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login";
-      if (wasSig) sigFade(false, 0, 500);   /* 시그니처 영상 → 홈 영상 겹쳐 바뀜 */
+      if (wasOv) ovFade(wasOv, "", 0, 500);   /* 시그니처 · 상품연구 영상 → 홈 영상 겹쳐 바뀜 */
       B.classList.remove("lgo-out");
       showLogin(""); window.scrollTo(0, 0);
       B.classList.add("lgo-in");
@@ -1567,7 +1594,7 @@
      H(배너 자리)의 레이아웃 높이는 끝 높이로 미리 바뀌어 있고, 그 아래 것은 follow()가 보이는 아래 끝을 따라 옮김 */
   var bannerUndo = null;
   function bannerMorph(h0, h1, ops0, ops1, dur, delay, ease){
-    var H = $("hero"), W = H.clientWidth, big = Math.max(h0, h1), boxes = [HV.parentNode, $("hv2")], anims = [], undos = [];
+    var H = $("hero"), W = H.clientWidth, big = Math.max(h0, h1), boxes = [HV.parentNode, $("hv2"), $("hv3")], anims = [], undos = [];
     if (bannerUndo) bannerUndo();
     H.style.overflow = "visible"; H.style.background = "transparent";
     var o = { duration: dur, delay: delay, easing: ease, fill: "both" };
@@ -1589,7 +1616,7 @@
     bannerUndo = function(){ if (done) return; done = true; bannerUndo = null; anims.forEach(function(a){ a.cancel(); }); undos.forEach(function(f){ f(); }); H.style.overflow = ""; H.style.background = ""; };
     return bannerUndo;
   }
-  function vOps(){ return [HV, HV2].map(function(v){ return v ? getComputedStyle(v).objectPosition : "50% 50%"; }); }
+  function vOps(){ return [HV, OV.signature.v, OV.research.v].map(function(v){ return v ? getComputedStyle(v).objectPosition : "50% 50%"; }); }
   function vDrawnOf(v, W, Hb, op){
     var vw = v.videoWidth || 1280, vh = v.videoHeight || 548, m = String(op).match(/(-?[\d.]+)%\s+(-?[\d.]+)%/), p2 = m ? [+m[1] / 100, +m[2] / 100] : [.5, .5];
     var sc = Math.max(W / vw, Hb / vh); return { s: sc, w: vw * sc, h: vh * sc, x: (W - vw * sc) * p2[0], y: (Hb - vh * sc) * p2[1] };
@@ -1670,7 +1697,7 @@
     lgoBusy = true;
     /* 1) 지금(홈 · 메뉴) 모습 재기 — 아무것도 바꾸기 전에 */
     var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), enOp = +getComputedStyle(en).opacity, h0 = H.offsetHeight, W = H.clientWidth;
-    var ops0 = vOps(), tB = tmRects(), wasSig = H.classList.contains("h-sig");
+    var ops0 = vOps(), tB = tmRects(), wasOv = curK();
     /* 2) 사라지는 것들은 같은 그림으로 남겨 두고 마저 사라짐 — 맨 위 정보 줄(이름 · 사번 · 로그아웃 / ☰) · 왼쪽 위 SDP 위로, 메뉴 줄 · ⏸ · 오른쪽 아래 SDP · 맨 위로 버튼 아래로 */
     var gUp = [ghostCopy($("mmBtn")), ghostCopy(H.querySelector(".h-sdpm")), ghostCopy($("who")), ghostCopy($("whoSep"))], gDn = [ghostCopy(document.querySelector(".bar")), ghostCopy(H.querySelector(".h-pp")), ghostCopy(H.querySelector(".h-sdp")), ghostCopy(document.querySelector(".fab"))];
     gUp.forEach(function(g){ if (g){ g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 250, easing: COUT, fill: "forwards" }); gone(g, 270); } });
@@ -1679,7 +1706,7 @@
     gA.animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }], { duration: 300, easing: COUT, fill: "forwards" }); gone(gA, 320);
     /* 3) 로그인 화면으로 한 번에 바꾸고 끝 모습 재기 */
     heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login";
-    if (wasSig) sigFade(false, 0, 500);
+    if (wasOv) ovFade(wasOv, "", 0, 500);
     H.style.transition = "none";
     showLogin(""); window.scrollTo(0, 0);
     var h1 = H.offsetHeight, ops1 = vOps(), z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect();

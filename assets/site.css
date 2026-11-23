@@ -2114,3 +2114,30 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
   [data-theme="dark"] .r-act .r-share{background:#3D63FF}
 }
 .shth.rsth{container-type:inline-size}
+
+/* ===== #238 · #239 (11-23) 상품연구 배너 = SPEC 배경 영상(글자 없음 · 10초 반복) + 그 위에 SPEC 글자 그림 4장 =====
+   배너 크기 · 왼쪽 위 로고 · ⏸ · 오른쪽 아래 SALES DEVELOPMENT DEPARTMENT는 그대로, 글자 제목(상품연구 전략자료 · PRODUCT RESEARCH)은 없음 */
+.hero .hv3{opacity:0; visibility:hidden}
+.hero.h-res .hv3, .hero.h-resx .hv3{opacity:1; visibility:visible}
+.hero.h-resx .hv3{opacity:0}
+.hero .hv3 .hv-v{object-position:50% 50%}
+/* 다크도 같은 영상(어둡게 덮지 않음 — 덮으면 SPEC 흰 글자가 탁해짐). 밝은 배경에서 위 메뉴 글자 · 아래 SDP가 읽히게
+   위 84 · 아래 56px(메뉴 배너 270 기준 = 31% · 21%, 태블릿 · 휴대폰은 같은 비율)에 옅은 그늘 */
+.hero .hv3 .hv-shade{opacity:1; background:linear-gradient(180deg, rgba(11,16,48,.30) 0%, rgba(11,16,48,0) 31.1%, rgba(11,16,48,0) 79.3%, rgba(11,16,48,.30) 100%)}
+/* SPEC 글자 묶음: 높이 = 배너 높이의 56%, 가로세로 1683:621, 배너 가운데 · 옅은 그림자 */
+.hero .hh-spec{top:0; bottom:0; justify-content:center}
+.hh-spec .spx{position:relative; display:block; height:56%; aspect-ratio:1683/621; flex:none; filter:drop-shadow(0 2px 10px rgba(40,60,150,.16))}
+.hh-spec .sp-l{position:absolute; top:0; height:100%; max-width:none; display:block}
+/* ④ 메뉴 이동: 이전 제목이 거의 사라진 뒤 글자 하나씩 60ms 간격(글자당 700ms) — 아래 .4em(= 글자 높이의 40%) · 흐림 8 · 투명 → 제자리
+   ③ 주소로 바로 · 새로 고침(.ld): 화면이 뜨고 250ms 뒤 S → P → E → C 70ms 간격(글자당 900ms) — 아래 글자 높이의 14% · 흐림 10 · 투명 → 제자리
+   시작 전(기다리는 동안)에도 투명(both) — 글자가 한 번 보였다 사라지는 깜빡임 없음 */
+@keyframes spIn{from{opacity:0; transform:translateY(40%); filter:blur(8px)}to{opacity:1; transform:none; filter:blur(0)}}
+@keyframes spInL{from{opacity:0; transform:translateY(14%); filter:blur(10px)}to{opacity:1; transform:none; filter:blur(0)}}
+.hh-spec.hh-on .sp-l{animation:spIn 700ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 60ms) both}
+.hh-spec.hh-on.ld .sp-l{animation:spInL 900ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 70ms) both}
+/* 나갈 때: 글자 하나씩 위로 .5em · 흐림 · 투명(다른 메뉴 제목과 같은 방식), 홈으로 갈 때는 묶음 전체를 0~350 안에 */
+@keyframes spOut{to{opacity:0; transform:translateY(-50%); filter:blur(8px)}}
+.hh-spec.out{animation:none}
+.hh-spec.out .sp-l{animation:spOut 450ms cubic-bezier(.4,0,.6,1) calc(var(--i, 0) * 45ms) both}
+.hh-spec.out.fast{animation:hhFo 350ms cubic-bezier(.4,0,.6,1) both}
+@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-l{animation:none !important} }
