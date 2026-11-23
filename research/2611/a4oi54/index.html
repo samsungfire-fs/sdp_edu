@@ -23,7 +23,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261123e">
+<link rel="stylesheet" href="assets/site.css?v=20261123f">
 </head>
 <body>
 
@@ -658,7 +658,8 @@
             '<div class="rget-info"><span class="r-pill">상품연구 전략자료</span>' +
               '<h1>' + esc(mo.title + " " + SC.ageName(a)) + '</h1>' +
               '<p class="rget-count">교육자료 <span class="nowrap">' + files.length + '개</span></p>' +
-              '<button type="button" class="copy-btn r-copy rp press" id="share">' + IC.link + '자료 링크 복사</button>' + anBtn("r:" + code + "/" + a.id, "자료") + '</div>' +
+              '<div class="r-act"><button type="button" class="copy-btn r-copy r-share rp press" id="shareOpen" aria-haspopup="dialog">' + IC.share + '공유하기</button>' +   /* #236 */
+              '<button type="button" class="copy-btn r-copy rp press" id="share">' + IC.link + '자료 링크 복사</button></div>' + anBtn("r:" + code + "/" + a.id, "자료") + '</div>' +
           '</aside>' +
           '<section class="files-card r-files" aria-labelledby="filesH">' +
             '<h2 id="filesH">교육자료 ' + (files.length ? '<span class="nowrap"><span class="num">' + files.length + '</span>개</span>' : '') + '</h2>' +
@@ -674,6 +675,13 @@
     $("share").addEventListener("click", function(){
       var url = rUrl(code, a.id);
       SC.copy(url).then(function(){ toast("링크를 복사했어요. 카톡에 붙여 넣으세요", IC.link); }, function(){ toast(url, IC.link); });
+    });
+    /* #236 [공유하기] = 강의와 같은 공유 창(PC · 태블릿 = 카카오톡 · QR / 휴대폰 = 기기 공유 시트), 제목 = '{달 제목} {연령}', 썸네일 = 그 연령 썸네일 */
+    $("shareOpen").addEventListener("click", function(){
+      var up = SC.upPic(a.thumb) || SC.upPic(mo.thumb), at = SC.athAge(mo, a);
+      Share.open({ files: files, share: { title: mo.title + " " + SC.ageName(a), url: rUrl(code, a.id),
+        thumb: SC.upPic(a.thumb) ? '<img src="' + esc(ROOT + SC.upPic(a.thumb)) + '" alt="">' : (at ? SC.autoThumb(at) : ''),
+        img: new URL(ROOT + (up || "assets/research-default.png"), location.href).href } }, this);
     });
     reveal(".rget .others"); playLr($("app"));
     return rUrl(code, a.id);
@@ -746,12 +754,12 @@
   function kakaoShare(v, url){
     if (!kakaoReady()){ copyLink(url); loadKakao().catch(function(){}); return; }
     try {
-      var n = (v.files || []).length;
+      var n = (v.files || []).length, rs = !!v.share;   /* #236 상품연구 연령 자료: v.share = { title, img } */
       Kakao.Share.sendDefault({
         objectType: "feed",
-        content: { title: String(v.title || "강의").slice(0, 200), description: (n ? "교육자료 " + n + "개 · " : "") + "영개파 교육 자료",
-          imageUrl: SC.thumb(v.id, false), imageWidth: 480, imageHeight: 360, link: { mobileWebUrl: url, webUrl: url } },
-        buttons: [{ title: "강의 보기", link: { mobileWebUrl: url, webUrl: url } }]
+        content: { title: String((rs ? v.share.title : v.title) || "강의").slice(0, 200), description: (n ? "교육자료 " + n + "개 · " : "") + "영개파 교육 자료",
+          imageUrl: rs ? v.share.img : SC.thumb(v.id, false), imageWidth: rs ? 1280 : 480, imageHeight: rs ? 720 : 360, link: { mobileWebUrl: url, webUrl: url } },
+        buttons: [{ title: rs ? "자료 보기" : "강의 보기", link: { mobileWebUrl: url, webUrl: url } }]
       });
     } catch (er) { copyLink(url); }
   }
@@ -768,9 +776,9 @@
     function onDown(e){ if (pop && !pop.contains(e.target) && e.target !== back && !(back && back.contains(e.target))) close(); }
     function sheet(){ return matchMedia("(max-width:560px)").matches; }
     function main(){
-      var v = cur.v, url = cur.url;
-      pop.innerHTML = '<h3 id="shpT">강의 공유하기<button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
-        '<div class="shpv"><span class="shth">' + SC.thumbImg(v.id) + '</span><b>' + esc(v.title || "제목 없음") + '</b></div>' +
+      var v = cur.v, url = cur.url, rs = v.share;
+      pop.innerHTML = '<h3 id="shpT">' + (rs ? "자료" : "강의") + ' 공유하기<button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
+        '<div class="shpv"><span class="shth' + (rs ? ' rsth' : '') + '">' + (rs ? rs.thumb : SC.thumbImg(v.id)) + '</span><b>' + esc((rs ? rs.title : v.title) || "제목 없음") + '</b></div>' +
         /* #82 PC 공유 창 = 카카오톡 · QR 코드 두 칸(링크는 페이지의 [링크 복사]) */
         '<div class="sopt"><button type="button" class="rp" data-kakao title="카카오톡으로 강의 카드를 보내요"><span class="k kk">' + IC.kakao + '</span>카카오톡</button><button type="button" class="rp" data-qr><span class="k qr">' + IC.qr + '</span>QR 코드</button></div>' +
         '<p class="shnote">받는 사람도 사번으로 로그인해야 볼 수 있어요.</p>';
@@ -780,7 +788,7 @@
     function qrView(){
       pop.innerHTML = '<h3 id="shpT"><button type="button" class="shback rp" data-main aria-label="공유하기로 돌아가기">' + IC.back + 'QR 코드</button><button type="button" class="shx rp" data-x aria-label="닫기">' + IC.x + '</button></h3>' +
         '<div class="qrbox"><canvas width="180" height="180" aria-label="강의 주소 QR 코드" role="img"></canvas><span class="qrmsg">QR 코드 그리는 중…</span></div>' +
-        '<p class="qrtx">휴대폰 카메라로 비추면<br>이 강의가 바로 열려요.</p>' +
+        '<p class="qrtx">휴대폰 카메라로 비추면<br>이 ' + (cur.v.share ? "자료" : "강의") + '가 바로 열려요.</p>' +
         '<div class="qrbtns"><button type="button" class="ab g rp qrsave" data-save disabled>' + IC.save + '이미지 저장</button>' +
         '<button type="button" class="ab g rp qrsave" data-qcopy disabled>' + IC.copy + '이미지 복사</button></div>';
       pop.querySelector("[data-main]").focus({ preventScroll:true });
@@ -841,7 +849,7 @@
       pop.style.left = left + "px"; pop.style.top = (r.bottom + scrollY + 10) + "px";
     }
     function open(v, btn){
-      var url = videoUrl(v.id);
+      var url = v.share ? v.share.url : videoUrl(v.id);
       var touch = matchMedia("(hover:none), (pointer:coarse)").matches || matchMedia("(max-width:980px)").matches;
       if (touch && navigator.share){ navigator.share({ url: url }).catch(function(){}); return; }
       if (pop){ close(); return; }
@@ -860,7 +868,7 @@
         if (b.hasAttribute("data-qcopy")){ copyQR(pop.querySelector("canvas")); return; }
         if (b.hasAttribute("data-save")){
           var a = document.createElement("a"); a.href = pop.querySelector("canvas").toDataURL("image/png");
-          a.download = "강의QR_" + String(v.title || v.id).replace(/[\\/:*?"<>|]/g, "").slice(0, 40) + ".png"; document.body.appendChild(a); a.click(); a.remove();
+          a.download = (v.share ? "자료QR_" + v.share.title : "강의QR_" + String(v.title || v.id)).replace(/[\\/:*?"<>|]/g, "").slice(0, 40) + ".png"; document.body.appendChild(a); a.click(); a.remove();
         }
       });
       setTimeout(function(){ document.addEventListener("pointerdown", onDown, true); }, 0);
@@ -1644,6 +1652,16 @@
   function tmFlip(before, go){ var els = []; tmRects().forEach(function(z, i){ var a = before[i][1]; if (a && z[1] && a.width && z[1].width){ go(z[0], flipKF(a, z[1])); els.push(z[0]); } }); return els; }
   function smooth(els, on){ els.forEach(function(e){ if (!e) return; e.style.willChange = on ? "transform" : ""; e.style.backfaceVisibility = on ? "hidden" : ""; }); }
 
+  /* #237 휴대폰 시트 바탕 판: 로그인 시트(윗변 둥글기 24 · 배너와 28px 겹침)의 바탕만 따로 한 장 — 배너와 같은 곡선 · 같은 시간으로 올라가며(내려가며)
+     둥글기 24 ↔ 0, 겹친 폭 28 ↔ 0이 같은 비율로 줄어듦. 바탕색 = 페이지 바탕(홈 바탕이 됨). 배너 위 · 메뉴 줄 · 본문 아래(z 2) */
+  function lgPlate(){
+    var sh = document.querySelector(".lg2-mid"); if (!sh || innerWidth > 640 || !document.body.animate) return null;
+    var r = sh.getBoundingClientRect(), rad = parseFloat(getComputedStyle(sh).borderTopLeftRadius) || 0; if (!rad || r.top <= 0) return null;
+    var d = document.createElement("div"); d.className = "lg-plate"; d.setAttribute("aria-hidden", "true");
+    d.style.cssText = "position:fixed;left:0;right:0;top:" + r.top + "px;height:" + Math.ceil(innerHeight - r.top + 160) + "px;background:" + getComputedStyle(document.body).backgroundColor +
+      ";border-radius:" + rad + "px " + rad + "px 0 0;z-index:2;pointer-events:none;will-change:transform";
+    document.body.appendChild(d); return { el: d, top: r.top, rad: rad };
+  }
   /* 로그아웃 → 로그인: 메뉴 판 0~200 · ☰ · 메뉴 줄 · ⏸ 0~250 · 목록 걷힘 0~300 · 배너 · 로고 · 버튼 50~750 · 로고 아래 영문 450~850 · 시트 450~950.
      레이아웃 바꾸기 전에 홈 로고 자리를 재서 출발점으로 */
   function logoutTransM(){
@@ -1666,6 +1684,9 @@
     showLogin(""); window.scrollTo(0, 0);
     var h1 = H.offsetHeight, ops1 = vOps(), z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect();
     var o = { duration: 700, easing: CIO, delay: at(50), fill: "backwards" };
+    /* #237 휴대폰: 시트 바탕 판이 배너가 펼쳐지는 것과 같이(50~750) 내려가며 둥글기 0 → 24 */
+    var pl = lgPlate();
+    if (pl){ pl.el.animate([{ transform: "translateY(" + (h0 - pl.top) + "px)", borderTopLeftRadius: "0px", borderTopRightRadius: "0px" }, { transform: "none", borderTopLeftRadius: pl.rad + "px", borderTopRightRadius: pl.rad + "px" }], { duration: 700, easing: CIO, delay: at(50), fill: "both" }); gone(pl.el, at(750) + 20); }
     var go = function(el, kf, oo){ if (el && el.animate) el.animate(kf, oo || o); };
     /* #192 배너: 영상 칸 = 둘 중 큰 높이, 보이는 높이만 clip-path(넓은 화면 576.7 → 460처럼 작아질 때도 한 번에 바뀌지 않음) */
     bannerMorph(h0, h1, ops0, ops1, 700, at(50), CIO);
@@ -1677,7 +1698,7 @@
     /* 로고 아래 SDP · (PC · 태블릿) 메뉴 이름 줄 450~850 */
     [brand.querySelector(".h-kick"), H.querySelector(".h-menus")].forEach(function(el){ go(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(450), fill: "backwards" }); });
     /* 카드(휴대폰 시트) 450~950: 보이는 배너 아래 끝을 따라 붙어 오며 아래(휴대폰 60 · 그 외 36px)에서 올라옴 */
-    follow([document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")], { t0: t0, h0: h0, h1: h1, bS: 50, bD: 700, bE: EIO, aS: 450, aD: 500, rise: innerWidth <= 640 ? 60 : 36 });
+    follow([document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")], { t0: t0, h0: h0, h1: h1, bS: 50, bD: 700, bE: EIO, aS: 450, aD: 500, rise: innerWidth <= 640 ? 24 : 36 });   /* #237 휴대폰 안 내용 24px 아래에서 */
     setTimeout(function(){ if (bannerUndo) bannerUndo(); H.style.transition = ""; smooth([kr, en].concat(tEls), false); }, at(750) + 20);
     setTimeout(function(){ lgoBusy = false; }, at(950) + 20);
   }
@@ -1689,10 +1710,11 @@
     var t0 = performance.now(), at = function(ms){ return Math.max(0, ms - (performance.now() - t0)); };
     btn.classList.remove("busy"); btn.classList.add("lg-ok"); btn.innerHTML = IC.ok + '로그인됐어요';
     var sheet = [document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")].filter(Boolean);
+    var pl = lgPlate(), dY = pl ? 24 : 36;   /* #237 휴대폰: 시트 바탕은 남고(판) 안 내용만 0~400에 24px 내려가며 사라짐 */
     /* #219 로고 아래 영문 · 메뉴 이름 줄 = 0~700 스르륵(투명 + 위로 4px, 천천히 시작 · 천천히 끝) */
     var KO = [{ opacity: 1, translate: "0 0" }, { opacity: 0, translate: "0 -4px" }], KOo = { duration: 700, easing: "cubic-bezier(.4,0,.6,1)", fill: "forwards" };
     var aK = kick && kick.animate ? kick.animate(KO, KOo) : null;
-    var aS = sheet.map(function(el){ return el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(36px)" }], { duration: 400, easing: COUT, fill: "forwards" }); });
+    var aS = sheet.map(function(el){ return el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(" + dY + "px)" }], { duration: 400, easing: COUT, fill: "forwards" }); });
     var mnu = H.querySelector(".h-menus"), aMn = mnu && mnu.animate && mnu.offsetWidth ? mnu.animate(KO, KOo) : null;
     /* #191 ⓓ 데이터 풀기는 누르자마자 · ⓐ 풀리는 대로 홈을 미리 다 그려 두고(전환 중엔 새로 그리지 않음) 움직임은 100ms부터 */
     return enterOpen().then(function(o){
@@ -1705,7 +1727,7 @@
       });
       var cur = sheet.map(function(el){ var c = getComputedStyle(el); return [c.opacity, c.transform]; });
       var gA = ghostMove($("app"));
-      sheet.forEach(function(el, i){ aS[i].cancel(); el.animate([{ opacity: cur[i][0], transform: cur[i][1] === "none" ? "none" : cur[i][1] }, { opacity: 0, transform: "translateY(36px)" }], { duration: Math.max(1, at(400)), easing: COUT, fill: "forwards" }); });
+      sheet.forEach(function(el, i){ aS[i].cancel(); el.animate([{ opacity: cur[i][0], transform: cur[i][1] === "none" ? "none" : cur[i][1] }, { opacity: 0, transform: "translateY(" + dY + "px)" }], { duration: Math.max(1, at(400)), easing: COUT, fill: "forwards" }); });
       gone(gA, at(400) + 20);
       [kick, mnu].forEach(function(el){ if (el) el.style.visibility = "hidden"; });
       /* #191 ⓕ 긴 작업(50ms 넘는 것)을 만들지 않게: 고스트로 바꾼 화면을 한 번 그린 뒤 다음 작업에서 홈을 그림 */
@@ -1730,6 +1752,12 @@
       var go = function(el, kf, x){ if (el && el.animate) return el.animate(kf, x || oo); };
       /* #192 배너: 영상 칸 = 둘 중 큰 높이로 고정, 보이는 높이만 clip-path(넓은 화면은 홈이 더 커서 460 → 576.7처럼 커짐) */
       bannerMorph(h0, h1, ops0, ops1, 900, at(100), CIO);
+      /* #237 휴대폰 시트 바탕 판: 배너와 같은 곡선 · 같은 시간(100~1,000)으로 홈 배너 아래 끝까지 올라가며 둥글기 24 → 0. 본문은 판 위(z 3) */
+      if (pl){
+        var ap = $("app"); ap.style.position = "relative"; ap.style.zIndex = "3";
+        pl.el.animate([{ transform: "none", borderTopLeftRadius: pl.rad + "px", borderTopRightRadius: pl.rad + "px" }, { transform: "translateY(" + (h1 - pl.top) + "px)", borderTopLeftRadius: "0px", borderTopRightRadius: "0px" }], { duration: 900, easing: CIO, delay: at(100), fill: "both" });
+        setTimeout(function(){ if (pl.el.parentNode) pl.el.remove(); ap.style.position = ""; ap.style.zIndex = ""; }, at(1000) + 20);
+      }
       if (a.width && z.width) go(kr, flipKF(a, z));
       if (aE.width && zE.width) go(en, flipKF(aE, zE));
       var tEls = tmFlip(tB, go);
@@ -1745,7 +1773,7 @@
       setTimeout(function(){ if (bannerUndo) bannerUndo(); H.style.transition = ""; smooth([kr, en].concat(tEls), false); }, at(1000) + 20);
       [kick, mnu].forEach(function(el){ if (el) el.style.visibility = ""; });
       });
-    }, enterFail);
+    }, function(e){ if (pl && pl.el.parentNode) pl.el.remove(); return enterFail(e); });
   }
 
   /* #63 휴대폰: 이름 칸 → [☰ 메뉴] 안으로. 바 바로 아래로 판이 내려오고, 판 밖은 검정 45% 덮개.

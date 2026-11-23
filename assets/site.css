@@ -2099,3 +2099,18 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
   .comments h2, .intro h2{font-size:17px !important}
   .others > h2, .r-others > h2{font-size:18px !important}
 }
+
+/* ===== 11-23 #236 상품연구 자료 화면 [공유하기] [자료 링크 복사] — 강의 페이지와 같은 공유 창 ===== */
+.r-act{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.r-act .r-copy{margin-top:0}
+.r-act .r-share{background:#003CDC; color:#FFFFFF; box-shadow:none}
+.r-act .r-share svg{width:19px; height:19px; color:#FFFFFF !important}
+[data-theme="dark"] .r-act .r-share{background:#3D63FF; color:#FFFFFF; box-shadow:none}
+@media (hover:hover) and (pointer:fine){ .r-act .r-share:hover{background:#0033BD} [data-theme="dark"] .r-act .r-share:hover{background:#3557E6} }
+@media (max-width:560px){
+  .r-act{flex-wrap:nowrap; align-self:stretch; width:100%; margin-top:4px; gap:10px}
+  .r-act .r-copy{flex:1 1 0; width:auto; min-width:0; height:52px; font-size:17px; margin-top:0; justify-content:center; padding:0 12px}
+  .r-act .r-share{background:#003CDC; color:#FFFFFF}
+  [data-theme="dark"] .r-act .r-share{background:#3D63FF}
+}
+.shth.rsth{container-type:inline-size}
