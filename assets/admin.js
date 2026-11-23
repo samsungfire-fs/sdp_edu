@@ -957,16 +957,15 @@
   }
   /* #187 썸네일 칸 = 왼쪽 [눌러서 올리기 · 또는 끌어다 놓기](올린 뒤엔 [다른 이미지로 바꾸기] [썸네일 지우기]) + 오른쪽 '지금 보이는 모습'
      (올린 그림이 있으면 그 그림, 없으면 자동 썸네일 — 첫째 줄 연월 · 연령대 / 둘째 줄 제목 / 책임위원) */
+  /* #228 ① · #230 썸네일 칸(월 · 연령 같은 모양) = 그림 240px(16:9 · 모서리 14) + 오른쪽 세로로 [다른 이미지로 바꾸기] [썸네일 지우기]
+     올린 그림이 없으면 그림 자리에 자동 썸네일(첫째 줄 연월 · 연령대 / 둘째 줄 제목 / 책임위원). 그림 · 버튼 칸에 끌어다 놓아도 올라감 */
   function thumbField(o, attrs, ai){
     var up = SC.upPic(o.thumb), src = up ? (pendingImgs[up] || up) : "";
-    var left = up
-      ? '<div class="th-btns th-drop-zone" ' + attrs + '><button type="button" class="btn-soft rp press" data-act="rthPick" ' + attrs + '>' + IC.upload + '다른 이미지로 바꾸기</button>' +
-          '<button type="button" class="btn-line rp press" data-act="rthDel" ' + attrs + '>썸네일 지우기</button></div>'
-      : '<button type="button" class="th-drop th-drop-zone rp" data-act="rthPick" ' + attrs + '>' + IC.upload + '<b>눌러서 올리기</b><span>또는 끌어다 놓기</span></button>';
-    return '<div class="th-row">' + left +
-      '<div class="th-now th-only"><span>미리보기</span>' + (up
-        ? '<div class="th-auto th-pic"><img src="' + esc(src) + '" alt="올린 썸네일"></div>'
-        : '<div class="th-auto" data-athn' + (ai != null ? ' data-ai="' + ai + '"' : '') + '>' + (rAt(o) ? SC.autoThumb(rAt(o)) : '') + '</div>') + '</div></div>';
+    return '<div class="th-row2 th-drop-zone" ' + attrs + '>' + (up
+        ? '<div class="th-auto th-pic th-img"><img src="' + esc(src) + '" alt="올린 썸네일"></div>'
+        : '<div class="th-auto th-img" data-athn' + (ai != null ? ' data-ai="' + ai + '"' : '') + ' role="img" aria-label="자동 썸네일">' + (rAt(o) ? SC.autoThumb(rAt(o)) : '') + '</div>') +
+      '<div class="th-btns2"><button type="button" class="btn-soft rp press" data-act="rthPick" ' + attrs + '>' + IC.upload + '다른 이미지로 바꾸기</button>' +
+        '<button type="button" class="btn-line rp press" data-act="rthDel" ' + attrs + (up ? '' : ' disabled title="올린 이미지가 없어요 — 지금은 자동 썸네일이에요"') + '>썸네일 지우기</button></div></div>';
   }
   function prevMonth(m){
     var best = null;
@@ -1004,12 +1003,18 @@
         '<input type="text" id="rm' + mi + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(m.title) + '" placeholder="예) 비급여통합치료비 상품연구 전략자료 모음" autocomplete="off" aria-label="제목">') +
       rrow(4, '책임위원 <span class="opt">(선택)</span>', "썸네일 아래쪽에 나와요. 비우면 안 나와요. 이 달 연령들의 기본값이 돼요.",
         '<input type="text" id="rm' + mi + 'by" class="ip" ' + at + ' data-rk="by" value="' + esc(m.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20" aria-label="책임위원">') +
-      rrow(5, "썸네일", ["올리지 않으면 연월 · 제목 · 책임위원으로 자동으로 만들어요.", "이미지 사이즈 16:9(1280x720)"], thumbField(m, at)) +
-      rrow(6, '연령 <b class="fn">' + m.ages.length + '</b>', "연령은 적은 나이부터 자동으로 정렬돼요. 사이트 목록도 같은 순서예요.",
+      rrow(5, "썸네일", ["이미지 사이즈 16:9(1280x720)"], thumbField(m, at)) +
+      /* #228 ⑥ 연령: 제목 줄 오른쪽 = 정렬 안내 · 목록(없으면 점선 빈 칸) · [+ 연령 추가] */
+      rrow(6, '연령 <b class="fn">' + m.ages.length + '</b>', "",
         (m.ages.length ? '<ul class="ages">' + m.ages.map(function(a, ai){ return ageHtml(m, mi, a, ai); }).join("") + '</ul>'
           : '<p class="ages-empty"><b>아직 연령이 없어요</b><span>아래 [+ 연령 추가]로 이 달 연령을 하나씩 넣어 주세요.</span></p>') +
-        '<button type="button" class="add rp" data-act="raddAge" ' + at + '>' + IC.plus + '연령 추가</button>', HOWTO_BTN, true) +
-      '<div class="ed-end">' + edFoot(wt, true, pub && code && saved ? 'research/' + code + '/' : '', '', 'data-act="rdel" ' + at, "월 삭제", m.title) + '</div></div>';
+        '<button type="button" class="add rp" data-act="raddAge" ' + at + '>' + IC.plus + '연령 추가</button>',
+        '<span class="ag-note">연령은 적은 나이부터 자동으로 정렬돼요. 사이트 목록도 같은 순서예요.</span>', true) +
+      /* #228 · #229 맨 아래: '사이트에서 보기'(새 달 · 저장 전은 회색) · [🕒 수정 기록 N] [월 삭제] → 그 밑 '업로드 · 마지막 수정' 줄 */
+      '<div class="ed-end m-end"><div class="ftr">' + (pub && code && saved ? '<a class="lk rp" href="research/' + code + '/" target="_blank" rel="noopener">' + NEWWIN + '사이트에서 보기</a>'
+          : '<span class="lk off" aria-disabled="true" title="' + (m._new ? "저장하면 볼 수 있어요" : "사이트에 공개된 저장된 달만 볼 수 있어요") + '">' + NEWWIN + '사이트에서 보기</span>') +
+        '<span class="ftr-r">' + Audit.logBtn(wt, true, m.title || SC.ymLabel(m.ym)) + '<button type="button" class="lk dg rp" data-act="rdel" ' + at + '>' + IC.del + '월 삭제</button></span></div>' +
+        Audit.metaLine(wt, true) + '</div></div>';
   }
   function ageStep(m, mi, a){
     var ai = m.ages.indexOf(a), at = 'data-m="' + mi + '" data-a="' + ai + '"', idp = "r" + mi + "a" + ai, pub = a.visible !== false, isN = !!a._new;
@@ -1023,7 +1028,7 @@
         '<input type="text" id="' + idp + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(a.title) + '" placeholder="예) 비급여통합치료비" autocomplete="off" aria-label="제목">') +
       rrow(3, '책임위원 <span class="opt">(선택)</span>', "",
         '<input type="text" id="' + idp + 'by" class="ip" ' + at + ' data-rk="by" value="' + esc(a.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20" aria-label="책임위원">') +
-      rrow(4, "썸네일", ["올리지 않으면", "연령대 · 제목 · 책임위원으로", "자동으로 만들어요.", "이미지 사이즈 16:9(1280x720)"], thumbField(a, at, ai)) +
+      rrow(4, "썸네일", ["이미지 사이즈 16:9(1280x720)"], thumbField(a, at, ai)) +
       rrow(5, '교육자료 <b class="fn">' + a.files.length + '</b>', ["① 드라이브에서 파일 우클릭 → 공유", "② ‘링크가 있는 모든 사용자’", "③ 링크 복사"],
         '<div class="fsort">' + filesHtml(a.files, at, idp, "rfdel", m._oym ? "rf:" + ymCode(m._oym) + "/" + a.id : "", savedKeys("r", m._oym, a.id)) + '</div>' +
         '<div><button type="button" class="btn-soft rp press" data-act="raddFile" ' + at + '>' + IC.plus + '자료 추가</button></div>', HOWTO_BTN) +
@@ -1315,7 +1320,10 @@
     var sv = $("efSave"), un = $("efUndo"), st = $("efSaveT"), dt = sv.querySelector(".dt");
     if (obj){
       var noUrl = isNew && !isR && !obj.id, has = dirty || isNew;
-      un.hidden = !(has || saving); un.textContent = isNew ? "취소" : "되돌리기"; un.disabled = saving;
+      un.hidden = !(has || saving); un.textContent = isNew && !isR ? "취소" : "되돌리기"; un.disabled = saving;   /* #228 ⑤ 새 달도 [되돌리기] */
+      /* #227 월 편집 머리 오른쪽 상태 글자: '● 저장하지 않은 변경 N개' / 새 달 '● 새 달 · 아직 저장 전' / 바뀐 게 없으면 없음 */
+      var est = $("efSt");
+      if (est){ var sh = isR && has && !saving; est.hidden = !sh; est.innerHTML = sh ? '<i class="dt" aria-hidden="true"></i>' + (isNew ? "새 달 · 아직 저장 전" : "저장하지 않은 변경 " + changeCount() + "개") : ""; }
       sv.disabled = saving || !canSave || noUrl || !has;
       dt.hidden = saving || !has || noUrl;
       var ic = sv.querySelector("svg"); if (ic) ic.remove();
@@ -2619,6 +2627,14 @@
       var o = merge ? merged(t) : get(t); if (!o) return "";
       return '<div class="hline"><span class="hist2">' + IC_CLOCK + '<span class="nowrap">마지막 ' + (/업로드했어요|만들었어요/.test(o.last.x) ? "업로드" : "수정") + ' <b>' + esc(o.last.n) + '</b> · ' + esc(fmtAt(o.last.at, "full")) + '</span></span></div>';
     }
+    /* #228 ③ 월 편집 맨 아래 줄: '업로드 소희수 · 2026.11.01 10:12'  '마지막 수정 박유진 · 2026.11.11 09:41' (새 달 = 업로드 {내 이름} · 저장 전 / 마지막 수정 없음) */
+    function metaLine(t, merge){
+      var me = adminSes ? adminSes.name : "", it = function(l, n, w){ return '<span class="mm-i">' + l + (n ? ' <b>' + esc(n) + '</b>' : '') + (w ? ' · ' + esc(w) : '') + '</span>'; };
+      if (!t) return '<div class="mmeta">' + it("업로드", me, "저장 전") + it("마지막 수정 없음") + '</div>';
+      var o = merge ? merged(t) : get(t); if (!o) return "";
+      var f = merge && o.own ? o.own.first : o.first;
+      return '<div class="mmeta">' + it("업로드", f.n, fmtAt(f.at, "full")) + (o.count > 1 ? it("마지막 수정", o.last.n, fmtAt(o.last.at, "full")) : it("마지막 수정 없음")) + '</div>';
+    }
     /* [🕒 수정 기록 N] — 강의 삭제 바로 왼쪽 */
     function logBtn(t, merge, title){
       var o = t ? (merge ? merged(t) : get(t)) : null;
@@ -2638,14 +2654,14 @@
       if (c.k === "adel") return [tag("연령 삭제", "r"), '<del>' + esc(c.o) + '</del>'];
       return null;
     }
-    function fromX(x){
-      var m;
+    function fromX(x, rs){
+      var m, FL = rs ? "자료" : "교육자료";
       if ((m = /^연령을 추가했어요 · (.*)$/.exec(x))) return [[tag("연령 추가", "g"), '<ins>' + esc(m[1]) + '</ins>']];   /* #216 예전 기록도 한 줄 */
       if ((m = /^연령을 삭제했어요 · (.*)$/.exec(x))) return [[tag("연령 삭제", "r"), '<del>' + esc(m[1]) + '</del>']];
       if (/^강의를 업로드|^달을 만들었어요|^연령을 만들었어요/.test(x)) return [[tag(/^강의/.test(x) ? "강의 추가" : "추가", "g"), esc(x)]];
-      if ((m = /^자료 (\d+)개를 (업로드|추가)했어요(?: · (.*))?$/.exec(x))) return [[tag("교육자료 추가", "g"), esc(m[3] || m[1] + "개")]];
-      if ((m = /^자료 (\d+)개를 삭제했어요(?: · (.*))?$/.exec(x))) return [[tag("교육자료 삭제", "r"), esc(m[2] || m[1] + "개")]];
-      if ((m = /^자료 링크를 바꿨어요 · (.*)$/.exec(x))) return [[tag("교육자료 링크", "n"), esc(m[1])]];
+      if ((m = /^자료 (\d+)개를 (업로드|추가)했어요(?: · (.*))?$/.exec(x))) return [[tag(FL + " 추가", "g"), esc(m[3] || m[1] + "개")]];
+      if ((m = /^자료 (\d+)개를 삭제했어요(?: · (.*))?$/.exec(x))) return [[tag(FL + " 삭제", "r"), esc(m[2] || m[1] + "개")]];
+      if ((m = /^자료 링크를 바꿨어요 · (.*)$/.exec(x))) return [[tag(FL + " 링크", "n"), esc(m[1])]];
       if (/^비공개 → 공개/.test(x)) return [[tag("공개", "b"), "비공개 → 공개"]];
       if (/^공개 → 비공개/.test(x)) return [[tag("비공개", "b"), "공개 → 비공개"]];
       if ((m = /^메뉴를 옮겼어요 · (.*)$/.exec(x))) return [[tag("메뉴", "n"), esc(m[1])]];
@@ -2655,10 +2671,10 @@
       if ((m = /^(.+?)[을를] 바꿨어요$/.exec(x))) return m[1].split("·").map(function(w){ return [tag(w, "n"), "바꿨어요"]; });
       return [[tag("수정", "n"), esc(x)]];
     }
-    function logRows(e){
+    function logRows(e, rs){
       var out = [];
       if (e.d && e.d.length){ e.d.forEach(function(c){ var r = fromD(c); if (r) out.push(r); }); if (out.length) return out; }
-      return fromX(e.x);
+      return fromX(e.x, rs);
     }
     function openLog(t, merge, title){
       var o = t ? (merge ? merged(t) : get(t)) : null, n = o ? o.count : 0;
@@ -2673,7 +2689,7 @@
         /* #216 같은 저장에 '연령을 추가했어요'가 있으면 연령 쪽 '연령을 만들었어요'는 겹쳐 쓰지 않음 */
         var addAt = {}; list.forEach(function(e){ if (/^연령을 추가했어요/.test(e.x)) addAt[e.n + "|" + e.at] = 1; });
         list = list.filter(function(e){ return !(e.x === "연령을 만들었어요" && !(e.d && e.d.length) && addAt[e.n + "|" + e.at]); });
-        list.forEach(function(e){ var k = e.n + "|" + e.at; if (!gk[k]){ gk[k] = { n: e.n, at: e.at, rows: [] }; groups.push(gk[k]); } gk[k].rows = gk[k].rows.concat(logRows(e)); });
+        list.forEach(function(e){ var k = e.n + "|" + e.at; if (!gk[k]){ gk[k] = { n: e.n, at: e.at, rows: [] }; groups.push(gk[k]); } gk[k].rows = gk[k].rows.concat(logRows(e, merge)); });
         if (!groups.length){ box.innerHTML = '<p class="lge">아직 기록이 없어요.</p>'; return; }
         var h = box.closest(".modal").querySelector("#modalT"); if (h) h.innerHTML = '수정 기록 <b>' + groups.length + '</b>';
         box.innerHTML = '<ol class="lgo">' + groups.map(function(g, i){
@@ -2696,7 +2712,7 @@
     document.addEventListener("click", function(e){ var b = e.target.closest("[data-log]"); if (!b) return; openLog(b.dataset.log, !!b.dataset.merge, b.dataset.logt); });
     function lastSave(){ var sv = get("save"); return sv ? sv.last : null; }
     function reset(){ map = null; more = {}; }
-    return { load: load, add: add, get: get, merged: merged, rowWho: rowWho, sumWho: sumWho, fileWho: fileWho, histHtml: histHtml, histLine: histLine, logBtn: logBtn, lastSave: lastSave, reset: reset, on: on, paint: paint };
+    return { load: load, add: add, get: get, merged: merged, rowWho: rowWho, sumWho: sumWho, fileWho: fileWho, histHtml: histHtml, histLine: histLine, metaLine: metaLine, logBtn: logBtn, lastSave: lastSave, reset: reset, on: on, paint: paint };
   })();
 
   /* 저장 전·후를 비교해 '변경 기록'에 남길 줄 만들기 (여러 칸을 한 번에 바꾸면 한 줄로 묶음) */

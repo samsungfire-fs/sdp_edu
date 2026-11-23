@@ -2316,3 +2316,74 @@ body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !impo
 .astep .frow .fnm .nm, .astep .frow .fnm .sz{line-height:1.3}
 @media (max-width:980px){ .astep .frow .fnm{min-height:34px} }
 .astep .as-foot{align-items:center}
+
+/* ===== 11-23 #226 ~ #231 =====
+   #226 상품연구 편집 칸 머리 = 한 줄: 왼쪽 묶음(제목 → 단계 줄 → 뒤로가기, 사이 8px) / 오른쪽 버튼 묶음(사이 8px), 버튼 가운데 = 제목 첫 줄 가운데 */
+.editor.age-mode #efSt{display:none !important}
+@media (min-width:981px){
+  #app .editor.month-mode .ed-head, #app .editor.age-mode .ed-head{display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:16px; row-gap:8px; align-items:start; padding:20px 24px 16px 28px}
+  #app .editor.month-mode .ed-head > *, #app .editor.age-mode .ed-head > *{grid-column:1; min-width:0}
+  #app .editor.month-mode .ed-head h2, #app .editor.age-mode .ed-head h2{line-height:34px; padding-right:0}
+  #app .editor.month-mode .ed-r1, #app .editor.age-mode .ed-r1{grid-column:2; grid-row:1 / span 2; position:static; width:auto; align-self:start; gap:8px; margin-top:-5px}
+  #app .editor.age-mode .ed-r1{grid-row:1 / span 3}
+  #app .editor.month-mode #edSteps, #app .editor.age-mode #edSteps, #app .editor.age-mode .ed-back{margin-top:0}
+  #app .editor.month-mode .ed-r1 .ed-sp, #app .editor.age-mode .ed-r1 .ed-sp{display:none}
+  #app .editor.month-mode .ed-close, #app .editor.age-mode .ed-close{width:44px; height:44px}
+  /* #227 저장 버튼 묶음: [● 저장하지 않은 변경 N개] [되돌리기] [저장] [✕] — 버튼 높이 44 */
+  #app .editor.month-mode #efSave{height:44px}
+  #app .editor.month-mode #efUndo{height:44px; padding:0 16px .06em; border-radius:10px; box-shadow:inset 0 0 0 1px var(--k-ln2); color:var(--k-t2)}
+}
+@media (min-width:981px) and (hover:hover) and (pointer:fine){ #app .editor.month-mode #efUndo:not(:disabled):hover{background:var(--k-s2); color:var(--k-t1)} }
+.ed-st{display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:700 !important; color:var(--k-t1); white-space:nowrap}
+.ed-st[hidden]{display:none}
+.ed-st .dt{width:8px; height:8px; border-radius:50%; background:#F5B300; flex:none}
+@media (max-width:980px){
+  #app .editor.month-mode .ed-st{grid-area:p; justify-self:start; margin:12px 0 0 calc(var(--edin) - var(--edpx))}
+}
+/* 편집 칸이 좁을 때(981~1399 편집 중) 상태 글자는 숨기고 버튼만(저장 버튼 이름에 개수가 있음) */
+@media (min-width:981px) and (max-width:1399px){ #app.is-edit .editor.month-mode .ed-st{display:none} }
+
+/* #231 연령 편집 · 연령 추가: 머리 밑 선 없음 + 그만큼 여백 줄임(단계 줄 ↔ 뒤로가기 = 제목 ↔ 단계 줄 간격), ① 연령대 칸 위 선은 그대로 */
+#app .editor.age-mode .ed-head{box-shadow:none; padding-bottom:10px}
+@media (min-width:981px){ #app .editor.age-mode .ed-back{margin-top:3px} }
+@media (max-width:980px){ #app .editor.age-mode .ed-back{margin-top:-2px} }
+.astep > .fs2:first-child{box-shadow:inset 0 1px 0 var(--k-ln), inset 0 -1px 0 var(--k-ln)}
+
+/* #228 ① · #230 썸네일 칸 = 그림 240px(16:9 · 모서리 14) + 오른쪽 세로 버튼 [다른 이미지로 바꾸기] [썸네일 지우기] (사이 16 · 버튼 사이 8) */
+.th-row2{display:flex; align-items:center; gap:16px; flex-wrap:wrap; border-radius:16px}
+.th-row2 .th-img{position:relative; display:block; flex:none; width:240px; height:auto; aspect-ratio:16/9; max-width:100%; border-radius:14px; overflow:hidden; box-shadow:inset 0 0 0 1px var(--k-ln)}
+.th-row2 .th-img.th-pic{background:#FFFFFF}
+.th-row2 .th-btns2{display:flex; flex-direction:column; align-items:stretch; gap:8px}
+.th-row2 .th-btns2 .btn-line{background:var(--k-s1); box-shadow:inset 0 0 0 2px #E4E8F4; color:var(--k-t2)}
+[data-theme="dark"] .th-row2 .th-btns2 .btn-line{box-shadow:inset 0 0 0 2px #2A3045}
+.th-row2 .th-btns2 .btn-line:disabled{opacity:.45; cursor:default}
+.th-row2.over{outline:2px dashed #003CDC; outline-offset:6px}
+[data-theme="dark"] .th-row2.over{outline-color:#5BC2E7}
+@media (max-width:520px){ .th-row2 .th-img{width:100%} .th-row2 .th-btns2{flex-direction:row; flex-wrap:wrap; width:100%} .th-row2 .th-btns2 > button{flex:1 1 auto} }
+
+/* #228 ⑥ 연령: 제목 줄 오른쪽 정렬 안내 · 없으면 점선 빈 칸 */
+.fs2 > .flb .ag-note{font-size:13px; line-height:1.5; color:var(--k-t3); text-align:right; word-break:keep-all; min-width:0; flex:0 1 auto}
+.fs2.fs-full > .flb{gap:16px}
+@media (max-width:640px){ .fs2.fs-full > .flb{flex-wrap:wrap; gap:6px} .fs2 > .flb .ag-note{text-align:left; flex-basis:100%} }
+.mstep .ages-empty{background:transparent; box-shadow:inset 0 0 0 0 transparent; border:1.5px dashed #C9D2EA; align-items:center; text-align:center; padding:22px 18px}
+[data-theme="dark"] .mstep .ages-empty{border-color:#2A3045}
+/* #228 ⑦ 다크: 칸 제목('연령 N' 등)이 잘 보이게 */
+[data-theme="dark"] .fs2 > .flb .n .nm{color:#EEF1FA}
+
+/* #228 · #229 월 편집 맨 아래: 연령 묶음 다음 28px → '사이트에서 보기' · [🕒 수정 기록 N] [월 삭제] → 16px → 위 선 + 16px → '업로드 · 마지막 수정' */
+.mstep > .fs2.fs-full{box-shadow:none}
+.ed-end.m-end{background:transparent; padding:8px 28px 24px; gap:16px}
+@media (max-width:980px){ .ed-end.m-end{padding:8px 24px calc(24px + env(safe-area-inset-bottom, 0px))} }
+@media (max-width:640px){ .ed-end.m-end{padding:8px 16px calc(24px + env(safe-area-inset-bottom, 0px))} }
+.m-end .ftr .lk{height:44px; border-radius:10px}
+.m-end .ftr .lk.off{color:var(--k-t3); opacity:.6; cursor:default; box-shadow:inset 0 0 0 1px var(--k-ln)}
+.m-end .ftr .ftr-r{gap:8px}
+.m-end .ftr .lk[data-log]{background:#FFFFFF; box-shadow:inset 0 0 0 2px #E4E8F4; color:#0B1030; font-size:15px; font-weight:700 !important; gap:6px; padding:0 14px .06em}
+.m-end .ftr .lk[data-log] svg{width:16px; height:16px}
+.m-end .ftr .lk[data-log] .lkn{min-width:20px; height:20px; padding:0 6px; border-radius:6px; font-size:12px; font-weight:700 !important; background:#E8EDFC; color:#003CDC}
+[data-theme="dark"] .m-end .ftr .lk[data-log]{background:#1F232C; box-shadow:inset 0 0 0 2px #2A3045; color:#EEF1FA}
+[data-theme="dark"] .m-end .ftr .lk[data-log] .lkn{background:#1E2540; color:#8FA8FF}
+@media (hover:hover) and (pointer:fine){ .m-end .ftr .lk[data-log]:hover{background:#F6F8FD} [data-theme="dark"] .m-end .ftr .lk[data-log]:hover{background:#252A35} .m-end .ftr .lk.off:hover{background:var(--k-s1); box-shadow:inset 0 0 0 1px var(--k-ln)} }
+.mmeta{display:flex; flex-wrap:wrap; gap:6px 14px; padding-top:16px; box-shadow:inset 0 1px 0 #EEF1F7; font-size:12.5px; line-height:1.5; color:var(--k-t3)}
+[data-theme="dark"] .mmeta{box-shadow:inset 0 1px 0 #262A33}
+.mmeta b{font-weight:700 !important; color:var(--k-t2)}

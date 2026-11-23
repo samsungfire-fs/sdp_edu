@@ -15,7 +15,7 @@
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css?v=20261123d">
-<link rel="stylesheet" href="assets/admin.css?v=20261123f">
+<link rel="stylesheet" href="assets/admin.css?v=20261123g">
 </head>
 <body>
 <script>/* 11-12: 저장된 관리자 로그인이 있으면 처음부터 관리자 화면으로 그림('확인 중' 화면 없이). 확인은 admin.js가 뒤에서 */(function(){try{var k="sdp-admin-sid",o=JSON.parse(localStorage.getItem(k)||sessionStorage.getItem(k)||"null"),n=new Date(Date.now()+324e5).toISOString().slice(0,19);if(o&&o.sid&&o.p&&localStorage.getItem("sdp-gate-url")&&!(o.exp&&String(o.exp).slice(0,19)<=n))document.body.classList.add("authed")}catch(e){}})();</script>
@@ -173,6 +173,7 @@
           <span class="tagp" id="edPill"></span>
           <span class="ed-swbox" id="edSwBox"></span>
           <span class="ed-sp"></span>
+          <span class="ed-st" id="efSt" role="status" hidden></span>
           <button type="button" class="tb rp" id="efUndo" hidden>되돌리기</button>
           <button type="button" class="bb p rp" id="efSave"><span class="dt" aria-hidden="true"></span><span id="efSaveT">저장</span></button>
         </div>
@@ -352,6 +353,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/common.js?v=20261123c"></script>
-<script src="assets/admin.js?v=20261123f"></script>
+<script src="assets/admin.js?v=20261123g"></script>
 </body>
 </html>
