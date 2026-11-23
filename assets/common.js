@@ -168,9 +168,29 @@
   SC.upPic = function (p) { p = String(p || ""); return /^assets\/research\/u-/.test(p) ? p : ""; };
   SC.ageName = function (a) { var b = String((a && a.band) || "").trim(), t = String((a && a.title) || "").trim(); return b ? (t ? b + " " + t : b) : t; };
   SC.athSrc = "assets/";
+  /* #208~#211 왼쪽 = 날짜 · 연령 글자만(월: 작게 26년 + 크게 11월 / 연령: 크게 40대, '60세 이상' → 60세 + 작게 이상), 오른쪽 = 제목만 + 책임위원.
+     날짜 · 연령을 못 꺼내면 예전 아이콘 칸 + 첫째 줄 */
+  SC.athTx = function (o) {
+    var A = String(o.a || "").trim();
+    if (o.icon !== "shield"){
+      var y = /^(\d{4})-(\d{2})$/.exec(String(o.ym || "")), x = y ? [y[1].slice(2), +y[2]] : (/(\d{2,4})\s*년\s*(\d{1,2})\s*월/.exec(A) || []).slice(1);
+      if (x && x.length === 2 && x[1]) return { s: String(x[0]).slice(-2) + "년", b: (+x[1]) + "월", top: true };
+      return null;
+    }
+    var m = /(\d{1,3})\s*(대|세)\s*(이상|이하|초과|미만)?/.exec(A);
+    return m ? { b: m[1] + m[2], s: m[3] || "" } : null;
+  };
   SC.autoThumb = function (o) {
-    var A = String(o.a || "").trim(), B = String(o.b || "").trim(), by = String(o.by || "").trim(), k = SC.ATH_K.indexOf(o.k) >= 0 ? o.k : "blue";
-    return '<span class="ath k-' + k + '" role="img" aria-label="' + SC.esc([A, B].filter(Boolean).join(" ") + (by ? " · 책임위원 " + by : "")) + '">' +
+    var A = String(o.a || "").trim(), B = String(o.b || "").trim(), by = String(o.by || "").trim(), k = SC.ATH_K.indexOf(o.k) >= 0 ? o.k : "blue", tx = SC.athTx(o);
+    var label = SC.esc([A, B].filter(Boolean).join(" ") + (by ? " · 책임위원 " + by : ""));
+    if (tx){
+      var T = B || (o.icon === "shield" ? "연령별 전략자료" : "상품연구 전략자료");
+      return '<span class="ath ath2 k-' + k + '" role="img" aria-label="' + label + '">' +
+        '<span class="tx" aria-hidden="true">' + (tx.top && tx.s ? '<small>' + SC.esc(tx.s) + '</small>' : '') + '<b>' + SC.esc(tx.b) + '</b>' + (!tx.top && tx.s ? '<small>' + SC.esc(tx.s) + '</small>' : '') + '</span>' +
+        /* #212 제목 + 책임위원 = 한 묶음으로 세로 가운데(오른쪽 아래 '자료 N개'와 겹치지 않게) */
+        '<span class="rt"><span class="b t1">' + SC.esc(T) + '</span>' + (by ? '<span class="by">책임위원<b>' + SC.esc(by) + '</b></span>' : '') + '</span></span>';
+    }
+    return '<span class="ath k-' + k + '" role="img" aria-label="' + label + '">' +
       '<span class="tile" aria-hidden="true"><img src="' + SC.athSrc + 'ath-' + (o.icon === "shield" ? "shield" : "docs") + '-' + k + '.svg" alt=""></span>' +
       (A ? '<span class="a">' + SC.esc(A) + '</span>' : '') + (B ? '<span class="b' + (A ? '' : ' solo') + '">' + SC.esc(B) + '</span>' : '') +
       (by ? '<span class="by">책임위원<b>' + SC.esc(by) + '</b></span>' : '') + '</span>';
@@ -179,7 +199,7 @@
     var a = SC.ymLabel(m.ym), t = String(m.title || "").trim(), x = SC.splitHead(t), b = t;
     if (x && (!a || x[0].replace(/\s/g, "") === a.replace(/\s/g, "") || /월|\./.test(x[0]))){ if (!a) a = x[0]; b = x[1]; }
     if (b.replace(/\s/g, "") === a.replace(/\s/g, "")) b = "";
-    return { a: a, b: b, by: m.by, k: SC.athMonthKey(m.ym), icon: "docs" };
+    return { a: a, b: b, by: m.by, k: SC.athMonthKey(m.ym), icon: "docs", ym: m.ym };
   };
   SC.athAge = function (m, a) {
     var band = String(a.band || "").trim(), t = String(a.title || "").trim(), b = t;

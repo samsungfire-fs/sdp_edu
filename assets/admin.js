@@ -252,6 +252,7 @@
         }
         /* 강의별 공유 페이지·메뉴 주소가 빠져 있으면 조용히 만들어 둠 (저장 버튼은 건드리지 않음) */
         if (needLock) setTimeout(lockNow, 1500); else autoPages();
+        setTimeout(durFix, 4000);   /* #201 */
         setTimeout(function(){ data.videos.forEach(function(v){ if (v.id && !thumbCache[v.id]) bestThumb(v.id); }); }, 2500);   /* 첫 저장이 썸네일 확인을 기다리지 않게 */
         Auth.afterLoad();
         updateSaveBar();
@@ -333,12 +334,32 @@
   }
 
   /* ---------- 유튜브 / 드라이브 정보 가져오기 ---------- */
+  /* #201 영상 길이 = 분:초 두 자리씩(17:42 · 04:10), 1시간 넘으면 H:MM:SS — 반올림해서 '분'으로 만들지 않음 */
   function fmtDur(iso){
-    var m = String(iso || "").match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/); if (!m) return "";
-    var h = +(m[1] || 0), mi = +(m[2] || 0), s = +(m[3] || 0);
-    if (h) return h + "시간" + (mi ? " " + mi + "분" : "");
-    if (mi) return mi + "분";
-    return s + "초";
+    var m = String(iso || "").match(/P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/); if (!m || !m[0] || m[0] === "P") return "";
+    var h = +(m[1] || 0) * 24 + +(m[2] || 0), mi = +(m[3] || 0), s = +(m[4] || 0), d2 = function(n){ return (n < 10 ? "0" : "") + n; };
+    return h ? h + ":" + d2(mi) + ":" + d2(s) : d2(mi) + ":" + d2(s);
+  }
+  /* #201 예전에 '17분'처럼 저장된 강의: 관리자를 열면 유튜브에서 길이만 다시 받아 조용히 한 번 저장(고치던 내용이 있으면 하지 않음) */
+  var DUR_RE = /^\d+:\d{2}(:\d{2})?$/, durBusy = false, durTried = false;
+  function durFix(){
+    if (durTried || durBusy || !apiKey || !canSave || !baseline) return;
+    if (saving || autoBusy || locking || needLock){ setTimeout(durFix, 2500); return; }
+    if (dirty) return;
+    var ids = data.videos.filter(function(v){ return v.id && !DUR_RE.test(v.duration || ""); }).map(function(v){ return v.id; });
+    if (!ids.length){ durTried = true; return; }
+    durBusy = true; durTried = true;
+    var chunks = []; for (var i = 0; i < ids.length; i += 50) chunks.push(ids.slice(i, i + 50));
+    Promise.all(chunks.map(function(c){
+      return fetch("https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=" + c.join(",") + "&key=" + encodeURIComponent(apiKey))
+        .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); });
+    })).then(function(rs){
+      var map = {}; rs.forEach(function(j){ (j.items || []).forEach(function(it){ var d = fmtDur(it.contentDetails && it.contentDetails.duration); if (d) map[it.id] = d; }); });
+      if (dirty || saving) return;
+      var n = 0; data.videos.forEach(function(v){ if (map[v.id] && v.duration !== map[v.id]){ v.duration = map[v.id]; n++; } });
+      if (!n) return;
+      render(); return save({ msg: "영상 길이를 분:초(" + n + "개)로 바꿨어요" });
+    }).catch(function(){}).then(function(){ durBusy = false; });
   }
   function ytMeta(id){
     var watch = "https://www.youtube.com/watch?v=" + id;

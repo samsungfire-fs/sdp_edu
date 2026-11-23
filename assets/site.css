@@ -1918,7 +1918,7 @@ body.lgo-in .lg2-mid, body.lgo-in .lg2-help{animation:lgo-card 600ms cubic-bezie
   .hero .h-sdpm{display:block; position:absolute; left:14px; top:19.4px; width:240px; height:3.24px; z-index:3; overflow:visible; pointer-events:none; opacity:1;
     filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)) drop-shadow(0 0 10px rgba(0,0,0,.28)); transition:opacity 700ms cubic-bezier(.2,.8,.2,1) 500ms}
   .hero .h-sdpm text{font-family:"SFN", sans-serif; font-weight:700; font-size:4.5px; letter-spacing:.9px; fill:#FFFFFF}
-  .hero.h-menu .h-sdpm{opacity:0; transition:opacity 400ms cubic-bezier(.2,.8,.2,1)}   /* 홈 → 메뉴: 영문 로고와 같이 0~400 사라짐 / 메뉴 → 홈: 500~1,200 나타남 */
+  .hero.h-menu .h-sdpm{opacity:0; transition:opacity 300ms cubic-bezier(.2,.8,.2,1)}   /* #205 0~300 */   /* 홈 → 메뉴: 영문 로고와 같이 0~400 사라짐 / 메뉴 → 홈: 500~1,200 나타남 */
   body.login-mode:not(.lgt-shrink) .hero .h-sdpm{display:none}
   body:not(.login-mode) .hero.h-home .h-kr{height:20px} body:not(.login-mode) .hero.h-home .h-en{height:6.6px}
   .hero .hh-t, .hero .hh-sig{top:0; bottom:0; justify-content:center}
@@ -1986,3 +1986,69 @@ body.lgo-in.lgo-m .lg2-mid, body.lgo-in.lgo-m .lg2-help{animation:lgo-card60 600
 @keyframes lgo-down8{to{opacity:0; transform:translateY(8px)}}
 @keyframes lgo-card60{from{opacity:0; transform:translateY(60px)}to{opacity:1; transform:none}}
 body.lgo-out .fab{animation:lgo-downout 300ms cubic-bezier(.2,.8,.2,1) both; pointer-events:none}   /* #189 맨 위로 버튼도 메뉴 줄과 같이 사라짐 */
+
+/* ===== 11-19 #193~#203 · #208~#211 ===== */
+/* #198~#200 NEW = 카드 아래 정보 줄 맨 앞('조회' 왼쪽, 8px) · 글자만(#199) · 그 강의 메뉴 색(라이트/다크 따로, #200). 썸네일 위에는 아무것도 올리지 않음 */
+.ys.has-new{gap:5px; flex-wrap:wrap; row-gap:6px; overflow:visible; white-space:normal}
+.ys.has-new > span, .ys.has-new > i{white-space:nowrap}
+.new{flex:none; display:inline-flex; align-items:center; height:20px; padding:0 6px; margin-right:3px; font-weight:700 !important; font-size:10px; line-height:1; letter-spacing:.14em; border-radius:5px;
+  color:var(--nc); background:rgba(var(--ncr), .09); box-shadow:inset 0 0 0 1px rgba(var(--ncr), .24)}
+[data-theme="dark"] .new{color:var(--nc); background:rgba(var(--ncr), .14); box-shadow:inset 0 0 0 1px rgba(var(--ncr), .55)}
+@media (max-width:480px){ .new{letter-spacing:.08em} }
+.plc .ys .new, .pl-card .ys .new{margin-right:2px}   /* #203 홈 상품연구 줄 */
+/* 강의 화면 정보 줄 NEW(#194 자리 그대로 · #199 점 없음 · #200 메뉴 색): 라이트 = 꽉 찬 메뉴 색 + 흰 글자 / 다크 = 14% 바탕 + 메뉴 색 글자 + 55% 테두리 */
+.lec-meta .new.nw{height:24px; padding:0 9px; margin-right:0; font-size:10.5px; letter-spacing:.15em; border-radius:6px; background:var(--nc); color:#FFFFFF; box-shadow:none}
+[data-theme="dark"] .lec-meta .new.nw{background:rgba(var(--ncr), .14); color:var(--nc); box-shadow:inset 0 0 0 1px rgba(var(--ncr), .55)}
+@media (max-width:980px) and (min-width:561px){ .lec-meta .new.nw{display:none} }
+/* #201 · #202 영상 길이 = 분:초 · 바탕 옅게 + 흐림 */
+.chip-dur, .others .vgrid .chip-dur{background:rgba(7,8,12,.46); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); text-shadow:0 1px 2px rgba(0,0,0,.35); font-variant-numeric:tabular-nums}
+.lec-meta .nowrap{font-variant-numeric:tabular-nums}
+
+/* #208~#211 상품연구 자동 썸네일: 왼쪽 = 날짜 · 연령 글자만(둥근 유리 칸 없음), 오른쪽 = 제목만(53cqw부터) + 책임위원 */
+.ath.ath2 .tx{position:absolute; left:2.5cqw; top:6cqw; width:46cqw; height:42cqw; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3.2cqw; text-align:center; white-space:nowrap}
+.ath.ath2 .tx b, .ath.ath2 .tx small{display:block; line-height:1; letter-spacing:-.04em; font-weight:800 !important; padding:.06em .04em;
+  background:linear-gradient(175deg, var(--ath2), var(--athc) 55%, color-mix(in srgb, var(--athc) 70%, #0B1030) 72%); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 .6cqw 1.2cqw color-mix(in srgb, var(--ath2) 38%, transparent))}
+.ath.ath2 .tx b{font-size:21.5cqw}
+.ath.ath2 .tx small{font-size:8.6cqw}
+[data-theme="dark"] .ath.ath2 .tx b, [data-theme="dark"] .ath.ath2 .tx small{background-image:linear-gradient(175deg, #FFFFFF, var(--ath1)); filter:drop-shadow(0 0 1.8cqw color-mix(in srgb, var(--ath2) 75%, transparent))}
+.ath.ath2 .b.t1{left:53cqw; right:4cqw; top:15.6cqw; font-size:5.4cqw; line-height:1.3; color:#0B1030; -webkit-line-clamp:3;
+  word-break:keep-all; overflow-wrap:anywhere; line-break:strict; text-wrap:balance}
+[data-theme="dark"] .ath.ath2 .b.t1{color:#FFFFFF}
+.ath.ath2 .by{left:53cqw}
+body .ath.ath2 .b.t1{font-weight:700 !important}
+
+/* #211 ① 겹친 장(폴더 모양) — 홈 상품연구 줄 · 월 목록 카드 같은 값: 뒤 장 좌우 18px · 높이 10 · .32 / 가운데 장 9px · 5 · .55, 위 모서리 10px */
+.pl-stack{position:relative; padding-top:10px}
+.pl-stack::before, .pl-stack::after{content:""; position:absolute; border-radius:10px 10px 0 0; height:24px; background:#8A93B4; transform-origin:50% 100%;
+  transition:transform 300ms cubic-bezier(.23,1,.32,1)}
+.pl-stack::before{top:0; left:18px; right:18px; opacity:.32}
+.pl-stack::after{top:5px; left:9px; right:9px; opacity:.55}
+[data-theme="dark"] .pl-stack::before, [data-theme="dark"] .pl-stack::after{background:#7480B0}
+.pl-stack .thumb{position:relative; z-index:1; transition:transform 300ms cubic-bezier(.23,1,.32,1), box-shadow 300ms cubic-bezier(.23,1,.32,1)}
+.r-card.r-stack .thumb.r-th{margin:0}
+/* #211 ② 마우스 올림: 썸네일 위로 4px + 그림자, 장들이 살짝 펼쳐짐 · 누름: 모임(120ms). 공통 누름 물결은 이 카드에서 끔 */
+.pl-card::before, .pl-card::after, .r-stack::before, .r-stack::after{display:none !important}
+@media (hover:hover) and (pointer:fine){
+  .pl-card:hover .pl-stack .thumb, .r-stack:hover .pl-stack .thumb{transform:translateY(-4px); box-shadow:0 16px 30px -18px rgba(0,60,220,.5)}
+  .pl-card:hover .pl-stack::after, .r-stack:hover .pl-stack::after{transform:translateY(-6px) scaleX(1.015)}
+  .pl-card:hover .pl-stack::before, .r-stack:hover .pl-stack::before{transform:translateY(-9px) scaleX(1.03)}
+}
+.pl-card:active .pl-stack .thumb, .r-stack:active .pl-stack .thumb{transform:scale(.97); transition-duration:120ms}
+.pl-card:active .pl-stack::after, .r-stack:active .pl-stack::after{transform:scale(.97); transition-duration:120ms}
+.pl-card:active .pl-stack::before, .r-stack:active .pl-stack::before{transform:scale(.95); transition-duration:120ms}
+@media (prefers-reduced-motion:reduce){ .pl-stack .thumb, .pl-stack::before, .pl-stack::after{transition:none !important; transform:none !important} }
+/* 11-19 #195 · #207 강의 열기 · 뒤로가기 전환: 날아가는 썸네일 · 도착 전 영상 칸 썸네일 */
+.lt-fly{position:fixed; z-index:80; overflow:hidden; background:#000; pointer-events:none; transform-origin:0 0; will-change:transform}
+.lt-fly img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block}
+.player .lt-img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; z-index:1}
+.player .lt-play{position:absolute; left:50%; top:50%; width:68px; height:68px; margin:-34px 0 0 -34px; z-index:2; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(7,8,12,.46); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); color:#FFFFFF}
+.player .lt-play svg{width:28px; height:28px; margin-left:3px}
+
+/* 11-19 #212 상품연구 자동 썸네일: 왼쪽 글자 세로 가운데 · 오른쪽 = 제목 + 책임위원 한 묶음 세로 가운데(맨 아래에 붙지 않아 '자료 N개' 칸과 안 겹침) */
+.ath.ath2 .tx{top:0; bottom:0; height:auto}
+.ath.ath2 .rt{position:absolute; left:53cqw; right:4cqw; top:0; bottom:0; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:2.8cqw}
+.ath.ath2 .rt .b.t1, .ath.ath2 .rt .by{position:static; left:auto; right:auto; top:auto; bottom:auto}
+.ath.ath2 .rt .b.t1{font-size:5.6cqw; max-width:100%}
+.ath.ath2 .rt .by{font-size:3.4cqw}
+.ath.ath2 .rt .by b{font-size:3.8cqw}

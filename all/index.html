@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261119j">
+<link rel="stylesheet" href="assets/site.css?v=20261123a">
 </head>
 <body>
 
@@ -88,7 +88,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261119j"></script>
+<script src="assets/common.js?v=20261123a"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -222,6 +222,9 @@
   /* #92 오른쪽 끝 흐림 = 옆에 메뉴가 더 있음(끝까지 밀면 사라짐) */
   function menuFade(){ var mn = $("menu"); if (mn.scrollTop) mn.scrollTop = 0;   /* 아이폰: 가로 끝에서 튕길 때 세로로 밀린 것 되돌림 */ $("menuBox").classList.toggle("cut", mn.scrollLeft > 2); $("menuBox").classList.toggle("mn-more", mn.scrollWidth - mn.clientWidth - mn.scrollLeft > 4); }   /* 11-19: 'more'는 강의 소개 [더보기] 버튼 이름과 겹쳐 메뉴 줄이 5px 내려가 있었음(끝까지 밀면 그 이름이 빠져 올라감) → 이름 바꿈 */
   function drawMenu(cur){
+    /* 11-23 같은 메뉴를 막 그렸으면(메뉴 이동 중 목록을 나중에 그릴 때) 다시 그리지 않음 — 미끄러지던 밑줄이 끝 자리로 튀지 않게 */
+    var mn0 = $("menu"); if (mn0.dataset.cur === String(cur) && performance.now() - (mn0._dt || 0) < 1500) return;
+    mn0.dataset.cur = String(cur); mn0._dt = performance.now();
     var mn = $("menu"), old = mn.querySelector(".menu-ul"), from = old && old.dataset.x != null && !old.hidden ? { x: +old.dataset.x, w: +old.dataset.w } : null;
     mn.innerHTML = SC.MENUS.map(function(c){
       return '<a href="' + (c.id === "research" ? rUrl() : menuUrl(c.id)) + '" data-go' + (c.id === cur ? ' aria-current="page"' : '') + '>' + esc(c.label) + '</a>';
@@ -300,22 +303,23 @@
     var c = SC.catOf(v);
     return '<span class="mbadge" data-menu="' + c + '">' + esc(SC.catLabel(c)) + '</span>';
   }
+  /* #198~#200 NEW = 카드 아래 정보 줄 맨 앞('조회' 왼쪽) · 글자만 · 그 강의 메뉴 색(라이트/다크 따로, --mc-메뉴) */
+  function newTag(cat){ var k = String(cat || "all").replace(/[^\w-]/g, ""); return '<span class="new" style="--nc:var(--mc-' + k + ',var(--mc-all));--ncr:var(--mcr-' + k + ',var(--mcr-all))">NEW<span class="sr">새 강의</span></span>'; }
   function card(v, withMenu){
     var n = (v.files || []).length;
     return '<li><a class="card rp" href="' + videoUrl(v.id) + '" data-go>' +
       '<div class="thumb">' + SC.thumbImg(v.id) + (SC.isPublic(v) ? '' : privTag()) +
-        (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') +
         (v.duration ? '<span class="chip-dur">' + esc(v.duration) + '</span>' : '') +
         '<span class="play" aria-hidden="true">' + IC.play + '</span></div>' +
-      cardBody(v.title, withMenu ? SC.catOf(v) : "", [vw2(v.id), SC.fmtDate(v.date), n ? "자료 " + n + "개" : ""]) + '</a></li>';
+      cardBody(v.title, withMenu ? SC.catOf(v) : "", [vw2(v.id), SC.fmtDate(v.date), n ? "자료 " + n + "개" : ""], SC.isNew(v.date) ? newTag(SC.catOf(v)) : "") + '</a></li>';
   }
   /* #61 카드 아래 = 글자 두 줄: 제목(말머리 뺌) · ('전체'에서만) ■ 메뉴 이름 · 조회 N회 · 날짜 · 자료 N개 */
   function cleanTitle(t){ return String(t || "").replace(/^\[[^\]]*\]\s*/, "") || String(t || ""); }
-  function cardBody(title, cat, parts){
+  function cardBody(title, cat, parts, nw){
     var full = title || "제목 없음", t = cleanTitle(full), seg = parts.filter(Boolean);
     return '<div class="card-body yt-b"><h3 class="yt-t"' + (t !== full ? ' title="' + esc(full) + '"' : '') + '>' + esc(t) + '</h3>' +
       /* #154 카드 썸네일 밑 메뉴 이름(색 점 + 이름) 뺌 */
-      (seg.length ? '<span class="ys">' + seg.map(function(x, i){ var dot = i && seg[i - 1].indexOf('class="vw2"') < 0; return (dot ? '<i aria-hidden="true">·</i>' : '') + (x.charAt(0) === "<" ? x : '<span>' + esc(x) + '</span>'); }).join("") + '</span>' : '') + '</div>';
+      (seg.length ? '<span class="ys' + (nw ? ' has-new' : '') + '">' + (nw || '') + seg.map(function(x, i){ var dot = i && seg[i - 1].indexOf('class="vw2"') < 0; return (dot ? '<i aria-hidden="true">·</i>' : '') + (x.charAt(0) === "<" ? x : '<span>' + esc(x) + '</span>'); }).join("") + '</span>' : '') + '</div>';
   }
   function vw2(id){
     if (!LOCKED) return "";
@@ -333,11 +337,15 @@
     return '<div class="thumb r-th' + (cls ? " " + cls : "") + (src ? "" : " dflt") + '">' +
       '<img src="' + esc(src || RDEF) + '" alt=""' + (src ? "" : ' data-default="true"') + (eager ? "" : ' loading="lazy"') + '></div>';
   }
-  function rCard(href, thumb, title, left, n, priv, at){
-    return '<li><a class="card r-card rp" href="' + href + '" data-go>' + rThumb(thumb, priv ? "has-priv" : "", false, at).replace(/<\/div>$/, (priv ? privTag() : '') + '</div>') +
-      cardBody(title, "", [left, "자료 " + n + "개"]) + '</a></li>';
+  function rCard(href, thumb, title, left, n, priv, at, nw, stack){
+    var th = rThumb(thumb, priv ? "has-priv" : "", false, at).replace(/<\/div>$/, (priv ? privTag() : '') + '</div>');
+    return '<li><a class="card r-card' + (stack ? ' r-stack' : ' rp') + '" href="' + href + '" data-go>' + (stack ? '<div class="pl-stack">' + th + '</div>' : th) +
+      cardBody(title, "", [left, "자료 " + n + "개"], nw) + '</a></li>';
   }
-  function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령 ' + rAges(m).length + '개', rFileCount(m), !SC.isPublic(m), SC.athMonth(m)); }
+  /* #203 가장 최근 월(공개된 것 중) 카드 정보 줄 맨 앞에 NEW — 상품연구 색 */
+  function latestYm(){ var l = rMonths().filter(function(m){ return SC.isPublic(m); }); return l.length ? String(l[0].ym) : ""; }
+  /* #211 ① 월 목록 카드도 홈처럼 뒤 겹친 장(폴더 모양) */
+  function monthCard(m){ return rCard(rUrl(ymCode(m.ym)), m.thumb, m.title, '연령 ' + rAges(m).length + '개', rFileCount(m), !SC.isPublic(m), SC.athMonth(m), String(m.ym) === latestYm() ? newTag("research") : "", true); }
   function ageCard(m, a){ return rCard(rUrl(ymCode(m.ym), a.id), a.thumb, SC.ageName(a), "", (a.files || []).length, !SC.isPublic(a) || !SC.isPublic(m), SC.athAge(m, a)); }
 
   /* ---------- 목록 화면 (전체 · 메뉴 · 상품연구 월/연령) ---------- */
@@ -376,9 +384,9 @@
   var IC_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>';
   function plCard(m){
     var n = rFileCount(m), priv = !SC.isPublic(m), title = (m.title || "") + " 상품연구 전략자료";
-    return '<li><a class="card pl-card rp" href="' + rUrl(ymCode(m.ym)) + '" data-go><div class="pl-stack">' +
+    return '<li><a class="card pl-card" href="' + rUrl(ymCode(m.ym)) + '" data-go><div class="pl-stack">' +
       rThumb(m.thumb, priv ? "has-priv" : "", false, SC.athMonth(m)).replace(/<\/div>$/, (priv ? privTag() : '') + '<span class="pl-badge">' + IC_LIST + '자료 ' + n + '개</span></div>') + '</div>' +
-      '<div class="card-body yt-b"><h3 class="yt-t pl-t" title="' + esc(title) + '">' + esc(title) + '</h3><span class="ys"><span>연령 ' + rAges(m).length + '개</span></span></div></a></li>';
+      '<div class="card-body yt-b"><h3 class="yt-t pl-t" title="' + esc(title) + '">' + esc(title) + '</h3><span class="ys' + (String(m.ym) === latestYm() ? ' has-new">' + newTag("research") : '">') + '<span>연령 ' + rAges(m).length + '개</span></span></div></a></li>';
   }
   function drawShelves(){
     var html = '<div class="shelves">', ARR = function(dir){ return '<button type="button" class="sh-nav ' + dir + ' rp" data-sh="' + dir + '" aria-label="' + (dir === "prev" ? "이전" : "다음") + ' 강의 보기"' + (dir === "prev" ? " hidden" : "") + '>' + (dir === "prev" ? IC.back : IC.next) + '</button>'; };
@@ -538,12 +546,18 @@
   var lastListMenu = "";
   /* #128 로그인 직후 홈(1.44초) · #140 · #159 메뉴 이동(홈 ↔ 메뉴 1초 · 메뉴 → 메뉴 0.3초): 그 시각까지 목록을 접어 두었다가 라인 리빌 */
   function holdList(){
-    var at = lgRevealAt || glideAt || (revealIn ? Date.now() + revealIn : 0), whole = !!lgRevealAt, lb = $("listLr"), ap = $("app");
-    lgRevealAt = 0; revealIn = 0;
+    var at = lgRevealAt || glideAt || revealAbs || (revealIn ? Date.now() + revealIn : 0), whole = !!lgRevealAt, lb = $("listLr"), ap = $("app");
+    lgRevealAt = 0; revealIn = 0; revealAbs = 0;
     if (!at || !lb || !L) return;
     var dl = Math.max(0, at - Date.now());
     lb.classList.add("wait"); if (whole) ap.classList.add("lg-hold");
-    setTimeout(function(){ ap.classList.remove("lg-hold"); if (!lb.isConnected) return; lb.classList.remove("wait"); SC.lineReveal(lb); }, dl);
+    /* 11-23 사용자: 메뉴를 누르는 순간 새 목록 제목 · 검색창이 '툭' 먼저 뜨지 않게 — 라인 리빌과 같이 나타남 */
+    var lh = !whole && ap.querySelector(".list-head"); if (lh) lh.style.opacity = "0";
+    setTimeout(function(){
+      ap.classList.remove("lg-hold");
+      if (lh){ lh.style.opacity = ""; if (lh.animate && !REDUCE) lh.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 300, easing: "cubic-bezier(.2,.8,.2,1)" }); }
+      if (!lb.isConnected) return; lb.classList.remove("wait"); SC.lineReveal(lb);
+    }, dl);
     L.noLr = true;
   }
   function renderList(r){
@@ -883,13 +897,10 @@
         '<a class="back-all rp" href="' + backUrl + '" data-go>' + IC.back + '전체 강의</a>' +
         '<div class="watch-grid">' +
           '<div class="watch-main">' +
-            '<div class="player-box"><div class="player">' +
-              '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.id) + '?rel=0&playsinline=1&modestbranding=1" title="' + esc(v.title || "강의 영상") + '" ' +
-              'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>' +
-            '</div></div>' +
+            '<div class="player-box"><div class="player">' + (LT ? ltPoster(LT.src) : ytFrame(v)) + '</div></div>' +
             '<section class="lec-info">' +
               /* #85 휴대폰: 1줄 = [NEW] [메뉴] 배지 · 2줄 = 날짜 · 길이 · 조회(한 줄 고정). PC · 태블릿은 한 줄 그대로 */
-              '<div class="lec-meta"><span class="lm-b">' + (SC.isPublic(v) ? '' : '<span class="priv-pill">' + IC.lock + '비공개 · 관리자에게만 보여요</span>') + (SC.isNew(v.date) ? '<span class="chip-new">NEW</span>' : '') + '<span class="lm-cat">' + esc(SC.catLabel(c)) + '</span></span>' +
+              '<div class="lec-meta"><span class="lm-b">' + (SC.isPublic(v) ? '' : '<span class="priv-pill">' + IC.lock + '비공개 · 관리자에게만 보여요</span>') + (SC.isNew(v.date) ? newTag(c).replace('class="new"', 'class="new nw"') : '') + '<span class="lm-cat">' + esc(SC.catLabel(c)) + '</span></span>' +
               '<span class="lm-t"><span>' + metaText(v, true) + '</span>' + (LOCKED ? '<span class="sep">·</span>' + vwHtml(v.id) : '') + '</span></div>' +
               '<h1>' + esc(v.title || "제목 없음") + '</h1>' +
               '<div class="lec-act"><button type="button" class="ab p rp press" id="shareOpen" aria-haspopup="dialog">' + IC.share + '공유하기</button>' +
@@ -929,20 +940,39 @@
         });
       } else body.classList.remove("clamp");
     });
-    reveal(".watch .comments, .watch .others"); playLr($("app"));
+    if (!LT){ reveal(".watch .comments, .watch .others"); playLr($("app")); }
+    else LT.v = v;
     track("siteView", "v:" + v.id);
   }
+  function ytFrame(v){
+    return '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.id) + '?rel=0&playsinline=1&modestbranding=1" title="' + esc(v.title || "강의 영상") + '" ' +
+      'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+  }
+  function ltPoster(src){ return '<img class="lt-img" src="' + esc(src || "") + '" alt="">' + '<span class="lt-play" aria-hidden="true">' + IC.play + '</span>'; }
 
   /* ---------- 화면 고르기 ---------- */
-  function route(){
+  function route(split){
     Share.close(); MM.close(true);
-    var r = parse(), want;
+    var r = parse();
     var view = r.v ? "video" : r.r ? "research" : "list";
     didRestore = false;
     document.title = TAB_TITLE;
     document.body.classList.toggle("r-page", !r.v && !!r.r);
     heroGo(r, restoreNext ? "still" : "");   /* #140 · #159 배너 머리 · 메뉴 이동 전환 */
+    /* 11-23 사용자: 메뉴를 누르는 순간 '뚝' 끊김 — 배너 · 밑줄 움직임을 먼저 시작하고(이번 프레임), 무거운 목록 그리기는 다음 작업에서.
+       목록이 나타나는 시각은 누른 순간 기준 그대로(revealAbs) */
+    if (split){
+      revealAbs = revealIn ? Date.now() + revealIn : 0; revealIn = 0;
+      if (!r.v) drawMenu(r.r ? "research" : r.m);
+      requestAnimationFrame(function(){ setTimeout(function(){ routeBody(r, view); }, 0); });
+      return;
+    }
+    routeBody(r, view);
+  }
+  function routeBody(r, view){
+    var want;
     if (r.v || r.r) lastListMenu = "";   /* #113 강의 · 상품연구에 다녀오면 '다른 메뉴에서 넘어온 것' */
+    if (!LT) lstash = null;   /* #195 다른 화면으로 가면 기억해 둔 목록은 버림 */
     if (r.v){ renderVideo(r.v); want = videoUrl(r.v); }
     else if (r.r) want = renderResearch(r);
     else want = renderList(r);
@@ -958,17 +988,113 @@
     e.preventDefault();
     if (expired()){ if (a.href !== location.href) history.pushState(null, "", a.href); showLogin("expired"); window.scrollTo(0, 0); return; }
     if (lastView === "list") feedSave();
+    /* #195 · #207 강의 화면 → 들어오기 전 목록(같은 주소)이면 기억해 둔 화면 그대로 + 영상 칸이 원래 카드 자리로 */
+    if (lastView === "video" && lstash && lstash.url === a.href.split("#")[0]){ history.pushState(null, "", a.href); lecBack(); return; }
     restoreNext = lastView === "video" && !!a.closest("#barBack, .back-all");
     var y0 = window.scrollY, from = lastView;
+    /* #195 · #207 목록에서 강의 카드를 누르면: 그 썸네일이 그대로 커져 영상 칸이 됨 */
+    var lcard = from === "list" && !REDUCE && document.body.animate && a.classList.contains("card") && a.querySelector(".thumb img") && $("listBody") && a.closest("#app");
+    var fromUrl = location.href.split("#")[0];
     if (a.href !== location.href) history.pushState(null, "", a.href);
+    if (lcard && parse().v){ lecOpen(a, y0, fromUrl); return; }
     /* #177 스크롤을 내린 채 다른 메뉴(목록)로 갈 때: 같은 화면에서 맨 위로 700ms 미끄러지며 보던 목록은 0~250 옅어지며 8px 아래로, 새 목록은 600~ 라인 리빌 */
     var to = parse(), glide = !REDUCE && y0 > 2 && !restoreNext && (from === "list" || from === "research") && !to.v;
     var oldNodes = glide ? listLeave() : null;
     if (glide) glideAt = Date.now() + 600;
+    /* 11-23 맨 위에서 다른 메뉴로: 보던 목록은 같은 자리에서 0~250 옅어지며 8px 아래로(노드째 옮겨서), 배너 · 밑줄은 누른 순간부터 */
+    var split = !glide && !REDUCE && !restoreNext && !to.v && (from === "list" || from === "research") && !!$("app").firstChild && !!document.body.animate;
+    if (split){
+      var gq = ghostMove($("app")); gq.style.zIndex = "5";
+      gq.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(8px)" }], { duration: 250, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards" }); gone(gq, 270);
+      route(true); return;
+    }
     route(); glideAt = 0;
     if (glide){ listGhost(oldNodes); glideTop(y0); }
     else if (!didRestore) window.scrollTo(0, 0);
   });
+  /* ===== #195 · #207 강의 열기 · 뒤로가기: 누른 카드 썸네일 ↔ 영상 칸(같은 그림 하나로 FLIP, transform만, 780ms cubic-bezier(.65,0,.35,1)) =====
+     열기: 0~300 목록 옅어지며 98.5% · 80~780 썸네일 → 영상 칸(모서리 14 → 22/20/0) · 250~600 위쪽 ‹ · 메뉴 줄 · 350~800 교육자료 칸(오른쪽 24px에서)
+           · 450~900 정보 · 제목 · 버튼(아래 14px에서) · 700~950 재생 버튼 · 도착 뒤 유튜브 플레이어
+     뒤로: 0~250 강의 화면 사라짐 · 50~750 영상 칸 → 원래 카드 자리 · 200~600 목록 다시 또렷 — 목록은 들어가기 전 화면 그대로(다시 그리지 않음) */
+  var LT = null, lstash = null, ltBusy = false;
+  function ltFly(src, from, to, r0, r1, delay, dur){
+    var f = document.createElement("div"); f.className = "lt-fly"; f.setAttribute("aria-hidden", "true");
+    f.style.cssText = "left:" + to.left + "px;top:" + to.top + "px;width:" + to.width + "px;height:" + to.height + "px;border-radius:" + r1 + "px";
+    f.innerHTML = '<img src="' + esc(src) + '" alt="">'; document.body.appendChild(f);
+    var sx = from.width / to.width, sy = from.height / to.height;
+    f.animate([{ transform: "translate(" + (from.left - to.left) + "px," + (from.top - to.top) + "px) scale(" + sx + "," + sy + ")", borderRadius: (r0 / sx) + "px / " + (r0 / sy) + "px" },
+               { transform: "none", borderRadius: r1 + "px" }], { duration: dur, delay: delay, easing: CIO, fill: "both" });
+    return f;
+  }
+  /* 노드를 옮기면 가로 목록 넘긴 자리(scrollLeft)가 0으로 돌아가서 재 두었다가 되돌림 */
+  function slGet(box){ return [].map.call(box.querySelectorAll(".sh-row"), function(e){ return [e, e.scrollLeft]; }); }
+  function slSet(list){ (list || []).forEach(function(x){ if (x[0].isConnected) x[0].scrollLeft = x[1]; }); }
+  function appShift(){ var m = /matrix\(([^)]+)\)/.exec(getComputedStyle($("app")).transform || ""); return m ? +m[1].split(",")[5] || 0 : 0; }
+  function lecOpen(a, y0, fromUrl){
+    var th = a.querySelector(".thumb"), img = th.querySelector("img"), A = th.getBoundingClientRect(), rA = parseFloat(getComputedStyle(th).borderTopLeftRadius) || 14;
+    var st = { url: fromUrl, y: y0, L: L, m: L && L.m, list: lastList, menu: lastListMenu, th: th, src: img.currentSrc || img.src, title: document.title, body: document.body.className };
+    LT = { src: st.src, t0: performance.now() }; ltBusy = true;
+    var at = function(ms){ return Math.max(0, ms - (performance.now() - LT.t0)); };
+    /* 보던 목록: 노드째 옮겨(그림 다시 받지 않음) 같은 자리에서 0~300 옅어지며 98.5% */
+    st.sl = slGet($("app"));
+    var g = ghostMove($("app")); slSet(st.sl); g.style.zIndex = "5"; g.style.transformOrigin = "50% " + Math.max(0, A.top + A.height / 2 - parseFloat(g.style.top || 0)) + "px";
+    th.style.visibility = "hidden";
+    g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.985)" }], { duration: 300, easing: COUT, fill: "forwards" });
+    route(); window.scrollTo(0, 0);
+    var pl = document.querySelector(".watch .player"); if (!pl){ LT = null; ltBusy = false; return; }
+    var B = pl.getBoundingClientRect(), sh = appShift(), rB = parseFloat(getComputedStyle(pl).borderTopLeftRadius) || 0;
+    B = { left: B.left, top: B.top - sh, width: B.width, height: B.height };
+    pl.style.visibility = "hidden";
+    var f = ltFly(st.src, A, B, rA, rB, at(80), 700);
+    var go = function(el, kf, d, dur){ if (el && el.animate) el.animate(kf, { duration: dur, delay: at(d), easing: COUT, fill: "backwards" }); };
+    var W = $("app").querySelector(".watch");
+    go(W.querySelector(".back-all"), [{ opacity: 0, transform: "translateY(-6px)" }, { opacity: 1, transform: "none" }], 250, 350);
+    go(document.querySelector(".bar"), [{ opacity: 0 }, { opacity: 1 }], 250, 350);
+    go(W.querySelector(".files-card"), [{ opacity: 0, transform: "translateX(24px)" }, { opacity: 1, transform: "none" }], 350, 450);
+    [".lec-info", ".intro", ".comments", ".others"].forEach(function(q){ go(W.querySelector(q), [{ opacity: 0, transform: "translateY(14px)" }, { opacity: 1, transform: "none" }], 450, 450); });
+    go(pl.querySelector(".lt-play"), [{ opacity: 0, transform: "scale(.8)" }, { opacity: 1, transform: "none" }], 700, 250);
+    setTimeout(function(){
+      /* 목록은 기억해 둠(뒤로가기 때 그대로 되돌림) */
+      var fr = document.createDocumentFragment(), inner = g.firstChild; while (inner && inner.firstChild) fr.appendChild(inner.firstChild);
+      if (g.parentNode) g.parentNode.removeChild(g); st.frag = fr; if (lastView === "video") lstash = st;
+    }, 320);
+    setTimeout(function(){
+      pl.style.visibility = ""; if (f.parentNode) f.parentNode.removeChild(f);
+      var v = LT && LT.v; LT = null; ltBusy = false;
+      if (v && pl.isConnected){   /* 도착 뒤 유튜브 플레이어 — 불러올 때까지 썸네일 그대로 */
+        pl.insertAdjacentHTML("afterbegin", ytFrame(v));
+        var fr = pl.querySelector("iframe"), done = function(){ [].slice.call(pl.querySelectorAll(".lt-img, .lt-play")).forEach(function(x){ x.remove(); }); };
+        fr.addEventListener("load", function(){ setTimeout(done, 150); }, { once: true }); setTimeout(done, 4000);
+      }
+    }, at(780) + 10);
+  }
+  function lecBack(){
+    var st = lstash; lstash = null; ltBusy = true;
+    var t0 = performance.now(), at = function(ms){ return Math.max(0, ms - (performance.now() - t0)); };
+    var pl = document.querySelector(".watch .player"), B = pl ? pl.getBoundingClientRect() : null, rB = pl ? parseFloat(getComputedStyle(pl).borderTopLeftRadius) || 0 : 0;
+    var vid = parse().v;
+    /* 강의 화면: 영상은 썸네일 그림으로 바꾼 뒤(플레이어 멈춤) 0~250 사라짐 */
+    if (pl) pl.style.visibility = "hidden";
+    var g = ghostMove($("app")); g.style.zIndex = "5";
+    g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, easing: COUT, fill: "forwards" }); gone(g, 270);
+    var ifr = g.querySelector("iframe"); if (ifr) ifr.src = "about:blank";
+    /* 목록 되돌리기(다시 그리지 않음) */
+    setBody(st.body.indexOf("no-fab") > -1 ? "no-fab" : ""); drawMenu(st.m || "all");
+    var r = parse(); heroGo(r, "");
+    $("app").appendChild(st.frag); slSet(st.sl); L = st.L; lastList = st.list; lastListMenu = st.menu; lastView = "list"; document.title = st.title;
+    window.scrollTo(0, st.y);
+    var th = st.th, A = th && th.isConnected ? th.getBoundingClientRect() : null, sh = appShift();
+    $("app").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: at(200), easing: COUT, fill: "backwards" });
+    if (A && B && A.width){
+      A = { left: A.left, top: A.top - sh, width: A.width, height: A.height };
+      var rA = parseFloat(getComputedStyle(th).borderTopLeftRadius) || 14;
+      th.style.visibility = "hidden";
+      var f = ltFly(st.src, B, A, rB, rA, at(50), 700);
+      setTimeout(function(){ th.style.visibility = ""; if (f.parentNode) f.parentNode.removeChild(f); }, at(750) + 10);
+    } else if (th) th.style.visibility = "";
+    setTimeout(function(){ ltBusy = false; }, at(750) + 20);
+  }
+
   /* #180 휴대폰: 검색창이 제목 옆 남은 폭을 씀 — 안내 글이 다 안 들어가면 '제목 찾기'로 줄임 */
   var fitCv = null;
   function fitQ(){
@@ -1011,6 +1137,8 @@
   window.addEventListener("popstate", function(){
     if (MM.onPop()) return;
     if (lgoBusy){ try { history.pushState(null, "", location.href); } catch (e){} return; }   /* #189 전환 중 뒤로 가기 막기 */
+    if (ltBusy) return;
+    if (lastView === "video" && lstash && lstash.url === location.href.split("#")[0]){ lecBack(); return; }   /* #195 브라우저 뒤로가기도 같은 전환 */
     if (lastView === "list") feedSave();
     restoreNext = lastView === "video";
     route();
@@ -1208,7 +1336,7 @@
   var HERO = $("hero"), HBR = HERO.querySelector(".h-brand"), HKR = HERO.querySelector(".h-kr"), HEN = HERO.querySelector(".h-en"), HHEAD = $("heroHead");
   var HEAD_EN = { newbie: "ONBOARDING", partner: "PARTNER STRATEGY", research: "PRODUCT RESEARCH" };
   var heroKey = "", heroBusy = 0, heroT = [];
-  var EZ = "cubic-bezier(.4,0,.2,1)", EB = "cubic-bezier(.22,1,.36,1)";
+  var EZ = "cubic-bezier(.4,0,.2,1)", EB = "cubic-bezier(.22,1,.36,1)", EZF = bez(.4, 0, .2, 1);   /* #192 follow용 EZ 곡선 함수 */
   function heroW(){ HERO.style.setProperty("--hw", (HERO.clientWidth || innerWidth) + "px"); }
   heroW(); window.addEventListener("resize", heroW);
   function headKeyOf(r){
@@ -1253,7 +1381,9 @@
     heroPaint();
   }
   function heroClear(){ heroT.forEach(clearTimeout); heroT = []; HERO.getAnimations && HERO.getAnimations({ subtree: true }).forEach(function(a){ if (a.id === "hx") a.cancel(); });
-    [HKR, HEN].forEach(function(el){ el.removeAttribute("style"); }); HERO.style.height = ""; HERO.style.transition = ""; HERO.classList.remove("h-tr", "h-load"); heroBusy = 0; }
+    [HKR, HEN].forEach(function(el){ el.removeAttribute("style"); }); HERO.style.height = ""; HERO.style.transition = ""; HERO.classList.remove("h-tr", "h-load"); heroBusy = 0;
+    if (heroFol){ heroFol.forEach(function(a){ a.cancel(); }); heroFol = null; } if (bannerUndo) bannerUndo(); }
+  var heroFol = null;
   function later(fn, ms){ heroT.push(setTimeout(fn, ms)); }
   function rectIn(el){ var a = el.getBoundingClientRect(), h = HERO.getBoundingClientRect(); return { x: a.left - h.left, y: a.top - h.top, w: a.width, h: a.height }; }
   function pin(el, r){ el.style.cssText = "position:absolute;display:block;margin:0;left:" + r.x + "px;top:" + r.y + "px;height:" + r.h + "px;width:auto;transform-origin:0 0"; }
@@ -1284,7 +1414,7 @@
     later(function(){ HERO.classList.remove("h-sigx"); if (a) a.cancel(); if (on){ if (!HV.paused) HV.pause(); } else if (HV2 && !HV2.paused) HV2.pause(); heroPaint(); }, delay + dur + 30);
   }
   /* 목록 라인 리빌 시각(ms 뒤) — renderList · 상품연구 목록이 이 시각까지 접어 둠 */
-  var revealIn = 0;
+  var revealIn = 0, revealAbs = 0;
   function heroGo(r, how){
     var k = headKeyOf(r);
     if (document.body.classList.contains("login-mode")){ heroClear(); heroApply("all"); HHEAD.innerHTML = ""; heroKey = "login"; return; }
@@ -1310,15 +1440,16 @@
     }
     /* 홈 ↔ 메뉴: 처음 모습을 재고 → 끝 모습을 움직임 없이 재고 → 높이 · 로고를 끝 모습으로 움직임 */
     heroBusy = 1;
-    var h0 = HERO.offsetHeight, kr0 = rectIn(HKR), en0 = homeFrom ? rectIn(HEN) : null;
+    var h0 = HERO.offsetHeight, kr0 = rectIn(HKR), en0 = homeFrom ? rectIn(HEN) : null, ops0 = vOps();
     HERO.style.transition = "none";
     HERO.classList.toggle("h-home", homeTo); HERO.classList.toggle("h-menu", !homeTo); HERO.dataset.head = k;
-    var h1 = HERO.offsetHeight, kr1 = rectIn(HKR), en1 = homeTo ? rectIn(HEN) : null;
-    HERO.style.height = h0 + "px"; HERO.classList.add("h-tr");
+    var h1 = HERO.offsetHeight, kr1 = rectIn(HKR), en1 = homeTo ? rectIn(HEN) : null, ops1 = vOps();
+    HERO.classList.add("h-tr");
     pin(HKR, kr1); pin(HEN, homeTo ? en1 : en0);
-    void HERO.offsetHeight;
     var dH = 0;   /* #169 메뉴를 누르면 밑줄과 배너가 동시에(0~750) */
-    HERO.style.transition = "height 750ms " + EZ + " " + dH + "ms"; HERO.style.height = h1 + "px";
+    /* #192 배너 높이 = clip-path(높이를 매 프레임 바꾸지 않음), 메뉴 줄 · 목록은 보이는 아래 끝을 따라 */
+    bannerMorph(h0, h1, ops0, ops1, 750, dH, EZ);
+    heroFol = follow([document.querySelector(".bar"), $("app"), HERO.querySelector(".h-pp"), HERO.querySelector(".h-sdp")], { t0: performance.now(), h0: h0, h1: h1, bS: dH, bD: 750, bE: EZF });   /* #205 ⏸ · 오른쪽 아래 SDP도 배너와 같이 */
     anim(HKR, [{ transform: "translate(" + (kr0.x - kr1.x) + "px," + (kr0.y - kr1.y) + "px) scale(" + (kr0.h / kr1.h) + ")" }, { transform: "none" }], { duration: 750, delay: dH, easing: EZ, fill: "backwards" });
     if (homeTo){   /* 700~1,400 영문 로고 왼쪽 → 오른쪽 드러남 + 흐림 6 → 0 */
       HEN.classList.add("rv");
@@ -1420,6 +1551,50 @@
     };
   }
   var EIO = bez(.65, 0, .35, 1), EOUT = bez(.2, .8, .2, 1);
+  /* ===== #192 배너 높이 바꾸기(로그인 ↔ 홈 · 홈 ↔ 메뉴, PC · 태블릿 · 휴대폰 모두) =====
+     ⓐ 시작 · 끝 높이를 둘 다 재고 ⓑ 영상 칸은 둘 중 큰 높이로 처음부터 고정(영상은 그 칸 안에서 transform으로만 — 다시 그리지 않음)
+     ⓒ 보이는 높이만 clip-path:inset(0 0 (큰 높이 − 보이는 높이) 0) — 커질 때도 작아질 때도 같은 방법 ⓔ 배너 상자 바탕은 그동안 투명(남색 빈 자리 없음).
+     H(배너 자리)의 레이아웃 높이는 끝 높이로 미리 바뀌어 있고, 그 아래 것은 follow()가 보이는 아래 끝을 따라 옮김 */
+  var bannerUndo = null;
+  function bannerMorph(h0, h1, ops0, ops1, dur, delay, ease){
+    var H = $("hero"), W = H.clientWidth, big = Math.max(h0, h1), boxes = [HV.parentNode, $("hv2")], anims = [], undos = [];
+    if (bannerUndo) bannerUndo();
+    H.style.overflow = "visible"; H.style.background = "transparent";
+    var o = { duration: dur, delay: delay, easing: ease, fill: "both" };
+    boxes.forEach(function(box, i){
+      if (!box) return;
+      var v = box.querySelector("video"), sh = box.querySelector(".hv-shade");
+      box.style.bottom = "auto"; box.style.height = big + "px";
+      anims.push(box.animate([{ clipPath: "inset(0 0 " + (big - h0) + "px 0)" }, { clipPath: "inset(0 0 " + (big - h1) + "px 0)" }], o));
+      if (sh){ sh.style.cssText = "top:-3px;bottom:auto;height:" + (big + 6) + "px;transform-origin:0 0;will-change:transform";
+        anims.push(sh.animate([{ transform: "scaleY(" + ((h0 + 6) / (big + 6)) + ")" }, { transform: "scaleY(" + ((h1 + 6) / (big + 6)) + ")" }], o)); }
+      if (v && v.videoWidth){
+        var d0 = vDrawnOf(v, W, h0, ops0[i]), d1 = vDrawnOf(v, W, h1, ops1[i]);
+        v.style.cssText = "position:absolute;inset:auto;left:" + d1.x + "px;top:" + d1.y + "px;width:" + d1.w + "px;height:" + d1.h + "px;object-fit:fill;transform-origin:0 0;will-change:transform";
+        anims.push(v.animate([{ transform: "translate(" + (d0.x - d1.x) + "px," + (d0.y - d1.y) + "px) scale(" + (d0.s / d1.s) + ")" }, { transform: "none" }], o));
+      }
+      undos.push(function(){ box.style.bottom = ""; box.style.height = ""; if (sh) sh.style.cssText = ""; if (v) v.style.cssText = ""; });
+    });
+    var done = false;
+    bannerUndo = function(){ if (done) return; done = true; bannerUndo = null; anims.forEach(function(a){ a.cancel(); }); undos.forEach(function(f){ f(); }); H.style.overflow = ""; H.style.background = ""; };
+    return bannerUndo;
+  }
+  function vOps(){ return [HV, HV2].map(function(v){ return v ? getComputedStyle(v).objectPosition : "50% 50%"; }); }
+  function vDrawnOf(v, W, Hb, op){
+    var vw = v.videoWidth || 1280, vh = v.videoHeight || 548, m = String(op).match(/(-?[\d.]+)%\s+(-?[\d.]+)%/), p2 = m ? [+m[1] / 100, +m[2] / 100] : [.5, .5];
+    var sc = Math.max(W / vw, Hb / vh); return { s: sc, w: vw * sc, h: vh * sc, x: (W - vw * sc) * p2[0], y: (Hb - vh * sc) * p2[1] };
+  }
+  /* 배너 아래 것(메뉴 줄 · 목록 · 카드 · ⏸)은 보이는 배너 아래 끝을 따라 transform으로 — 같은 곡선으로 계산한 자리(겹치거나 빈 틈 없음).
+     o: t0(기준 시각) · h0 · h1 · bS · bD · bE(곡선 함수) · (나타나기) aS · aD · rise */
+  function follow(els, o){
+    var now = performance.now() - o.t0, end = Math.max(o.bS + o.bD, o.aS != null ? o.aS + o.aD : 0), span = Math.max(1, end - now), kf = [];
+    for (var i = 0; i <= 24; i++){
+      var t = now + span * i / 24, off = (o.h0 - o.h1) * (1 - o.bE((t - o.bS) / o.bD)), f = { offset: i / 24 };
+      if (o.aS != null){ var p = EOUT(Math.min(1, Math.max(0, (t - o.aS) / o.aD))); f.opacity = p; off += (o.rise || 0) * (1 - p); }
+      f.transform = "translateY(" + off.toFixed(2) + "px)"; kf.push(f);
+    }
+    return els.filter(Boolean).map(function(el){ return el.animate(kf, { duration: span, easing: "linear", fill: "backwards" }); });
+  }
   function mobT(){ return !REDUCE && innerWidth <= 640 && !!document.body.animate; }
   /* 고스트에 옮겨 적는 모양 속성(보이는 데 필요한 것만 — 전부 옮기면 휴대폰에서 느림) */
   var GH_P = ("display position top right bottom left width height min-width min-height max-width max-height box-sizing margin-top margin-right margin-bottom margin-left " +
@@ -1475,7 +1650,7 @@
     lgoBusy = true;
     /* 1) 지금(홈 · 메뉴) 모습 재기 — 아무것도 바꾸기 전에 */
     var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), enOp = +getComputedStyle(en).opacity, h0 = H.offsetHeight, W = H.clientWidth;
-    var op0 = getComputedStyle(HV).objectPosition, tB = tmRects(), wasSig = H.classList.contains("h-sig");
+    var ops0 = vOps(), tB = tmRects(), wasSig = H.classList.contains("h-sig");
     /* 2) 사라지는 것들은 같은 그림으로 남겨 두고 마저 사라짐 — 맨 위 정보 줄(이름 · 사번 · 로그아웃 / ☰) · 왼쪽 위 SDP 위로, 메뉴 줄 · ⏸ · 오른쪽 아래 SDP · 맨 위로 버튼 아래로 */
     var gUp = [ghostCopy($("mmBtn")), ghostCopy(H.querySelector(".h-sdpm")), ghostCopy($("who")), ghostCopy($("whoSep"))], gDn = [ghostCopy(document.querySelector(".bar")), ghostCopy(H.querySelector(".h-pp")), ghostCopy(H.querySelector(".h-sdp")), ghostCopy(document.querySelector(".fab"))];
     gUp.forEach(function(g){ if (g){ g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 250, easing: COUT, fill: "forwards" }); gone(g, 270); } });
@@ -1487,15 +1662,11 @@
     if (wasSig) sigFade(false, 0, 500);
     H.style.transition = "none";
     showLogin(""); window.scrollTo(0, 0);
-    var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), dH = h1 - h0;
+    var h1 = H.offsetHeight, ops1 = vOps(), z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect();
     var o = { duration: 700, easing: CIO, delay: at(50), fill: "backwards" };
     var go = function(el, kf, oo){ if (el && el.animate) el.animate(kf, oo || o); };
-    if (dH > 0) go(H, [{ clipPath: "inset(0 0 " + dH + "px 0)" }, { clipPath: "inset(0 0 0 0)" }]);
-    var d0 = vDrawn(W, h0, op0), d1 = vDrawn(W, h1, op1);
-    HV.style.cssText = "position:absolute;inset:auto;left:" + d1.x + "px;top:" + d1.y + "px;width:" + d1.w + "px;height:" + d1.h + "px;object-fit:fill;transform-origin:0 0;will-change:transform";
-    go(HV, [{ transform: "translate(" + (d0.x - d1.x) + "px," + (d0.y - d1.y) + "px) scale(" + (d0.s / d1.s) + ")" }, { transform: "none" }]);
-    var sh = HV.parentNode.querySelector(".hv-shade");
-    if (sh && dH){ sh.style.cssText = "top:-3px;bottom:auto;height:" + (h1 + 6) + "px;transform-origin:0 0;will-change:transform"; go(sh, [{ transform: "scaleY(" + ((h0 + 6) / (h1 + 6)) + ")" }, { transform: "none" }]); }
+    /* #192 배너: 영상 칸 = 둘 중 큰 높이, 보이는 높이만 clip-path(넓은 화면 576.7 → 460처럼 작아질 때도 한 번에 바뀌지 않음) */
+    bannerMorph(h0, h1, ops0, ops1, 700, at(50), CIO);
     if (a.width && z.width) go(kr, flipKF(a, z));
     if (aE.width && zE.width && enOp > .5) go(en, flipKF(aE, zE));
     else go(en, [{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: COUT, delay: at(300), fill: "backwards" });
@@ -1503,8 +1674,9 @@
     smooth([kr, en].concat(tEls), true);
     /* 로고 아래 SDP · (PC · 태블릿) 메뉴 이름 줄 450~850 */
     [brand.querySelector(".h-kick"), H.querySelector(".h-menus")].forEach(function(el){ go(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(450), fill: "backwards" }); });
-    [document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(60px)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: COUT, delay: at(450), fill: "backwards" }); });
-    setTimeout(function(){ HV.style.cssText = ""; H.style.transition = ""; if (sh) sh.style.cssText = ""; smooth([kr, en].concat(tEls), false); }, at(750) + 20);
+    /* 카드(휴대폰 시트) 450~950: 보이는 배너 아래 끝을 따라 붙어 오며 아래(휴대폰 60 · 그 외 36px)에서 올라옴 */
+    follow([document.querySelector(".lg2-mid"), document.querySelector(".lg2-help")], { t0: t0, h0: h0, h1: h1, bS: 50, bD: 700, bE: EIO, aS: 450, aD: 500, rise: innerWidth <= 640 ? 60 : 36 });
+    setTimeout(function(){ if (bannerUndo) bannerUndo(); H.style.transition = ""; smooth([kr, en].concat(tEls), false); }, at(750) + 20);
     setTimeout(function(){ lgoBusy = false; }, at(950) + 20);
   }
 
@@ -1521,7 +1693,7 @@
     /* #191 ⓓ 데이터 풀기는 누르자마자 · ⓐ 풀리는 대로 홈을 미리 다 그려 두고(전환 중엔 새로 그리지 않음) 움직임은 100ms부터 */
     return enterOpen().then(function(o){
       /* 1) 지금(로그인) 모습 재기 */
-      var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), h0 = H.offsetHeight, W = H.clientWidth, op0 = getComputedStyle(HV).objectPosition, tB = tmRects();
+      var a = kr.getBoundingClientRect(), aE = en.getBoundingClientRect(), h0 = H.offsetHeight, ops0 = vOps(), tB = tmRects();
       /* 2) 사라지는 중인 것: 로고 아래 영문 · 메뉴 이름 줄(남은 시간) · 카드/시트(본문 노드째 옮겨서 남은 시간) */
       [[kick, aK], [mnu, aMn]].forEach(function(x){
         var g = ghostCopy(x[0]); if (x[1]) x[1].cancel();
@@ -1549,38 +1721,22 @@
         (im.decode ? im.decode() : Promise.reject()).then(show, function(){ im.addEventListener("load", show, { once: true }); im.addEventListener("error", show, { once: true }); });
       });
       /* 4) 홈 끝 모습 재기 */
-      var h1 = H.offsetHeight, op1 = getComputedStyle(HV).objectPosition, z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect(), dH = h0 - h1;
+      var h1 = H.offsetHeight, ops1 = vOps(), z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect();
       var oo = { duration: 700, easing: CIO, delay: at(100), fill: "backwards" };
       var go = function(el, kf, x){ if (el && el.animate) return el.animate(kf, x || oo); };
-      /* 배너: 보이는 그림은 처음 높이에서 시작 — 영상 · 그늘을 처음 높이로 그려 두고, 아래 끝은 바탕색 판이 올라와 덮음 */
-      var hv = HV.parentNode, sh = hv.querySelector(".hv-shade");
-      H.style.overflow = "visible"; hv.style.bottom = "auto"; hv.style.height = h0 + "px";
-      var d0 = vDrawn(W, h0, op0), d1 = vDrawn(W, h1, op1);
-      HV.style.cssText = "position:absolute;inset:auto;left:" + d1.x + "px;top:" + d1.y + "px;width:" + d1.w + "px;height:" + d1.h + "px;object-fit:fill;transform-origin:0 0;will-change:transform";
-      go(HV, [{ transform: "translate(" + (d0.x - d1.x) + "px," + (d0.y - d1.y) + "px) scale(" + (d0.s / d1.s) + ")" }, { transform: "none" }]);
-      if (sh){ sh.style.cssText = "top:-3px;bottom:auto;height:" + (h0 + 6) + "px;transform-origin:0 0;will-change:transform"; go(sh, [{ transform: "none" }, { transform: "scaleY(" + ((h1 + 6) / (h0 + 6)) + ")" }], { duration: 700, easing: CIO, delay: at(100), fill: "both" }); }
-      var cov = document.createElement("i"); cov.className = "lgt-cover"; cov.style.cssText = "top:" + h0 + "px;height:" + (dH + 4) + "px";
-      H.appendChild(cov); go(cov, [{ transform: "none" }, { transform: "translateY(" + (-dH) + "px)" }], { duration: 700, easing: CIO, delay: at(100), fill: "both" });
+      /* #192 배너: 영상 칸 = 둘 중 큰 높이로 고정, 보이는 높이만 clip-path(넓은 화면은 홈이 더 커서 460 → 576.7처럼 커짐) */
+      bannerMorph(h0, h1, ops0, ops1, 700, at(100), CIO);
       if (a.width && z.width) go(kr, flipKF(a, z));
       if (aE.width && zE.width) go(en, flipKF(aE, zE));
       var tEls = tmFlip(tB, go);
       smooth([kr, en].concat(tEls), true);
       /* 맨 위 정보 줄(이름 · 사번 · 로그아웃 / 휴대폰 ☰) · 왼쪽 위 영문 500~900 */
       [$("mmBtn"), H.querySelector(".h-sdpm"), $("who"), $("whoSep")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: COUT, delay: at(500), fill: "backwards" }); });
-      /* 메뉴 줄 · ⏸ 550~950: 배너 아래 끝(덮는 판)을 따라 붙어 오며 나타남 — 겹치지 않게 같은 곡선으로 계산한 자리 */
-      var ts = performance.now() - t0, span = Math.max(1, 950 - ts), kf = [];
-      for (var i = 0; i <= 24; i++){
-        var t = ts + span * i / 24, off = dH * (1 - EIO((t - 100) / 700)), p = EOUT(Math.min(1, Math.max(0, (t - 550) / 400)));
-        kf.push({ offset: i / 24, opacity: p, transform: "translateY(" + (off + 10 * (1 - p)).toFixed(2) + "px)" });
-      }
-      [document.querySelector(".bar"), H.querySelector(".h-pp"), H.querySelector(".h-sdp")].forEach(function(el){ go(el, kf, { duration: span, easing: "linear", fill: "backwards" }); });
+      /* 메뉴 줄 · ⏸ · SDP 550~950: 보이는 배너 아래 끝을 따라 붙어 오며 나타남(커질 때도 작아질 때도) · 목록(라인 리빌 전 접혀 있음)도 같이 따라옴 */
+      follow([document.querySelector(".bar"), H.querySelector(".h-pp"), H.querySelector(".h-sdp")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 700, bE: EIO, aS: 550, aD: 400, rise: 10 });
+      follow([$("app")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 700, bE: EIO });
       go(document.querySelector(".fab"), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(550), fill: "backwards" });   /* 맨 위로 버튼도 메뉴 줄과 같이 */
-      setTimeout(function(){
-        H.style.overflow = ""; H.style.transition = ""; hv.style.bottom = ""; hv.style.height = ""; HV.style.cssText = "";
-        if (sh){ sh.style.cssText = ""; if (sh.getAnimations) sh.getAnimations().forEach(function(x){ x.cancel(); }); }
-        if (cov.parentNode) cov.parentNode.removeChild(cov);
-        smooth([kr, en].concat(tEls), false);
-      }, at(800) + 20);
+      setTimeout(function(){ if (bannerUndo) bannerUndo(); H.style.transition = ""; smooth([kr, en].concat(tEls), false); }, at(800) + 20);
       [kick, mnu].forEach(function(el){ if (el) el.style.visibility = ""; });
       });
     }, enterFail);
