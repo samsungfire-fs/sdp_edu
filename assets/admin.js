@@ -994,14 +994,14 @@
       /* #224 ① 공개 설정(머리의 공개 스위치 대신) ② 연월 ③ 제목 ④ 책임위원 ⑤ 썸네일 ⑥ 연령 */
       rrow(1, "공개 설정", "",
         '<div class="segs" role="radiogroup" aria-label="공개 설정">' + rSeg("rmvisSet", at, "1", pub, "공개", IC.eye) + rSeg("rmvisSet", at, "0", !pub, "비공개", IC.lock) + '</div>') +
-      rrow(2, "연월", "썸네일 첫째 줄에 크게 나와요. 이 달이 최신일수록 사이트에서 위에 보여요.",
+      rrow(2, "연월", "자동으로 썸네일이 만들어져요!",   /* #232 */
         '<div class="ym' + (dup ? " dup" : "") + '" role="group" aria-label="연월">' +
           '<label class="asel"><select id="rm' + mi + 'y" ' + at + ' data-rym="y" aria-label="년">' + years.map(function(k){ return '<option value="' + k + '"' + (k === y ? " selected" : "") + '>' + k + '년</option>'; }).join("") + '</select>' + IC.down + '</label>' +
           '<label class="asel"><select id="rm' + mi + 'mo" ' + at + ' data-rym="m" aria-label="월">' + [1,2,3,4,5,6,7,8,9,10,11,12].map(function(k){ return '<option value="' + k + '"' + (k === mo ? " selected" : "") + '>' + k + '월</option>'; }).join("") + '</select>' + IC.down + '</label>' +
         '</div>' + (dup ? '<span class="pill bad ym-err" role="alert">이미 등록된 달이에요. 다른 달을 골라 주세요.</span>' : '')) +
-      rrow(3, "제목", "썸네일 둘째 줄에 나와요. 사이트의 카드와 페이지 제목에도 그대로 나와요.",
+      rrow(3, "제목", "자동으로 썸네일이 만들어져요!",
         '<input type="text" id="rm' + mi + 'title" class="ip" ' + at + ' data-rk="title" value="' + esc(m.title) + '" placeholder="예) 비급여통합치료비 상품연구 전략자료 모음" autocomplete="off" aria-label="제목">') +
-      rrow(4, '책임위원 <span class="opt">(선택)</span>', "썸네일 아래쪽에 나와요. 비우면 안 나와요. 이 달 연령들의 기본값이 돼요.",
+      rrow(4, '책임위원 <span class="opt">(선택)</span>', "썸네일 아래쪽과 사이트 카드에 나와요.",
         '<input type="text" id="rm' + mi + 'by" class="ip" ' + at + ' data-rk="by" value="' + esc(m.by || "") + '" placeholder="예) 홍길동" autocomplete="off" maxlength="20" aria-label="책임위원">') +
       rrow(5, "썸네일", ["이미지 사이즈 16:9(1280x720)"], thumbField(m, at)) +
       /* #228 ⑥ 연령: 제목 줄 오른쪽 = 정렬 안내 · 목록(없으면 점선 빈 칸) · [+ 연령 추가] */

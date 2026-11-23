@@ -156,7 +156,7 @@
   SC.athMonthKey = function (ym) { var x = /^(\d{4})-(\d{2})$/.exec(String(ym || "")); return x ? SC.ATH_K[(((11 - +x[2]) % 6) + 6) % 6] : "blue"; };
   SC.athAgeKey = function (band) {
     var x = /(\d{1,3})/.exec(String(band || "")); if (!x) return "blue";
-    var n = +x[1]; return n <= 30 ? "green" : n < 50 ? "sky" : n < 60 ? "orange" : "pink";
+    var n = +x[1]; return n < 30 ? "green" : n < 40 ? "purple" : n < 50 ? "sky" : n < 60 ? "orange" : n < 70 ? "pink" : "blue";   /* #234 나이대마다 다른 색 */
   };
   /* 연령 이름 = 연령대 + 제목(#149, 예: 40대 비급여통합치료비). 예전 데이터(연령대 칸 없음)는 제목 그대로 */
   /* #225 연령대에 숫자만(맨 앞 숫자 1~3자리 + 띄어쓰기/끝) 넣으면 '세'를 붙여 봄: 70 → 70세 · 70 비급여 → 70세 비급여. 40대 · 60세 이상 · 30~40대 · 연월은 그대로 */

@@ -2062,3 +2062,40 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
 .card:has(> .card-body.yt-b), .card:has(> .yt-b){border-bottom-left-radius:0; border-bottom-right-radius:0}
 .ys:has(.new){padding:2px 0 2px 2px; margin-left:-2px; margin-bottom:-2px}
 .new{box-sizing:border-box}
+
+/* ===== 11-23 #235 사용자 사이트 메뉴 · 큰 제목 · 칸 제목 약 20% 작게(줄 높이 · 굵기 · 색 · 간격 그대로, 관리자 · 로그인 큰 문구 · 전환 설명 글은 그대로) ===== */
+/* ① 맨 위 메뉴 23 → 19 · 21 → 17 · 17 → 14 */
+.menu a{font-size:19px !important}
+/* ② 화면 큰 제목 32 → 26 · 28 → 23 · 26 → 21 / 강의 제목 30 → 24 · 26 → 21 · 22 → 18 */
+.list-head h1:not(.sig-h){font-size:26px !important}
+.lec-info h1{font-size:24px !important}
+.rget-info h1{font-size:clamp(24px,2.08vw,30px) !important}
+.empty h2, .state h1{font-size:21px !important}
+/* ③ 칸 제목 24 → 20 · 23 → 19 · 26 → 21 · 30 → 24 · 22 → 18 · 21 → 17 */
+.sh-t{font-size:20px !important}
+.files-card h2{font-size:19px !important}
+.r-files h2{font-size:21px !important}
+.comments h2, .intro h2{font-size:18px !important}
+.others > h2, .r-others > h2{font-size:24px !important}
+@media (max-width:980px){
+  .menu a{font-size:17px !important}
+  .lec-info h1{font-size:21px !important}
+  .rget-info h1{font-size:24px !important}
+  .r-files h2{font-size:20px !important}
+  .others > h2, .r-others > h2{font-size:21px !important}
+}
+@media (max-width:640px){
+  .list-page .list-head:has(.search) h1{font-size:21px !important}
+}
+@media (max-width:560px){
+  .menu a{font-size:14px !important}
+  .list-head h1:not(.sig-h){font-size:23px !important}
+  .list-page .list-head:has(.search) h1{font-size:21px !important}
+  .lec-info h1{font-size:18px !important}
+  .rget-info h1{font-size:21px !important}
+  .empty h2, .state h1{font-size:19px !important}
+  .sh-t{font-size:17px !important}
+  .files-card h2, .r-files h2{font-size:20px !important}
+  .comments h2, .intro h2{font-size:17px !important}
+  .others > h2, .r-others > h2{font-size:18px !important}
+}

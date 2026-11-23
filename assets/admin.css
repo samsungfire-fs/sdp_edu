@@ -2387,3 +2387,26 @@ body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !impo
 .mmeta{display:flex; flex-wrap:wrap; gap:6px 14px; padding-top:16px; box-shadow:inset 0 1px 0 #EEF1F7; font-size:12.5px; line-height:1.5; color:var(--k-t3)}
 [data-theme="dark"] .mmeta{box-shadow:inset 0 1px 0 #262A33}
 .mmeta b{font-weight:700 !important; color:var(--k-t2)}
+
+/* ===== 11-23 #233 월 편집 ⑥ 연령 카드: 썸네일 176(16:9 · 모서리 12) · 안 여백 12/14/12/12 · 칸 사이 18 · 최소 높이 123 · 모서리 18 · 카드 사이 10
+   썸네일 · 글자 묶음 · 공개 스위치 · [편집] 모두 카드 세로 가운데 ===== */
+.mstep .ages{gap:10px}
+.mstep .aitem{border-radius:18px}
+.mstep .arow{align-items:center; gap:18px; padding:12px 14px 12px 12px; min-height:123px; box-sizing:border-box; border-radius:18px}
+.mstep .arow .athumb{width:176px; aspect-ratio:16/9; border-radius:12px; align-self:center}
+.mstep .arow .vtext{display:flex; flex-direction:column; justify-content:center; gap:8px; min-width:0; flex:1 1 auto; align-self:center}
+.mstep .arow .vtext h3{font-size:16px; font-weight:700 !important; margin:0}
+.mstep .arow .badges{align-items:center}
+.mstep .arow .badges .bdg{font-size:12px}
+.mstep .arow .badges .bdg:not(.priv){height:auto; padding:3px 8px}
+.mstep .arow .badges .am-who{font-size:12.5px; color:var(--k-t3)}
+.mstep .arow > .vs{margin-left:auto; align-self:center}
+.mstep .arow > .vexp{align-self:center}
+[data-theme="dark"] .mstep .aitem{background:#171A21; box-shadow:inset 0 0 0 2px #262A33}
+[data-theme="dark"] .mstep .aitem.open{background:#121A33; box-shadow:inset 0 0 0 2px #3D63FF}
+[data-theme="dark"] .mstep .arow .vtext h3{color:#EEF1FA}
+[data-theme="dark"] .mstep .arow .badges .bdg:not(.priv){padding:0}
+@media (hover:hover) and (pointer:fine){ [data-theme="dark"] .mstep .aitem:hover{box-shadow:inset 0 0 0 2px #343946} }
+/* 편집 칸이 좁을 때(981~1399 편집 중)는 썸네일 128 · 휴대폰(640 이하)은 지금처럼 썸네일 없이 */
+@media (min-width:981px) and (max-width:1399px){ #app.is-edit .mstep .arow .athumb{width:128px} #app.is-edit .mstep .arow{gap:14px; min-height:0} }
+@media (max-width:640px){ .mstep .arow{gap:10px; min-height:0; padding:12px 10px 12px 12px} }
