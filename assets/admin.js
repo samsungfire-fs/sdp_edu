@@ -810,12 +810,17 @@
     $("edSwBox").innerHTML = lsw(pub, 'data-act="edvis"', isR ? "이 달을 사이트에 공개" : "이 강의를 사이트에 공개");
     $("edSheetT").textContent = isR ? "월 편집" : "강의 편집";
     var ageOn = isR && !!openA && openM.ages.indexOf(openA) > -1;
-    $("editor").classList.toggle("age-mode", ageOn); $("edSteps").hidden = !ageOn;
+    $("editor").classList.toggle("age-mode", ageOn); $("editor").classList.toggle("month-mode", isR && !ageOn); $("edSteps").hidden = !ageOn;
     if (isR){
       var mi = rdata.months.indexOf(openM), mt = openM.title.trim();
-      $("edTitle").textContent = mt || (isNew ? "새 달" : "제목 없음");
+      /* #215 월 화면 머리 = 연령 화면과 같은 모양: '{월 제목} · 월 편집' + 단계 줄 '① 월 정보 —— ② 연령 설정'(①이 지금 단계) */
+      $("edTitle").innerHTML = '<span data-msname>' + esc(mt || (isNew ? "새 달" : "제목 없음")) + '</span> <em class="as-em">· ' + (isNew ? "월 추가" : "월 편집") + '</em>';
       $("edTitle").classList.toggle("ph", !mt);
       $("edNewH").hidden = true;
+      if (!ageOn){
+        $("edSteps").hidden = false;
+        $("edSteps").innerHTML = '<ol class="as-steps ms" aria-label="단계"><li class="on" aria-current="step"><i aria-hidden="true">1</i>월 정보</li><li class="ln" aria-hidden="true"></li><li class="nx"><i aria-hidden="true">2</i>연령 설정</li></ol>';
+      }
       if (ageOn){   /* #184 · #185 연령 화면 머리: 연령 제목 · 그 아래 단계 줄 '✓ (월 제목) —— ② 연령 설정' */
         var an = SC.ageName(openA), lab2 = mt || SC.ymLabel(openM.ym) || "이 달";
         $("edTitle").innerHTML = '<span data-asname>' + esc(an || (openA._new ? "새 연령" : "제목 없음")) + '</span> <em class="as-em">· ' + (openA._new ? "연령 추가" : "연령 편집") + '</em>';
@@ -829,6 +834,14 @@
       $("edNewH").hidden = !(isNew && !openV.id);
       $("edNewH").textContent = "유튜브 주소를 넣으면 제목을 가져오고 [저장]이 켜져요.";
     }
+    /* #215 · 11-23 사용자: '‹ 뒤로가기'는 편집 칸 머리(스크롤해도 붙어 있는 곳)에 — 월 화면 = ✕와 같음 · 연령 화면 = 월 정보로 */
+    var bk = $("edBack");
+    if (isR){
+      var bmi = rdata.months.indexOf(openM), bai = ageOn ? openM.ages.indexOf(openA) : -1;
+      bk.innerHTML = ageOn ? '<button type="button" class="as-back rp" data-act="rageBack" data-m="' + bmi + '" data-a="' + bai + '" aria-label="월 정보로 뒤로가기">' + IC_BK + '<span>뒤로가기</span></button>'
+        : '<button type="button" class="as-back rp" data-act="rmBack" data-m="' + bmi + '" aria-label="상품연구 목록으로 뒤로가기">' + IC_BK + '<span>뒤로가기</span></button>';
+      bk.hidden = false;
+    } else { bk.innerHTML = ""; bk.hidden = true; }
     var body = $("edBody"), st = body.scrollTop;
     body.innerHTML = isR ? monthBody(openM, mi) : videoBody(openV, i);
     body.scrollTop = swap || opening ? 0 : st;
@@ -995,7 +1008,6 @@
     var lab = SC.ymLabel(m.ym) || m.title || "이 달", code = ymCode(m.ym), saved = !m._new && !dirtyMonth(m), cin = stepDir === "in"; stepDir = "";
     /* #184 · #185 연령 화면: 편집 칸 머리 = 연령 제목 + 단계 줄(renderEditor) · 내용 맨 위 '‹ 뒤로가기' */
     return '<div class="astep' + (cin ? " as-in" : "") + '" data-ai="' + ai + '">' +
-      '<button type="button" class="as-back rp" data-act="rageBack" ' + at + ' aria-label="월 정보로 뒤로가기">' + IC_BK + '<span>뒤로가기</span></button>' +
       rsec(1, '연령대 <span class="req" aria-label="필수">*</span>', "입력하면 자동으로 썸네일이 만들어져요!",
         '<input type="text" id="' + idp + 'band" class="ip" ' + at + ' data-rk="band" value="' + esc(a.band || "") + '" placeholder="예) 40대 · 60세 이상 · 30~40대" autocomplete="off" maxlength="20" aria-label="연령대">') +
       rsec(2, '제목 <span class="req" aria-label="필수">*</span>', '연령대 밑에 들어갈 제목을 입력해주세요',
@@ -1118,6 +1130,7 @@
   }
   function rClick(b, e){
     var act = b.dataset.act, m = rdata.months[+b.dataset.m], a = m && b.dataset.a != null ? m.ages[+b.dataset.a] : null;
+    if (act === "rmBack"){ closeEditor(); return; }   /* #215 월 화면 '‹ 뒤로가기' = ✕와 같음(저장 안 한 내용 처리도) */
     if (!m) return;
     if (act === "redit"){
       if (b.classList.contains("vrow") && (e.target.closest("button") || e.target.closest("a"))) return;
@@ -1206,7 +1219,7 @@
       o.title = t.value; markDirty(); setTimeout(function(){ athRefresh(+t.dataset.m); }, 0);
       var h = t.dataset.a != null ? null : document.querySelector('.ritem[data-m="' + t.dataset.m + '"] h3');
       if (h){ h.textContent = t.value.trim() || "제목 없음"; h.classList.toggle("untitled", !t.value.trim()); }
-      if (t.dataset.a == null) $("edTitle").textContent = t.value.trim() || "제목 없음";
+      if (t.dataset.a == null){ var mn = document.querySelector("[data-msname]"); if (mn) mn.textContent = t.value.trim() || (rObj(t)._new ? "새 달" : "제목 없음"); $("edTitle").classList.toggle("ph", !t.value.trim()); }
       else { var ah = t.closest(".aitem"); ah = ah && ah.querySelector(".arow h3"); if (ah){ ah.textContent = t.value.trim() || "제목 없음"; ah.classList.toggle("untitled", !t.value.trim()); } }
       return;
     }
@@ -2603,10 +2616,18 @@
       if (c.k === "title") return [tag("제목", "n"), '<del>' + esc(c.o || "(없음)") + '</del> → ' + esc(c.n || "(없음)")];
       if (c.k === "desc") return [tag("강의 소개", "n"), esc(c.ol + "줄 → " + c.nl + "줄") + (c.oc !== c.nc ? ' <span class="mu">(' + esc(c.oc + "자 → " + c.nc + "자") + ')</span>' : '')];
       if (c.k === "undo") return [tag("삭제 되돌리기", "r"), "삭제한 강의를 되돌렸어요"];
+      /* #216 상품연구: 바뀐 칸마다 '<del>예전</del> → 새것', 연령 칸은 앞에 어느 연령인지 굵게 */
+      var w = c.w ? '<b class="lgwho">' + esc(c.w) + '</b> · ' : '';
+      if (c.k === "f") return [tag(c.l || "수정", "n"), w + '<del>' + esc(c.o || "없음") + '</del> → ' + esc(c.n || "없음")];
+      if (c.k === "th") return [tag("썸네일", "n"), w + (c.n ? "직접 올림 (" + esc(c.n) + ")" : "자동으로 되돌림")];
+      if (c.k === "aadd") return [tag("연령 추가", "g"), '<ins>' + esc(c.n) + '</ins>'];
+      if (c.k === "adel") return [tag("연령 삭제", "r"), '<del>' + esc(c.o) + '</del>'];
       return null;
     }
     function fromX(x){
       var m;
+      if ((m = /^연령을 추가했어요 · (.*)$/.exec(x))) return [[tag("연령 추가", "g"), '<ins>' + esc(m[1]) + '</ins>']];   /* #216 예전 기록도 한 줄 */
+      if ((m = /^연령을 삭제했어요 · (.*)$/.exec(x))) return [[tag("연령 삭제", "r"), '<del>' + esc(m[1]) + '</del>']];
       if (/^강의를 업로드|^달을 만들었어요|^연령을 만들었어요/.test(x)) return [[tag(/^강의/.test(x) ? "강의 추가" : "추가", "g"), esc(x)]];
       if ((m = /^자료 (\d+)개를 (업로드|추가)했어요(?: · (.*))?$/.exec(x))) return [[tag("교육자료 추가", "g"), esc(m[3] || m[1] + "개")]];
       if ((m = /^자료 (\d+)개를 삭제했어요(?: · (.*))?$/.exec(x))) return [[tag("교육자료 삭제", "r"), esc(m[2] || m[1] + "개")]];
@@ -2635,6 +2656,9 @@
         var box = $("logBody"); if (!box) return;
         if (!r.ok){ box.innerHTML = '<p class="lge">기록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; return; }
         var list = (r.list || []).filter(function(e){ return e.x && e.x !== "업로드"; }), groups = [], gk = {};
+        /* #216 같은 저장에 '연령을 추가했어요'가 있으면 연령 쪽 '연령을 만들었어요'는 겹쳐 쓰지 않음 */
+        var addAt = {}; list.forEach(function(e){ if (/^연령을 추가했어요/.test(e.x)) addAt[e.n + "|" + e.at] = 1; });
+        list = list.filter(function(e){ return !(e.x === "연령을 만들었어요" && !(e.d && e.d.length) && addAt[e.n + "|" + e.at]); });
         list.forEach(function(e){ var k = e.n + "|" + e.at; if (!gk[k]){ gk[k] = { n: e.n, at: e.at, rows: [] }; groups.push(gk[k]); } gk[k].rows = gk[k].rows.concat(logRows(e)); });
         if (!groups.length){ box.innerHTML = '<p class="lge">아직 기록이 없어요.</p>'; return; }
         var h = box.closest(".modal").querySelector("#modalT"); if (h) h.innerHTML = '수정 기록 <b>' + groups.length + '</b>';
@@ -2677,6 +2701,8 @@
   function changed(words){ var w = words[words.length - 1], c = w.charCodeAt(w.length - 1) - 0xAC00; return words.join("·") + (c >= 0 && c < 11172 && c % 28 ? "을" : "를") + " 바꿨어요"; }
   var restoring = false;
   function cut(x, n){ x = String(x || ""); return x.length > n ? x.slice(0, n) + "…" : x; }
+  function ymTxt(ym){ var p = String(ym || "").split("-"); return p.length === 2 ? +p[0] + "년 " + (+p[1]) + "월" : String(ym || ""); }
+  function thName(th){ return th ? String(th).split("/").pop() : ""; }   /* #216 썸네일: 직접 올린 파일 이름(비면 자동) */
   function lineN(x){ return String(x || "").split(/\n/).filter(function(l){ return l.trim(); }).length; }
   function auditItems(S, out, rout){
     var items = [], oldV = {}, newIds = {}, catL = function(c){ return SC.catLabel(c); };
@@ -2714,30 +2740,39 @@
     rdata.months.forEach(function(m){ if (m._oym && m._oym !== m.ym && oldM[m._oym] && !newYm[m._oym]) ymMoved[m.ym] = m._oym; });
     rout.months.forEach(function(m){
       var code = ymCode(m.ym), t = "r:" + code, oy = ymMoved[m.ym], o = oldM[m.ym] || (oy && oldM[oy]);
-      if (oy){ items.push({ t: t, from: "r:" + ymCode(oy), x: "연월을 바꿨어요" }); items.push({ t: "rf:" + code, from: "rf:" + ymCode(oy) }); }
+      if (oy){ items.push({ t: t, from: "r:" + ymCode(oy), x: "연월을 바꿨어요", d: [{ k: "f", l: "연월", o: ymTxt(oy), n: ymTxt(m.ym) }] }); items.push({ t: "rf:" + code, from: "rf:" + ymCode(oy) }); }
       if (!o){
         items.push({ t: t, x: "달을 만들었어요" + (m.ages.length ? " · 연령 " + m.ages.length + "개" : "") });
-        m.ages.forEach(function(a){ items.push({ t: t + "/" + a.id, x: "연령을 만들었어요" }); a.files.forEach(function(f){ items.push({ t: "rf:" + code + "/" + a.id + ":" + fileKey(f), x: "업로드" }); }); if (a.files.length) items.push({ t: t + "/" + a.id, x: "자료 " + a.files.length + "개를 업로드했어요" }); });
+        m.ages.forEach(function(a){ items.push({ t: t + "/" + a.id, x: "연령을 만들었어요", d: [{ k: "aadd", n: SC.ageName(a) }] }); a.files.forEach(function(f){ items.push({ t: "rf:" + code + "/" + a.id + ":" + fileKey(f), x: "업로드" }); }); if (a.files.length) items.push({ t: t + "/" + a.id, x: "자료 " + a.files.length + "개를 업로드했어요" }); });
         return;
       }
-      var ch = [];
-      if (o.title !== m.title) ch.push("제목"); if ((o.thumb || "") !== (m.thumb || "")) ch.push("썸네일");
-      if (ch.length) items.push({ t: t, x: changed(ch) });
+      /* #216 바뀐 칸마다 예전 값 · 새 값을 같이 남김(수정 기록 창에서 '<del>예전</del> → 새것') */
+      var ch = [], md = [];
+      if (o.title !== m.title){ ch.push("제목"); md.push({ k: "f", l: "제목", o: cut(o.title, 140), n: cut(m.title, 140) }); }
+      if ((o.by || "") !== (m.by || "")){ ch.push("책임위원"); md.push({ k: "f", l: "책임위원", o: o.by || "", n: m.by || "" }); }
+      if ((o.thumb || "") !== (m.thumb || "")){ ch.push("썸네일"); md.push({ k: "th", n: thName(m.thumb) }); }
+      if (ch.length) items.push({ t: t, x: changed(ch), d: md });
       if ((o.visible !== false) !== (m.visible !== false)) items.push({ t: t, x: m.visible !== false ? "비공개 → 공개로 바꿨어요" : "공개 → 비공개로 바꿨어요" });
       var oa = {}; o.ages.forEach(function(a){ oa[a.id] = a; });
       var na = {}; m.ages.forEach(function(a){ na[a.id] = a; });
       m.ages.forEach(function(a){
         var at = t + "/" + a.id, x = oa[a.id];
-        if (!x){ items.push({ t: t, x: "연령을 추가했어요 · " + SC.ageName(a) }); items.push({ t: at, x: "연령을 만들었어요" }); a.files.forEach(function(f){ items.push({ t: "rf:" + code + "/" + a.id + ":" + fileKey(f), x: "업로드" }); }); return; }
-        var c2 = [];
-        if ((x.band || "") !== (a.band || "")) c2.push("연령대"); if (x.title !== a.title) c2.push("제목"); if ((x.thumb || "") !== (a.thumb || "")) c2.push("썸네일");
-        if (c2.length) items.push({ t: at, x: changed(c2) });
+        if (!x){ items.push({ t: t, x: "연령을 추가했어요 · " + SC.ageName(a), d: [{ k: "aadd", n: SC.ageName(a) }] }); items.push({ t: at, x: "연령을 만들었어요" }); a.files.forEach(function(f){ items.push({ t: "rf:" + code + "/" + a.id + ":" + fileKey(f), x: "업로드" }); }); return; }
+        var c2 = [], ad = [], an = SC.ageName(a);
+        if ((x.band || "") !== (a.band || "")){ c2.push("연령대"); ad.push({ k: "f", l: "연령대", w: an, o: x.band || "", n: a.band || "" }); }
+        if (x.title !== a.title){ c2.push("제목"); ad.push({ k: "f", l: "연령 제목", w: a.band || an, o: cut(x.title, 140), n: cut(a.title, 140) }); }
+        if ((x.by || "") !== (a.by || "")){ c2.push("책임위원"); ad.push({ k: "f", l: "책임위원", w: an, o: x.by || "", n: a.by || "" }); }
+        if ((x.thumb || "") !== (a.thumb || "")){ c2.push("썸네일"); ad.push({ k: "th", w: an, n: thName(a.thumb) }); }
+        if (c2.length) items.push({ t: at, x: changed(c2), d: ad });
         if ((x.visible !== false) !== (a.visible !== false)) items.push({ t: at, x: a.visible !== false ? "비공개 → 공개로 바꿨어요" : "공개 → 비공개로 바꿨어요" });
         filesDiff(x.files || [], a.files, "rf:" + code + "/" + a.id, items, at);
       });
-      o.ages.forEach(function(x){ if (!na[x.id]) items.push({ t: t, x: "연령을 삭제했어요 · " + x.title }); });
+      o.ages.forEach(function(x){ if (!na[x.id]) items.push({ t: t, x: "연령을 삭제했어요 · " + (SC.ageName(x) || x.title), d: [{ k: "adel", o: SC.ageName(x) || x.title }] }); });
       var oOrder = o.ages.filter(function(x){ return na[x.id]; }).map(function(x){ return x.id; }).join(","), nOrder = m.ages.filter(function(a){ return oa[a.id]; }).map(function(a){ return a.id; }).join(",");
-      if (oOrder !== nOrder) items.push({ t: t, x: "연령 순서를 바꿨어요" });
+      if (oOrder !== nOrder){
+        var nmOf = function(arr, keep){ return arr.filter(function(z){ return keep[z.id]; }).map(function(z){ return z.band || SC.ageName(z); }).join(" · "); };
+        items.push({ t: t, x: "연령 순서를 바꿨어요", d: [{ k: "f", l: "연령 순서", o: nmOf(o.ages, na), n: nmOf(m.ages, oa) }] });
+      }
     });
     (S.r.months || []).forEach(function(o){
       if (newYm[o.ym] || Object.keys(ymMoved).some(function(k){ return ymMoved[k] === o.ym; })) return;

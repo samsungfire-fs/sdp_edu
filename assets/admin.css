@@ -1491,7 +1491,7 @@ body:has(.admin.is-edit) .toast{bottom:calc(24px + env(safe-area-inset-bottom, 0
   #app .ed-r1 > .tagp{grid-area:p; justify-self:start; margin:14px 0 0 calc(var(--edin) - var(--edpx))}
   #app .ed-swbox{grid-area:w; justify-self:end; margin:14px calc(var(--edin) - var(--edpx)) 0 0}
   #app .ed-sp{display:none}
-  #app .ed-head h2, #app .ed-newh{padding:0 var(--edin)}
+  #app .ed-head h2, #app .ed-newh, #app .ed-steps, #app .ed-back{padding:0 var(--edin)}
   #app .ed-head h2{margin-top:12px}
   #app .ed-newh{margin-top:6px}
   .fs{grid-template-columns:1fr; gap:12px; padding:24px}
@@ -2258,3 +2258,23 @@ body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !impo
 /* 11-23 #214 연령 줄 [편집] = 강의 관리 [편집]과 같은 모양(연필 16px · 간격 6px) — 'undefined' 글자 없앰 */
 .vexp.aged{gap:6px}
 .vexp.aged svg{width:16px; height:16px; flex:none}
+
+/* #215 월 편집 머리 = 연령 편집과 같은 모양(제목 · 월 편집 + 단계 줄 '① 월 정보 —— ② 연령 설정') · 내용 맨 위 '‹ 뒤로가기' */
+.editor.month-mode #edPill{display:none !important}
+.editor.month-mode .ed-head h2 .as-em{font-size:15px; color:#8A93B4}
+[data-theme="dark"] .editor.month-mode .ed-head h2 .as-em{color:#6B7390}
+.as-steps .nx{color:#8A93B4}
+.as-steps .nx i{background:none; box-shadow:inset 0 0 0 1.5px #C9D2EA; color:#8A93B4}
+[data-theme="dark"] .as-steps .nx{color:#6B7390}
+[data-theme="dark"] .as-steps .nx i{box-shadow:inset 0 0 0 1.5px #2A3045; color:#6B7390}
+[data-theme="dark"] .as-steps.ms .ln{background:#2A3045}
+#app .editor.month-mode #edSteps{margin-top:-4px}
+/* 11-23 사용자: '‹ 뒤로가기'는 편집 칸 머리 안(스크롤해도 늘 보임) — 월 · 연령 화면 */
+.ed-back{margin-top:-4px; display:flex}
+@media (max-width:980px){ #app .ed-back{margin-top:8px} }
+.ed-back[hidden]{display:none}
+.ed-back .as-back{margin:0 0 0 -6px}
+
+/* #216 수정 기록: 새 값은 보통 글자(<ins> 밑줄 없음) · 연령 이름 굵게 */
+.lgx ins{text-decoration:none; color:inherit}
+.lgx .lgwho{font-weight:800 !important; color:var(--k-t1)}

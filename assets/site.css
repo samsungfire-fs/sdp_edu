@@ -2055,3 +2055,9 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
 
 /* 11-23 PC: 스크롤바 자리를 늘 비워 둠 — 페이지 길이가 바뀌어 스크롤바가 생기거나 사라져도 화면이 좌우로 밀리지 않게(로그인 화면 제외) */
 @media (hover:hover) and (pointer:fine){ html:has(> body:not(.login-mode)){ scrollbar-gutter:stable } }
+
+/* #218 NEW 테두리 잘림: 카드(.card)가 overflow:hidden + 아래 모서리 둥글기(16~22px)라, 정보 줄 맨 앞(왼쪽 아래) NEW의 모서리가 둥근 모서리에 깎였음
+   → 글자 카드(썸네일만 둥근 유튜브식 · 바탕 없음)는 카드 아래 모서리를 둥글게 자르지 않음 + NEW 둘레 2px 여유(자리는 그대로) */
+.card:has(> .card-body.yt-b), .card:has(> .yt-b){border-bottom-left-radius:0; border-bottom-right-radius:0}
+.ys:has(.new){padding:2px 0 2px 2px; margin-left:-2px; margin-bottom:-2px}
+.new{box-sizing:border-box}

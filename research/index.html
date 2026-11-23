@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261123b">
+<link rel="stylesheet" href="assets/site.css?v=20261123c">
 </head>
 <body>
 
@@ -1713,7 +1713,7 @@
       /* 3) 홈을 한 번에 그림(목록은 라인 리빌까지 접어 둠) */
       H.style.transition = "none";
       heroApply("all"); heroKey = "all"; HHEAD.innerHTML = "";
-      lgRevealAt = Date.now() + at(650);
+      lgRevealAt = Date.now() + at(850);   /* #217 라인 리빌 850~ */
       enterDraw(o);
       /* 썸네일: 화면에 들어올 것은 바로 받고, 다 풀린(decode) 것만 보이게 — 하나씩 '툭' 뜨지 않게 */
       [].forEach.call($("app").querySelectorAll("img"), function(im, i){
@@ -1726,21 +1726,21 @@
       });
       /* 4) 홈 끝 모습 재기 */
       var h1 = H.offsetHeight, ops1 = vOps(), z = kr.getBoundingClientRect(), zE = en.getBoundingClientRect();
-      var oo = { duration: 700, easing: CIO, delay: at(100), fill: "backwards" };
+      var oo = { duration: 900, easing: CIO, delay: at(100), fill: "backwards" };   /* #217 배너 · 영상 · 로고 · 라이트/다크 100~1,000(900ms) */
       var go = function(el, kf, x){ if (el && el.animate) return el.animate(kf, x || oo); };
       /* #192 배너: 영상 칸 = 둘 중 큰 높이로 고정, 보이는 높이만 clip-path(넓은 화면은 홈이 더 커서 460 → 576.7처럼 커짐) */
-      bannerMorph(h0, h1, ops0, ops1, 700, at(100), CIO);
+      bannerMorph(h0, h1, ops0, ops1, 900, at(100), CIO);
       if (a.width && z.width) go(kr, flipKF(a, z));
       if (aE.width && zE.width) go(en, flipKF(aE, zE));
       var tEls = tmFlip(tB, go);
       smooth([kr, en].concat(tEls), true);
       /* 맨 위 정보 줄(이름 · 사번 · 로그아웃 / 휴대폰 ☰) · 왼쪽 위 영문 500~900 */
-      [$("mmBtn"), H.querySelector(".h-sdpm"), $("who"), $("whoSep")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: COUT, delay: at(500), fill: "backwards" }); });
+      [$("mmBtn"), H.querySelector(".h-sdpm"), $("who"), $("whoSep")].forEach(function(el){ go(el, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: COUT, delay: at(700), fill: "backwards" }); });   /* #217 700~1,100 */
       /* 메뉴 줄 · ⏸ · SDP 550~950: 보이는 배너 아래 끝을 따라 붙어 오며 나타남(커질 때도 작아질 때도) · 목록(라인 리빌 전 접혀 있음)도 같이 따라옴 */
-      follow([document.querySelector(".bar"), H.querySelector(".h-pp"), H.querySelector(".h-sdp")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 700, bE: EIO, aS: 550, aD: 400, rise: 10 });
-      follow([$("app")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 700, bE: EIO });
-      go(document.querySelector(".fab"), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(550), fill: "backwards" });   /* 맨 위로 버튼도 메뉴 줄과 같이 */
-      setTimeout(function(){ if (bannerUndo) bannerUndo(); H.style.transition = ""; smooth([kr, en].concat(tEls), false); }, at(800) + 20);
+      follow([document.querySelector(".bar"), H.querySelector(".h-pp"), H.querySelector(".h-sdp")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 900, bE: EIO, aS: 750, aD: 400, rise: 10 });   /* #217 메뉴 줄 · ⏸ 750~1,150 */
+      follow([$("app")], { t0: t0, h0: h0, h1: h1, bS: 100, bD: 900, bE: EIO });
+      go(document.querySelector(".fab"), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: COUT, delay: at(750), fill: "backwards" });   /* 맨 위로 버튼도 메뉴 줄과 같이 */
+      setTimeout(function(){ if (bannerUndo) bannerUndo(); H.style.transition = ""; smooth([kr, en].concat(tEls), false); }, at(1000) + 20);
       [kick, mnu].forEach(function(el){ if (el) el.style.visibility = ""; });
       });
     }, enterFail);
