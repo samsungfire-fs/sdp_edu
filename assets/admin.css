@@ -2278,3 +2278,41 @@ body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !impo
 /* #216 수정 기록: 새 값은 보통 글자(<ins> 밑줄 없음) · 연령 이름 굵게 */
 .lgx ins{text-decoration:none; color:inherit}
 .lgx .lgwho{font-weight:800 !important; color:var(--k-t1)}
+
+/* #224 · #222 월 편집 · 새 달 · 연령 편집 칸 = 한 줄 배치: 왼쪽 150px 번호 상자 + 칸 이름 / 사이 18px / 오른쪽 입력 + 그 밑 도움말 */
+.fs.fs2{grid-template-columns:150px minmax(0,1fr); gap:18px; padding:20px 28px; align-items:start}
+.fs2 > .flb{padding-top:14px; gap:10px}
+.fs2 > .flb .n{gap:9px; font-size:15px; font-weight:700 !important; line-height:24px; color:var(--k-t1); align-items:center}
+.fs2 > .flb .n em{width:24px; height:24px; border-radius:7px; font-size:13px; font-weight:700 !important; line-height:1}
+.fs2 > .flb .n .nm{display:block; line-height:24px; word-break:keep-all; font-weight:700 !important}
+.fs2 > .flb .n .opt{font-weight:400 !important; color:var(--k-t3); font-size:15px}
+.fs2 > .flb .howto{align-self:flex-start}
+.fs2 > .fc{gap:12px}
+.fs2 .hp2{margin:-4px 0 0; font-size:13px; line-height:1.6; color:var(--k-t3); word-break:keep-all; overflow-wrap:break-word; text-wrap:pretty}
+.fs2 .hp2 .hl{display:block}
+.fs2.fs-full{grid-template-columns:minmax(0,1fr); gap:14px}
+.fs2.fs-full > .flb{padding-top:0; flex-direction:row; align-items:center; justify-content:space-between}
+@media (min-width:981px) and (max-width:1399px){ #app.is-edit .fs.fs2{grid-template-columns:minmax(0,1fr); gap:12px} #app.is-edit .fs2 > .flb{padding-top:0; flex-direction:row; align-items:center; justify-content:space-between} }
+@media (max-width:980px){ .fs.fs2{grid-template-columns:minmax(0,1fr); gap:12px; padding:20px 24px} .fs2 > .flb{padding-top:0; flex-direction:row; align-items:center; justify-content:space-between} }
+@media (max-width:640px){ .fs.fs2{padding:20px 16px} }
+/* 월 화면: 공개는 ① 칸으로 — 머리의 공개 스위치는 숨김 */
+.editor.month-mode #edSwBox{display:none !important}
+/* 썸네일: [눌러서 올리기] 220×124 · 미리보기 220×124, 두 상자 아래쪽 같은 줄 */
+.fs2 .th-row{display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px}
+.fs2 .th-row .th-drop{width:220px; height:124px; aspect-ratio:auto; flex:none}
+.fs2 .th-row .th-btns{flex:none; align-self:flex-end; width:220px; height:124px; justify-content:center}
+.fs2 .th-row .th-btns > button{width:100%; justify-content:center}
+.fs2 .th-row .th-now.th-only{flex:none; width:220px; max-width:none; gap:8px}
+.fs2 .th-row .th-now.th-only > span{font-size:13px; line-height:1.4; color:var(--k-t3)}
+.fs2 .th-row .th-now.th-only .th-auto{width:220px; height:124px; max-width:none; aspect-ratio:auto}
+@media (max-width:520px){ .fs2 .th-row .th-drop, .fs2 .th-row .th-btns, .fs2 .th-row .th-now.th-only, .fs2 .th-row .th-now.th-only .th-auto{width:calc(50% - 7px); height:auto; aspect-ratio:16/9} .fs2 .th-row .th-btns{aspect-ratio:auto} }
+/* #222 ① 아이콘 + 글자 세로 가운데(한글 글자는 줄 상자 위쪽에 쏠려 아이콘을 살짝 올림) */
+#app .as-back, #app .ed-btn, #app .bb, #app .btn-soft, #app .btn-line, #app .add, #app .howto, #app .site-link, #app .seg, #app .vexp, .modal .bb{display:inline-flex; align-items:center; line-height:1}
+#app .ed-btn > svg, #app .bb > svg, #app .btn-soft > svg, #app .btn-line > svg, #app .add > svg, #app .howto > svg, #app .seg > svg, #app .vexp > svg, .modal .bb > svg{display:block; position:relative; top:-1px; flex:none}
+#app .as-back > svg, #app .mtab > svg{display:block; position:relative; top:-1.5px; flex:none}
+/* ⑦ 교육자료 줄: 종류 표 · 이름 · 크기 한 줄 가운데, 휴지통도 그 줄 가운데 / ⑧ 맨 아래 상태 글자 · 버튼 세로 가운데 */
+.astep .frow{align-items:start}
+.astep .frow .fnm{min-height:40px; padding-top:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.astep .frow .fnm .nm, .astep .frow .fnm .sz{line-height:1.3}
+@media (max-width:980px){ .astep .frow .fnm{min-height:34px} }
+.astep .as-foot{align-items:center}

@@ -159,14 +159,16 @@
     var n = +x[1]; return n <= 30 ? "green" : n < 50 ? "sky" : n < 60 ? "orange" : "pink";
   };
   /* 연령 이름 = 연령대 + 제목(#149, 예: 40대 비급여통합치료비). 예전 데이터(연령대 칸 없음)는 제목 그대로 */
-  SC.ageBand = function (a) { var b = String((a && a.band) || "").trim(); if (b) return b; var x = SC.splitHead(a && a.title); return x && /[대세]/.test(x[0]) ? x[0] : ""; };
+  /* #225 연령대에 숫자만(맨 앞 숫자 1~3자리 + 띄어쓰기/끝) 넣으면 '세'를 붙여 봄: 70 → 70세 · 70 비급여 → 70세 비급여. 40대 · 60세 이상 · 30~40대 · 연월은 그대로 */
+  SC.bandFix = function (s) { s = String(s == null ? "" : s).trim(); return s.replace(/^(\d{1,3})(?=\s|$)/, "$1세"); };
+  SC.ageBand = function (a) { var b = SC.bandFix(a && a.band); if (b) return b; var x = SC.splitHead(a && a.title); return x && /[대세]/.test(x[0]) ? x[0] : ""; };
   /* #182 연령 = 적은 나이 → 많은 나이(이름 앞 숫자, 같으면 '이상' · '초과'가 뒤, 숫자 없으면 맨 뒤) — 관리자 · 사이트 · 분석 모두 */
   SC.ageKey = function (a) { var b = SC.ageBand(a) || String((a && a.title) || ""), m = /(\d{1,3})/.exec(b); return m ? +m[1] + (/이상|초과/.test(b) ? 0.5 : 0) : 1e6; };
   SC.sortAges = function (list) { return (list || []).map(function (a, i) { return [a, i, SC.ageKey(a)]; }).sort(function (x, y) { return x[2] - y[2] || x[1] - y[1]; }).map(function (x) { return x[0]; }); };
   /* #187 상품연구 썸네일: 직접 올린 그림(11-19부터 올린 것, 'assets/research/u-…')이 있으면 그 그림, 없으면 자동 썸네일.
      11-18 전에 올린 예전 그림은 #162대로 쓰지 않음(데이터는 남겨 둠) */
   SC.upPic = function (p) { p = String(p || ""); return /^assets\/research\/u-/.test(p) ? p : ""; };
-  SC.ageName = function (a) { var b = String((a && a.band) || "").trim(), t = String((a && a.title) || "").trim(); return b ? (t ? b + " " + t : b) : t; };
+  SC.ageName = function (a) { var b = SC.bandFix(a && a.band), t = String((a && a.title) || "").trim(); return b ? (t ? b + " " + t : b) : t; };
   SC.athSrc = "assets/";
   /* #208~#211 왼쪽 = 날짜 · 연령 글자만(월: 작게 26년 + 크게 11월 / 연령: 크게 40대, '60세 이상' → 60세 + 작게 이상), 오른쪽 = 제목만 + 책임위원.
      날짜 · 연령을 못 꺼내면 예전 아이콘 칸 + 첫째 줄 */
@@ -202,7 +204,7 @@
     return { a: a, b: b, by: m.by, k: SC.athMonthKey(m.ym), icon: "docs", ym: m.ym };
   };
   SC.athAge = function (m, a) {
-    var band = String(a.band || "").trim(), t = String(a.title || "").trim(), b = t;
+    var band = SC.bandFix(a.band), t = String(a.title || "").trim(), b = t;
     if (!band){ var x = SC.splitHead(t); if (x && /[대세]/.test(x[0])){ band = x[0]; b = x[1]; } }
     return { a: band, b: b, by: String(a.by || "").trim() || m.by, k: SC.athAgeKey(band), icon: "shield" };
   };
