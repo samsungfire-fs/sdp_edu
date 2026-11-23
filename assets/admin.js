@@ -1059,7 +1059,7 @@
         '<span class="bdg priv">비공개</span><span class="bdg files dim">자료 ' + a.files.length + '개</span>' +
         (miss ? '<span class="bdg miss dim">링크 없음 ' + miss + '</span>' : '') + (m._oym ? Audit.rowWho("r:" + ymCode(m._oym) + "/" + a.id) : '') + '</div></div>' +
       rSwitch(pub, 'data-act="ravis" ' + at, "사이트에 공개") +
-      '<button type="button" class="vexp aged" data-act="rage" ' + at + ' aria-label="이 연령 고치기">' + IC.edit + '<span>편집</span></button></div></li>';
+      '<button type="button" class="vexp aged" data-act="rage" ' + at + ' aria-label="이 연령 고치기">' + IC.pen + '<span>편집</span></button></div></li>';
   }
   function rObj(el){
     var m = rdata.months[+el.dataset.m]; if (!m) return null;

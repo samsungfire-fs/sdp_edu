@@ -2255,3 +2255,6 @@ body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !impo
 .modal.logm > .lgs{line-height:1.5; padding-bottom:1px; margin-top:3px; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis}
 .modal.logm > .lgh h3{min-width:0; flex:1 1 auto}
 .modal.logm > .lgl{flex:1 1 auto; min-height:0; overflow:auto}
+/* 11-23 #214 연령 줄 [편집] = 강의 관리 [편집]과 같은 모양(연필 16px · 간격 6px) — 'undefined' 글자 없앰 */
+.vexp.aged{gap:6px}
+.vexp.aged svg{width:16px; height:16px; flex:none}
