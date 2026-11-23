@@ -25,7 +25,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261123a">
+<link rel="stylesheet" href="assets/site.css?v=20261123b">
 </head>
 <body>
 
@@ -88,7 +88,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/common.js?v=20261123a"></script>
+<script src="assets/common.js?v=20261123b"></script>
 <script>
 (function(){
   var esc = SC.esc, $ = function(id){ return document.getElementById(id); };
@@ -1004,6 +1004,10 @@
     /* 11-23 맨 위에서 다른 메뉴로: 보던 목록은 같은 자리에서 0~250 옅어지며 8px 아래로(노드째 옮겨서), 배너 · 밑줄은 누른 순간부터 */
     var split = !glide && !REDUCE && !restoreNext && !to.v && (from === "list" || from === "research") && !!$("app").firstChild && !!document.body.animate;
     if (split){
+      /* 11-23 사용자: 메뉴를 누르기 직전 배너 · 로고가 좌우로 한 번 흔들림 — 보던 목록을 떼어 낸 한 프레임 동안 페이지가 짧아져
+         오른쪽 스크롤바가 사라졌다 생기며 화면 폭이 바뀌었음 → 새 목록이 그려질 때까지 페이지 높이를 그대로 붙잡아 둠 */
+      var apq = $("app"); apq.style.minHeight = apq.offsetHeight + "px";
+      setTimeout(function(){ apq.style.minHeight = ""; }, 1400);
       var gq = ghostMove($("app")); gq.style.zIndex = "5";
       gq.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(8px)" }], { duration: 250, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards" }); gone(gq, 270);
       route(true); return;

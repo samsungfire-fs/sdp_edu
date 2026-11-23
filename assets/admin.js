@@ -1754,7 +1754,11 @@
         return h.getFileHandle("index.html").then(function(){ return h.getFileHandle("admin.html"); }).then(function(){
           dirHandle = h; kvSet("dir", h); showFolder(); return h;
         }).catch(function(){ toast("sdp_edu 폴더를 골라 주세요. 그 안에 index.html이 있어야 해요"); return null; });
-      }).catch(function(){ return null; });
+      }).catch(function(e){
+        /* 11-23 폴더 고르는 창을 닫으면 아무 반응이 없는 것처럼 보여서 알려 줌 */
+        toast(e && e.name === "AbortError" ? "폴더를 고르지 않아 업데이트하지 않았어요 · 다시 눌러 sdp_edu 폴더를 골라 주세요" : "폴더 고르는 창을 열지 못했어요 · 다시 눌러 주세요");
+        return null;
+      });
     }
     function ensurePerm(h){
       var o = { mode:"read" };
@@ -1792,7 +1796,7 @@
     var fromBar = false;
     function upload(items){
       $("updLog").innerHTML = "";
-      if (!items.length){ log('<span class="pill bad">올릴 파일이 없어요. sdp_edu 폴더가 맞는지 확인해 주세요</span>'); return Promise.resolve(); }
+      if (!items.length){ log('<span class="pill bad">올릴 파일이 없어요. sdp_edu 폴더가 맞는지 확인해 주세요</span>'); if (fromBar) toast("올릴 파일이 없어요 · sdp_edu 폴더가 맞는지 확인해 주세요"); setBusy(false); return Promise.resolve(); }
       setBusy(true, "확인 중");
       var head, baseTree, remote = {};
       return gh("/git/ref/heads/" + encodeURIComponent(branch)).then(function(ref){
@@ -1886,14 +1890,18 @@
       if (!fromBar) $("updBox").open = true;
       if (!canSave){ $("updLog").innerHTML = ""; log('<span class="pill bad">먼저 로그인해서 저장소에 연결해 주세요</span>'); if (fromBar) toast(verifying ? "최신 목록을 확인하는 중이에요. 잠시 뒤 다시 눌러 주세요" : "저장소에 연결되지 않아 업데이트할 수 없어요"); return; }
       if (!canFS){ $("updPick").click(); return; }
-      var h = dirHandle;
-      (h ? Promise.resolve(h) : pickDir()).then(function(h2){
+      /* 11-23 누르자마자 아이콘이 돌며 '업데이트 중…'(폴더를 고르거나 허용하는 동안에도) — 그만두면 원래대로 */
+      setBusy(true, "폴더 확인 중");
+      var h = dirHandle, uploading = false;
+      (h ? Promise.resolve(h) : kvGet("dir").then(function(x){ if (x){ dirHandle = x; showFolder(); return x; } return pickDir(); })).then(function(h2){
         if (!h2) return;
         return ensurePerm(h2).then(function(ok){
-          if (!ok){ toast("폴더 읽기를 허용해야 업데이트할 수 있어요"); return; }
+          if (!ok){ toast("폴더 읽기를 허용해야 업데이트할 수 있어요 · 다시 눌러 ‘허용’을 골라 주세요"); return; }
+          uploading = true;
           return readDir(h2).then(upload);
         });
-      }).catch(function(){ toast("폴더를 읽지 못했어요. ‘바꾸기’로 폴더를 다시 골라 주세요"); });
+      }).catch(function(){ toast("폴더를 읽지 못했어요. ‘바꾸기’로 폴더를 다시 골라 주세요"); })
+        .then(function(){ if (!uploading) setBusy(false); });
     }
     $("updRun").addEventListener("click", run);
     $("barUpd").addEventListener("click", run);
