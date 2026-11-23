@@ -2250,3 +2250,8 @@ body:has(.astep) .fab{bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !impo
 
 /* 11-19 #202 관리자 강의 줄 썸네일 길이 칸도 옅게 + 흐림 · #201 분:초 숫자 폭 고정 */
 #app .lrow .vthumb .dur, .pv2 .li1 .dth .dur{background:rgba(7,8,12,.46); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); text-shadow:0 1px 2px rgba(0,0,0,.35); font-variant-numeric:tabular-nums}
+/* 11-23 #213 수정 기록 창: 기록이 많아 창 안에서 스크롤될 때 머리 아래 강의 제목 줄이 반만 보이던 것 — 머리 · 제목 줄은 줄어들지 않게(flex:none), 스크롤은 목록 안에서만 */
+.modal.logm > .lgh, .modal.logm > .lgs{flex:none; height:auto; max-height:none; overflow:visible}
+.modal.logm > .lgs{line-height:1.5; padding-bottom:1px; margin-top:3px; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis}
+.modal.logm > .lgh h3{min-width:0; flex:1 1 auto}
+.modal.logm > .lgl{flex:1 1 auto; min-height:0; overflow:auto}

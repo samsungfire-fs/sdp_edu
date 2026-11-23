@@ -1750,7 +1750,8 @@
     if (canFS) kvGet("dir").then(function(h){ dirHandle = h; showFolder(); }); else showFolder();
 
     function pickDir(){
-      return window.showDirectoryPicker({ id:"sc-site", mode:"read" }).then(function(h){
+      var opt = { id:"sc-site", mode:"read" }; if (dirHandle) opt.startIn = dirHandle;   /* 지난번 sdp_edu 폴더에서 바로 열림 → [폴더 선택]만 누르면 됨 */
+      return window.showDirectoryPicker(opt).then(function(h){
         return h.getFileHandle("index.html").then(function(){ return h.getFileHandle("admin.html"); }).then(function(){
           dirHandle = h; kvSet("dir", h); showFolder(); return h;
         }).catch(function(){ toast("sdp_edu 폴더를 골라 주세요. 그 안에 index.html이 있어야 해요"); return null; });
@@ -1895,10 +1896,16 @@
       var h = dirHandle, uploading = false;
       (h ? Promise.resolve(h) : kvGet("dir").then(function(x){ if (x){ dirHandle = x; showFolder(); return x; } return pickDir(); })).then(function(h2){
         if (!h2) return;
-        return ensurePerm(h2).then(function(ok){
-          if (!ok){ toast("폴더 읽기를 허용해야 업데이트할 수 있어요 · 다시 눌러 ‘허용’을 골라 주세요"); return; }
+        /* 11-23 크롬을 다시 열면 폴더 읽기 허용이 풀리는데, 그때 뜨는 '허용' 말풍선이 주소창 쪽에 작게 떠서(또는 조용히 막혀서) 아무 반응이 없는 것처럼 보였음
+           → 허용이 풀려 있으면 말풍선 대신 폴더 고르는 창을 바로 띄움(지난번 폴더에서 열려 [폴더 선택]만 누르면 허용까지 한 번에) */
+        return h2.queryPermission({ mode:"read" }).then(function(p){
+          if (p === "granted") return h2;
+          toast("sdp_edu 폴더가 열리면 [폴더 선택]을 눌러 주세요");
+          return pickDir();
+        }).then(function(h3){
+          if (!h3) return;
           uploading = true;
-          return readDir(h2).then(upload);
+          return readDir(h3).then(upload);
         });
       }).catch(function(){ toast("폴더를 읽지 못했어요. ‘바꾸기’로 폴더를 다시 골라 주세요"); })
         .then(function(){ if (!uploading) setBusy(false); });
