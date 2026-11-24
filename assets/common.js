@@ -331,10 +331,13 @@
     var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>';
     var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
     function cur() { return root.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+    SC.themePaint = function(){ paint(); };
     function paint() {
       var t = cur(), mc = document.querySelector('meta[name="theme-color"]');
       var bar = opts.bar || { light: "#003CDC", dark: "#0B1442" };
-      if (mc) mc.setAttribute("content", bar[t]);
+      /* #256 인트로 동안(첫 진입 까만 화면 · 인트로 진행)은 위 띠 색도 인트로 색 #07080C */
+      var itr = root.classList.contains("itr-pre") || (document.body && document.body.classList.contains("itr-run"));
+      if (mc) mc.setAttribute("content", itr ? "#07080C" : bar[t]);
       if (opts.tm) opts.tm.querySelectorAll("[data-theme-set]").forEach(function (b) { b.setAttribute("aria-checked", b.dataset.themeSet === t); });
       if (opts.sw) opts.sw.setAttribute("aria-checked", t === "dark" ? "true" : "false");
       if (opts.ic) {
