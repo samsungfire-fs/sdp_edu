@@ -2138,30 +2138,29 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
    시간: 메뉴 이동 = --hd 기준(메뉴 → 메뉴 --hd 200 → 글자 450~ · 빛 결 1,600~2,800 / 홈 → 상품연구 --hd 300 → 모두 100ms 뒤), 주소로 바로 · 새로 고침 = .ld */
 .hh-spec .spx{filter:none}
 .hh-spec .sp-l{filter:drop-shadow(0 2px 10px rgba(40,60,150,.16))}
-.hh-spec .sp-g{position:absolute; inset:0; display:block; opacity:0; pointer-events:none;
-  -webkit-mask-size:100% 100%; mask-size:100% 100%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
-  background:linear-gradient(100deg, rgba(255,255,255,0) 36%, rgba(91,194,231,.9) 44%, rgba(118,132,255,.8) 50%, rgba(255,150,206,.7) 56%, rgba(255,255,255,0) 64%) no-repeat;
-  background-size:250cqw 100%}
+/* 빛 결 = SVG(묶음 전체) — 띠 사각형만 가로로 옮김(사용자 단위 px = 묶음 그림 1683px 기준). 시작 전엔 왼쪽 밖 */
+.hh-spec .sp-gs{position:absolute; left:0; top:0; width:100%; height:100%; display:block; pointer-events:none; overflow:hidden}
+.hh-spec .sp-gb{transform:translateX(-3281.85px)}
 @keyframes spPr{
   0%{opacity:0; transform:scale(1.08); filter:blur(2.444cqw) drop-shadow(-4.398cqw 0 0 rgba(80,200,255,.9)) drop-shadow(4.398cqw 0 0 rgba(255,110,200,.9)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}
   43%{opacity:1; filter:blur(.489cqw) drop-shadow(-1.466cqw 0 0 rgba(80,200,255,.65)) drop-shadow(1.466cqw 0 0 rgba(255,110,200,.65)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}
   100%{opacity:1; transform:none; filter:blur(0cqw) drop-shadow(0 0 0 rgba(80,200,255,0)) drop-shadow(0 0 0 rgba(255,110,200,0)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}}
 /* 묶음 너비 기준 위치 130% → −30% = 글자 칸마다 (−195cqw → 45cqw) − 그 글자 왼쪽 자리(--l) */
-@keyframes spGl{from{opacity:1; background-position:calc(-195cqw - var(--l, 0) * 1cqw) 0}to{opacity:1; background-position:calc(45cqw - var(--l, 0) * 1cqw) 0}}
+@keyframes spGb{from{transform:translateX(-3281.85px)}to{transform:translateX(757.35px)}}   /* 130% → −30% = 띠 왼쪽 끝 −1.95 → +0.45 묶음 너비(1683) */
 .hh-spec.hh-on .sp-l{animation:spPr 1260ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 90ms) both}
-.hh-spec.hh-on .sp-g{animation:spGl 1200ms cubic-bezier(.45,0,.25,1) calc(var(--hd) + 1400ms) both}
+.hh-spec.hh-on .sp-gb{animation:spGb 1200ms cubic-bezier(.45,0,.25,1) calc(var(--hd) + 1400ms) both}
 /* 주소로 바로 · 새로 고침(배너가 뜬 때 = 0): 글자 250 · 340 · 430 · 520ms 시작(각 1,260ms) · 빛 결 1,570~3,190ms(1,620ms) */
 .hh-spec.hh-on.ld .sp-l{animation-delay:calc(250ms + var(--i, 0) * 90ms)}
-.hh-spec.hh-on.ld .sp-g{animation-duration:1620ms; animation-delay:1570ms}
+.hh-spec.hh-on.ld .sp-gb{animation-duration:1620ms; animation-delay:1570ms}
 /* 나갈 때: 묶음째 위로 · 흐림 · 투명, 빛 결은 바로 숨김. 홈으로 갈 때는 묶음 전체를 0~350 안에 */
 @keyframes spOut{to{opacity:0; transform:translateY(-50%); filter:blur(8px)}}
 .hh-spec.out{animation:none}
 .hh-spec.out .spx{animation:spOut 450ms cubic-bezier(.4,0,.6,1) both}
-.hh-spec.out .sp-g{animation:none; opacity:0}
+.hh-spec.out .sp-gs{display:none}
 .hh-spec.out.fast{animation:hhFo 350ms cubic-bezier(.4,0,.6,1) both}
 .hh-spec.out.fast .spx{animation:none}
 /* 움직임 줄이기: 글자 바로 보이고 빛 결 없음 */
-@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-l, .hh-spec.out .spx{animation:none !important} .hh-spec .sp-g{animation:none !important; opacity:0} }
+@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-l, .hh-spec.out .spx{animation:none !important} .hh-spec .sp-gs{display:none} .hh-spec .sp-gb{animation:none !important} }
 
 /* ===== #242 ① (11-23) 휴대폰 다크 링크 복사 버튼 = 어두운 버튼(0-13 '흰 버튼 그대로' 규칙 없앰) =====
    상품연구 [자료 링크 복사] = PC · 태블릿 다크와 같게(#0E1533 · 흰 글자 · 2px #243066 · 아이콘 #A9BCFF), 강의 [링크 복사] = U3 강의 캔버스(#0E1533 + 1px #232B4D) */
@@ -2181,7 +2180,8 @@ body{overflow-x:clip}
    층: 까만 덮개(1) < 배너(인트로 동안만 2, 바탕 투명) < 카드(3) < 빛줄기 · 빛 머리 · 번쩍(60) */
 .itr{position:fixed; pointer-events:none}
 .itr-cv{inset:0; z-index:1; background:#07080C}
-.hero.itr-on{z-index:2; background:transparent; transition:none !important}   /* 배너를 덮개 위 · 카드 아래로, 바탕 투명(덮개의 까만색이 보이게) */
+.hero.itr-on{z-index:2; background:transparent; transition:none !important}
+.hero.itr-on.itr-hand{background:#05081C}   /* #251 로그인 → 홈 전환으로 넘긴 뒤 = 원래 배너 바탕 */   /* 배너를 덮개 위 · 카드 아래로, 바탕 투명(덮개의 까만색이 보이게) */
 body.itr-run .lg2-mid{transition:none !important}
 .itr-ln{left:0; right:0; height:3px; margin-top:-1.5px; z-index:60}
 .itr-ln i{position:absolute; inset:0; display:block; transform-origin:0 50%; transform:scaleX(0);
@@ -2195,4 +2195,13 @@ body.itr-run .lg2-help{position:relative; z-index:3}
 /* 인트로를 할 첫 진입: 스크립트가 로그인 화면을 그릴 때까지 까만 빈 화면(로그인한 사람 · 움직임 줄이기 · 이 탭 두 번째부터는 붙지 않음) */
 html.itr-pre body{background:#07080C}
 html.itr-pre body > *{visibility:hidden}   /* 아래 안내 2개도 카드와 함께 덮개 위에서 나타남 */
+
+/* ===== 11-24 아이폰: 시그니처클래스에 들어가면 보라 배너가 나왔다가 다시 도시 배너로 바뀜 =====
+   세 배경 영상 층이 모두 z-index −1이라 겹치는 순서를 사파리가 바꿔 그림(바뀜 움직임이 끝나는 순간 홈 영상이 위로) → 순서를 따로 정하고,
+   시그니처 · 상품연구 배너가 다 바뀐 뒤에는 그 아래 홈 영상 층을 숨김(바뀌는 중 = .h-sigx · .h-resx 동안은 보임) */
+.hero > .hv{z-index:-3}
+.hero > .hv.hv2{z-index:-2}
+.hero > .hv.hv3{z-index:-1}
+.hero.h-sig:not(.h-sigx):not(.h-resx) > .hv:not(.hv2):not(.hv3), .hero.h-res:not(.h-sigx):not(.h-resx) > .hv:not(.hv2):not(.hv3){visibility:hidden}
+.hero.h-res:not(.h-sigx):not(.h-resx) > .hv2{visibility:hidden}
 
