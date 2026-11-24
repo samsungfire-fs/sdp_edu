@@ -512,20 +512,53 @@
     });
     /* 키패드가 올라온 동안 사용자가 직접 화면을 끌어 내리면 그 자리를 존중(되돌리지 않음) */
     d.addEventListener("touchmove", function (e) { if (de.classList.contains("kb-in") && !isField(e.target)) manual = true; }, { passive: true, capture: true });
+    /* 키패드가 내려갔을 때 올리기 전 자리로 — 아래 여백(kb-pad)은 돌아온 뒤에 뺌(먼저 빼면 화면이 뚝 잘려 튐) */
+    /* 11-24 사용자(아이폰): 돌아올 때 뚝뚝 끊김 — ① 키패드가 내려가는 중에 같이 움직이면 사파리가 보이는 자리를 스스로 옮기며 서로 부딪힘
+       ② 사파리 smooth 스크롤이 0.42초보다 길면 아래 여백(kb-pad)이 먼저 빠져 남은 거리를 한 번에 건너뜀
+       → 키패드가 다 내려간 뒤에 시작 · 매 장 직접 옮기는 움직임(길이를 정함) · 여백은 움직임이 끝난 뒤 뺌 · 그 사이 손가락이 닿으면 멈춤 */
+    var bk = null;
+    function back(y, end) {
+      if (bk) bk.stop = true;
+      var y1 = w.scrollY, dy = y - y1, T = Math.min(560, 300 + Math.abs(dy) * 0.5), t0 = 0, me = { stop: false }; bk = me;
+      if (RM || Math.abs(dy) < 2) { w.scrollTo(0, y); bk = null; end(); return; }
+      var ez = function (k) { return k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+      var f = (function (ts) { if (me.stop) { end(); return; } if (!t0) t0 = ts; var k = Math.min(1, (ts - t0) / T);
+        w.scrollTo(0, Math.round(y1 + dy * ez(k))); if (k < 1) requestAnimationFrame(f); else { bk = null; end(); } }); requestAnimationFrame(f);
+    }
+    d.addEventListener("touchstart", function () { if (bk) bk.stop = true; }, { passive: true, capture: true });
+    function settle(keepFocus) {
+      if (!de.classList.contains("kb-in")) return;
+      if (!keepFocus) cur = null;
+      var y = y0; y0 = null;
+      var lgm = d.body && d.body.classList.contains("login-mode");   /* 로그인 화면은 한 화면짜리 — 끌어 내렸어도 제자리로 */
+      if (y == null && lgm) y = 0;
+      if (y != null && (!manual || lgm) && w.scrollY > y + 2) {
+        de.classList.add("kb-pad"); de.classList.remove("kb-in"); clearTimeout(offT);
+        back(y, function () { if (de.classList.contains("kb-in")) return; de.classList.remove("kb-pad"); if (w.scrollY > y + 2) w.scrollTo(0, y); setKb(); });
+      } else de.classList.remove("kb-in");
+    }
+    var waitDown = null;
     d.addEventListener("focusout", function () {
       setTimeout(function () {
         var a = d.activeElement;
         if (!isField(a) && de.classList.contains("kb-in")) {
-          cur = null;
-          var y = y0; y0 = null;
-          if (y != null && !manual && w.scrollY > y + 2) {
-            /* 접힌 칸 펴기와 제자리로 돌아오기를 함께 스르륵 — 아래 여백(kb-pad)은 돌아온 뒤에 뺌(먼저 빼면 화면이 뚝 잘려 튐) */
-            de.classList.add("kb-pad"); de.classList.remove("kb-in"); glide(y);
-            offT = setTimeout(function () { de.classList.remove("kb-pad"); if (!de.classList.contains("kb-in") && w.scrollY > y + 2) w.scrollTo(0, y); setKb(); }, RM ? 0 : 420);
-          } else de.classList.remove("kb-in");
-        } else if (!isField(a)) cur = null;
+          /* 키패드가 아직 내려가는 중이면 다 내려간 뒤(아래 resize)에 — 신호가 안 오면 0.9초 뒤 */
+          if (vv && kb() > 80) { cur = null; clearTimeout(waitDown); waitDown = setTimeout(function () { settle(false); setKb(); }, 900); }
+          else settle(false);
+        }
+        else if (!isField(a)) cur = null;
         setKb();
       }, 160);
+    });
+    /* 11-24 사용자(아이폰): 키패드만 내려가고 칸에는 커서가 남는 때(포커스가 안 빠짐 → focusout 없음) 화면이 올라간 채 고정됐음
+       → 보이는 높이가 다시 화면 높이로 돌아오면(키패드 내려감) 칸에 커서가 있어도 제자리로. 다시 누르면 처음처럼 맞춤 */
+    var kbWas = false, downT = null;
+    if (vv) vv.addEventListener("resize", function () {
+      var k = kb();
+      if (k > 80) { kbWas = true; clearTimeout(downT); return; }
+      if (!kbWas) return;
+      clearTimeout(downT);
+      downT = setTimeout(function () { if (kb() > 80) return; kbWas = false; clearTimeout(waitDown); settle(isField(d.activeElement)); setKb(); }, 120);
     });
     /* 키패드 위 줄(자동 완성 · ▲▼✓)이 늦게 붙어 높이가 또 바뀌거나, 커서만 있던 칸에서 키패드가 올라오면 다시 맞춤 */
     if (vv) vv.addEventListener("resize", function () {
