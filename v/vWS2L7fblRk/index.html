@@ -2009,6 +2009,9 @@
       if (!saved.some(function(x){ return x[0] === el; })) saved.push([el, el.getAttribute("style")]);
       var f = kf[0]; Object.keys(f).forEach(function(k){ if (k !== "offset" && k !== "easing") el.style[k] = f[k]; }); return null; }
     function restore(){ saved.forEach(function(x){ if (x[1] == null) x[0].removeAttribute("style"); else x[0].setAttribute("style", x[1]); }); }
+    /* #262 아이폰: 움직임의 '시작 전 첫 장면(투명 0)'에 기대지 않음 — 시작 시각 전에는 요소 자체를 visibility:hidden으로 숨겨 두고, 그 시각에 스크립트가 켬 */
+    var reveal = [], revT = [];
+    function HIDE(el, t){ if (!el) return; if (!saved.some(function(x){ return x[0] === el; })) saved.push([el, el.getAttribute("style")]); el.style.visibility = "hidden"; reveal.push([el, t]); }
     var cv = mk("itr-cv"), ln = mk("itr-ln", "top:" + Y + "px"), lnIn = document.createElement("i"); ln.appendChild(lnIn);
     var hd = mk("itr-hd", "top:" + Y + "px;width:" + D + "px;height:" + D + "px;margin:" + (-D / 2) + "px 0 0 " + (-D / 2) + "px"),
         fl = mk("itr-fl", "background:radial-gradient(ellipse at 50% " + Y + "px, rgba(255,255,255,.95), rgba(200,235,255,.55) 40%, rgba(200,235,255,0) 75%)");
@@ -2026,10 +2029,10 @@
     /* #258 배너 열림: 영상 배너를 매 장 자르지(clip-path) 않고, 빛줄 위 · 아래 까만 막(#07080C) 두 장이 위 · 아래로 비켜남(transform) — 같은 시간 · 곡선 */
     var mT = document.createElement("div"), mB = document.createElement("div");
     mT.className = "itr itr-mk"; mB.className = "itr itr-mk"; mT.setAttribute("aria-hidden", "true"); mB.setAttribute("aria-hidden", "true");
-    mT.style.cssText = "top:0;height:" + (Y + 1) + "px"; mB.style.cssText = "top:" + Y + "px;height:" + (BH - Y + 2) + "px";
+    mT.style.cssText = "top:0;height:" + (Y + 4) + "px"; mB.style.cssText = "top:" + (Y - 4) + "px;height:" + (BH - Y + 6) + "px";   /* #262 빛줄 높이에서 8px 겹침(틈 없음) */
     H.insertBefore(mB, H.firstChild); H.insertBefore(mT, H.firstChild); lay.push(mT, mB);
-    A(mT, [{ transform: "translateY(0px)" }, { transform: "translateY(" + (-Y - 2) + "px)" }], 1100, 2100, EZ_O);
-    A(mB, [{ transform: "translateY(0px)" }, { transform: "translateY(" + (BH - Y + 2) + "px)" }], 1100, 2100, EZ_O);
+    A(mT, [{ transform: "translateY(0px)" }, { transform: "translateY(" + (-Y - 6) + "px)" }], 1100, 2100, EZ_O);
+    A(mB, [{ transform: "translateY(0px)" }, { transform: "translateY(" + (BH - Y + 6) + "px)" }], 1100, 2100, EZ_O);
     vPlay(HV);   /* #258 배경 영상은 까만 화면 동안(0ms) 이미 재생 — 배너가 열릴 때 처음 재생 · 첫 장면 풀기가 겹치지 않게 */
     /* 밝기(brightness 1.9 · saturate .6 → 원래)는 영상에 필터를 움직이지 않고 밝은 막을 덮었다가 걷음(11-24 아이폰: 필터 움직임이 깨져 그려짐) — #250 ⑲ 열림과 같은 곡선 */
     var br = document.createElement("div"); br.className = "itr itr-br"; br.setAttribute("aria-hidden", "true"); hv.appendChild(br); lay.push(br);
@@ -2039,7 +2042,7 @@
        흐린 로고(흐림 6) · 하늘 빛 로고(빛 16px)를 캔버스에 한 번 그려 로고 위에 겹치고 투명도 · 크기만 움직임(흰 로고라 밝기 2.4는 보이는 차이 없음) */
     /* #255 로고는 번쩍이 사라져 갈 때: 0~1,450 안 보임 → 1,450~1,700 나타남(빛 강하게) → 1,700~2,350 빛이 줄어 보통 로고 */
     /* #260 1,450~1,950 나타남(500ms, (.22,1,.36,1)) → 1,950~2,450 하늘 빛이 줄어 보통 로고(500ms, (.4,0,.2,1)) */
-    A(kr, [{ opacity: 0, transform: "scale(1.04)", visibility: "hidden" }, { opacity: 1, transform: "scale(1)", visibility: "visible" }], 1450, 1950, EZ_I);
+    A(kr, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, transform: "scale(1)" }], 1450, 1950, EZ_I); HIDE(kr, 1450);
     (function(){
       var brand = kr.parentNode, bb = brand.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1), w = kb.width, h = kb.height, pd = 40;
       function cvs(fn){ var c = document.createElement("canvas"); c.className = "itr itr-lg"; c.setAttribute("aria-hidden", "true");
@@ -2049,9 +2052,9 @@
       var cb = cvs(function(x){ var off = w + pd * 4; x.shadowColor = "#fff"; x.shadowBlur = 12; x.shadowOffsetX = off * dpr; x.drawImage(kr, pd - off, pd, w, h); });
       var cg = cvs(function(x){ x.shadowColor = "rgba(140,215,255,1)"; x.shadowBlur = 16; x.drawImage(kr, pd, pd, w, h); x.shadowBlur = 0; x.drawImage(kr, pd, pd, w, h); });
       /* 흐린 로고는 1,450~1,950 전체에 걸쳐 또렷한 로고와 겹쳐 지나감(한 번에 바뀌지 않게) · 하늘 빛은 1,950까지 강하게 → 2,450까지 줄어듦 */
-      A(cb, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: .95, offset: .22 }, { opacity: 0, transform: "scale(1)" }], 1450, 1950, EZ_I);
-      A(cg, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, transform: "scale(1)" }], 1450, 1950, EZ_I);
-      A(cg, [{ opacity: 1 }, { opacity: 0 }], 1950, 2450, "cubic-bezier(.4,0,.2,1)");
+      A(cb, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: .95, offset: .22 }, { opacity: 0, transform: "scale(1)" }], 1450, 1950, EZ_I); HIDE(cb, 1450);
+      /* #262 하늘 빛 로고는 움직임 하나로(전엔 두 개라 뒤 움직임(1,950~)의 첫 장면 '투명 1'이 0ms부터 덮어 처음부터 보였음) — 앞 반 (.22,1,.36,1) · 뒤 반 (.4,0,.2,1) */
+      A(cg, [{ opacity: 0, transform: "scale(1.04)", easing: EZ_I }, { opacity: 1, transform: "scale(1)", offset: .5, easing: "cubic-bezier(.4,0,.2,1)" }, { opacity: 0, transform: "scale(1)" }], 1450, 2450); HIDE(cg, 1450);
       lgC = [cb, cg];
     })();
     /* ⑥ 카드(휴대폰은 시트) · 영문 로고 · SDP · 메뉴 이름 줄 · 라이트/다크 */
@@ -2061,10 +2064,10 @@
                 [mn, [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], 2200, 2700]];
     var hid = [];   /* #251 자동 로그인: 카드 · 안내 · SDP · 메뉴 이름 줄은 나오지 않음(로그인 → 홈 전환이 끝날 때까지 숨겨 둠) */
     if (auto) CARD.forEach(function(x){ if (x[0]){ hid.push([x[0], x[0].getAttribute("style")]); x[0].style.visibility = "hidden"; } });
-    else CARD.forEach(function(x){ A(x[0], x[1], x[2], x[3], EZ_I); });
-    A(en, [{ opacity: 0 }, { opacity: 1 }], auto ? 1900 : 2000, auto ? 2400 : 2500, EZ_I);
-    A(lt, [{ opacity: 0 }, { opacity: 1 }], auto ? 2100 : 2400, auto ? 2500 : 2800, EZ_I);
-    function offSkip(){ clearTimeout(lgT); lgDrop(); setTimeout(function(){ if (SC.themePaint) SC.themePaint(); }, 700);   /* #256 인트로가 끝나면 위 띠 색을 테마 색으로 */ document.removeEventListener("pointerdown", down, true); document.removeEventListener("keydown", down, true);
+    else CARD.forEach(function(x){ A(x[0], x[1], x[2], x[3], EZ_I); HIDE(x[0], x[2]); });
+    A(en, [{ opacity: 0 }, { opacity: 1 }], auto ? 1900 : 2000, auto ? 2400 : 2500, EZ_I); HIDE(en, auto ? 1900 : 2000);
+    A(lt, [{ opacity: 0 }, { opacity: 1 }], auto ? 2100 : 2400, auto ? 2500 : 2800, EZ_I); HIDE(lt, auto ? 2100 : 2400);
+    function offSkip(){ clearTimeout(lgT); lgDrop(); revT.forEach(clearTimeout); revT = []; setTimeout(function(){ if (SC.themePaint) SC.themePaint(); }, 700);   /* #256 인트로가 끝나면 위 띠 색을 테마 색으로 */ document.removeEventListener("pointerdown", down, true); document.removeEventListener("keydown", down, true);
       document.removeEventListener("pointerup", upSkip, true); document.removeEventListener("pointercancel", upSkip, true); }
     function clean(){ if (done) return; done = true; clearTimeout(endT); offSkip();
       anims.forEach(function(a){ a.cancel(); }); restore(); lay.forEach(function(d){ d.remove(); }); H.classList.remove("itr-on"); document.body.classList.remove("itr-run"); unlock(); }
@@ -2087,7 +2090,8 @@
     /* #253 · #254: 겹친 흐린 · 하늘 빛 로고(캔버스)는 로고 빛이 끝나는 때(#255 = 2,350ms)에 바로 지움 — 뒤에 다시 보이는 순간이 없게
        (전엔 2,400 홈 전환으로 넘길 때 적어 둔 값을 지우면서 투명 0이 풀려 로그인 자리에서 0.46초 다시 보였음) */
     function lgDrop(){ lgC.forEach(function(c){ anims.forEach(function(a){ if (a._el === c) a.cancel(); }); c.remove(); var i = lay.indexOf(c); if (i > -1) lay.splice(i, 1); }); lgC = []; }
-    function go(){ if (done) return; T0 = performance.now(); lgT = setTimeout(lgDrop, 2450);   /* #260 빛이 끝나는 2,450에 겹친 캔버스 지움 */
+    function go(){ if (done) return; T0 = performance.now(); lgT = setTimeout(lgDrop, 2450);
+      reveal.forEach(function(x){ revT.push(setTimeout(function(){ if (!done) x[0].style.visibility = "visible"; }, x[1])); });   /* #260 빛이 끝나는 2,450에 겹친 캔버스 지움 */
       specs.forEach(function(x){ var a = x[0].animate(x[1], { duration: x[3] - x[2], delay: x[2], easing: x[4] || "linear", fill: "both" }); a._el = x[0]; anims.push(a); });
       endT = setTimeout(auto ? handoff : clean, auto ? 2400 : 2850); }
     /* #251 2,400: 목록이 풀렸으면 로그인 → 홈 전환으로 넘김(그 전환의 0ms) · 아직이면 배너가 열린 채 기다림 · 실패면 로그인 카드 */
