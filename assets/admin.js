@@ -3748,7 +3748,7 @@
   var SyncLog = (function(){
     var page = 1, seq = 0, rows = [];
     function n(v, t2){ return '<span class="r' + (t2 ? " t2" : "") + '">' + (v == null ? "—" : nf(v)) + '</span>'; }
-    var HEAD = '<div class="tr th g-log" role="row"><span>날짜시각</span><span>방식</span><span>결과</span><span class="r">정상 회원</span><span class="r">비정상 회원</span><span class="r">사번 없음</span><span class="r">새 사번</span><span class="r">실패 사번</span><span>실패 이유</span></div>';
+    var HEAD = '<div class="tr th g-log" role="row"><span>날짜시각</span><span>방식</span><span>결과</span><span class="r">정상 회원</span><span class="r">비정상 회원</span><span class="r">사번 없음</span><span class="r">새 사번</span><span class="r">실패 사번</span><span>실패 이유 · 변동</span></div>';
     function open(){
       Modal.show('<div class="lgh"><span class="slg-ic">' + PI.refresh + '</span><div class="k-col slg-t"><h3 id="modalT">사번 갱신 기록</h3><p class="lgs">세일즈온 사번 목록을 가져온 기록이에요 · 최근 것이 위</p></div>' +
         '<button type="button" class="xx rp" data-close aria-label="닫기">' + IC_X + '</button></div><div class="slg-b"><div class="tbl cards scrollx" id="logTbl" style="--mw:1060px"></div></div>', "logm syncm pv2");
@@ -3772,7 +3772,8 @@
           return '<div class="tr g-log' + (x.ok ? '' : ' bad') + '" role="row"><span class="t2">' + esc(fmtAt(x.at, "dot")) + '</span><span class="t2" data-k="방식">' + esc(x.how) + '</span>' +
             '<span>' + (x.ok ? '<span class="k-pill ok s">성공</span>' : '<span class="k-pill er s">실패</span>') + '</span>' +
             (x.ok ? n(x.normal) + n(x.abnormal, 1) + n(x.nosabun, 1) + '<span class="r">' + (x.added == null ? "—" : x.added ? "+" + nf(x.added) : "0") + '</span>' : n(null) + n(null, 1) + n(null, 1) + n(null)) +
-            fcell(x, i) + '<span class="el" title="' + esc(x.why || "") + '">' + esc(x.why || "") + '</span></div>';
+            /* 11-24 사용자: 성공한 갱신은 전 갱신과 달라진 것(정상 → 비정상 등, 창구 v27)을 같은 칸에 — 실패 이유가 있으면 그것 먼저 */
+            fcell(x, i) + (function(){ var t = x.why || x.ch || ""; return '<span class="el' + (!x.why && x.ch ? ' t2' : '') + '" title="' + esc(t) + '">' + esc(t) + '</span>'; })() + '</div>';
         }).join("") + '<div class="tf"><span>모두 <b>' + nf(r.total) + '</b>번</span>' + pager(r.page, r.total, r.size, "data-lpg") + '</div>';
         LRX(t);   /* #105 창 안 표 처음 나올 때 */
       }).catch(function(){ if (my !== seq || !$("logTbl")) return; $("logTbl").innerHTML = LOADERR; });
