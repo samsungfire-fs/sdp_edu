@@ -1548,9 +1548,10 @@ body, body *:not(svg):not(svg *){font-family:"SFN", "Apple SD Gothic Neo", "Malg
 .hero .hv::after{content:""; position:absolute; inset:-3px; background:rgba(2,8,28,.24); pointer-events:none}   /* #133 막 .34 → .24 */
 .hero .hv-shade{position:absolute; inset:-3px; background:linear-gradient(180deg, rgba(2,4,16,.62) 0%, rgba(2,4,16,.08) 34%, rgba(2,4,16,.10) 60%, rgba(2,4,16,.72) 100%); z-index:1; opacity:.8}   /* #133 위아래 그늘 1 → .8 */
 .hero .h-brand{position:absolute; left:0; right:0; top:60px; bottom:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; color:#FFFFFF; text-decoration:none; width:max-content; max-width:100%; margin:0 auto}
-.hero .h-kr{display:block; height:66px; width:auto; filter:drop-shadow(0 4px 18px rgba(0,10,60,.45))}
+.hero .h-kr{display:block; height:66px; width:auto; --ksh:drop-shadow(0 4px 18px rgba(0,10,60,.45)); filter:var(--ksh)}   /* #266 그림자 값은 --ksh 하나 — 흐림 → 또렷(hmKr) 동안에도 같은 그림자 */
 .hero .h-en{display:block; height:17px; width:auto; opacity:1}   /* #134 완전한 흰색 · 약 10% 크게 */
-.hero .h-kick{display:block; margin-top:4px; font-weight:700 !important; font-size:13px; line-height:1.2; letter-spacing:.26em; padding-left:.26em; color:#FFFFFF; opacity:1; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
+.hero .h-kick{display:block; margin-top:4px; font-weight:700 !important; font-size:13px; line-height:1.2; letter-spacing:.26em; padding-left:.26em; color:#FFFFFF; opacity:1; white-space:nowrap;
+  text-shadow:none; filter:drop-shadow(0 2px 10px rgba(0,0,0,.22)); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}   /* #267 영문 로고와 같은 그림자 · 같은 방식(처음부터 고정) */
 .hero .h-menus{display:none}
 @media (max-width:980px){
   .hero .h-brand{top:48px; gap:8px}
@@ -1616,7 +1617,7 @@ body.login-mode:not(.lgt-shrink) .hero{height:460px; aspect-ratio:auto}
 body.login-mode:not(.lgt-shrink) .hero .hv-v{object-position:50% 42%}
 body.login-mode:not(.lgt-shrink) .hero .h-brand{top:40px; bottom:104px; justify-content:center; gap:0; pointer-events:none}
 body.login-mode:not(.lgt-shrink) .hero .h-kr{height:62px}
-body.login-mode:not(.lgt-shrink) .hero .h-en{height:17.4px; margin-top:12px; filter:drop-shadow(0 2px 10px rgba(0,0,0,.22))}
+body.login-mode:not(.lgt-shrink) .hero .h-en{height:17.4px; margin-top:12px; --esh:drop-shadow(0 2px 10px rgba(0,0,0,.22)); filter:var(--esh)}
 body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:13px; margin:12px 0 22px; letter-spacing:.26em; padding-left:.26em}
 body.login-mode:not(.lgt-shrink) .hero .h-menus{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px 16px; font-size:16px; line-height:1.4; color:rgba(255,255,255,.9); text-shadow:0 1px 2px rgba(0,0,0,.35), 0 0 10px rgba(0,0,0,.28)}
 .hero .h-menus span{white-space:nowrap}
@@ -1746,7 +1747,7 @@ body .ath .by{font-weight:400 !important}
 .hero .ubar{pointer-events:none} .hero .ubar-in > *{pointer-events:auto}
 /* #139 · #158 홈이 아닌 메뉴: 국문 로고 = 왼쪽 위 작은 로고(PC 20 · 태블릿 16 · 휴대폰 14), 영문 로고 숨김 */
 body:not(.login-mode) .hero.h-menu .h-brand{top:0; bottom:0; left:0; right:0; width:auto; margin:0; display:block; pointer-events:none}
-body:not(.login-mode) .hero.h-menu .h-kr{position:absolute; left:40px; top:20px; height:20px; pointer-events:auto; filter:drop-shadow(0 1px 6px rgba(0,0,0,.35))}
+body:not(.login-mode) .hero.h-menu .h-kr{position:absolute; left:40px; top:20px; height:20px; pointer-events:auto; --ksh:drop-shadow(0 1px 6px rgba(0,0,0,.35)); filter:var(--ksh)}
 body:not(.login-mode) .hero.h-menu .h-en{display:none}
 @media (max-width:980px){ body:not(.login-mode) .hero.h-menu .h-kr{left:24px; top:15px; height:16px} }
 @media (max-width:640px){ body:not(.login-mode) .hero.h-menu .h-kr{left:14px; top:14px; height:14px} }
@@ -1755,9 +1756,17 @@ body:not(.login-mode) .hero.h-menu .h-en{display:none}
 .hero .h-en.rv{-webkit-mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%; mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%}
 /* #159 주소로 바로 · 새로 고침: 홈 국문 흐림 10 · ×1.04 → 또렷(0~700), 영문 드러남(300~1,000) */
 .hero.h-load .h-kr{animation:hmKr 700ms cubic-bezier(.22,1,.36,1) both}
-.hero.h-load .h-en{-webkit-mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%; mask:linear-gradient(90deg,#000 46%,transparent 55%) no-repeat 0 0/220% 100%; animation:hmEn 700ms cubic-bezier(.22,1,.36,1) 300ms both}
-@keyframes hmKr{from{opacity:0; filter:blur(10px); transform:scale(1.04)}to{opacity:1; filter:blur(0); transform:none}}
-@keyframes hmEn{from{-webkit-mask-position:100% 0; mask-position:100% 0; filter:blur(6px)}to{-webkit-mask-position:0 0; mask-position:0 0; filter:blur(0)}}
+/* #266 영문 드러남: 가리개(mask)가 글자 상자만 덮으면 상자 밖 그림자가 잘려 있다가 h-load가 빠질 때 그림자가 툭 생김 →
+   가리개를 상자보다 사방 30px 크게(no-clip) 두고, 끝에는 전부 보이게(--enp 120%) — 끝 모습 = 가리개 없는 모습 */
+@property --enp{syntax:'<percentage>'; inherits:false; initial-value:120%}
+.hero.h-load .h-en{-webkit-mask:linear-gradient(90deg,#000 calc(var(--enp) - 20%),transparent var(--enp)) no-repeat -30px -30px/calc(100% + 60px) calc(100% + 60px); mask:linear-gradient(90deg,#000 calc(var(--enp) - 20%),transparent var(--enp)) no-repeat -30px -30px/calc(100% + 60px) calc(100% + 60px);
+  -webkit-mask-clip:no-clip; mask-clip:no-clip; animation:hmEn 700ms cubic-bezier(.22,1,.36,1) 300ms both}
+/* #266 로고 3개(국문 · 영문 · SALES DEVELOPMENT DEPARTMENT)는 처음부터 늘 따로 그리는 층(will-change 고정) — 움직임(흐림 → 또렷 · 인트로 · 전환)이
+   끝날 때 '움직이는 층 → 보통 그림'으로 바뀌며 로고와 그림자가 한 장 사이에 다시 그려져 툭 바뀌었음(크롬 측정: 로그인 1,791 · 홈 5,705 화소) → 0 */
+.hero .h-kr, .hero .h-en, .hero .h-kick{will-change:transform}
+/* #266 (11-24) 흐림 움직임 끝(blur 0)에 그림자가 빠져 있다가 h-load가 빠지는 순간(1.1초) 그림자가 툭 생겼음 → 처음부터 같은 그림자를 같이 적음 */
+@keyframes hmKr{from{opacity:0; filter:blur(10px) var(--ksh, drop-shadow(0 0 0 transparent)); transform:scale(1.04)}to{opacity:1; filter:blur(0) var(--ksh, drop-shadow(0 0 0 transparent)); transform:none}}
+@keyframes hmEn{from{--enp:0%; filter:blur(6px) var(--esh, drop-shadow(0 0 0 transparent))}to{--enp:120%; filter:blur(0) var(--esh, drop-shadow(0 0 0 transparent))}}
 /* SALES DEVELOPMENT PART = 로그인 화면 가운데에만(홈 · 메뉴는 오른쪽 아래 SVG) */
 body:not(.login-mode) .hero .h-kick, body.lgt-shrink .hero .h-kick{display:none}
 
@@ -2197,7 +2206,9 @@ body.itr-run .itr, body.itr-run .itr-ln i, body.itr-run .hero .h-kr, body.itr-ru
 /* #258 카드 · 버튼이 올라오는 동안 뒤 흐림(backdrop-filter) 끔 — 움직이는 영상 위에서 매 장 다시 계산됨. 인트로가 끝나면(클래스 빠짐) 다시 켜짐 */
 body.itr-run .hero .h-lgtop .tm, body.itr-run .hero .h-lgtop .tm-ic{-webkit-backdrop-filter:none !important; backdrop-filter:none !important; background:rgba(40,44,62,.72) !important}
 .itr.itr-br{position:absolute; inset:0; z-index:2; background:rgba(226,238,255,.42)}   /* 배너가 열릴 때 밝게(brightness 1.9 · saturate .6 대신) → 2,600까지 걷힘 */
-.itr.itr-lg{position:absolute; z-index:2; transform-origin:50% 50%; opacity:0}   /* 기본은 안 보임(움직임 밖에서는 절대 보이지 않게) */   /* 로고 위 흐린 로고 · 하늘 빛(캔버스) */
+.itr.itr-lg{position:absolute; z-index:2; transform-origin:50% 50%; opacity:0}
+/* #265 국문 로고 뒤 후광: 로고 너비 × 1.35 · 높이 × 3.2 타원, 배너 위 · 로고 아래(로고는 인트로 동안 z 1) · 빛줄기 아래 — 투명도만 움직임 */
+.itr.itr-halo{position:absolute; z-index:0; opacity:0; border-radius:50%; mix-blend-mode:screen; background:radial-gradient(ellipse at center, rgba(170,228,255,.6) 0, rgba(91,194,231,.28) 38%, rgba(91,194,231,0) 70%)}   /* 기본은 안 보임(움직임 밖에서는 절대 보이지 않게) */   /* 로고 위 흐린 로고 · 하늘 빛(캔버스) */
 body.itr-run .lg2-help{position:relative; z-index:3}
 /* 인트로를 할 첫 진입: 스크립트가 로그인 화면을 그릴 때까지 까만 빈 화면(로그인한 사람 · 움직임 줄이기 · 이 탭 두 번째부터는 붙지 않음) */
 html.itr-pre body{background:#000}

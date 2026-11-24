@@ -39,7 +39,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261124i">
+<link rel="stylesheet" href="assets/site.css?v=20261124j">
 </head>
 <body>
 
@@ -2046,25 +2046,17 @@
        흐린 로고(흐림 6) · 하늘 빛 로고(빛 16px)를 캔버스에 한 번 그려 로고 위에 겹치고 투명도 · 크기만 움직임(흰 로고라 밝기 2.4는 보이는 차이 없음) */
     /* #255 로고는 번쩍이 사라져 갈 때: 0~1,450 안 보임 → 1,450~1,700 나타남(빛 강하게) → 1,700~2,350 빛이 줄어 보통 로고 */
     /* #260 1,450~1,950 나타남(500ms, (.22,1,.36,1)) → 1,950~2,450 하늘 빛이 줄어 보통 로고(500ms, (.4,0,.2,1)) */
-    /* #264 아이폰: 국문 로고 3장(또렷 · 흐림 · 하늘 빛)은 미리 만든 움직임(지연 1,450)에 맡기지 않음 — 사파리가 숨김을 푸는 순간의 움직임 시작을 놓쳐
-       1~2장 만에 툭 켜지고, 2,450 타이머로 지울 때 빛이 남아 있다가 툭 꺼졌음. → 1,450에 투명 0으로 적고 숨김을 푼 뒤 두 장 뒤(rAF 두 번)에 움직임을 만들고,
-       흐림 · 빛 캔버스는 움직임이 끝난(finished) 뒤에만 지움 */
+    /* #265 국문 로고 = 진짜 로고 하나 + 로고 뒤 후광(하늘색 타원 빛) — 겹친 흐린 · 빛 로고 그림(#255 · #260 · #264 캔버스)은 없앰(바꿔 끼우는 순간 '툭').
+       움직이는 것은 투명도 · transform뿐, 필터 없음. 아이폰: 1,450에 숨김을 풀고 두 장 뒤(rAF 두 번) element.animate로 시작 · 후광은 끝난(finished) 뒤에만 지움(#264 방식) */
     var LG = null;
     function keepStyle(el){ if (!saved.some(function(x){ return x[0] === el; })) saved.push([el, el.getAttribute("style")]); }
-    keepStyle(kr); kr.style.opacity = "0"; kr.style.visibility = "hidden";
+    keepStyle(kr); kr.style.opacity = "0"; kr.style.visibility = "hidden"; kr.style.position = "relative"; kr.style.zIndex = "1";   /* 후광(z 0) 위 */
     (function(){
-      var brand = kr.parentNode, bb = brand.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1), w = kb.width, h = kb.height, pd = 40;
-      function cvs(fn){ var c = document.createElement("canvas"); c.className = "itr itr-lg"; c.setAttribute("aria-hidden", "true");
-        c.width = Math.round((w + pd * 2) * dpr); c.height = Math.round((h + pd * 2) * dpr);
-        c.style.cssText = "left:" + (kb.left - bb.left - pd) + "px;top:" + (kb.top - bb.top - pd) + "px;width:" + (w + pd * 2) + "px;height:" + (h + pd * 2) + "px";
-        var x = c.getContext("2d"); if (x){ x.scale(dpr, dpr); try { fn(x); } catch(er){} } brand.appendChild(c); lay.push(c); return c; }
-      var cb = cvs(function(x){ var off = w + pd * 4; x.shadowColor = "#fff"; x.shadowBlur = 12; x.shadowOffsetX = off * dpr; x.drawImage(kr, pd - off, pd, w, h); });
-      var cg = cvs(function(x){ x.shadowColor = "rgba(140,215,255,1)"; x.shadowBlur = 16; x.drawImage(kr, pd, pd, w, h); x.shadowBlur = 0; x.drawImage(kr, pd, pd, w, h); });
-      /* 흐린 로고는 1,450~1,950 전체에 걸쳐 또렷한 로고와 겹쳐 지나감(한 번에 바뀌지 않게) · 하늘 빛은 1,950까지 강하게 → 2,450까지 줄어듦 */
-      cb.style.visibility = "hidden";
-      /* #262 하늘 빛 로고는 움직임 하나로(전엔 두 개라 뒤 움직임(1,950~)의 첫 장면 '투명 1'이 0ms부터 덮어 처음부터 보였음) — 앞 반 (.22,1,.36,1) · 뒤 반 (.4,0,.2,1) */
-      cg.style.visibility = "hidden";
-      lgC = [cb, cg]; LG = { cb: cb, cg: cg };
+      var brand = kr.parentNode, bb = brand.getBoundingClientRect(), w = kb.width, h = kb.height, hw = Math.round(w * 1.35), hh = Math.round(h * 3.2);
+      var ha = document.createElement("div"); ha.className = "itr itr-halo"; ha.setAttribute("aria-hidden", "true");
+      ha.style.cssText = "left:" + Math.round(kb.left - bb.left + w / 2 - hw / 2) + "px;top:" + Math.round(kb.top - bb.top + h / 2 - hh / 2) + "px;width:" + hw + "px;height:" + hh + "px;visibility:hidden";
+      brand.insertBefore(ha, kr); lay.push(ha);
+      lgC = [ha]; LG = { ha: ha };
     })();
     /* ⑥ 카드(휴대폰은 시트) · 영문 로고 · SDP · 메뉴 이름 줄 · 라이트/다크 */
     var CARD = [[mid, [{ opacity: 0, transform: "translateY(40px)" }, { opacity: 1, transform: "none" }], 1800, 2600],
@@ -2099,17 +2091,16 @@
     /* #253 · #254: 겹친 흐린 · 하늘 빛 로고(캔버스)는 로고 빛이 끝나는 때(#255 = 2,350ms)에 바로 지움 — 뒤에 다시 보이는 순간이 없게
        (전엔 2,400 홈 전환으로 넘길 때 적어 둔 값을 지우면서 투명 0이 풀려 로그인 자리에서 0.46초 다시 보였음) */
     function lgDrop(){ lgC.forEach(function(c){ anims.forEach(function(a){ if (a._el === c) a.cancel(); }); c.remove(); var i = lay.indexOf(c); if (i > -1) lay.splice(i, 1); }); lgC = []; }
-    /* #264 1,450: 로고 3장 나타남 — 또렷 0 → 1 · 1.04 → 1배(500ms (.22,1,.36,1)) / 흐림 0 → .9 → 0(500ms) / 하늘 빛 0 → 1(1,700쯤) → 0(2,450쯤, 1,000ms (.4,0,.2,1)) */
+    /* #265 1,450: 국문 로고 0 → 1 · 1.04 → 1배(1,450~2,050, (.4,0,.2,1)) · 후광 0 → 1(1,450~1,750, (.22,1,.36,1)) → 0(~2,450, (.4,0,.2,1)) → 0이 된 뒤 지움 */
     function revealLogo(){ if (done || !LG) return;
-      var cb = LG.cb, cg = LG.cg, all = [kr, cb, cg];
-      all.forEach(function(e){ e.style.opacity = "0"; e.style.visibility = "visible"; });
-      requestAnimationFrame(function(){ requestAnimationFrame(function(){ if (done || !document.contains(cg)) return;
-        var late = Math.max(0, performance.now() - T0 - 1450 - 34);   /* 두 장 기다린 것(약 33ms)보다 더 늦었으면 그만큼만 앞당김 */
+      var c0 = anims[0] && anims[0].currentTime; if (c0 != null && c0 < 1440){ lgT = setTimeout(revealLogo, 1450 - c0); return; }   /* 인트로 시계(움직임 시간)로 1,450 — 타이머가 먼저 오면 기다림 */
+      var ha = LG.ha;
+      [kr, ha].forEach(function(e){ e.style.opacity = "0"; e.style.visibility = "visible"; });
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ if (done || !document.contains(ha)) return;
+        var c1 = anims[0] && anims[0].currentTime, late = Math.max(0, (c1 != null ? c1 : performance.now() - T0) - 1450 - 34);   /* 두 장 기다린 것(약 33ms)보다 더 늦었으면 그만큼만 앞당김 */
         function an(el, kf, dur, ez){ var a = el.animate(kf, { duration: dur, easing: ez, fill: "forwards" }); a._el = el; anims.push(a); if (late) a.currentTime = Math.min(late, dur); return a; }
-        var S = [{ transform: "scale(1.04)" }, { transform: "scale(1)" }];
-        an(kr, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, transform: "scale(1)" }], 500, EZ_I);
-        an(cb, [{ opacity: 0 }, { opacity: .9, offset: .2 }, { opacity: 0 }], 500, "linear"); an(cb, S, 500, EZ_I);
-        var g = an(cg, [{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 1, offset: .5 }, { opacity: 0 }], 1000, "cubic-bezier(.4,0,.2,1)"); an(cg, S, 500, EZ_I);
+        an(kr, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, transform: "scale(1)" }], 600, "cubic-bezier(.4,0,.2,1)");
+        var g = an(ha, [{ opacity: 0, easing: EZ_I }, { opacity: 1, offset: .3, easing: "cubic-bezier(.4,0,.2,1)" }, { opacity: 0 }], 1000, "linear");
         g.finished.then(function(){ lgDrop(); }, function(){});
       }); });
     }
