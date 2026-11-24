@@ -1741,7 +1741,6 @@ body .ath .by{font-weight:400 !important}
 /* #146 · #150 시그니처 배경 영상(물결) — 홈 영상 위에 겹침 */
 .hero .hv2{opacity:0; visibility:hidden}
 .hero.h-sig .hv2, .hero.h-sigx .hv2{opacity:1; visibility:visible}
-.hero.h-sigx .hv2{opacity:0}
 .hero .hv2 .hv-v{object-position:50% 50%}
 /* 위 내 정보 줄이 왼쪽 위 작은 로고를 가리지 않게 */
 .hero .ubar{pointer-events:none} .hero .ubar-in > *{pointer-events:auto}
@@ -2119,7 +2118,6 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
    배너 크기 · 왼쪽 위 로고 · ⏸ · 오른쪽 아래 SALES DEVELOPMENT DEPARTMENT는 그대로, 글자 제목(상품연구 전략자료 · PRODUCT RESEARCH)은 없음 */
 .hero .hv3{opacity:0; visibility:hidden}
 .hero.h-res .hv3, .hero.h-resx .hv3{opacity:1; visibility:visible}
-.hero.h-resx .hv3{opacity:0}
 .hero .hv3 .hv-v{object-position:50% 50%}
 /* 다크도 같은 영상(어둡게 덮지 않음 — 덮으면 SPEC 흰 글자가 탁해짐). 밝은 배경에서 위 메뉴 글자 · 아래 SDP가 읽히게
    위 84 · 아래 56px(메뉴 배너 270 기준 = 31% · 21%, 태블릿 · 휴대폰은 같은 비율)에 옅은 그늘 */
@@ -2131,36 +2129,39 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
 .hh-spec .sp-w{position:absolute; top:0; height:100%; display:block}
 .hh-spec .sp-l{position:absolute; left:0; top:0; width:100%; height:100%; max-width:none; display:block}
 /* #248 (11-24) SPEC 등장 = 시안 A+ '프리즘 굴절 + 빛 결' — #244(스캔 · 치수선 · 눈금 · 반짝 별)를 통째로 바꿈
-   ① 프리즘 굴절: 글자 4장 각각 S → P → E → C 90ms 간격, 글자당 1,260ms (.22,1,.36,1). 하늘 · 분홍으로 갈라진 두 빛이 모이며 하얗게 맺힘
-      갈라진 거리 18px · 6px · 흐림 10 · 2px(#250 ⑯) = PC 배너 글자 높이 151px 기준 → 글자 높이에 비례(묶음 너비 기준 cqw: 18/151 × 621/1683 = 4.398cqw, 6px = 1.466cqw, 10px = 2.444cqw, 2px = .489cqw)
-      필터 함수 개수 · 순서는 처음 · 중간 · 끝이 같게(부드럽게 바뀜), 글자 그림자(#239 값)는 맨 뒤 — 그래서 묶음 그림자는 글자마다로 옮김
-   ② 빛 결: 글자 모양 안에서만, 띠 크기 = 묶음 너비 × 250%, 위치 130% → −30%(왼쪽 → 오른쪽 한 번) (.45,0,.25,1)
-   시간: 메뉴 이동 = --hd 기준(메뉴 → 메뉴 --hd 200 → 글자 450~ · 빛 결 1,600~2,800 / 홈 → 상품연구 --hd 300 → 모두 100ms 뒤), 주소로 바로 · 새로 고침 = .ld */
+   11-24 아이폰: 글자 그림(.sp-l)에 흐림 · 그림자 필터를 움직이면 사파리가 글자를 흰 네모로 그림 → 필터 없이:
+   글자마다 캔버스 4장(그림자 · 하늘 · 분홍 · 흐린 흰 글자, index.html spPaint)을 겹쳐 두고 투명도 · 위치만 움직임
+   ① 프리즘 굴절: S → P → E → C 90ms 간격, 글자당 1,260ms (.22,1,.36,1). 처음 = 투명 0 · 1.08배 · 하늘 −18 / 분홍 +18px(.9) · 흐림
+      → 43% = 투명 1 · 하늘 −6 / 분홍 +6px(.65) · 흐림 적게 → 끝 = 제자리 · 갈라진 빛 0 · 흐림 0. 거리는 글자 높이에 비례(18/151 × 621/1683 = 4.398cqw)
+   ② 빛 결 = SVG(묶음 전체, 글자 그림 4장을 가림) — 띠 사각형만 가로로 옮김(130% → −30%)
+   시간: 메뉴 이동 = --hd 기준(메뉴 → 메뉴 글자 450~ · 빛 결 1,600~2,800 / 홈 → 상품연구 100ms 뒤), 주소로 바로 · 새로 고침 = .ld */
 .hh-spec .spx{filter:none}
-.hh-spec .sp-l{filter:drop-shadow(0 2px 10px rgba(40,60,150,.16))}
-/* 빛 결 = SVG(묶음 전체) — 띠 사각형만 가로로 옮김(사용자 단위 px = 묶음 그림 1683px 기준). 시작 전엔 왼쪽 밖 */
-.hh-spec .sp-gs{position:absolute; left:0; top:0; width:100%; height:100%; display:block; pointer-events:none; overflow:hidden}
+.hh-spec .sp-cv{position:absolute; left:0; top:0; width:100%; height:100%; display:block; pointer-events:none; opacity:0}
+.hh-spec .sp-sh{opacity:1}
+.hh-spec .sp-l{z-index:1}
+.hh-spec .sp-gs{position:absolute; left:0; top:0; width:100%; height:100%; display:block; pointer-events:none; overflow:hidden; z-index:2}
 .hh-spec .sp-gb{transform:translateX(-3281.85px)}
-@keyframes spPr{
-  0%{opacity:0; transform:scale(1.08); filter:blur(2.444cqw) drop-shadow(-4.398cqw 0 0 rgba(80,200,255,.9)) drop-shadow(4.398cqw 0 0 rgba(255,110,200,.9)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}
-  43%{opacity:1; filter:blur(.489cqw) drop-shadow(-1.466cqw 0 0 rgba(80,200,255,.65)) drop-shadow(1.466cqw 0 0 rgba(255,110,200,.65)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}
-  100%{opacity:1; transform:none; filter:blur(0cqw) drop-shadow(0 0 0 rgba(80,200,255,0)) drop-shadow(0 0 0 rgba(255,110,200,0)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}}
-/* 묶음 너비 기준 위치 130% → −30% = 글자 칸마다 (−195cqw → 45cqw) − 그 글자 왼쪽 자리(--l) */
+@keyframes spPw{0%{opacity:0; transform:scale(1.08)}43%{opacity:1}100%{opacity:1; transform:none}}
+@keyframes spPc{0%{opacity:.9; transform:translateX(-4.398cqw)}43%{opacity:.65; transform:translateX(-1.466cqw)}100%{opacity:0; transform:none}}
+@keyframes spPm{0%{opacity:.9; transform:translateX(4.398cqw)}43%{opacity:.65; transform:translateX(1.466cqw)}100%{opacity:0; transform:none}}
+@keyframes spPb{0%{opacity:1}43%{opacity:.45}100%{opacity:0}}
+@keyframes spPl{0%{opacity:0}43%{opacity:.55}100%{opacity:1}}
 @keyframes spGb{from{transform:translateX(-3281.85px)}to{transform:translateX(757.35px)}}   /* 130% → −30% = 띠 왼쪽 끝 −1.95 → +0.45 묶음 너비(1683) */
-.hh-spec.hh-on .sp-l{animation:spPr 1260ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 90ms) both}
+.hh-spec.hh-on .sp-w, .hh-spec.hh-on .sp-cy, .hh-spec.hh-on .sp-mg, .hh-spec.hh-on .sp-bl, .hh-spec.hh-on .sp-l{animation-duration:1260ms; animation-timing-function:cubic-bezier(.22,1,.36,1); animation-fill-mode:both; animation-delay:calc(var(--hd) + 250ms + var(--i, 0) * 90ms)}
+.hh-spec.hh-on .sp-w{animation-name:spPw} .hh-spec.hh-on .sp-cy{animation-name:spPc} .hh-spec.hh-on .sp-mg{animation-name:spPm} .hh-spec.hh-on .sp-bl{animation-name:spPb} .hh-spec.hh-on .sp-l{animation-name:spPl}
 .hh-spec.hh-on .sp-gb{animation:spGb 1200ms cubic-bezier(.45,0,.25,1) calc(var(--hd) + 1400ms) both}
 /* 주소로 바로 · 새로 고침(배너가 뜬 때 = 0): 글자 250 · 340 · 430 · 520ms 시작(각 1,260ms) · 빛 결 1,570~3,190ms(1,620ms) */
-.hh-spec.hh-on.ld .sp-l{animation-delay:calc(250ms + var(--i, 0) * 90ms)}
+.hh-spec.hh-on.ld .sp-w, .hh-spec.hh-on.ld .sp-cy, .hh-spec.hh-on.ld .sp-mg, .hh-spec.hh-on.ld .sp-bl, .hh-spec.hh-on.ld .sp-l{animation-delay:calc(250ms + var(--i, 0) * 90ms)}
 .hh-spec.hh-on.ld .sp-gb{animation-duration:1620ms; animation-delay:1570ms}
-/* 나갈 때: 묶음째 위로 · 흐림 · 투명, 빛 결은 바로 숨김. 홈으로 갈 때는 묶음 전체를 0~350 안에 */
-@keyframes spOut{to{opacity:0; transform:translateY(-50%); filter:blur(8px)}}
+/* 나갈 때: 묶음째 위로 · 투명(흐림은 필터라 뺌 — 아이폰 흰 네모), 빛 결은 바로 숨김. 홈으로 갈 때는 묶음 전체를 0~350 안에 */
+@keyframes spOut{to{opacity:0; transform:translateY(-50%)}}
 .hh-spec.out{animation:none}
 .hh-spec.out .spx{animation:spOut 450ms cubic-bezier(.4,0,.6,1) both}
 .hh-spec.out .sp-gs{display:none}
 .hh-spec.out.fast{animation:hhFo 350ms cubic-bezier(.4,0,.6,1) both}
 .hh-spec.out.fast .spx{animation:none}
 /* 움직임 줄이기: 글자 바로 보이고 빛 결 없음 */
-@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-l, .hh-spec.out .spx{animation:none !important} .hh-spec .sp-gs{display:none} .hh-spec .sp-gb{animation:none !important} }
+@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-w, .hh-spec .sp-l, .hh-spec .sp-cv, .hh-spec.out .spx{animation:none !important} .hh-spec .sp-cy, .hh-spec .sp-mg, .hh-spec .sp-bl{opacity:0} .hh-spec .sp-gs{display:none} .hh-spec .sp-gb{animation:none !important} }
 
 /* ===== #242 ① (11-23) 휴대폰 다크 링크 복사 버튼 = 어두운 버튼(0-13 '흰 버튼 그대로' 규칙 없앰) =====
    상품연구 [자료 링크 복사] = PC · 태블릿 다크와 같게(#0E1533 · 흰 글자 · 2px #243066 · 아이콘 #A9BCFF), 강의 [링크 복사] = U3 강의 캔버스(#0E1533 + 1px #232B4D) */
@@ -2191,6 +2192,8 @@ body.itr-run .lg2-mid{transition:none !important}
 .itr-hd::after{content:""; position:absolute; left:-30%; right:-30%; top:50%; height:4px; margin-top:-2px; border-radius:2px;
   background:linear-gradient(90deg, rgba(140,215,255,0), rgba(220,245,255,.95) 50%, rgba(140,215,255,0))}
 .itr-fl{inset:0; z-index:60; opacity:0}
+.itr.itr-br{position:absolute; inset:0; z-index:2; background:rgba(226,238,255,.42)}   /* 배너가 열릴 때 밝게(brightness 1.9 · saturate .6 대신) → 2,600까지 걷힘 */
+.itr.itr-lg{position:absolute; z-index:2; transform-origin:50% 50%}   /* 로고 위 흐린 로고 · 하늘 빛(캔버스) */
 body.itr-run .lg2-help{position:relative; z-index:3}
 /* 인트로를 할 첫 진입: 스크립트가 로그인 화면을 그릴 때까지 까만 빈 화면(로그인한 사람 · 움직임 줄이기 · 이 탭 두 번째부터는 붙지 않음) */
 html.itr-pre body{background:#07080C}

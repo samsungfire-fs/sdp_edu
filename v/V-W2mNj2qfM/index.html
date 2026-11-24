@@ -24,7 +24,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261124d">
+<link rel="stylesheet" href="assets/site.css?v=20261124e">
 </head>
 <body>
 
@@ -1394,7 +1394,9 @@
       return '<div class="hh hh-spec" role="img" aria-label="' + esc(SC.RESEARCH.label) + ' SPEC"><span class="spx" aria-hidden="true">' +
         [["s", 0, 21.093], ["p", 24.361, 23.589], ["e", 50.446, 22.4], ["c", 75.876, 24.124]].map(function(L, i){
           var src = "assets/spec-" + L[0] + ".png?v=1";
-          return '<span class="sp-w" style="--i:' + i + ';--l:' + L[1] + ';left:' + L[1] + '%;width:' + L[2] + '%"><img class="sp-l" src="' + src + '" alt="" decoding="async"></span>'; }).join("") +
+          return '<span class="sp-w" style="--i:' + i + ';--l:' + L[1] + ';left:' + L[1] + '%;width:' + L[2] + '%">' +
+            '<canvas class="sp-cv sp-sh"></canvas><canvas class="sp-cv sp-cy"></canvas><canvas class="sp-cv sp-mg"></canvas><canvas class="sp-cv sp-bl"></canvas>' +
+            '<img class="sp-l" src="' + src + '" alt="" decoding="async"></span>'; }).join("") +
         spGlow() + '</span></div>';
     var t = SC.catLabel(k);
     return '<div class="hh hh-t" role="img" aria-label="' + esc(t) + '"><span class="t" aria-hidden="true">' +
@@ -1411,6 +1413,7 @@
       src: '<source src="assets/spec-bg.webm?v=1" type="video/webm"><source src="assets/spec-bg.mp4?v=1" type="video/mp4">' }
   }, OV_ORDER = ["signature", "research"];
   function ovOf(k){ return OV[k] ? k : ""; }
+  function ovReset(id){ var b = $(id); if (b){ b.style.transition = ""; b.style.opacity = ""; b.style.visibility = ""; } }
   function ovVideo(n){
     var o = OV[n]; if (o.v) return o.v;
     var box = $(o.box), v = o.v = document.createElement("video");
@@ -1436,7 +1439,7 @@
     else heroRun();
     heroPaint();
   }
-  function heroClear(){ heroT.forEach(clearTimeout); heroT = []; HERO.classList.remove("h-sigx", "h-resx"); HERO.getAnimations && HERO.getAnimations({ subtree: true }).forEach(function(a){ if (a.id === "hx") a.cancel(); });
+  function heroClear(){ heroT.forEach(clearTimeout); heroT = []; HERO.classList.remove("h-sigx", "h-resx"); ovReset("hv2"); ovReset("hv3"); HERO.getAnimations && HERO.getAnimations({ subtree: true }).forEach(function(a){ if (a.id === "hx") a.cancel(); });
     [HKR, HEN].forEach(function(el){ el.removeAttribute("style"); }); HERO.style.height = ""; HERO.style.transition = ""; HERO.classList.remove("h-tr", "h-load"); heroBusy = 0;
     if (heroFol){ heroFol.forEach(function(a){ a.cancel(); }); heroFol = null; } if (bannerUndo) bannerUndo(); }
   var heroFol = null;
@@ -1456,6 +1459,32 @@
     if (shift != null && !REDUCE && !QUIET){ hh.style.setProperty("--hd", shift + "ms"); hh.classList.add("hh-on"); }
     else if (shift != null && REDUCE) hh.classList.add("fade");
     HHEAD.appendChild(hh);
+    if (k === "research") spPaint(hh);
+  }
+  /* 11-24 아이폰: 글자 그림에 흐림 · 그림자 필터를 움직이면 사파리가 글자를 흰 네모로 그림 → 흐린 글자 · 하늘/분홍 갈라진 빛 · 그림자를
+     캔버스에 한 번 그려 두고(글자 그림 원래 크기 기준이라 화면 크기에 비례) 투명도 · 위치만 움직임
+     흐림 10px · 갈라진 빛 흐림 6px · 그림자 0 2px 10px rgba(40,60,150,.16) = PC 글자 높이 151px 기준 → 그림(621px)에서는 × 621/151 */
+  var spCache = {};
+  function spPaint(root){
+    var K = 621 / 151, P = 130;
+    [].forEach.call(root.querySelectorAll(".sp-w"), function(w){
+      var im = w.querySelector(".sp-l"), src = im.getAttribute("src");
+      function draw(){
+        var c = spCache[src];
+        if (!c){
+          var nw = im.naturalWidth, nh = im.naturalHeight; if (!nw) return;
+          c = spCache[src] = {};
+          var mk = function(color, sd, oy){ var cv = document.createElement("canvas"); cv.width = nw + P * 2; cv.height = nh + P * 2; var x = cv.getContext("2d"); if (!x) return cv;
+            var off = cv.width + 50; x.shadowColor = color; x.shadowBlur = sd * 2 * K; x.shadowOffsetX = off; x.shadowOffsetY = (oy || 0) * K; x.drawImage(im, P - off, P); return cv; };
+          c.sh = mk("rgba(40,60,150,.16)", 5, 2); c.cy = mk("rgba(80,200,255,1)", 3); c.mg = mk("rgba(255,110,200,1)", 3); c.bl = mk("rgba(255,255,255,1)", 5);
+          c.nw = nw; c.nh = nh;
+        }
+        ["sh", "cy", "mg", "bl"].forEach(function(n){ var t = w.querySelector(".sp-" + n), s = c[n]; if (!t || !s) return; t.width = s.width; t.height = s.height;
+          var x = t.getContext("2d"); if (x) x.drawImage(s, 0, 0);
+          t.style.left = (-P / c.nw * 100) + "%"; t.style.top = (-P / c.nh * 100) + "%"; t.style.width = (s.width / c.nw * 100) + "%"; t.style.height = (s.height / c.nh * 100) + "%"; });
+      }
+      if (im.complete && im.naturalWidth) draw(); else im.addEventListener("load", draw, { once: true });
+    });
   }
   /* 배경 영상 겹쳐 바꾸기(시그니처 · 상품연구에 들어갈 때 · 나갈 때만). from / to = 겹침 층 이름("" = 홈 영상)
      위에 있는 층만 투명도가 움직이고 아래 층은 그동안 그대로 보임(두 층 다 반투명해져 홈 영상이 비치지 않게) */
@@ -1466,11 +1495,14 @@
       if (v2.readyState >= 3) vPlay(v2);
       else { v2.load && v2.networkState === 0 && v2.load(); later(function(){ if (HERO.classList.contains(OV[to].cls)) vPlay(v2); }, delay + dur + 50); } }
     else vPlay(HV);
-    var top = !from ? to : !to ? from : (OV_ORDER.indexOf(to) > OV_ORDER.indexOf(from) ? to : from), anims = [];
-    [from, to].forEach(function(n){ if (!n) return; HERO.classList.add(OV[n].x);
-      var kf = n !== top ? [{ opacity: 1 }, { opacity: 1 }] : n === to ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 1 }, { opacity: 0 }];
-      anims.push(anim($(OV[n].box), kf, { duration: dur, delay: delay, easing: EZ, fill: "both" })); });
-    later(function(){ [from, to].forEach(function(n){ if (n) HERO.classList.remove(OV[n].x); }); anims.forEach(function(a){ if (a) a.cancel(); });
+    var top = !from ? to : !to ? from : (OV_ORDER.indexOf(to) > OV_ORDER.indexOf(from) ? to : from);
+    /* 11-24 아이폰: 스크립트 움직임(animate)을 끝에 지우는 순간 사파리가 영상 층을 안 보이게 그려서(보라 배너 → 도시 · 까만 화면) 보통 CSS 바뀜(transition)으로.
+       위 층만 투명도가 바뀌고 아래 층은 그동안 그대로 보임. 끝나면 적어 둔 값을 지움(그때 CSS 값과 같아서 바뀌는 것 없음) */
+    [from, to].forEach(function(n){ if (!n) return; HERO.classList.add(OV[n].x); var b = $(OV[n].box);
+      b.style.transition = "none"; b.style.visibility = "visible"; b.style.opacity = (n === top && n === to) ? "0" : "1"; });
+    void HERO.offsetWidth;   /* 시작 값을 먼저 그린 뒤 바꿔야 바뀜 움직임이 생김 */
+    var tb = $(OV[top].box); tb.style.transition = "opacity " + dur + "ms " + EZ + " " + delay + "ms"; tb.style.opacity = top === to ? "1" : "0";
+    later(function(){ [from, to].forEach(function(n){ if (!n) return; HERO.classList.remove(OV[n].x); ovReset(OV[n].box); });
       if (to){ if (!HV.paused) HV.pause(); } if (from){ var fv = OV[from].v; if (fv && !fv.paused) fv.pause(); } heroPaint(); }, delay + dur + 30);
   }
   /* 목록 라인 리빌 시각(ms 뒤) — renderList · 상품연구 목록이 이 시각까지 접어 둠 */
@@ -1973,12 +2005,24 @@
     A(fl, [{ opacity: 0, offset: 0 }, { opacity: .85, offset: 100 / 600 }, { opacity: 0, offset: 1 }], 1050, 1650);
     /* ④ 배너가 빛줄에서 위아래로 열림 · 밝기는 2,600까지 원래대로 */
     A(hv, [{ clipPath: "inset(" + Y + "px 0px " + (BH - Y) + "px 0px)" }, { clipPath: "inset(0px 0px 0px 0px)" }], 1100, 2100, EZ_O);
-    A(hv.querySelector("video") || hv, [{ filter: "brightness(1.9) saturate(.6)" }, { filter: "brightness(1) saturate(1)" }], 1100, 2600, EZ_O);   /* #250 ⑲ 열림과 같은 곡선 */
+    /* 밝기(brightness 1.9 · saturate .6 → 원래)는 영상에 필터를 움직이지 않고 밝은 막을 덮었다가 걷음(11-24 아이폰: 필터 움직임이 깨져 그려짐) — #250 ⑲ 열림과 같은 곡선 */
+    var br = document.createElement("div"); br.className = "itr itr-br"; br.setAttribute("aria-hidden", "true"); hv.appendChild(br); lay.push(br);
+    A(br, [{ opacity: 1 }, { opacity: 0 }], 1100, 2600, EZ_O);
     /* ⑤ 로고: 1,080까지 없음 → 1,250 나타남(밝게 + 하늘 빛) → 2,000 원래 밝기 · 빛 없음. 로고 그림자(원래 값)는 맨 뒤 그대로 */
-    var KS = " drop-shadow(0 4px 18px rgba(0,10,60,.45))";
-    A(kr, [{ opacity: 0, transform: "scale(1.04)", filter: "blur(6px) brightness(2.4) drop-shadow(0 0 16px rgba(140,215,255,1))" + KS, offset: 0 },
-           { opacity: 1, transform: "scale(1)", filter: "blur(0px) brightness(2.4) drop-shadow(0 0 16px rgba(140,215,255,1))" + KS, offset: 170 / 920, easing: EZ_I },
-           { opacity: 1, transform: "scale(1)", filter: "blur(0px) brightness(1) drop-shadow(0 0 0px rgba(140,215,255,0))" + KS, offset: 1 }], 1080, 2000, EZ_I);
+    /* 11-24 아이폰: 로고 그림에 흐림 · 밝기 · 빛 필터를 움직이면 사파리가 흰 네모로 그림 → 필터 없이:
+       흐린 로고(흐림 6) · 하늘 빛 로고(빛 16px)를 캔버스에 한 번 그려 로고 위에 겹치고 투명도 · 크기만 움직임(흰 로고라 밝기 2.4는 보이는 차이 없음) */
+    A(kr, [{ opacity: 0, transform: "scale(1.04)", visibility: "hidden" }, { opacity: 1, transform: "scale(1)", visibility: "visible" }], 1080, 1250, EZ_I);
+    (function(){
+      var brand = kr.parentNode, bb = brand.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1), w = kb.width, h = kb.height, pd = 40;
+      function cvs(fn){ var c = document.createElement("canvas"); c.className = "itr itr-lg"; c.setAttribute("aria-hidden", "true");
+        c.width = Math.round((w + pd * 2) * dpr); c.height = Math.round((h + pd * 2) * dpr);
+        c.style.cssText = "left:" + (kb.left - bb.left - pd) + "px;top:" + (kb.top - bb.top - pd) + "px;width:" + (w + pd * 2) + "px;height:" + (h + pd * 2) + "px";
+        var x = c.getContext("2d"); if (x){ x.scale(dpr, dpr); try { fn(x); } catch(er){} } brand.appendChild(c); lay.push(c); return c; }
+      var cb = cvs(function(x){ var off = w + pd * 4; x.shadowColor = "#fff"; x.shadowBlur = 12; x.shadowOffsetX = off * dpr; x.drawImage(kr, pd - off, pd, w, h); });
+      var cg = cvs(function(x){ x.shadowColor = "rgba(140,215,255,1)"; x.shadowBlur = 16; x.drawImage(kr, pd, pd, w, h); x.shadowBlur = 0; x.drawImage(kr, pd, pd, w, h); });
+      A(cb, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, offset: .3 }, { opacity: 0, transform: "scale(1)" }], 1080, 1250, EZ_I);
+      A(cg, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, transform: "scale(1)", offset: 170 / 920 }, { opacity: 0, transform: "scale(1)" }], 1080, 2000, EZ_I);
+    })();
     /* ⑥ 카드(휴대폰은 시트) · 영문 로고 · SDP · 메뉴 이름 줄 · 라이트/다크 */
     var CARD = [[mid, [{ opacity: 0, transform: "translateY(40px)" }, { opacity: 1, transform: "none" }], 1800, 2600],
                 [help, [{ opacity: 0, transform: "translateY(40px)" }, { opacity: 1, transform: "none" }], 1800, 2600],
@@ -2016,7 +2060,7 @@
     function handoff(){ if (done) return;
       pre.then(function(o){ if (done) return; done = true; offSkip();
         /* 끝난 인트로 움직임(배너 열림 · 로고 · 영문)은 지금 끄고 적어 둔 첫 장면도 지움 — 전환이 같은 요소를 움직임. 덮개 · 빛 · 라이트/다크 · 영상 밝기는 마저 */
-        var keepOn = [cv, lt, hv.querySelector("video")];
+        var keepOn = [cv, lt, br];
         anims.forEach(function(a){ if (keepOn.indexOf(a._el) < 0) a.cancel(); }); restore(); H.classList.add("itr-hand");   /* 배너 바탕(남색)은 원래대로 — 이제부터는 보통 로그인 전환과 같음 */
         loginTransM({ pre: Promise.resolve(o), auto: true });
         setTimeout(function(){ anims.forEach(function(a){ a.cancel(); }); lay.forEach(function(d){ d.remove(); }); H.classList.remove("itr-on", "itr-hand"); document.body.classList.remove("itr-run");
