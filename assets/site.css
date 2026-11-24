@@ -2130,45 +2130,38 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
 .hh-spec .spx{container-type:inline-size}
 .hh-spec .sp-w{position:absolute; top:0; height:100%; display:block}
 .hh-spec .sp-l{position:absolute; left:0; top:0; width:100%; height:100%; max-width:none; display:block}
-/* #244 SPEC 전용 등장 — '정밀하게 재서 펼치는 연구 자료'. ① 스캔 리빌 ② 치수선 · 눈금 ③ 빛 결 ④ 반짝. 곡선은 따로 적은 것 말고 (.22,1,.36,1)
-   시간: 메뉴 이동 = --hd 기준(메뉴 → 메뉴 --hd 200 → 글자 450~, 홈 → 상품연구 --hd 300 → 모두 100ms 뒤), 주소로 바로 · 새로 고침 = .ld(--hd 0) */
+/* #248 (11-24) SPEC 등장 = 시안 A+ '프리즘 굴절 + 빛 결' — #244(스캔 · 치수선 · 눈금 · 반짝 별)를 통째로 바꿈
+   ① 프리즘 굴절: 글자 4장 각각 S → P → E → C 90ms 간격, 글자당 1,260ms (.22,1,.36,1). 하늘 · 분홍으로 갈라진 두 빛이 모이며 하얗게 맺힘
+      갈라진 거리 18px · 6px · 흐림 10 · 2px(#250 ⑯) = PC 배너 글자 높이 151px 기준 → 글자 높이에 비례(묶음 너비 기준 cqw: 18/151 × 621/1683 = 4.398cqw, 6px = 1.466cqw, 10px = 2.444cqw, 2px = .489cqw)
+      필터 함수 개수 · 순서는 처음 · 중간 · 끝이 같게(부드럽게 바뀜), 글자 그림자(#239 값)는 맨 뒤 — 그래서 묶음 그림자는 글자마다로 옮김
+   ② 빛 결: 글자 모양 안에서만, 띠 크기 = 묶음 너비 × 250%, 위치 130% → −30%(왼쪽 → 오른쪽 한 번) (.45,0,.25,1)
+   시간: 메뉴 이동 = --hd 기준(메뉴 → 메뉴 --hd 200 → 글자 450~ · 빛 결 1,600~2,800 / 홈 → 상품연구 --hd 300 → 모두 100ms 뒤), 주소로 바로 · 새로 고침 = .ld */
+.hh-spec .spx{filter:none}
+.hh-spec .sp-l{filter:drop-shadow(0 2px 10px rgba(40,60,150,.16))}
 .hh-spec .sp-g{position:absolute; inset:0; display:block; opacity:0; pointer-events:none;
   -webkit-mask-size:100% 100%; mask-size:100% 100%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
-  background:linear-gradient(100deg, rgba(255,255,255,0) 37%, rgba(91,194,231,.92) 45%, rgba(118,132,255,.78) 50%, rgba(255,150,206,.62) 55%, rgba(255,255,255,0) 63%) no-repeat;
+  background:linear-gradient(100deg, rgba(255,255,255,0) 36%, rgba(91,194,231,.9) 44%, rgba(118,132,255,.8) 50%, rgba(255,150,206,.7) 56%, rgba(255,255,255,0) 64%) no-repeat;
   background-size:250cqw 100%}
-.hh-spec .sp-ln{position:absolute; left:1%; right:1%; top:108%; height:1.5px; margin-top:-.75px; background:rgba(255,255,255,.88); box-shadow:0 1px 6px rgba(40,60,150,.28); transform-origin:50% 50%; display:block}
-.hh-spec .sp-tk{position:absolute; top:103.5%; height:9%; width:1.5px; background:rgba(255,255,255,.88); box-shadow:0 1px 6px rgba(40,60,150,.28); transform-origin:50% 50%; display:block}
-.hh-spec .sp-tk.l{left:1%} .hh-spec .sp-tk.r{right:1%}
-.hh-spec .sp-st{position:absolute; left:95.5%; top:9%; width:11%; aspect-ratio:1; margin:-5.5% 0 0 -5.5%; display:block; opacity:0; pointer-events:none; filter:drop-shadow(0 0 6px rgba(91,194,231,.95))}
-.hh-spec .sp-st svg{display:block; width:100%; height:100%; fill:#FFFFFF}
-@keyframes spScan{0%{clip-path:inset(50% 0 50% 0); opacity:0; transform:translateY(8%) scaleX(1.04); filter:blur(8px)}
-  45%{clip-path:inset(0); opacity:1; transform:translateY(1.6%) scaleX(1.008); filter:blur(2px)}
-  100%{clip-path:inset(0); opacity:1; transform:none; filter:blur(0)}}
-@keyframes spLn{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-@keyframes spTk{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes spPr{
+  0%{opacity:0; transform:scale(1.08); filter:blur(2.444cqw) drop-shadow(-4.398cqw 0 0 rgba(80,200,255,.9)) drop-shadow(4.398cqw 0 0 rgba(255,110,200,.9)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}
+  43%{opacity:1; filter:blur(.489cqw) drop-shadow(-1.466cqw 0 0 rgba(80,200,255,.65)) drop-shadow(1.466cqw 0 0 rgba(255,110,200,.65)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}
+  100%{opacity:1; transform:none; filter:blur(0cqw) drop-shadow(0 0 0 rgba(80,200,255,0)) drop-shadow(0 0 0 rgba(255,110,200,0)) drop-shadow(0 2px 10px rgba(40,60,150,.16))}}
+/* 묶음 너비 기준 위치 130% → −30% = 글자 칸마다 (−195cqw → 45cqw) − 그 글자 왼쪽 자리(--l) */
 @keyframes spGl{from{opacity:1; background-position:calc(-195cqw - var(--l, 0) * 1cqw) 0}to{opacity:1; background-position:calc(45cqw - var(--l, 0) * 1cqw) 0}}
-@keyframes spSt{0%{opacity:1; transform:rotate(-45deg) scale(0)}40%{opacity:1; transform:rotate(0deg) scale(1)}100%{opacity:0; transform:rotate(35deg) scale(.35)}}
-/* 메뉴 이동(누른 순간 = 0): 글자 450~ 90ms 간격 · 치수선 1,100~1,850 · 눈금 1,700~2,080 · 빛 결 1,400~2,500 · 반짝 2,400~2,960 */
-.hh-spec.hh-on .sp-w{animation:spScan 1000ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 90ms) both}
-.hh-spec.hh-on .sp-ln{animation:spLn 750ms cubic-bezier(.65,0,.35,1) calc(var(--hd) + 900ms) both}
-.hh-spec.hh-on .sp-tk{animation:spTk 380ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 1500ms) both}
-.hh-spec.hh-on .sp-g{animation:spGl 1100ms cubic-bezier(.45,0,.25,1) calc(var(--hd) + 1200ms) both}
-.hh-spec.hh-on .sp-st{animation:spSt 560ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 2200ms) both}
-/* 주소로 바로 · 새로 고침(배너가 뜬 때 = 0): 글자 250 · 340 · 430 · 520 · 치수선 950~1,710 · 눈금 1,560~1,940 · 빛 결 1,350~2,650 · 반짝 2,350~3,110 */
-.hh-spec.hh-on.ld .sp-w{animation-delay:calc(250ms + var(--i, 0) * 90ms)}
-.hh-spec.hh-on.ld .sp-ln{animation-duration:760ms; animation-delay:950ms}
-.hh-spec.hh-on.ld .sp-tk{animation-delay:1560ms}
-.hh-spec.hh-on.ld .sp-g{animation-duration:1300ms; animation-delay:1350ms}
-.hh-spec.hh-on.ld .sp-st{animation-duration:760ms; animation-delay:2350ms}
-/* 나갈 때: 지금처럼 글자 하나씩 위로 · 흐림 · 투명, 치수선 · 눈금도 같이 사라짐, 빛 결 · 별은 바로 숨김. 홈으로 갈 때는 묶음 전체를 0~350 안에 */
+.hh-spec.hh-on .sp-l{animation:spPr 1260ms cubic-bezier(.22,1,.36,1) calc(var(--hd) + 250ms + var(--i, 0) * 90ms) both}
+.hh-spec.hh-on .sp-g{animation:spGl 1200ms cubic-bezier(.45,0,.25,1) calc(var(--hd) + 1400ms) both}
+/* 주소로 바로 · 새로 고침(배너가 뜬 때 = 0): 글자 250 · 340 · 430 · 520ms 시작(각 1,260ms) · 빛 결 1,570~3,190ms(1,620ms) */
+.hh-spec.hh-on.ld .sp-l{animation-delay:calc(250ms + var(--i, 0) * 90ms)}
+.hh-spec.hh-on.ld .sp-g{animation-duration:1620ms; animation-delay:1570ms}
+/* 나갈 때: 묶음째 위로 · 흐림 · 투명, 빛 결은 바로 숨김. 홈으로 갈 때는 묶음 전체를 0~350 안에 */
 @keyframes spOut{to{opacity:0; transform:translateY(-50%); filter:blur(8px)}}
 .hh-spec.out{animation:none}
-.hh-spec.out .sp-w{animation:spOut 450ms cubic-bezier(.4,0,.6,1) calc(var(--i, 0) * 45ms) both}
-.hh-spec.out .sp-ln, .hh-spec.out .sp-tk{animation:hhFo 400ms cubic-bezier(.4,0,.6,1) both}
-.hh-spec.out .sp-g, .hh-spec.out .sp-st{animation:none; opacity:0}
+.hh-spec.out .spx{animation:spOut 450ms cubic-bezier(.4,0,.6,1) both}
+.hh-spec.out .sp-g{animation:none; opacity:0}
 .hh-spec.out.fast{animation:hhFo 350ms cubic-bezier(.4,0,.6,1) both}
-/* 움직임 줄이기: 글자 · 치수선은 바로 보이고 빛 결 · 반짝 없음 */
-@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-w, .hh-spec .sp-ln, .hh-spec .sp-tk{animation:none !important} .hh-spec .sp-g, .hh-spec .sp-st{animation:none !important; opacity:0} }
+.hh-spec.out.fast .spx{animation:none}
+/* 움직임 줄이기: 글자 바로 보이고 빛 결 없음 */
+@media (prefers-reduced-motion:reduce){ .hh-spec.out{animation:hhIn 150ms ease reverse both} .hh-spec .sp-l, .hh-spec.out .spx{animation:none !important} .hh-spec .sp-g{animation:none !important; opacity:0} }
 
 /* ===== #242 ① (11-23) 휴대폰 다크 링크 복사 버튼 = 어두운 버튼(0-13 '흰 버튼 그대로' 규칙 없앰) =====
    상품연구 [자료 링크 복사] = PC · 태블릿 다크와 같게(#0E1533 · 흰 글자 · 2px #243066 · 아이콘 #A9BCFF), 강의 [링크 복사] = U3 강의 캔버스(#0E1533 + 1px #232B4D) */
@@ -2183,3 +2176,23 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
    입력칸 16px 규칙(11-12)은 그대로 — 글자칸 확대가 다시 생기지 않게 ===== */
 html{touch-action:pan-x pan-y; overflow-x:hidden}
 body{overflow-x:clip}
+
+/* ===== #249 (11-24) 사이트 첫 진입 인트로 '빛줄기 번쩍' — 움직임은 index.html loginIntro(). 여기는 층 · 모양만 =====
+   층: 까만 덮개(1) < 배너(인트로 동안만 2, 바탕 투명) < 카드(3) < 빛줄기 · 빛 머리 · 번쩍(60) */
+.itr{position:fixed; pointer-events:none}
+.itr-cv{inset:0; z-index:1; background:#07080C}
+.hero.itr-on{z-index:2; background:transparent; transition:none !important}   /* 배너를 덮개 위 · 카드 아래로, 바탕 투명(덮개의 까만색이 보이게) */
+body.itr-run .lg2-mid{transition:none !important}
+.itr-ln{left:0; right:0; height:3px; margin-top:-1.5px; z-index:60}
+.itr-ln i{position:absolute; inset:0; display:block; transform-origin:0 50%; transform:scaleX(0);
+  background:linear-gradient(90deg, rgba(91,194,231,0), rgba(140,215,255,.9) 60%, #fff); box-shadow:0 0 12px 2px rgba(91,194,231,.9), 0 0 40px 6px rgba(91,194,231,.35)}
+.itr-hd{left:0; z-index:60; border-radius:50%; opacity:0;
+  background:radial-gradient(circle, #fff 0 3%, rgba(200,240,255,.9) 6%, rgba(91,194,231,.45) 18%, transparent 50%)}
+.itr-hd::after{content:""; position:absolute; left:-30%; right:-30%; top:50%; height:4px; margin-top:-2px; border-radius:2px;
+  background:linear-gradient(90deg, rgba(140,215,255,0), rgba(220,245,255,.95) 50%, rgba(140,215,255,0))}
+.itr-fl{inset:0; z-index:60; opacity:0}
+body.itr-run .lg2-help{position:relative; z-index:3}
+/* 인트로를 할 첫 진입: 스크립트가 로그인 화면을 그릴 때까지 까만 빈 화면(로그인한 사람 · 움직임 줄이기 · 이 탭 두 번째부터는 붙지 않음) */
+html.itr-pre body{background:#07080C}
+html.itr-pre body > *{visibility:hidden}   /* 아래 안내 2개도 카드와 함께 덮개 위에서 나타남 */
+
