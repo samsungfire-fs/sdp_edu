@@ -3029,7 +3029,7 @@
       $("stAdm").innerHTML = nv(st.adminCount);
       var ns = st.noSabun;
       $("stNo").innerHTML = nv(ns && ns.rows);
-      $("stNoSub").innerHTML = ns ? "그중 정상 회원 " + num(ns.normal) + "명 · 직접 입력 " + num(ns.manual) + "명" +
+      $("stNoSub").innerHTML = ns ? "사번 직접 입력 " + num(ns.manual) + "명(그중 정상 회원 " + num(ns.normal) + "명)" +
         (ns.bad ? "<br>8자리가 아닌 값 " + ns.bad + "개는 무시" : "") + (ns.dup ? "<br>회원 탭에 이미 있는 사번 " + ns.dup + "개는 회원 탭 우선" : "") + "<br>시트 '사번 없음' 탭에 있어요" : "";
       $("syncLast").textContent = L ? fmtAt(L.at) : "아직 안 받음";
       var lp = $("syncLastPill"); lp.hidden = !L; if (L){ lp.className = "k-pill " + (L.ok ? "ok" : "er"); lp.innerHTML = L.ok ? K.ck + "성공" : "실패"; }
@@ -3113,7 +3113,7 @@
       btn.hidden = false; $("syncRetry").hidden = !!info.ok;
     }
     function noSabunLine(c){
-      var t = "사번 없음 정상 회원 " + num(c.normal) + "명 (직접 입력 " + num(c.manual) + "명)";
+      var t = "사번 없음 " + num(c.rows) + "명 · 사번 직접 입력 " + num(c.manual) + "명(그중 정상 회원 " + num(c.normal) + "명)";
       if (c.bad) t += " · 8자리가 아닌 값 " + c.bad + "개는 무시";
       if (c.dup) t += " · 회원 탭에 이미 있는 사번 " + c.dup + "개는 회원 탭 우선";
       return t;
@@ -3467,18 +3467,20 @@
       if (q.tab === "abnormal") return '<div class="tr th g-mem2" role="row">' + T("sabun", "사번") + T("name", "이름") + T("state", "가입상태") + T("org", "소속") + '</div>';
       return '<div class="tr th g-mem" role="row">' + T("sabun", "사번") + T("name", "이름") + T("state", "가입상태") + T("org", "소속") + T("last", "마지막 접속") + T("views", "누적 조회", 1) + T("downs", "누적 다운로드", 1) + '</div>';
     }
+    /* v29 창구(11-24 사용자): 가입상태 셋 — 정상 회원 · 비정상 회원 · 사번 없음(세일즈온 정상이어도 사번이 없으면) */
+    function stPill(v){ return v === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : v === "사번 없음" ? '<span class="k-pill mu s">사번 없음</span>' : '<span class="k-pill s">비정상 회원</span>'; }
     function rowHtml(x){
       if (q.tab === "nosabun"){
         var st = nsState[x.uid] || (x.manual ? (x.dup ? "dup" : x.manualOk ? "ok" : "bad") : ""), val = st && st.v != null ? st.v : x.manual;
         var stt = typeof st === "object" ? st.s : st;
         var msg = stt === "ok" ? '<span class="ns-st ok">✓ 저장됨</span>' : stt === "bad" ? '<span class="ns-st er">8자리 숫자로 적어 주세요</span>' : stt === "dup" ? '<span class="ns-st er">회원 탭에 이미 있는 사번이에요</span>' : stt === "busy" ? '<span class="ns-st">' + SPIN + '</span>' : stt === "err" ? '<span class="ns-st er">저장하지 못했어요</span>' : '';
         return '<div class="tr c g-ns" role="row" data-uk="' + esc(x.uid) + '"><span class="t2 el" title="' + esc(x.uid) + '">' + esc(x.uid) + '</span><span class="nm">' + esc(x.name) + '</span><span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span>' +
-          '<span>' + (x.state === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : '<span class="k-pill s">비정상 회원</span>') + '</span>' +
+          '<span>' + stPill(x.state) + '</span>' +
           '<span class="ns-in"><input class="k-in k-num" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" data-ns="' + esc(x.uid) + '" value="' + esc(val || "") + '" placeholder="8자리" aria-label="' + esc(x.name) + ' 사번 직접 입력"' + (stt === "bad" || stt === "dup" ? ' aria-invalid="true"' : '') + '>' +
           '<button type="button" class="k-btn k-btn2 xs rp" data-nssave="' + esc(x.uid) + '">저장</button>' + msg + '</span></div>';
       }
       var on = sel === x.sabun ? " on" : "";
-      var stp = '<span class="stc">' + (x.state === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : '<span class="k-pill s">비정상 회원</span>') + '</span>';
+      var stp = '<span class="stc">' + stPill(x.state) + '</span>';
       if (q.tab === "abnormal") return '<div class="tr go g-mem2' + on + '" role="row" tabindex="0" data-sb="' + esc(x.sabun) + '"><span class="t2">' + esc(x.sabun) + '</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span></div>';
       /* #52 [전체] 칸: 사번 없는 회원도 같은 표에 (사번 자리는 '사번 없음', 상세 없음) */
       if (!x.sabun) return '<div class="tr g-mem nosb" role="row" data-uk="' + esc(x.uid || "") + '"><span class="mu">사번 없음</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span><span class="mu" data-k="마지막 접속">—</span><span class="r mu" data-k="조회">—</span><span class="r mu" data-k="다운로드">—</span></div>';
@@ -3496,7 +3498,7 @@
       if (!r) return;
       var from = (r.page - 1) * r.size;
       var foot = '<div class="tf"><span>' + (r.total ? nf(from + 1) + "–" + nf(Math.min(from + r.size, r.total)) + " / " : "") + '<b>' + nf(r.total) + '</b>명' +
-        (q.tab === "nosabun" ? ' · 그중 정상 회원 ' + nf(r.noSabunNormal) + '명 · 직접 입력 ' + nf(r.manualCount) + '명' : '') + '</span>' + pager(r.page, r.total, r.size, "data-mpg") + '</div>';
+        (q.tab === "nosabun" ? ' · 사번 직접 입력 ' + nf(r.manualCount) + '명(그중 정상 회원 ' + nf(r.noSabunNormal) + '명)' : '') + '</span>' + pager(r.page, r.total, r.size, "data-mpg") + '</div>';
       tbl.innerHTML = r.rows.length ? head() + r.rows.map(rowHtml).join("") + foot
         : (q.q ? emptyHtml("search", "‘" + esc(q.q) + "’에 맞는 회원이 없어요.", "사번 · 이름 · 소속의 일부로 검색해 보세요.") :
            q.filter === "seen" ? emptyHtml("log", "접속한 적 있는 회원이 아직 없어요.", r.logStart ? "" : "사이트에 사번 로그인이 붙으면 쌓여요.") :
@@ -3544,7 +3546,7 @@
     }
     function defDir(k){ return k === "last" || k === "views" || k === "downs" ? "desc" : "asc"; }
     var MGET = { last: function(x){ return x.last || ""; }, views: function(x){ return x.views || 0; }, downs: function(x){ return x.downs || 0; },
-      name: function(x){ return x.name || ""; }, sabun: function(x){ return x.sabun || ""; }, org: function(x){ return x.org || ""; }, state: function(x){ return x.state === "정상 회원" ? 0 : 1; },
+      name: function(x){ return x.name || ""; }, sabun: function(x){ return x.sabun || ""; }, org: function(x){ return x.org || ""; }, state: function(x){ return x.state === "정상 회원" ? 0 : x.state === "사번 없음" ? 2 : 1; },
       uid: function(x){ return x.uid || ""; }, manual: function(x){ return x.manual || ""; } };
     var NSK = { uid:1, name:1, org:1, state:1, manual:1 }, lastAll = null, lrWant = false;   /* lastAll = 지금 탭 · 검색 · 접속 여부를 걸친 전체 줄(쪽 나누기 전) — #104 엑셀 */
     function local(){
@@ -3641,7 +3643,8 @@
       gateFetch({ action:"noSabunSave", sid: adminSes.sid, uid: uid, sabun: v }).then(function(r){
         if (!r.ok){ nsState[uid] = { s: r.error === "dup" ? "dup" : r.error === "bad" ? "bad" : "err", v:v }; paint(); return; }
         nsState[uid] = { s: v ? "ok" : "", v:v };
-        (res.rows || []).forEach(function(x){ if (x.uid === uid){ x.manual = v; x.manualOk = !!v; x.dup = false; } });
+        var up = function(x){ if (x.uid === uid){ x.manual = v; x.manualOk = !!v; x.dup = false; if (r.state) x.state = r.state; } };   /* v29 창구: 가입상태도 바로(사번 적으면 세일즈온 값, 지우면 사번 없음) */
+        (res.rows || []).forEach(up); if (full){ full.ns.forEach(up); full.nsAll.forEach(up); full.sorted = {}; }
         paint(); if (v) toast("저장했어요. 다음 갱신 때 회원 명단에 들어가요");
       }).catch(function(){ nsState[uid] = { s:"err", v:v }; paint(); });
     }
