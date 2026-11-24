@@ -2189,9 +2189,13 @@ body.itr-run .lg2-mid{transition:none !important}
   background:linear-gradient(90deg, rgba(91,194,231,0), rgba(140,215,255,.9) 60%, #fff); box-shadow:0 0 12px 2px rgba(91,194,231,.9), 0 0 40px 6px rgba(91,194,231,.35)}
 .itr-hd{left:0; z-index:60; border-radius:50%; opacity:0;
   background:radial-gradient(circle, #fff 0 3%, rgba(200,240,255,.9) 6%, rgba(91,194,231,.45) 18%, transparent 50%)}
-.itr-hd::after{content:""; position:absolute; left:-30%; right:-30%; top:50%; height:4px; margin-top:-2px; border-radius:2px;
-  background:linear-gradient(90deg, rgba(140,215,255,0), rgba(220,245,255,.95) 50%, rgba(140,215,255,0))}
+.itr-hd::after{content:""; position:absolute; left:-46%; right:50%; top:50%; height:4px; margin-top:-2px; border-radius:2px; filter:blur(1px);
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.95))}   /* #259 가로 빛 줄은 머리 뒤(왼쪽)에만 — 머리 앞으로 선이 먼저 나가 보이지 않게 */
 .itr-fl{inset:0; z-index:60; opacity:0}
+.itr.itr-mk{position:absolute; left:0; right:0; z-index:0; background:#07080C}   /* #258 배너 열림용 위 · 아래 까만 막(배경 영상 위 · 로고 아래) */
+body.itr-run .itr, body.itr-run .itr-ln i, body.itr-run .hero .h-kr, body.itr-run .hero .h-en, body.itr-run #heroLgTop, body.itr-run .lg2-mid, body.itr-run .lg2-help{will-change:transform, opacity}   /* #258 인트로 동안만 */
+/* #258 카드 · 버튼이 올라오는 동안 뒤 흐림(backdrop-filter) 끔 — 움직이는 영상 위에서 매 장 다시 계산됨. 인트로가 끝나면(클래스 빠짐) 다시 켜짐 */
+body.itr-run .hero .h-lgtop .tm, body.itr-run .hero .h-lgtop .tm-ic{-webkit-backdrop-filter:none !important; backdrop-filter:none !important; background:rgba(40,44,62,.72) !important}
 .itr.itr-br{position:absolute; inset:0; z-index:2; background:rgba(226,238,255,.42)}   /* 배너가 열릴 때 밝게(brightness 1.9 · saturate .6 대신) → 2,600까지 걷힘 */
 .itr.itr-lg{position:absolute; z-index:2; transform-origin:50% 50%; opacity:0}   /* 기본은 안 보임(움직임 밖에서는 절대 보이지 않게) */   /* 로고 위 흐린 로고 · 하늘 빛(캔버스) */
 body.itr-run .lg2-help{position:relative; z-index:3}
