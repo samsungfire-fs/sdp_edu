@@ -2193,7 +2193,7 @@ body.itr-run .lg2-mid{transition:none !important}
   background:linear-gradient(90deg, rgba(140,215,255,0), rgba(220,245,255,.95) 50%, rgba(140,215,255,0))}
 .itr-fl{inset:0; z-index:60; opacity:0}
 .itr.itr-br{position:absolute; inset:0; z-index:2; background:rgba(226,238,255,.42)}   /* 배너가 열릴 때 밝게(brightness 1.9 · saturate .6 대신) → 2,600까지 걷힘 */
-.itr.itr-lg{position:absolute; z-index:2; transform-origin:50% 50%}   /* 로고 위 흐린 로고 · 하늘 빛(캔버스) */
+.itr.itr-lg{position:absolute; z-index:2; transform-origin:50% 50%; opacity:0}   /* 기본은 안 보임(움직임 밖에서는 절대 보이지 않게) */   /* 로고 위 흐린 로고 · 하늘 빛(캔버스) */
 body.itr-run .lg2-help{position:relative; z-index:3}
 /* 인트로를 할 첫 진입: 스크립트가 로그인 화면을 그릴 때까지 까만 빈 화면(로그인한 사람 · 움직임 줄이기 · 이 탭 두 번째부터는 붙지 않음) */
 html.itr-pre body{background:#07080C}

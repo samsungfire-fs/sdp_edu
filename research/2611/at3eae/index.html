@@ -24,7 +24,7 @@
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261124e">
+<link rel="stylesheet" href="assets/site.css?v=20261124f">
 </head>
 <body>
 
@@ -1974,7 +1974,7 @@
     var D = innerWidth > 980 ? 260 : innerWidth > 640 ? 200 : 140;
     /* 빛 머리 지름: PC 260 · 태블릿 200 · 휴대폰 140 */
     var EZ_B = "cubic-bezier(.55,0,.2,1)", EZ_O = "cubic-bezier(.16,1,.3,1)", EZ_I = "cubic-bezier(.22,1,.36,1)", EZ_W = "cubic-bezier(.65,0,.35,1)";
-    var lay = [], anims = [], done = false;
+    var lay = [], anims = [], done = false, lgC = [], lgT = null;
     /* 11-24 사용자(아이폰 캡처): 인트로 중에 '저장된 암호' 판 · 키패드가 올라옴 → 인트로 동안은 사번 칸을 잠그고(로그인 칸으로 안 보이게 · 누를 수 없게)
        인트로가 끝나 로그인 화면이 뜨면 풀고 칸에 커서 → 그때 키패드 · 자동 완성 판 */
     var inp = $("usb"), form = $("ulog");
@@ -2022,6 +2022,7 @@
       var cg = cvs(function(x){ x.shadowColor = "rgba(140,215,255,1)"; x.shadowBlur = 16; x.drawImage(kr, pd, pd, w, h); x.shadowBlur = 0; x.drawImage(kr, pd, pd, w, h); });
       A(cb, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, offset: .3 }, { opacity: 0, transform: "scale(1)" }], 1080, 1250, EZ_I);
       A(cg, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, transform: "scale(1)", offset: 170 / 920 }, { opacity: 0, transform: "scale(1)" }], 1080, 2000, EZ_I);
+      lgC = [cb, cg];
     })();
     /* ⑥ 카드(휴대폰은 시트) · 영문 로고 · SDP · 메뉴 이름 줄 · 라이트/다크 */
     var CARD = [[mid, [{ opacity: 0, transform: "translateY(40px)" }, { opacity: 1, transform: "none" }], 1800, 2600],
@@ -2033,7 +2034,7 @@
     else CARD.forEach(function(x){ A(x[0], x[1], x[2], x[3], EZ_I); });
     A(en, [{ opacity: 0 }, { opacity: 1 }], auto ? 1900 : 2000, auto ? 2400 : 2500, EZ_I);
     A(lt, [{ opacity: 0 }, { opacity: 1 }], auto ? 2100 : 2400, auto ? 2500 : 2800, EZ_I);
-    function offSkip(){ document.removeEventListener("pointerdown", down, true); document.removeEventListener("keydown", down, true);
+    function offSkip(){ clearTimeout(lgT); lgDrop(); document.removeEventListener("pointerdown", down, true); document.removeEventListener("keydown", down, true);
       document.removeEventListener("pointerup", upSkip, true); document.removeEventListener("pointercancel", upSkip, true); }
     function clean(){ if (done) return; done = true; clearTimeout(endT); offSkip();
       anims.forEach(function(a){ a.cancel(); }); restore(); lay.forEach(function(d){ d.remove(); }); H.classList.remove("itr-on"); document.body.classList.remove("itr-run"); unlock(); }
@@ -2053,7 +2054,10 @@
         function(){ sesSet(null); SES = null; paintWho(); hid.forEach(function(x){ if (x[1] == null) x[0].removeAttribute("style"); else x[0].setAttribute("style", x[1]); }); unlock(); }); }
     var endT = null;
     var T0 = 0;
-    function go(){ if (done) return; T0 = performance.now();
+    /* #253 · #254: 겹친 흐린 · 하늘 빛 로고(캔버스)는 로고 빛이 끝나는 2,000ms에 바로 지움 — 뒤에 다시 보이는 순간이 없게
+       (전엔 2,400 홈 전환으로 넘길 때 적어 둔 값을 지우면서 투명 0이 풀려 로그인 자리에서 0.46초 다시 보였음) */
+    function lgDrop(){ lgC.forEach(function(c){ anims.forEach(function(a){ if (a._el === c) a.cancel(); }); c.remove(); var i = lay.indexOf(c); if (i > -1) lay.splice(i, 1); }); lgC = []; }
+    function go(){ if (done) return; T0 = performance.now(); lgT = setTimeout(lgDrop, 2000);
       specs.forEach(function(x){ var a = x[0].animate(x[1], { duration: x[3] - x[2], delay: x[2], easing: x[4] || "linear", fill: "both" }); a._el = x[0]; anims.push(a); });
       endT = setTimeout(auto ? handoff : clean, auto ? 2400 : 2850); }
     /* #251 2,400: 목록이 풀렸으면 로그인 → 홈 전환으로 넘김(그 전환의 0ms) · 아직이면 배너가 열린 채 기다림 · 실패면 로그인 카드 */
