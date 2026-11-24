@@ -337,7 +337,7 @@
       var bar = opts.bar || { light: "#003CDC", dark: "#0B1442" };
       /* #256 인트로 동안(첫 진입 까만 화면 · 인트로 진행)은 위 띠 색도 인트로 색 #07080C */
       var itr = root.classList.contains("itr-pre") || (document.body && document.body.classList.contains("itr-run"));
-      if (mc) mc.setAttribute("content", itr ? "#07080C" : bar[t]);
+      if (mc) mc.setAttribute("content", itr ? "#000000" : bar[t]);   /* #263 인트로 동안 = 완전 검정 #000 */
       if (opts.tm) opts.tm.querySelectorAll("[data-theme-set]").forEach(function (b) { b.setAttribute("aria-checked", b.dataset.themeSet === t); });
       if (opts.sw) opts.sw.setAttribute("aria-checked", t === "dark" ? "true" : "false");
       if (opts.ic) {
