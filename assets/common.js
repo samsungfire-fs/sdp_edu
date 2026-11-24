@@ -17,18 +17,21 @@
     return m ? m[1] : "";
   };
 
-  SC.thumb = function (id, hi) {
-    return "https://i.ytimg.com/vi/" + id + "/" + (hi ? "maxresdefault" : "hqdefault") + ".jpg";
+  /* 11-24 썸네일 버전(tv): 유튜브 스튜디오에서 썸네일을 바꾼 뒤 관리자 [다시 가져오기]를 누르면 tv가 바뀌어 주소 끝 ?v=가 달라짐
+     → 브라우저 · 카톡 · 유튜브 그림 서버가 예전 그림을 그대로 쓰지 않고 새 그림을 받음 */
+  SC.tvq = function (tv) { return tv ? "?v=" + encodeURIComponent(tv) : ""; };
+  SC.thumb = function (id, hi, tv) {
+    return "https://i.ytimg.com/vi/" + id + "/" + (hi ? "maxresdefault" : "hqdefault") + ".jpg" + SC.tvq(tv);
   };
 
   /* 썸네일 이미지 태그 — 칸 크기에 맞는 화질만 받음(11-11 속도: 늘 1280px 고화질을 받던 것 → 휴대폰·PC 칸에 맞게 640/480px).
      고화질이 없는 영상이면 일반 화질로 */
   var THUMB_SIZES = "(max-width:560px) 52vw, (max-width:980px) 34vw, 420px";
-  SC.thumbImg = function (id, eager, sizes) {
-    var b = "https://i.ytimg.com/vi/" + id + "/";
-    return '<img src="' + b + 'hqdefault.jpg" srcset="' + b + 'hqdefault.jpg 480w, ' + b + 'sddefault.jpg 640w, ' + b + 'maxresdefault.jpg 1280w" sizes="' + (sizes || THUMB_SIZES) + '" alt="" ' +
+  SC.thumbImg = function (id, eager, sizes, tv) {
+    var b = "https://i.ytimg.com/vi/" + id + "/", q = SC.tvq(tv);
+    return '<img src="' + b + 'hqdefault.jpg' + q + '" srcset="' + b + 'hqdefault.jpg' + q + ' 480w, ' + b + 'sddefault.jpg' + q + ' 640w, ' + b + 'maxresdefault.jpg' + q + ' 1280w" sizes="' + (sizes || THUMB_SIZES) + '" alt="" ' +
       (eager ? 'fetchpriority="high" ' : 'loading="lazy" decoding="async" ') +
-      'onerror="this.onerror=null;this.removeAttribute(\'srcset\');this.src=\'' + b + 'hqdefault.jpg\'">';
+      'onerror="this.onerror=null;this.removeAttribute(\'srcset\');this.src=\'' + b + 'hqdefault.jpg' + q + '\'">';
   };
 
   /* 구글드라이브 공유 링크 → 바로 다운로드 주소 */

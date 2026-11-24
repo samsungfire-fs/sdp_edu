@@ -286,7 +286,7 @@
       return {
         id: v.id || "", _url: v.id ? "https://youtu.be/" + v.id : "", title: v.title || "", channel: v.channel || "",
         description: v.description || "", duration: v.duration || "", date: v.date || "", _st: v.id ? "ok" : "",
-        category: SC.catOf(v), visible: v.visible !== false, publishedAt: v.publishedAt || "", _oid: v.id || "",
+        category: SC.catOf(v), visible: v.visible !== false, publishedAt: v.publishedAt || "", _oid: v.id || "", tv: v.tv || "",
         files: (v.files || []).map(fileIn)
       };
     }) };
@@ -402,10 +402,12 @@
       v.title = m.title || v.title; v.channel = m.channel || v.channel;
       if (m.full){ v.description = m.description; v.duration = m.duration; if (m.date) v.date = m.date; if (m.publishedAt) v.publishedAt = m.publishedAt; }
       if (!v.date) v.date = SC.today();
+      if (force) v.tv = Date.now().toString(36);   /* 11-24 [다시 가져오기] = 썸네일도 새로(유튜브 스튜디오에서 바꾼 썸네일) */
       v._st = m.full ? "ok" : "partial"; markDirty(); render();
     }).catch(function(){
       if (SC.ytId(v._url) !== id) return;
       if (!v.date) v.date = SC.today();
+      if (force) v.tv = Date.now().toString(36);
       v._st = "fail"; markDirty(); render();
     });
   }
@@ -534,7 +536,7 @@
   var IC_CLK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
   function itemHtml(v, i){
     var ed = v === openV, pub = v.visible !== false, n = v.files.length, miss = v.files.filter(function(f){ return !SC.download(f.link, f.type).url; }).length;
-    var th = v.id ? '<div class="vthumb dim">' + SC.thumbImg(v.id) + (v.duration ? '<span class="dur">' + esc(v.duration) + '</span>' : '') + '</div>' : '<div class="vthumb blank dim">영상 없음</div>';
+    var th = v.id ? '<div class="vthumb dim">' + SC.thumbImg(v.id, false, null, v.tv) + (v.duration ? '<span class="dur">' + esc(v.duration) + '</span>' : '') + '</div>' : '<div class="vthumb blank dim">영상 없음</div>';
     var mm = !v.id ? '<span class="new">새 강의 · 유튜브 주소를 넣어 주세요</span>'
       : (v.date ? '<span>' + IC.cal + SC.fmtDate(v.date) + '</span>' : '') + (v.duration ? '<span>' + esc(v.duration) + '</span>' : '') +
         (n ? '<span class="fl">자료 ' + n + '개</span>' : '<span>자료 없음</span>') + (miss ? '<span class="miss">링크 없음 ' + miss + '</span>' : '');
@@ -591,7 +593,7 @@
   var NEWWIN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>';
   function ytCard(v, i){
     if (!v.id) return videoStatus(v) ? '<div class="url-row">' + videoStatus(v) + '</div>' : '';
-    return '<div class="ytc"><span class="th">' + SC.thumbImg(v.id) + '</span><span class="i">' + videoStatus(v) +
+    return '<div class="ytc"><span class="th">' + SC.thumbImg(v.id, false, null, v.tv) + '</span><span class="i">' + videoStatus(v) +
       (v.date ? '<span>유튜브에 올린 날짜 <b>' + longDate(v.publishedAt || v.date) + '</b></span>' : '') + (v.duration ? '<span>길이 <b>' + esc(v.duration) + '</b></span>' : '') + '</span></div>' +
       '<button type="button" class="bb g rp" data-act="refetch" data-i="' + i + '">' + IC.refresh + '다시 가져오기</button>';
   }
@@ -1358,7 +1360,7 @@
       videos: data.videos.filter(function(v){ return v.id; }).map(function(v){
         return {
           id: v.id, title: v.title.trim(), channel: v.channel, description: v.description.trim(),
-          duration: v.duration, date: v.date || SC.today(), publishedAt: v.publishedAt || undefined, category: SC.catOf(v), visible: v.visible !== false,
+          duration: v.duration, date: v.date || SC.today(), publishedAt: v.publishedAt || undefined, tv: v.tv || undefined, category: SC.catOf(v), visible: v.visible !== false,
           files: cleanFiles(v.files)
         };
       })
@@ -1387,11 +1389,11 @@
   }
   /* 11-12 속도: 영상마다 큰 썸네일이 있는지 이 브라우저에 기억(저장할 때마다 모든 영상 썸네일을 다시 받아 보지 않게) */
   var thumbCache = (function(){ try { return JSON.parse(LS.get("sc-thumb-best") || "{}"); } catch(e){ return {}; } })();
-  function bestThumb(id){
-    if (thumbCache[id]) return Promise.resolve(thumbCache[id]);
+  function bestThumb(id, tv){
+    if (thumbCache[id]) return Promise.resolve(thumbCache[id] + SC.tvq(tv));
     return new Promise(function(res){
       var img = new Image(), done = false;
-      function fin(u, sure){ if (done) return; done = true; thumbCache[id] = u; if (sure) LS.set("sc-thumb-best", JSON.stringify(thumbCache)); res(u); }
+      function fin(u, sure){ if (done) return; done = true; thumbCache[id] = u; if (sure) LS.set("sc-thumb-best", JSON.stringify(thumbCache)); res(u + SC.tvq(tv)); }
       img.onload = function(){ fin(img.naturalWidth > 200 ? SC.thumb(id, true) : SC.thumb(id, false), true); };
       img.onerror = function(){ fin(SC.thumb(id, false), true); };
       setTimeout(function(){ fin(SC.thumb(id, false)); }, 5000);
@@ -1615,7 +1617,7 @@
         var made = 0;
         return Promise.all([
           fetch("index.html?tpl=" + Date.now(), { cache:"no-store" }).then(function(r){ if (!r.ok) throw new Error("tpl"); return r.text(); }),
-          Promise.all(saved.videos.map(function(v){ return missing.indexOf("v/" + v.id + "/index.html") > -1 ? bestThumb(v.id) : ""; })),
+          Promise.all(saved.videos.map(function(v){ return missing.indexOf("v/" + v.id + "/index.html") > -1 ? bestThumb(v.id, v.tv) : ""; })),
           rAutoImgs(noImg, remote)
         ]).then(function(r){
           var need = {}; missing.forEach(function(p){ need[p] = true; });
@@ -1708,7 +1710,7 @@
         .then(function(c){ baseTree = c.tree.sha; return gh("/git/trees/" + baseTree + "?recursive=1"); })
         .then(function(t){ (t.tree || []).forEach(function(e){ if (e.type === "blob") remote[e.path] = e.sha; }); }),
       fetch("index.html?tpl=" + Date.now(), { cache:"no-store" }).then(function(r){ if (!r.ok) throw new Error("tpl"); return r.text(); }),
-      Promise.all(out.videos.map(function(v){ return bestThumb(v.id); })),
+      Promise.all(out.videos.map(function(v){ return bestThumb(v.id, v.tv); })),
       lockPair(json, rjson)
     ]).then(function(r){
       var tpl = r[1], thumbs = r[2], pair = r[3]; newSha = pair.vsha; newRsha = pair.rsha;
@@ -2000,7 +2002,7 @@
         var idx = changed.filter(function(x){ return x.path === "index.html"; })[0], pages = Promise.resolve([]);
         if (idx && canSave){
           var out = cleanData(), tpl = new TextDecoder().decode(idx.buf);
-          pages = Promise.all(out.videos.map(function(v){ return bestThumb(v.id); })).then(function(th){
+          pages = Promise.all(out.videos.map(function(v){ return bestThumb(v.id, v.tv); })).then(function(th){
             var tsha = {}; Object.keys(remote).forEach(function(p){ if (/^assets\/research\/t-/.test(p)) tsha[p] = remote[p]; });   /* #246 공유 그림 지문 그대로 */
             var built = builtPages(tpl, out, th, cleanResearch(), tsha);
             return built.concat(staleShare(remote, built));
@@ -3612,7 +3614,7 @@
               /* #94 본 강의: 맨 앞 유튜브 썸네일 80×45(+ 영상 길이) · 썸네일 · 제목을 누르면 그 강의 분석으로 */
               if (!isFile){
                 var vid = String(x.id).indexOf("v:") === 0 ? String(x.id).slice(2) : "", vv = vid ? Look.video(vid) : null, href = "#/analytics/" + encodeURIComponent(x.id);
-                return '<div class="li li1 lv"' + (i >= 5 ? ' data-more hidden' : '') + '><a class="dth" href="' + href + '" data-detana tabindex="-1" aria-hidden="true">' + (vid ? SC.thumbImg(vid, false, "80px") : '') +
+                return '<div class="li li1 lv"' + (i >= 5 ? ' data-more hidden' : '') + '><a class="dth" href="' + href + '" data-detana tabindex="-1" aria-hidden="true">' + (vid ? SC.thumbImg(vid, false, "80px", vv && vv.tv) : '') +
                   (vv && vv.duration ? '<span class="dur">' + esc(vv.duration) + '</span>' : '') + '</a><a class="tt" href="' + href + '" data-detana title="' + esc(full) + '">' + esc(tt) + '</a>' +
                   '<b class="n">' + nf(x.n) + '번</b><span class="w">' + esc(relAt(x.last)) + '</span></div>';
               }
