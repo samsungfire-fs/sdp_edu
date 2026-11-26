@@ -3468,7 +3468,7 @@
       return '<div class="tr th g-mem" role="row">' + T("sabun", "사번") + T("name", "이름") + T("state", "가입상태") + T("org", "소속") + T("last", "마지막 접속") + T("views", "누적 조회", 1) + T("downs", "누적 다운로드", 1) + '</div>';
     }
     /* v29 창구(11-24 사용자): 가입상태 셋 — 정상 회원 · 비정상 회원 · 사번 없음(세일즈온 정상이어도 사번이 없으면) */
-    function stPill(v){ return v === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : v === "사번 없음" ? '<span class="k-pill mu s">사번 없음</span>' : '<span class="k-pill s">비정상 회원</span>'; }
+    function stPill(v){ return v === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : v === "사번 없음" ? '<span class="k-pill no s">사번 없음</span>' : '<span class="k-pill s">비정상 회원</span>'; }
     function rowHtml(x){
       if (q.tab === "nosabun"){
         var st = nsState[x.uid] || (x.manual ? (x.dup ? "dup" : x.manualOk ? "ok" : "bad") : ""), val = st && st.v != null ? st.v : x.manual;
@@ -3486,7 +3486,7 @@
       /* #52 [전체] 칸: 사번 없는 회원도 같은 표에 (사번 자리는 '사번 없음', 상세 없음) */
       if (!x.sabun) return '<div class="tr g-mem nosb" role="row" data-uk="' + esc(x.uid || "") + '"><span class="mu">사번 없음</span><span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span><span class="mu" data-k="마지막 접속">—</span><span class="r mu" data-k="조회">—</span><span class="r mu" data-k="다운로드">—</span></div>';
       return '<div class="tr go g-mem' + on + '" role="row" tabindex="0" data-sb="' + esc(x.sabun) + '">' + sbc + '<span class="nm">' + esc(x.name) + '</span>' + stp + '<span class="el t2" title="' + esc(x.org) + '">' + esc(org2(x.org) || "—") + '</span>' +
-        (x.last ? '<span data-k="마지막 접속">' + esc(relAt(x.last)) + '</span>' : '<span class="mu" data-k="마지막 접속">접속 전</span>') +
+        lastHtml(x) +
         '<span class="r' + (x.views ? '' : ' mu') + '" data-k="조회">' + nf(x.views) + '</span><span class="r' + (x.downs ? '' : ' mu') + '" data-k="다운로드">' + nf(x.downs) + '</span></div>';
     }
     function paint(){
@@ -3546,7 +3546,7 @@
       }).catch(function(e){ fullBusy = false; PgBusy.stop(); if (full) return; sessionGone(e); $("memTbl").className = "tbl"; $("memTbl").innerHTML = LOADERR; });
     }
     function defDir(k){ return k === "last" || k === "views" || k === "downs" ? "desc" : "asc"; }
-    var MGET = { last: function(x){ return x.last || ""; }, views: function(x){ return x.views || 0; }, downs: function(x){ return x.downs || 0; },
+    var MGET = { last: function(x){ return isOn(x) ? "9999-12-31T23:59:59" : x.last || ""; },   /* #270 접속 중 = 최신순 맨 위 */ views: function(x){ return x.views || 0; }, downs: function(x){ return x.downs || 0; },
       name: function(x){ return x.name || ""; }, sabun: function(x){ return x.sabun || ""; }, org: function(x){ return x.org || ""; }, state: function(x){ return x.state === "정상 회원" ? 0 : x.state === "사번 없음" ? 2 : 1; },
       uid: function(x){ return x.uid || ""; }, manual: function(x){ return x.manual || ""; } };
     var NSK = { uid:1, name:1, org:1, state:1, manual:1 }, lastAll = null, lrWant = false;   /* lastAll = 지금 탭 · 검색 · 접속 여부를 걸친 전체 줄(쪽 나누기 전) — #104 엑셀 */
@@ -3579,9 +3579,44 @@
           .catch(function(){}).then(function(){ delete preBusy[ck]; });
       });
     }
-    function leave(){ Object.keys(memCache).forEach(function(k){ memCache[k].stale = true; }); if (full) full.stale = true; }
+    function leave(){ Object.keys(memCache).forEach(function(k){ memCache[k].stale = true; }); if (full) full.stale = true; clearTimeout(onlT); onlT = 0; }
     function sessionGone(e){ if (e && /nosession|expired/.test(e.message)){ toast("로그인 시간이 지났어요. 다시 로그인해 주세요"); } }
-    function show(){ if (!res || res.tab !== q.tab) fetch1(true); else { paint(); fetch1(true); } }
+    /* #270 접속 중(디자인 #270 · 창구 v31 memberOnline): 회원 관리 화면에 있는 동안 1분마다 접속 중 사번만 받아, 바뀐 '마지막 접속' 칸만 바꿈(깜빡임 없음).
+       비정상 회원 · 사번 없음은 접속 중이 되지 않음. 창구가 예전 것이면(unknown) 아무것도 안 함 */
+    var ONL = {}, onlT = 0, onlSig = "", onlDone = false, ONL_HTML = '<span class="onl"><i aria-hidden="true"></i>접속 중</span>';
+    function isOn(x){ return !!(x && x.sabun && ONL[x.sabun] && x.state === "정상 회원"); }
+    function kNow(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19); }
+    function lastHtml(x){
+      if (isOn(x)) return '<span class="lc-on" data-k="마지막 접속" data-o="1">' + ONL_HTML + '</span>';
+      return x.last ? '<span data-k="마지막 접속" data-o="0">' + esc(relAt(x.last)) + '</span>' : '<span class="mu" data-k="마지막 접속" data-o="0">접속 전</span>';
+    }
+    function detLast(sb, st, last){ return isOn({ sabun: sb, state: st }) ? ONL_HTML : last && relAt(last) ? esc(relAt(last)) : '<span class="mu">기록 없음</span>'; }
+    function onlPaint(){
+      var by = {}; ((res && res.rows) || []).forEach(function(x){ if (x.sabun) by[x.sabun] = x; });
+      document.querySelectorAll("#memTbl [data-sb]").forEach(function(tr){
+        var x = by[tr.dataset.sb], c = x && tr.querySelector('[data-k="마지막 접속"]'); if (!c) return;
+        if (c.getAttribute("data-o") !== (isOn(x) ? "1" : "0")) c.outerHTML = lastHtml(x);
+      });
+      var d = document.querySelector("#memDet [data-onl]");
+      if (d){ var h = detLast(d.getAttribute("data-onl"), d.getAttribute("data-ost"), d.getAttribute("data-last")); if (d.innerHTML !== h) d.innerHTML = h; }
+    }
+    function onlPoll(){
+      clearTimeout(onlT); onlT = 0;
+      if (!/^#\/members/.test(location.hash) || !adminSes || noGate()) return;
+      if (document.hidden){ onlT = setTimeout(onlPoll, 60000); return; }
+      gateFetch({ action:"memberOnline", sid: adminSes.sid }).then(function(r){
+        if (!r || !r.ok) return;
+        var m = {}; (r.on || []).forEach(function(sb){ m[sb] = 1; });
+        var sig = Object.keys(m).sort().join(","); if (sig === onlSig) return;
+        var first = !onlSig && !onlDone; onlDone = true;
+        onlSig = sig; ONL = m; if (full) full.sorted = {};
+        /* 처음 받았을 때 한 번은 다시 그려 '마지막 접속 최신순'이면 접속 중이 맨 위로 · 그 뒤로는 바뀐 칸만 */
+        if (first && full && !full.stale && q.sort === "last" && /^#\/members/.test(location.hash)){ res = local(); q.page = res.page; paint(); onlPaint(); }
+        else onlPaint();
+      }).catch(function(){}).then(function(){ if (/^#\/members/.test(location.hash)){ clearTimeout(onlT); onlT = setTimeout(onlPoll, 60000); } });
+    }
+    document.addEventListener("visibilitychange", function(){ if (!document.hidden && /^#\/members/.test(location.hash)) onlPoll(); });
+    function show(){ if (!res || res.tab !== q.tab) fetch1(true); else { paint(); fetch1(true); } onlPoll(); }
     /* #71 상세 칸 860px: 1600px 이상은 표 옆, 그보다 좁으면 오른쪽에서 덮어 나오는 서랍(뒤 검정 30%) */
     var dim = null;
     function placeDet(){
@@ -3627,9 +3662,9 @@
         }
         det.innerHTML = '<div class="det-h"><span class="k-av">' + esc((m.name || "?").charAt(0)) + '</span><span class="k-col"><span class="k-row k-g8"><b>' + esc(m.name) + '</b>' +
           (m.state === "정상 회원" ? '<span class="k-pill ok s">정상 회원</span>' : '<span class="k-pill s">비정상 회원</span>') + '</span><span>사번 ' + esc(m.sabun) + (m.from === "manual" ? " · 직접 입력" : "") + '</span><span>' + esc(m.org || "") + '</span>' +
-          (m.from === "manual" && m.uid ? '<span><button type="button" class="k-btn k-btn2 xs" data-detclr="' + esc(m.uid) + '">직접 적은 사번 지우기</button></span>' : '') + '</span>' +
+          (m.from === "manual" && m.uid ? '<span><button type="button" class="k-btn k-btn2 xs" data-detclr="' + esc(m.uid) + '" data-prev="' + esc(m.sabun || "") + '">직접 적은 사번 지우기</button></span>' : '') + '</span>' +
           '<button type="button" class="x" data-detx aria-label="회원 상세 닫기">' + PI.x + '</button></div>' +
-          '<div class="tiles"><div class="tile"><span class="k">마지막 접속</span><span class="v s">' + (r.last && relAt(r.last) ? esc(relAt(r.last)) : '<span class="mu">기록 없음</span>') + '</span></div>' +
+          '<div class="tiles"><div class="tile"><span class="k">마지막 접속</span><span class="v s" data-onl="' + esc(m.sabun || "") + '" data-ost="' + esc(m.state || "") + '" data-last="' + esc(r.last || "") + '">' + detLast(m.sabun, m.state, r.last) + '</span></div>' +
           '<div class="tile hi"><span class="k">누적 조회</span><span class="v">' + nf(r.viewCount) + '<small>번</small></span></div>' +
           '<div class="tile hi"><span class="k">누적 다운로드</span><span class="v">' + nf(r.downCount) + '<small>번</small></span></div></div>' +
           (r.logStart ? '' : '<div class="k-msg wa">' + PI.info + '<span><b>아직 기록이 없어요.</b> 사이트에 사번 로그인이 붙으면 쌓여요.</span></div>') +
@@ -3706,7 +3741,7 @@
         if (x && !x.ok) throw new Error(x.error || "fail");
         var sheets = [];
         if (ns) sheets.push({ name:"회원", cols:[22, 12, 40, 12, 16], rows: [["회원 아이디", "이름", "소속", "가입상태", "사번(직접 입력)"]].concat(rows.map(function(m){ return [m.uid, m.name, m.org, m.state, m.manual || ""]; })) });
-        else sheets.push({ name:"회원", cols:[12, 12, 12, 40, 18, 11, 13], rows: [["사번", "이름", "가입상태", "소속", "마지막 접속", "누적 조회", "누적 다운로드"]].concat(rows.map(function(m){ return [m.sabun, m.name, m.state, m.org, at2(m.last), m.views || 0, m.downs || 0]; })) });
+        else sheets.push({ name:"회원", cols:[12, 12, 12, 40, 18, 11, 13], rows: [["사번", "이름", "가입상태", "소속", "마지막 접속", "누적 조회", "누적 다운로드"]].concat(rows.map(function(m){ return [m.sabun, m.name, m.state, m.org, isOn(m) ? at2(kNow()) : at2(m.last), m.views || 0, m.downs || 0]; })) });
         if (needX){
           var idx = {}; rows.forEach(function(m, i){ if (m.sabun) idx[m.sabun] = i; });
           var pick = function(list){ return (list || []).filter(function(e){ return idx[e[0]] != null; }).sort(function(p, r){ var t = (r[4] || r[3] || ""), u = (p[4] || p[3] || ""); return (idx[p[0]] - idx[r[0]]) || (t > u ? 1 : t < u ? -1 : 0); }); };   /* 회원은 목록 순서, 같은 회원 안에서는 최근 것이 위 */
@@ -3742,8 +3777,15 @@
     $("memDet").addEventListener("click", function(e){
       if (e.target.closest("[data-detx]")){ closeDet(); return; }
       var cl = e.target.closest("[data-detclr]"); if (cl && !cl.disabled){ cl.disabled = true;   /* v30 창구: 직접 적은 사번 지우기 → 다시 사번 없음 */
-        gateFetch({ action:"noSabunSave", sid: adminSes.sid, uid: cl.getAttribute("data-detclr"), sabun: "" }).then(function(r){
-          if (!r.ok){ cl.disabled = false; toast("지우지 못했어요"); return; } closeDet(); toast("지웠어요 · 이제 사번 없음으로 세요"); refresh(); }).catch(function(){ cl.disabled = false; toast("지우지 못했어요"); }); return; }
+        var cuid = cl.getAttribute("data-detclr"), prev = (cl.getAttribute("data-prev") || "").replace(/\s+/g, "");
+        gateFetch({ action:"noSabunSave", sid: adminSes.sid, uid: cuid, sabun: "" }).then(function(r){
+          if (!r.ok){ cl.disabled = false; toast("지우지 못했어요"); return; } closeDet();
+          /* #269 ㉛ 확인 창 없이 지우니 5초 동안 [되돌리기] — 누르면 지우기 전 사번으로 그대로 */
+          toastAct("지웠어요 · 이제 사번 없음으로 세요", /^\d{8}$/.test(prev) ? function(){
+            gateFetch({ action:"noSabunSave", sid: adminSes.sid, uid: cuid, sabun: prev }).then(function(r2){
+              if (!r2.ok){ toast("되돌리지 못했어요"); return; } toast("되돌렸어요 · 사번 " + prev); refresh(); }).catch(function(){ toast("되돌리지 못했어요"); });
+          } : null);
+          refresh(); }).catch(function(){ cl.disabled = false; toast("지우지 못했어요"); }); return; }
       if (e.target.closest("[data-detana]")){ closeDet(); return; }          /* #94 분석으로 가면서 상세 칸은 닫음 */
       var m = e.target.closest("[data-detmore]"); if (m){ m.parentNode.querySelectorAll("[data-more]").forEach(function(el){ el.hidden = false; }); m.remove(); }
     });
@@ -3781,10 +3823,17 @@
             '<span>' + (x.ok ? '<span class="k-pill ok s">성공</span>' : '<span class="k-pill er s">실패</span>') + '</span>' +
             (x.ok ? n(x.normal) + n(x.abnormal, 1) + n(x.nosabun, 1) + '<span class="r">' + (x.added == null ? "—" : x.added ? "+" + nf(x.added) : "0") + '</span>' : n(null) + n(null, 1) + n(null, 1) + n(null)) +
             /* 11-24 사용자: 성공한 갱신은 전 갱신과 달라진 것(정상 → 비정상 등, 창구 v27)을 같은 칸에 — 실패 이유가 있으면 그것 먼저 */
-            fcell(x, i) + (function(){ var t = x.why || x.ch || ""; return '<span class="el' + (!x.why && x.ch ? ' t2' : '') + '" title="' + esc(t) + '">' + esc(t) + '</span>'; })() + '</div>';
+            fcell(x, i) + (function(){ var t = x.why || x.ch || "", v = x.why ? t : chShort(t); return '<span class="el' + (!x.why && x.ch ? ' t2' : '') + '" title="' + esc(t) + '">' + esc(v) + '</span>'; })() + '</div>';
         }).join("") + '<div class="tf"><span>모두 <b>' + nf(r.total) + '</b>번</span>' + pager(r.page, r.total, r.size, "data-lpg") + '</div>';
         LRX(t);   /* #105 창 안 표 처음 나올 때 */
       }).catch(function(){ if (my !== seq || !$("logTbl")) return; $("logTbl").innerHTML = LOADERR; });
+    }
+    /* #269 ㉙ 변동 글: 이름은 3명까지만 쓰고 '외 N명'(칸이 두 줄 넘게 늘지 않게) — 예전 기록(이름 10명 · '외')도 같게. 전체는 칸에 마우스를 올리면(title) */
+    function chShort(t){
+      return String(t || "").replace(/(\d[\d,]*)명\(([^)]*)\)/g, function(all, n, list){
+        var N = +String(n).replace(/,/g, ""), names = list.replace(/\s*외$/, "").split(/,\s*/).filter(Boolean), sh = names.slice(0, 3), rest = N - sh.length;
+        return n + "명(" + sh.join(", ") + (rest > 0 ? " 외 " + nf(rest) + "명" : "") + ")";
+      });
     }
     function closePop(){ var p = document.querySelector(".fpop"); if (p){ var b = document.querySelector('[data-fails][aria-expanded="true"]'); if (b) b.setAttribute("aria-expanded", "false"); p.remove(); } }
     document.addEventListener("click", function(e){

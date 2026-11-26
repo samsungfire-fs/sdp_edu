@@ -1552,11 +1552,14 @@ body, body *:not(svg):not(svg *){font-family:"SFN", "Apple SD Gothic Neo", "Malg
 .hero .h-en{display:block; height:17px; width:auto; opacity:1}   /* #134 완전한 흰색 · 약 10% 크게 */
 .hero .h-kick{display:block; margin-top:4px; font-weight:700 !important; font-size:13px; line-height:1.2; letter-spacing:.26em; padding-left:.26em; color:#FFFFFF; opacity:1; white-space:nowrap;
   text-shadow:none; filter:drop-shadow(0 2px 10px rgba(0,0,0,.22)); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}   /* #267 영문 로고와 같은 그림자 · 같은 방식(처음부터 고정) */
+/* #268 글자 대신 흰색 그림(영문 로고와 같은 재질 · 획 약 1.8px) — 자리 · 크기 · 자간 · 위치 · 움직임은 글자 그대로(글자는 투명으로 남겨 자리 · 화면 읽기용).
+   그림 높이 = 글자 크기 × .865 · 자간 .26em = ci-sdp-w.png, 자간 .22em(휴대폰 등) = ci-sdp-w-mo.png */
+.hero .h-kick{color:transparent; background:url(ci-sdp-w.png?v=1) 50% calc(50% - .08em) / auto .865em no-repeat}
 .hero .h-menus{display:none}
 @media (max-width:980px){
   .hero .h-brand{top:48px; gap:8px}
   .hero .h-kr{height:38px} .hero .h-en{height:10.5px}
-  .hero .h-kick{font-size:10px; letter-spacing:.22em; padding-left:.22em}
+  .hero .h-kick{font-size:10px; letter-spacing:.22em; padding-left:.22em; background-image:url(ci-sdp-w-mo.png?v=1)}
 }
 @media (max-width:640px){
   .hero .h-brand{top:42px; gap:7px}
@@ -1641,7 +1644,7 @@ body.login-mode .hero .h-lgtop{display:block}
   body.login-mode:not(.lgt-shrink) .hero .h-brand{bottom:96px}
   body.login-mode:not(.lgt-shrink) .hero .h-kr{height:50px}
   body.login-mode:not(.lgt-shrink) .hero .h-en{height:14px}
-  body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:12px}
+  body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:12px; background-image:url(ci-sdp-w.png?v=1)}
   body.login-mode:not(.lgt-shrink) .hero .h-menus{font-size:15px}
   .hero .h-lgtop{top:32px; right:40px}
   .hero .h-lgtop .tm{padding:2px; border-radius:9px} .hero .h-lgtop .tm button{height:30px; padding:0 9px .06em; font-size:12.5px; border-radius:7px; gap:4px}
@@ -1653,7 +1656,7 @@ body.login-mode .hero .h-lgtop{display:block}
   body.login-mode:not(.lgt-shrink) .hero .h-brand{top:40px; bottom:28px}
   body.login-mode:not(.lgt-shrink) .hero .h-kr{height:30px}
   body.login-mode:not(.lgt-shrink) .hero .h-en{height:8.5px; margin-top:7px}
-  body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:9px; margin:8px 0 0; letter-spacing:.22em; padding-left:.22em}
+  body.login-mode:not(.lgt-shrink) .hero .h-kick{font-size:9px; margin:8px 0 0; letter-spacing:.22em; padding-left:.22em; background-image:url(ci-sdp-w-mo.png?v=1)}
   body.login-mode:not(.lgt-shrink) .hero .h-menus{display:none}
   .hero .h-lgtop{top:16px; right:16px}
   .lg.lg2{padding:0}
@@ -2052,6 +2055,10 @@ body .ath.ath2 .b.t1{font-weight:700 !important}
 .player .lt-img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; z-index:1}
 .player .lt-play{position:absolute; left:50%; top:50%; width:68px; height:68px; margin:-34px 0 0 -34px; z-index:2; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(7,8,12,.46); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); color:#FFFFFF}
 .player .lt-play svg{width:28px; height:28px; margin-left:3px}
+/* 11-26 플레이어 준비 전 썸네일: 누르면 '준비 중' 원 → 준비되는 대로 재생 */
+.player .lt-img, .player .lt-play{cursor:pointer}
+.player .lt-play.wait svg{margin:0; width:30px; height:30px; animation:spin 800ms linear infinite}   /* #269 ㉝ 흰 선 2px · 끝 둥글게 · 3/4 원(그림은 index.html) */
+@media (prefers-reduced-motion:reduce){ .player .lt-play.wait svg{animation-duration:2400ms} }
 
 /* 11-19 #212 상품연구 자동 썸네일: 왼쪽 글자 세로 가운데 · 오른쪽 = 제목 + 책임위원 한 묶음 세로 가운데(맨 아래에 붙지 않아 '자료 N개' 칸과 안 겹침) */
 .ath.ath2 .tx{top:0; bottom:0; height:auto}

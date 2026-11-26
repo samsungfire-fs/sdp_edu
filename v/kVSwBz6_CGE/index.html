@@ -34,10 +34,18 @@
 <link rel="apple-touch-startup-image" media="screen and (device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" href="assets/splash-828x1792.png?v=2">
 <link rel="apple-touch-startup-image" media="screen and (device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" href="assets/splash-750x1334.png?v=2">
 <link rel="apple-touch-startup-image" media="screen and (device-width:414px) and (device-height:736px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" href="assets/splash-1242x2208.png?v=2">
+<!-- 11-26 강의 영상(유튜브) · 썸네일 서버에 미리 연결 — 강의를 누른 뒤 플레이어가 뜨기까지 줄임 -->
+<link rel="preconnect" href="https://www.youtube-nocookie.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="dns-prefetch" href="https://www.google.com">
 <!-- #126 모든 글자 = 삼성금융서체(SFN) -->
 <link rel="preload" href="assets/sfn400.woff2?v=2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/sfn700.woff2?v=2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=20261124j">
+<!-- #268 사번 로그인 배너 SALES DEVELOPMENT DEPARTMENT 그림 — 첫 화면부터 보이게 미리 받음(휴대폰 = 자간 .22em 그림) -->
+<link rel="preload" href="assets/ci-sdp-w.png?v=1" as="image" media="(min-width:641px)">
+<link rel="preload" href="assets/ci-sdp-w-mo.png?v=1" as="image" media="(max-width:640px)">
+<link rel="stylesheet" href="assets/site.css?v=20261126b">
 </head>
 <body>
 
@@ -907,7 +915,7 @@
   })();
 
   function renderVideo(id){
-    Share.close();
+    Share.close(); ytWarmOff();
     var v = pub().filter(function(x){ return x.id === id; })[0];
     if (!v) return notFound();
     L = null;
@@ -930,7 +938,7 @@
         '<a class="back-all rp" href="' + backUrl + '" data-go>' + IC.back + '전체 강의</a>' +
         '<div class="watch-grid">' +
           '<div class="watch-main">' +
-            '<div class="player-box"><div class="player">' + (LT ? ltPoster(LT.src) : ytFrame(v)) + '</div></div>' +
+            '<div class="player-box"><div class="player">' + ytFrame(v) + (LT ? ltPoster(LT.src) : '') + '</div></div>' +
             '<section class="lec-info">' +
               /* #85 휴대폰: 1줄 = [NEW] [메뉴] 배지 · 2줄 = 날짜 · 길이 · 조회(한 줄 고정). PC · 태블릿은 한 줄 그대로 */
               '<div class="lec-meta"><span class="lm-b">' + (SC.isPublic(v) ? '' : '<span class="priv-pill">' + IC.lock + '비공개 · 관리자에게만 보여요</span>') + (SC.isNew(v.date) ? newTag(c).replace('class="new"', 'class="new nw"') : '') + '<span class="lm-cat">' + esc(SC.catLabel(c)) + '</span></span>' +
@@ -974,12 +982,77 @@
       } else body.classList.remove("clamp");
     });
     if (!LT){ reveal(".watch .comments, .watch .others"); playLr($("app")); }
-    else LT.v = v;
+    else { LT.v = v; ytWire(document.querySelector(".watch .player")); }
+    if (!LT){ var yf = document.querySelector(".watch .player iframe"); if (yf){ ytHoldStart(); yf.addEventListener("load", function(){ setTimeout(ytHoldEnd, 800); }, { once: true }); ytWire(document.querySelector(".watch .player")); } }
     track("siteView", "v:" + v.id);
   }
   function ytFrame(v){
-    return '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.id) + '?rel=0&playsinline=1&modestbranding=1" title="' + esc(v.title || "강의 영상") + '" ' +
+    return '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.id) + '?rel=0&playsinline=1&modestbranding=1&enablejsapi=1&origin=' + encodeURIComponent(location.origin) + '" title="' + esc(v.title || "강의 영상") + '" ' +
       'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+  }
+  /* 11-26 사용자: 강의에 들어가 바로 재생을 눌러도 안 되고 기다려야 됨 — 전엔 썸네일이 영상 칸이 된 뒤(780ms)에야 유튜브 플레이어를 넣기 시작했고,
+     그 사이 보이는 재생 버튼은 그림이라 눌러도 아무 일이 없었음 → 누른 순간 플레이어를 썸네일 밑에 같이 넣어 움직이는 동안 받고,
+     준비 전에 재생을 누르면 '준비 중' 원을 보여 줬다가 준비되는 대로 재생(유튜브 플레이어 신호 enablejsapi) */
+  function ytWire(pl){
+    var fr = pl && pl.querySelector("iframe"); if (!fr) return;
+    var want = false, ready = false, iv = 0, T = [];
+    function post(o){ try { o.id = 1; o.channel = "widget"; fr.contentWindow.postMessage(JSON.stringify(o), "*"); } catch (e){} }
+    function clear(){ [].slice.call(pl.querySelectorAll(".lt-img, .lt-play")).forEach(function(x){ x.remove(); }); }
+    function go(){
+      if (ready) return; ready = true; clearInterval(iv); T.forEach(clearTimeout); window.removeEventListener("message", onMsg);
+      if (want && fr.isConnected) post({ event: "command", func: "playVideo", args: [] });
+      clear(); ytHoldEnd();
+    }
+    function onMsg(e){
+      if (e.source !== fr.contentWindow) return;
+      var d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (er){ return; }
+      if (d && (d.event === "onReady" || d.event === "initialDelivery")) go();
+    }
+    window.addEventListener("message", onMsg);
+    /* #269 ㉞ 강의 영상이 재생 중이면 배너 배경 영상을 멈춤(그 장면 그대로) · 일시 정지 · 끝 · 강의에서 나가면 다시(사용자가 배너 ⏸로 멈춘 건 그대로) */
+    function onState(e){
+      if (!fr.isConnected){ window.removeEventListener("message", onState); lecPlay(false, fr); return; }
+      if (e.source !== fr.contentWindow) return;
+      var d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (er){ return; }
+      var st = d && d.info && d.info.playerState; if (st == null) return;
+      if (st === 1) lecPlay(true, fr); else if (st === 2 || st === 0 || st === -1 || st === 5) lecPlay(false, fr);   /* 3(버퍼링)은 그대로 */
+    }
+    window.addEventListener("message", onState);
+    fr.addEventListener("load", function(){
+      var n = 0; post({ event: "listening" });
+      iv = setInterval(function(){ if (ready || !fr.isConnected || ++n > 12){ clearInterval(iv); return; } post({ event: "listening" }); }, 250);
+      T.push(setTimeout(function(){ if (!want) go(); }, 1200), setTimeout(go, 3000));   /* 신호가 안 와도 썸네일은 걷음 */
+    }, { once: true });
+    T.push(setTimeout(go, 10000));
+    pl.addEventListener("click", function(e){
+      if (ready || !e.target.closest(".lt-img, .lt-play")) return;
+      want = true; var b = pl.querySelector(".lt-play"); if (b && !b.classList.contains("wait")){ b.classList.add("wait");
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 1-9 9"/></svg>'; }   /* #269 ㉝ 흰 선 2px · 끝 둥글게 · 원의 3/4 */
+    });
+  }
+  /* 11-26 사용자: 강의를 누르면 거의 바로 플레이어가 준비되게 — 목록을 보는 동안 한가할 때 화면 밖에서 유튜브 플레이어를 한 번 불러 두고 지움
+     → 플레이어 파일이 이 사이트 몫으로 브라우저에 남고 연결도 열려 있어, 강의를 누르면 0.3~0.5초(크롬 실측)에 준비 = 썸네일이 커지는 움직임(0.78초) 안에 끝남
+     (미리 안 받아 두면 1.1초). 데이터 절약 모드 · 2G면 안 함 · 20분 안에 한 번 했으면 안 함(이미 남아 있음) · 강의를 누르면 바로 그만둠 */
+  var ytWarmT = 0, ytWarmF = null, ytWarmed = false;
+  function ytWarmOff(){ ytWarmed = true; clearTimeout(ytWarmT); }
+  function ytWarmSoon(){
+    if (ytWarmed || ytWarmT || !DATA) return;
+    ytWarmT = setTimeout(function(){ (window.requestIdleCallback || function(f){ f(); })(ytWarm, { timeout: 2000 }); }, 2500);
+  }
+  function ytWarm(){
+    if (ytWarmed || document.hidden) return; ytWarmed = true;
+    try { var cn = navigator.connection; if (cn && (cn.saveData || /2g/.test(cn.effectiveType || ""))) return; } catch (e){}
+    if (Date.now() - (+lsGet("sdp-ytw") || 0) < 20 * 60 * 1000) return;
+    var v = pub()[0]; if (!v || !v.id) return;
+    lsSet("sdp-ytw", String(Date.now()));
+    var f = ytWarmF = document.createElement("iframe");
+    f.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(v.id) + "?rel=0&playsinline=1&modestbranding=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+    f.title = ""; f.tabIndex = -1; f.setAttribute("aria-hidden", "true");
+    f.style.cssText = "position:fixed;left:-10000px;top:0;width:480px;height:270px;border:0;opacity:0;pointer-events:none";
+    var bye = function(){ if (f.parentNode) f.parentNode.removeChild(f); if (ytWarmF === f) ytWarmF = null; };
+    f.addEventListener("load", function(){ setTimeout(bye, 4000); }, { once: true });   /* 받은 뒤 플레이어가 나중에 부르는 파일까지 */
+    setTimeout(bye, 20000);
+    document.body.appendChild(f);
   }
   function ltPoster(src){ return '<img class="lt-img" src="' + esc(src || "") + '" alt="">' + '<span class="lt-play" aria-hidden="true">' + IC.play + '</span>'; }
 
@@ -1012,6 +1085,8 @@
     /* 주소창을 정식 주소로 맞춤 (예: 맨 위 주소 → all/) */
     if (location.href.split("#")[0] !== want) history.replaceState(null, "", want + location.hash);
     restoreNext = false; lastView = view;
+    if (view !== "video") ytWarmSoon();
+    if (lecOn && !lecOn.isConnected) lecPlay(false);   /* #269 ㉞ 강의에서 나가면 배너 영상 다시 */
   }
 
   /* 같은 사이트 안 이동은 새로 불러오지 않고 바로 바꿈 */
@@ -1019,6 +1094,7 @@
     var a = e.target.closest("a[data-go]");
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
+    if (ltBusy) ltStop();   /* 11-26 강의 열기 · 뒤로 움직임 중에 누름 → 움직임을 끝 모습으로 바로 한 뒤 이어서 */
     if (expired()){ if (a.href !== location.href) history.pushState(null, "", a.href); showLogin("expired"); window.scrollTo(0, 0); return; }
     if (lastView === "list") feedSave();
     /* #195 · #207 강의 화면 → 들어오기 전 목록(같은 주소)이면 기억해 둔 화면 그대로 + 영상 칸이 원래 카드 자리로 */
@@ -1070,15 +1146,15 @@
   function lecOpen(a, y0, fromUrl){
     var th = a.querySelector(".thumb"), img = th.querySelector("img"), A = th.getBoundingClientRect(), rA = parseFloat(getComputedStyle(th).borderTopLeftRadius) || 14;
     var st = { url: fromUrl, y: y0, L: L, m: L && L.m, list: lastList, menu: lastListMenu, th: th, src: img.currentSrc || img.src, title: document.title, body: document.body.className };
-    LT = { src: st.src, t0: performance.now() }; ltBusy = true;
-    var at = function(ms){ return Math.max(0, ms - (performance.now() - LT.t0)); };
+    var t0 = performance.now(); LT = { src: st.src, t0: t0 }; ltBusy = true; ytHoldStart();
+    var at = function(ms){ return Math.max(0, ms - (performance.now() - t0)); };
     /* 보던 목록: 노드째 옮겨(그림 다시 받지 않음) 같은 자리에서 0~300 옅어지며 98.5% */
     st.sl = slGet($("app"));
     var g = ghostMove($("app")); slSet(st.sl); g.style.zIndex = "5"; g.style.transformOrigin = "50% " + Math.max(0, A.top + A.height / 2 - parseFloat(g.style.top || 0)) + "px";
     th.style.visibility = "hidden";
     g.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.985)" }], { duration: 300, easing: COUT, fill: "forwards" });
     route(); window.scrollTo(0, 0);
-    var pl = document.querySelector(".watch .player"); if (!pl){ LT = null; ltBusy = false; return; }
+    var pl = document.querySelector(".watch .player"); if (!pl){ LT = null; ltBusy = false; ytHoldEnd(); return; }
     var B = pl.getBoundingClientRect(), sh = appShift(), rB = parseFloat(getComputedStyle(pl).borderTopLeftRadius) || 0;
     B = { left: B.left, top: B.top - sh, width: B.width, height: B.height };
     pl.style.visibility = "hidden";
@@ -1090,20 +1166,22 @@
     go(W.querySelector(".files-card"), [{ opacity: 0, transform: "translateX(24px)" }, { opacity: 1, transform: "none" }], 350, 450);
     [".lec-info", ".intro", ".comments", ".others"].forEach(function(q){ go(W.querySelector(q), [{ opacity: 0, transform: "translateY(14px)" }, { opacity: 1, transform: "none" }], 450, 450); });
     go(pl.querySelector(".lt-play"), [{ opacity: 0, transform: "scale(.8)" }, { opacity: 1, transform: "none" }], 700, 250);
-    setTimeout(function(){
+    /* 11-26 사용자: 이 움직임 중에 뒤로가기를 누르면 화면이 멈추고, 한 번 더 누르면 전전 페이지로 감 — 전엔 움직이는 동안 뒤로가기를 무시해서
+       주소만 목록으로 바뀌고 화면은 강의에 남았음. 이제 움직이는 중에 뒤로가기 · 다른 강의 · 메뉴를 누르면 이 움직임을 그 자리에서 끝낸 뒤 바로 이어서 처리 */
+    var stashed = false, ended = false, tm = [];
+    function stash(){
+      if (stashed) return; stashed = true;
       /* 목록은 기억해 둠(뒤로가기 때 그대로 되돌림) */
       var fr = document.createDocumentFragment(), inner = g.firstChild; while (inner && inner.firstChild) fr.appendChild(inner.firstChild);
       if (g.parentNode) g.parentNode.removeChild(g); st.frag = fr; if (lastView === "video") lstash = st;
-    }, 320);
-    setTimeout(function(){
+    }
+    function end(){   /* 도착 — 플레이어는 처음부터 썸네일 밑에서 받는 중(준비되면 ytWire가 썸네일을 걷음) */
+      if (ended) return; ended = true;
       pl.style.visibility = ""; if (f.parentNode) f.parentNode.removeChild(f);
-      var v = LT && LT.v; LT = null; ltBusy = false;
-      if (v && pl.isConnected){   /* 도착 뒤 유튜브 플레이어 — 불러올 때까지 썸네일 그대로 */
-        pl.insertAdjacentHTML("afterbegin", ytFrame(v));
-        var fr = pl.querySelector("iframe"), done = function(){ [].slice.call(pl.querySelectorAll(".lt-img, .lt-play")).forEach(function(x){ x.remove(); }); };
-        fr.addEventListener("load", function(){ setTimeout(done, 150); }, { once: true }); setTimeout(done, 4000);
-      }
-    }, at(780) + 10);
+      LT = null; ltBusy = false;
+    }
+    tm.push(setTimeout(stash, 320), setTimeout(end, at(780) + 10));
+    LT.stop = function(){ tm.forEach(clearTimeout); stash(); end(); };
   }
   function lecBack(){
     var st = lstash; lstash = null; ltBusy = true;
@@ -1115,6 +1193,7 @@
     var g = ghostMove($("app")); g.style.zIndex = "5";
     g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, easing: COUT, fill: "forwards" }); gone(g, 270);
     var ifr = g.querySelector("iframe"); if (ifr) ifr.src = "about:blank";
+    lecPlay(false);   /* #269 ㉞ 강의에서 나감 → 배너 영상 다시 */
     /* 목록 되돌리기(다시 그리지 않음) */
     setBody(st.body.indexOf("no-fab") > -1 ? "no-fab" : ""); drawMenu(st.m || "all");
     var r = parse(); heroGo(r, "");
@@ -1127,10 +1206,15 @@
       var rA = parseFloat(getComputedStyle(th).borderTopLeftRadius) || 14;
       th.style.visibility = "hidden";
       var f = ltFly(st.src, B, A, rB, rA, at(50), 700);
-      setTimeout(function(){ th.style.visibility = ""; if (f.parentNode) f.parentNode.removeChild(f); }, at(750) + 10);
     } else if (th) th.style.visibility = "";
-    setTimeout(function(){ ltBusy = false; }, at(750) + 20);
+    var done = false;
+    function end(){ if (done) return; done = true; clearTimeout(tm); if (th) th.style.visibility = ""; if (f && f.parentNode) f.parentNode.removeChild(f); ltBusy = false; LB = null; }
+    var tm = setTimeout(end, at(750) + 20);
+    LB = { stop: end };   /* 11-26 돌아가는 중에 또 뒤로 · 앞으로 · 다른 곳을 누르면 그 자리에서 끝내고 이어서 */
   }
+  /* 11-26 강의 열기 · 뒤로 움직임 중에 다른 이동이 오면: 움직임을 바로 끝 모습으로 */
+  var LB = null;
+  function ltStop(){ if (LT && LT.stop) LT.stop(); if (LB) LB.stop(); }
 
   /* #180 휴대폰: 검색창이 제목 옆 남은 폭을 씀 — 안내 글이 다 안 들어가면 '제목 찾기'로 줄임 */
   var fitCv = null;
@@ -1174,7 +1258,7 @@
   window.addEventListener("popstate", function(){
     if (MM.onPop()) return;
     if (lgoBusy){ try { history.pushState(null, "", location.href); } catch (e){} return; }   /* #189 전환 중 뒤로 가기 막기 */
-    if (ltBusy) return;
+    if (ltBusy) ltStop();
     if (lastView === "video" && lstash && lstash.url === location.href.split("#")[0]){ lecBack(); return; }   /* #195 브라우저 뒤로가기도 같은 전환 */
     if (lastView === "list") feedSave();
     restoreNext = lastView === "video";
@@ -1263,7 +1347,24 @@
     var b = { action: action, t: SES.t }; if (key) b.key = key;
     gate(b, true).catch(function(){});
   }
+  /* #270 접속 중(창구 v31 sitePing, 시트는 안 씀) — 11-26 사용자 규칙:
+     PC = 창 · 탭을 닫으면 바로 끝(열려만 있으면 안 보이는 탭이어도 접속 중) · 휴대폰 · 태블릿 = 이 페이지를 떠나고(다른 앱 · 다른 탭 · 닫기) 3분 뒤 끝.
+     열려 있는 동안 50초마다 신호(신호가 2분 끊기면 끝 — 꺼짐 · 통신 끊김 대비). 탭마다 번호(같은 사람이 탭 여러 개면 하나라도 열려 있으면 접속 중) */
+  var ONL_MOB = (function(){ try { return /iP(hone|ad|od)|Android|Mobile/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+    !!(window.matchMedia && matchMedia("(hover:none) and (pointer:coarse)").matches); } catch (e){ return false; } })();
+  var ONL_TAB = (function(){ var k = "sdp-tab", v; try { v = sessionStorage.getItem(k); if (!v){ v = Math.random().toString(36).slice(2, 10); sessionStorage.setItem(k, v); } } catch (e){ v = Math.random().toString(36).slice(2, 10); } return v; })();
+  function onSend(st){
+    if (!live() || !GATE) return;
+    var b = { action: "sitePing", t: SES.t, tab: ONL_TAB, st: st };
+    if (st !== "on" && navigator.sendBeacon){ try { if (navigator.sendBeacon(GATE, JSON.stringify(b))) return; } catch (e){} }   /* 떠나는 순간에도 가게 */
+    gate(b, st !== "on").catch(function(){});
+  }
+  function onPing(){ if (ONL_MOB && document.hidden) return; onSend("on"); }
+  setInterval(onPing, 50 * 1000);
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) onPing(); else if (ONL_MOB) onSend("away"); });
+  window.addEventListener("pagehide", function(){ onSend(ONL_MOB ? "away" : "bye"); });
   function seen(){
+    onPing();
     if (!live()) return;
     var k = "sdp-seen-" + SES.s, last = +(lsGet(k) || 0);
     if (Date.now() - last < 10 * 60 * 1000) return;
@@ -1362,7 +1463,7 @@
   if (REDUCE){ HV.removeAttribute("autoplay"); HV.pause(); heroUser = true; }   /* 동작 줄이기: 첫 장면에서 멈춘 채 */
   /* 화면 밖이거나 다른 탭이면 쉬었다가 돌아오면 이어서(사용자가 멈춘 건 그대로) */
   var heroVis = true;
-  function heroRun(){ if (heroUser) return; var v = curV(); if (heroVis && !document.hidden){ if (v.paused){ var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); } } else if (!v.paused) v.pause(); }
+  function heroRun(){ if (heroUser) return; var v = curV(); if (lecOn && lecOn.isConnected){ if (!v.paused) v.pause(); return; } lecOn = null; if (heroVis && !document.hidden){ if (ytHold && v !== HV && v.readyState < 3){ ytHoldQ = v; return; } if (v.paused){ var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); } } else if (!v.paused) v.pause(); }
   if (window.IntersectionObserver) new IntersectionObserver(function(es){ heroVis = es[0].isIntersecting; heroRun(); }).observe($("hero"));
   document.addEventListener("visibilitychange", heroRun);
   heroPaint();
@@ -1442,7 +1543,23 @@
   function sigVideo(){ return ovVideo("signature"); }
   function curK(){ var H = $("hero"); return H.classList.contains("h-res") ? "research" : H.classList.contains("h-sig") ? "signature" : ""; }
   function curV(){ var n = curK(); return n && OV[n].v ? OV[n].v : HV; }
-  function vPlay(v){ if (!v || heroUser) return; var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
+  /* 11-26 강의를 여는 동안(유튜브 플레이어가 준비될 때까지, 길어도 6초) 아직 안 받은 배너 영상(시그니처 물결 등)은 받기 · 재생을 잠깐 미룸
+     — 강의 영상 받기와 배너 영상 받기가 한꺼번에 몰려 플레이어가 늦게 뜨던 것. 그동안 배너는 첫 장면 그림(포스터) */
+  var ytHold = 0, ytHoldQ = null, ytHoldT = 0;
+  function ytHoldStart(){ ytHold = 1; clearTimeout(ytHoldT); ytHoldT = setTimeout(ytHoldEnd, 6000); }
+  function ytHoldEnd(){
+    if (!ytHold) return; ytHold = 0; clearTimeout(ytHoldT);
+    var q = ytHoldQ; ytHoldQ = null;
+    if (q && curV() === q){ q.preload = "auto"; heroRun(); }
+  }
+  /* #269 ㉞ 강의 영상 재생 중 = 배너 배경 영상 멈춤 */
+  var lecOn = null;
+  function lecPlay(on, fr){
+    if (on){ lecOn = fr; var v = curV(); if (!v.paused) v.pause(); }
+    else if (!fr || lecOn === fr){ var was = !!lecOn; lecOn = null; if (was) heroRun(); }
+  }
+  function vpre(v){ v.preload = ytHold && v.readyState < 3 ? "metadata" : "auto"; }
+  function vPlay(v){ if (!v || heroUser) return; if (lecOn && lecOn.isConnected){ if (!v.paused) v.pause(); return; } if (ytHold && v !== HV && v.readyState < 3){ ytHoldQ = v; return; } var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); }
   function ovSet(n){ HERO.classList.toggle("h-sig", n === "signature"); HERO.classList.toggle("h-res", n === "research"); }
   /* 정적 상태(움직임 없이) */
   function heroApply(k){
@@ -1451,7 +1568,7 @@
     ovSet(ov);
     HERO.dataset.head = k || "";
     OV_ORDER.forEach(function(n){ var v = OV[n].v; if (n !== ov && v && !v.paused) v.pause(); });
-    if (ov){ var v = ovVideo(ov); v.preload = "auto"; vPlay(v); if (!HV.paused) HV.pause(); }
+    if (ov){ var v = ovVideo(ov); vpre(v); vPlay(v); if (!HV.paused) HV.pause(); }
     else heroRun();
     heroPaint();
   }
@@ -1506,7 +1623,7 @@
      위에 있는 층만 투명도가 움직이고 아래 층은 그동안 그대로 보임(두 층 다 반투명해져 홈 영상이 비치지 않게) */
   function ovFade(from, to, delay, dur){
     if (from === to) return;
-    if (to){ var v2 = ovVideo(to); v2.preload = "auto";
+    if (to){ var v2 = ovVideo(to); vpre(v2);
       /* 영상이 아직 준비 전이면 배너가 움직이는 동안은 첫 장면 그림(포스터)만 → 움직임이 끝난 뒤 재생(받기 · 풀기가 움직임과 겹치지 않게) */
       if (v2.readyState >= 3) vPlay(v2);
       else { v2.load && v2.networkState === 0 && v2.load(); later(function(){ if (HERO.classList.contains(OV[to].cls)) vPlay(v2); }, delay + dur + 50); } }
@@ -1610,7 +1727,7 @@
   /* #191 로그아웃 새 전환 = PC · 태블릿 · 휴대폰 모두(좁은 강의 · 자료 페이지는 배너가 달라서 예전 방식) */
   function lgoAll(){ var B = document.body; return !REDUCE && !!$("hero").animate && !(NARROW && NARROW.matches && (B.classList.contains("watch-page") || B.classList.contains("back-page"))); }
   var lgoBusy = false;   /* #189 전환 중 뒤로 가기로 홈에 못 돌아가게 */
-  function doLogout(){ if (lgoMob()) mmGhost(); MM.close(true); sesSet(null); SES = null; STATS = null; logoutTrans(); }   /* 세션은 누르자마자 지움, 전환은 그 위에서 */
+  function doLogout(){ onSend("bye"); if (lgoMob()) mmGhost(); MM.close(true); sesSet(null); SES = null; STATS = null; logoutTrans(); }   /* 세션은 누르자마자 지움, 전환은 그 위에서 */
   /* #170 로그아웃 → 로그인 화면(로그인 → 홈을 거꾸로, cubic-bezier(.2,.8,.2,1)):
      0~120 로그아웃 눌림 · 0~300 내 정보 줄 · SDP 위로 8px / 메뉴 줄 · ⏸ 아래로 10px 사라짐 · 본문 아래에서 위로 걷힘
      300~1,080 배너 → 460 + 영상 50% 58% → 42% + 로고 묶음 로그인 자리로(×1.065 → 1) · 라이트/다크 버튼 위 18px에서
